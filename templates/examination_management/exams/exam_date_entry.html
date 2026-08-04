@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+    .exam-container {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    }
+    
+    .modal-header {
+        background-color: #4e73df;
+        color: white;
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #5a5c69;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-select, .form-control {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d3e2;
+        height: auto;
+        width: 100%;
+    }
+    
+    .form-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
+    }
+    
+    .form-select:focus, .form-control:focus {
+        border-color: #bac8f3;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    
+    .btn-primary {
+        background-color: #4e73df;
+        border-color: #4e73df;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2e59d9;
+        border-color: #2e59d9;
+    }
+    
+    .open-modal-btn {
+        background-color: #4e73df;
+        border-color: #4e73df;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(78, 115, 223, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .open-modal-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 10px rgba(78, 115, 223, 0.4);
+    }
+    
+    .alert {
+        border-radius: 8px;
+    }
+    
+    .loading-option {
+        color: #6c757d;
+        font-style: italic;
+    }
+    
+    /* Improved form group spacing */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Better alignment for form rows */
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: -0.75rem;
+        margin-left: -0.75rem;
+    }
+    
+    .form-row > .col {
+        padding-right: 0.75rem;
+        padding-left: 0.75rem;
+    }
+    
+    /* Consistent select option styling */
+    select option {
+        padding: 0.5rem 1rem;
+    }
+    
+    /* Make sure all form controls have same height */
+    .form-control, .form-select {
+        min-height: 50px;
+    }
+    
+    @media (max-width: 768px) {
+        .exam-container {
+            padding: 1rem;
+        }
+        
+        .row > div {
+            margin-bottom: 1rem;
+        }
+        
+        .form-control, .form-select {
+            min-height: 45px;
+        }
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="exam-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-calendar-alt me-2"></i>Exam Date Entry
+            </h1>
+            <button class="btn btn-primary open-modal-btn" data-bs-toggle="modal" data-bs-target="#examDateModal">
+                <i class="fas fa-plus me-2"></i>Create Exam Schedule
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="examDateModal" tabindex="-1" aria-labelledby="examDateModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="examDateModalLabel">
+                        <i class="fas fa-calendar-plus me-2"></i>Exam Date Entry
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form id="examDateForm" method="post">
+                        {% csrf_token %}
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0 form-group">
+                                <label for="programStudyId" class="form-label">
+                                    <i class="fas fa-graduation-cap me-2"></i>Program of Study
+                                </label>
+                                <select id="programStudyId" name="programme_of_study" class="form-select" required>
+                                    <option value="" selected disabled>-- Select --</option>
+                                    {% for pos in program_of_studies %}
+                                        <option value="{{ pos }}">{{ pos }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label for="deptId" class="form-label">
+                                    <i class="fas fa-building me-2"></i>Department
+                                </label>
+                                <select id="deptId" class="form-select" name="deptId" required>
+                                    <option value="" selected disabled>-- Select --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0 form-group">
+                                <label for="programId" class="form-label">
+                                    <i class="fas fa-book me-2"></i>Program
+                                </label>
+                                <select id="programId" name="programCode" class="form-select" required>
+                                    <option value="" selected disabled>-- Select --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label for="startDate" class="form-label">
+                                    <i class="fas fa-calendar-day me-2"></i>Start Date
+                                </label>
+                                <input type="date" id="startDate" name="start_date" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <!-- Hidden intake field -->
+                        <input type="hidden" id="intakeId" name="intake" value="ALL">
+
+                        
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-calendar-check me-2"></i>Generate Exam Schedule
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="resultMessage" class="mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function () {
+    $('#programStudyId').change(function () {
+        const pos = $(this).val();
+        $('#deptId').html('<option value="" class="loading-option"><i class="fas fa-spinner fa-spin me-2"></i>Loading departments...</option>');
+        $('#programId').html('<option value="" selected disabled>-- Select --</option>');
+
+        $.getJSON("{% url 'get_departments_by_pos' %}", { program_of_study: pos }, function (data) {
+            $('#deptId').html('<option value="" selected disabled>-- Select --</option>');
+            $.each(data.departments, function (index, dept) {
+                $('#deptId').append('<option value="' + dept.id + '">' + dept.name + '</option>');
+            });
+        }).fail(function() {
+            $('#deptId').html('<option value="">Error loading departments</option>');
+        });
+    });
+
+    $('#deptId').change(function () {
+        const deptId = $(this).val();
+        const pos = $('#programStudyId').val();
+        $('#programId').html('<option value="" class="loading-option"><i class="fas fa-spinner fa-spin me-2"></i>Loading programs...</option>');
+
+        $.getJSON("{% url 'get_programs01' %}", {
+            department_id: deptId,
+            program_of_study: pos
+        }, function (data) {
+            $('#programId').html('<option value="" selected disabled>-- Select --</option>');
+            $.each(data.programs, function (index, program) {
+                $('#programId').append('<option value="' + program.program_code + '">' + program.program_name + '</option>');
+            });
+        }).fail(function() {
+            $('#programId').html('<option value="">Error loading programs</option>');
+        });
+    });
+
+    $('#examDateForm').submit(function (event) {
+        event.preventDefault();
+        const submitBtn = $(this).find('button[type="submit"]');
+        const originalBtnText = submitBtn.html();
+        
+        // Show loading state
+        submitBtn.prop('disabled', true);
+        submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Generating...');
+
+        const programmeOfStudy = $('#programStudyId').val();
+        const deptId = $('#deptId').val();
+        const programCode = $('#programId').val();
+        const startDate = $('#startDate').val();
+
+        $.ajax({
+            url: "{% url 'exam_date_entry' %}",
+            method: "POST",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                programme_of_study: programmeOfStudy,
+                deptId: deptId,
+                programCode: programCode,
+                intake: "ALL",
+                start_date: startDate
+            },
+            success: function (response) {
+                $('#resultMessage').html(
+                    '<div class="alert alert-success alert-dismissible fade show">' +
+                    '<i class="fas fa-check-circle me-2"></i>' + response.message +
+                    '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                    '</div>'
+                );
+                
+                // Reset form if needed
+                if (response.success) {
+                    $('#examDateForm')[0].reset();
+                }
+            },
+            error: function (xhr) {
+                let msg = "An error occurred while generating the exam schedule.";
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    msg = xhr.responseJSON.error;
+                }
+                $('#resultMessage').html(
+                    '<div class="alert alert-danger alert-dismissible fade show">' +
+                    '<i class="fas fa-exclamation-circle me-2"></i>' + msg +
+                    '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                    '</div>'
+                );
+            },
+            complete: function() {
+                submitBtn.prop('disabled', false);
+                submitBtn.html(originalBtnText);
+            }
+        });
+    });
+
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    $('#startDate').attr('min', today);
+});
+</script>
+{% endblock %}

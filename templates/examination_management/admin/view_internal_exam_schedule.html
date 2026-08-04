@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid py-4" style="max-width:1400px;">
+
+  <div class="card shadow rounded-4 border-0">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">
+        <i class="fas fa-calendar-check me-2"></i> Internal Exam Schedules
+      </h4>
+      <a href="{% url 'internal_exam_schedule' %}" class="btn btn-light btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back to Schedule
+      </a>
+    </div>
+
+    <div class="card-body">
+
+      <!-- ================= FILTER FORM ================= -->
+      <form method="get" id="filterForm" class="row g-3 mb-4 align-items-end">
+
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Degree</label>
+          <select class="form-select" id="degree" name="degree"></select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Department</label>
+          <select class="form-select" id="department" name="department" disabled></select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">Regulation</label>
+          <select class="form-select" id="regulation" name="regulation" disabled></select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">Internal Assessment</label>
+          <select class="form-select" id="internal_assessment" name="internal_assessment" disabled></select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">Semester</label>
+          <select class="form-select" id="semester" name="semester" disabled></select>
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+          <button class="btn btn-primary">
+            <i class="fas fa-filter me-1"></i> Apply
+          </button>
+
+          <a href="{% url 'view_internal_exam_schedule' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-rotate-left me-1"></i> Clear
+          </a>
+
+          <button
+            type="submit"
+            form="deleteAllForm"
+            class="btn btn-danger ms-auto"
+            onclick="return confirm('⚠️ This will DELETE ALL Internal Exam Schedules. Continue?');">
+            <i class="fas fa-trash me-1"></i> Delete All
+          </button>
+        </div>
+
+      </form>
+      <!-- ================= END FILTER FORM ================= -->
+
+
+      <!-- ================= DELETE ALL FORM ================= -->
+      <form method="post" action="{% url 'ies_delete_all' %}" id="deleteAllForm">
+        {% csrf_token %}
+      </form>
+      <!-- =================================================== -->
+
+
+      <!-- ================= PUBLISH FORM ================= -->
+      <form method="post" action="{% url 'ies_publish' %}" class="mb-4">
+        {% csrf_token %}
+        <button class="btn btn-success"
+          onclick="return confirm('Publish Internal Exam Schedule to Time Table?');">
+          <i class="fas fa-upload me-1"></i> Publish
+        </button>
+      </form>
+      <!-- ================================================ -->
+
+
+      <!-- ================= SESSION BULK UPDATE ================= -->
+      <div class="card border-warning mb-4">
+        <div class="card-header bg-warning fw-semibold">
+          <i class="fas fa-clock me-2"></i> Session Update (Department & Semester)
+        </div>
+
+        <div class="card-body">
+          <form method="post" action="{% url 'ies_bulk_session_update' %}" class="row g-3">
+            {% csrf_token %}
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Department</label>
+              <select class="form-select" name="department" id="bulk_department" required>
+                <option value="">Select Department</option>
+                {% for d in departments %}
+                  <option value="{{ d.id }}">{{ d.Department }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Semester</label>
+              <select class="form-select" name="semester" id="bulk_semester" disabled required>
+                <option value="">Select Semester</option>
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Session</label>
+              <select class="form-select" name="session" required>
+                <option value="FN">FN</option>
+                <option value="AN">AN</option>
+              </select>
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+              <button class="btn btn-dark w-100"
+                onclick="return confirm('Update session for selected department & semester?');">
+                <i class="fas fa-save me-1"></i> Update
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <!-- ======================================================= -->
+
+
+      <!-- ================= TABLE ================= -->
+      {% regroup schedules by department as dept_groups %}
+
+      {% for dept in dept_groups %}
+        <h5 class="fw-bold mt-4">{{ forloop.counter }}. {{ dept.grouper }}</h5>
+
+        {% regroup dept.list by internal_assessment as iat_groups %}
+        {% for iat in iat_groups %}
+          <span class="badge bg-dark mb-2">{{ iat.grouper.iat }}</span>
+
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+              <thead class="table-primary">
+                <tr>
+                  <th>#</th>
+                  <th>Degree</th>
+                  <th>Department</th>
+                  <th>Regulation</th>
+                  <th>Semester</th>
+                  <th>Course Code</th>
+                  <th>Course Title</th>
+                  <th>Date</th>
+                  <th>Session</th>
+                  <th style="width:150px;">Action</th>
+                </tr>
+              </thead>
+              
+              <tbody>
+                {% for s in iat.list %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ s.degree }}</td>
+                  <td>{{ s.department }}</td>
+                  <td>{{ s.regulation }}</td>
+                  <td>{{ s.semester }}</td>
+                  <td>{{ s.course.course_code }}</td>
+                  <td>{{ s.course.title }}</td>
+                  <td>{{ s.exam_date|date:"d-m-Y" }}</td>
+                  <td>
+                    <span class="badge bg-info">{{ s.session }}</span>
+                  </td>
+                  
+                  <td>
+                    <div class="d-flex gap-2">
+                  
+                      <!-- EDIT -->
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-warning ies-edit-btn"
+                        data-id="{{ s.id }}"
+                        data-date="{{ s.exam_date|date:'Y-m-d' }}"
+                        data-session="{{ s.session }}"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editScheduleModal"
+                      >
+                        <i class="fas fa-pen"></i>
+                      </button>
+                  
+                      <!-- DELETE -->
+                      <form method="post"
+                            action="{% url 'ies_delete' s.id %}"
+                            onsubmit="return confirm('Delete this schedule row?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-danger">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </form>
+                  
+                    </div>
+                  </td>
+                  
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endfor %}
+      {% empty %}
+        <div class="text-center text-muted py-5">No schedules found</div>
+      {% endfor %}
+      <!-- ======================================== -->
+
+    </div>
+  </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(function () {
+
+  const selected = {
+    degree: "{{ selected_degree }}",
+    department: "{{ selected_department }}",
+    regulation: "{{ selected_regulation }}",
+    internal_assessment: "{{ selected_internal_assessment }}",
+    semester: "{{ selected_semester }}",
+    course: "{{ selected_course }}",
+    exam_date: "{{ selected_exam_date }}",
+  };
+
+  function fill($el, items, placeholder, selectedVal, enableIfItems=true) {
+    let html = `<option value="">${placeholder}</option>`;
+    (items || []).forEach(x => {
+      const sel = (String(x.id) === String(selectedVal)) ? "selected" : "";
+      html += `<option value="${x.id}" ${sel}>${x.text}</option>`;
+    });
+    $el.html(html);
+    const hasItems = items && items.length > 0;
+    $el.prop("disabled", !(enableIfItems && hasItems));
+  }
+
+  function resetBelow(level){
+    if(level <= 1) fill($("#department"), [], "All", "", false);
+    if(level <= 2) fill($("#regulation"), [], "All", "", false);
+    if(level <= 3) fill($("#internal_assessment"), [], "All", "", false);
+    if(level <= 4) fill($("#semester"), [], "All", "", false);
+    if(level <= 5) fill($("#course"), [], "All", "", false);
+    if(level <= 6) fill($("#exam_date"), [], "All", "", false);
+  }
+
+  function loadDegrees(){
+    $.get("{% url 'ies_degrees' %}", function(res){
+      fill($("#degree"), res.items, "All", selected.degree, true);
+      if(selected.degree) loadDepartments();
+    });
+  }
+
+  function loadDepartments(){
+    resetBelow(1);
+    const degree = $("#degree").val();
+    if(!degree) return;
+    $.get("{% url 'ies_departments' %}", {degree}, function(res){
+      fill($("#department"), res.items, "All", selected.department, true);
+      if(selected.department) loadRegulations();
+    });
+  }
+
+  function loadRegulations(){
+    resetBelow(2);
+    const degree = $("#degree").val();
+    const department = $("#department").val();
+    if(!degree || !department) return;
+    $.get("{% url 'ies_regulations' %}", {degree, department}, function(res){
+      fill($("#regulation"), res.items, "All", selected.regulation, true);
+      loadInternalAssessments();
+      if(selected.regulation) loadSemesters();
+    });
+  }
+
+  function loadInternalAssessments(){
+    resetBelow(3);
+    const degree = $("#degree").val();
+    if(!degree) return;
+    $.get("{% url 'internal_assessments_by_degree' %}", {degree_id: degree}, function(res){
+      fill($("#internal_assessment"), res.items, "All", selected.internal_assessment, true);
+    });
+  }
+
+  function loadSemesters(){
+    resetBelow(4);
+    const degree = $("#degree").val();
+    const department = $("#department").val();
+    const regulation = $("#regulation").val();
+    if(!degree || !department || !regulation) return;
+    $.get("{% url 'ies_semesters' %}", {degree, department, regulation}, function(res){
+      fill($("#semester"), res.items, "All", selected.semester, true);
+      if(selected.semester) loadCourses();
+    });
+  }
+
+  function loadCourses(){
+    resetBelow(5);
+    const degree = $("#degree").val();
+    const department = $("#department").val();
+    const regulation = $("#regulation").val();
+    const semester = $("#semester").val();
+    if(!degree || !department || !regulation || !semester) return;
+    $.get("{% url 'ies_courses' %}", {degree, department, regulation, semester}, function(res){
+      fill($("#course"), res.items, "All", selected.course, true);
+      if(selected.course) loadDates();
+    });
+  }
+
+  function loadDates(){
+    resetBelow(6);
+    const degree = $("#degree").val();
+    const department = $("#department").val();
+    const regulation = $("#regulation").val();
+    const semester = $("#semester").val();
+    const course = $("#course").val();
+    if(!degree || !department || !regulation || !semester || !course) return;
+    $.get("{% url 'ies_dates' %}", {degree, department, regulation, semester, course}, function(res){
+      fill($("#exam_date"), res.items, "All", selected.exam_date, true);
+      $("#exam_date").prop("disabled", false);
+    });
+  }
+
+  $("#degree").on("change", function(){
+    selected.degree=""; selected.department=""; selected.regulation=""; selected.internal_assessment="";
+    selected.semester=""; selected.course=""; selected.exam_date="";
+    loadDepartments();
+  });
+
+  $("#department").on("change", function(){
+    selected.department=""; selected.regulation=""; selected.internal_assessment="";
+    selected.semester=""; selected.course=""; selected.exam_date="";
+    loadRegulations();
+  });
+
+  $("#regulation").on("change", function(){
+    selected.regulation=""; selected.internal_assessment="";
+    selected.semester=""; selected.course=""; selected.exam_date="";
+    loadInternalAssessments();
+    loadSemesters();
+  });
+
+  $("#semester").on("change", function(){
+    selected.semester=""; selected.course=""; selected.exam_date="";
+    loadCourses();
+  });
+
+  $("#course").on("change", function(){
+    selected.course=""; selected.exam_date="";
+    loadDates();
+  });
+
+  loadDegrees();
+
+  $(document).on("click", ".ies-edit-btn", function () {
+    $("#edit_id").val($(this).data("id"));
+    $("#edit_exam_date").val($(this).data("date"));
+    $("#edit_session").val($(this).data("session"));
+  });
+
+});
+</script>
+<script>
+  $(function () {
+  
+    $("#bulk_department").on("change", function () {
+      const deptId = $(this).val();
+      const $semester = $("#bulk_semester");
+  
+      $semester.prop("disabled", true);
+      $semester.html('<option value="">Loading...</option>');
+  
+      if (!deptId) {
+        $semester.html('<option value="">Select Semester</option>');
+        return;
+      }
+  
+      $.get("{% url 'ies_semesters_by_department' %}", {
+        department_id: deptId
+      }, function (res) {
+  
+        let html = '<option value="">Select Semester</option>';
+  
+        res.items.forEach(item => {
+          html += `<option value="${item.id}">${item.text}</option>`;
+        });
+  
+        $semester.html(html);
+        $semester.prop("disabled", false);
+      });
+    });
+  
+  });
+  </script>
+  <!-- ================= EDIT MODAL ================= -->
+<div class="modal fade" id="editScheduleModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4 shadow">
+
+      <form method="post" action="{% url 'ies_update' %}">
+        {% csrf_token %}
+
+        <div class="modal-header bg-warning">
+          <h5 class="modal-title">
+            <i class="fas fa-pen me-2"></i>Edit Exam Schedule
+          </h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <input type="hidden" name="id" id="edit_id">
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Exam Date</label>
+            <input type="date" class="form-control" name="exam_date" id="edit_exam_date" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Session</label>
+            <select class="form-select" name="session" id="edit_session" required>
+              <option value="FN">FN</option>
+              <option value="AN">AN</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-warning">
+            <i class="fas fa-save me-1"></i> Update
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
+  
+
+{% endblock %}

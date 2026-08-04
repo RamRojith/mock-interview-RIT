@@ -1,0 +1,494 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4 admin-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header mb-5">
+    <div class="header-content text-center">
+      <h1 class="display-6 fw-bold text-white mb-2">Societies / Clubs / Chapters & Events</h1>
+      <p class="lead text-white-50"></p>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-lg">
+    <div class="card-header bg-gradient-primary text-white py-4">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <div class="header-icon me-3"><i class="fas fa-people-group fa-lg"></i></div>
+          <div>
+            <h4 class="mb-1 fw-bold">Professional Bodies — Records</h4>
+            <p class="mb-0 opacity-75">Add societies first, then log events by CAY bucket</p>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+
+    <div class="card-body p-4">
+      <!-- Department + badges + Show Past -->
+      <div class="row g-3 align-items-end mb-3">
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold text-muted mb-2"><i class="fas fa-building me-1"></i>DEPARTMENT</label>
+          <form method="get" action="{% url 'add_societies' %}">
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0"><i class="fas fa-university text-primary"></i></span>
+              <select name="department" id="department" class="form-select border-start-0" onchange="this.form.submit()" required>
+                <option value="">Select Department</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}" {% if dept.id|stringformat:"s" == selected_dept_id|stringformat:"s" %}selected{% endif %}>{{ dept.Department }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="col-md-6 d-flex gap-2 align-items-center">
+          {% if latest_entry %}
+          <span class="badge bg-light text-dark border">Latest AY: {{ latest_entry.academic_year_range|default:"—" }}</span>
+          <span class="badge bg-success text-white">Marks: {{ latest_entry.marks_awarded|default:"0.00" }}/{{ latest_entry.max_marks|default:"5" }}</span>
+          {% endif %}
+          <button id="btn_toggle_past" class="btn btn-outline-primary ms-auto">
+            <i class="fas fa-history me-2"></i>Show Past
+          </button>
+        </div>
+      </div>
+
+      <!-- Past panel -->
+      <div id="past_panel" class="mt-2" style="display:none;">
+        <div class="card border-0 bg-light">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="card-title mb-0"><i class="fas fa-archive me-2 text-primary"></i>Past Records</h6>
+              <div class="text-muted small" id="past_count"></div>
+            </div>
+            <div id="past_cards" class="row g-3"></div>
+            <div id="past_empty" class="text-center py-4" style="display:none;">
+              <i class="fas fa-inbox fa-2x text-muted mb-3"></i>
+              <p class="text-muted mb-0">No past records found for this department.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if selected_dept_id %}
+      <!-- TABLE 1: Societies -->
+      <div class="table-section mb-4">
+        <div class="section-header mb-4">
+          <h5 class="section-title"><i class="fas fa-users-gear me-2 text-primary"></i>Table 4.7.1.1 — Societies / Clubs / Chapters</h5>
+        </div>
+
+        <form method="post" action="{% url 'add_societies' %}">
+          {% csrf_token %}
+          <input type="hidden" name="department" value="{{ selected_dept_id }}">
+          <input type="hidden" name="action" value="save_societies">
+
+          <div class="row g-3 align-items-end mb-2">
+            <div class="col-sm-4">
+              <label class="form-label small fw-semibold text-muted mb-2"><i class="fas fa-calendar me-1"></i>ACADEMIC YEAR</label>
+              <input type="text" name="academic_year_range" class="form-control" placeholder="e.g. 2024-25" required>
+            </div>
+            <div class="col-sm-8 text-sm-end">
+              <span class="text-muted small">Creates a NEW submission with all rows below.</span>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="societiesTable">
+              <thead class="table-dark">
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Scope</th>
+                  <th>Year of Inauguration</th>
+                  <th style="width:50px;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="text" name="society_name[]" class="form-control form-control-sm"></td>
+                  <td>
+                    <select name="society_type[]" class="form-select form-select-sm">
+                      <option value="Society">Society</option>
+                      <option value="Club">Club</option>
+                      <option value="Chapter">Chapter</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select name="society_scope[]" class="form-select form-select-sm">
+                      <option value="">-- Select --</option>
+                      <option value="State">State</option>
+                      <option value="National">National</option>
+                      <option value="International">International</option>
+                    </select>
+                  </td>
+                  <td><input type="number" name="inauguration_year[]" class="form-control form-control-sm"></td>
+                  <td class="text-center"><button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">✖</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addSocietyRow()">+ Add Row</button>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-2"></i>Save Societies</button>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+
+      {% if show_events %}
+      <!-- TABLE 2: Events (NBA 4.7.1.2) -->
+      <div class="table-section">
+        <div class="section-header mb-3">
+          <h5 class="section-title"><i class="fas fa-table me-2 text-primary"></i>Table 4.7.1.2 — List of events/programs organized</h5>
+        </div>
+
+        <!-- Batch selector + derived labels -->
+        <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <label class="form-label small fw-semibold text-muted mb-0">
+              <i class="fas fa-calendar me-1"></i> BATCH (Start Year)
+            </label>
+            <select id="batch_select" class="form-select form-select-sm" style="max-width:220px;"></select>
+          </div>
+          <span class="badge bg-secondary">CAYm1: <span id="lbl_caym1">—</span></span>
+          <span class="badge bg-secondary">CAYm2: <span id="lbl_caym2">—</span></span>
+          <span class="badge bg-secondary">CAYm3: <span id="lbl_caym3">—</span></span>
+        </div>
+
+        <form method="post" action="{% url 'add_societies' %}">
+          {% csrf_token %}
+          <input type="hidden" name="department" value="{{ selected_dept_id }}">
+          <input type="hidden" name="action" value="save_events">
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-muted mb-2"><i class="fas fa-link me-1"></i>ATTACH TO SUBMISSION (AY)</label>
+              <select name="events_submission_id" class="form-select form-select-sm">
+                <option value="">Latest</option>
+                {% for s in event_submissions %}
+                  <option value="{{ s.id }}">{{ s.ay|default:"—" }} ({{ s.created_str }})</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <!-- CAYm1 -->
+          <div class="mb-2 fw-bold text-uppercase text-primary">CAYm1 <small class="text-muted">(<span id="lbl_caym1_hdr">—</span>)</small></div>
+          <div class="table-responsive mb-3">
+            <table class="table table-bordered table-hover">
+              <thead class="table-warning">
+                <tr>
+                  <th style="width:5%">S.N.</th>
+                  <th>Societies/Bodies/Chapters/Clubs</th>
+                  <th>The Event</th>
+                  <th>Level (National/International)</th>
+                  <th>Date of Event</th>
+                </tr>
+              </thead>
+              <tbody id="caym1_tbody">
+                <tr class="data-row">
+                  <td>1</td>
+                  <td>
+                    <select name="society_CAYm1[]" class="form-select form-select-sm">
+                      <option value="">-- Select --</option>
+                      {% for s in societies_for_dropdown %}
+                        <option value="{{ s.id }}">{{ s.name }}{% if s.type %} ({{ s.type }}){% endif %}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td>
+                    <input type="text" name="event_CAYm1[]" class="form-control form-control-sm" placeholder="Event name">
+                    <input type="text" name="body_CAYm1[]" class="form-control form-control-sm mt-1" placeholder="Body (optional)">
+                  </td>
+                  <td>
+                    <select name="level_CAYm1[]" class="form-select form-select-sm">
+                      <option value="State">State</option>
+                      <option value="National">National</option>
+                      <option value="International">International</option>
+                    </select>
+                  </td>
+                  <td><input type="date" name="date_CAYm1[]" class="form-control form-control-sm"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm mb-4" onclick="addEventRow('CAYm1')">+ Add CAYm1 Row</button>
+
+          <!-- CAYm2 -->
+          <div class="mb-2 fw-bold text-uppercase text-primary">CAYm2 <small class="text-muted">(<span id="lbl_caym2_hdr">—</span>)</small></div>
+          <div class="table-responsive mb-3">
+            <table class="table table-bordered table-hover">
+              <thead class="table-warning">
+                <tr>
+                  <th style="width:5%">S.N.</th>
+                  <th>Societies/Bodies/Chapters/Clubs</th>
+                  <th>The Event</th>
+                  <th>Level (National/International)</th>
+                  <th>Date of Event</th>
+                </tr>
+              </thead>
+              <tbody id="CAYm2_tbody">
+                <tr class="data-row">
+                  <td>1</td>
+                  <td>
+                    <select name="society_CAYm2[]" class="form-select form-select-sm">
+                      <option value="">-- Select --</option>
+                      {% for s in societies_for_dropdown %}
+                        <option value="{{ s.id }}">{{ s.name }}{% if s.type %} ({{ s.type }}){% endif %}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td>
+                    <input type="text" name="event_CAYm2[]" class="form-control form-control-sm" placeholder="Event name">
+                    <input type="text" name="body_CAYm2[]" class="form-control form-control-sm mt-1" placeholder="Body (optional)">
+                  </td>
+                  <td>
+                    <select name="level_CAYm2[]" class="form-select form-select-sm">
+                      <option value="State">State</option>
+                      <option value="National">National</option>
+                      <option value="International">International</option>
+                    </select>
+                  </td>
+                  <td><input type="date" name="date_CAYm2[]" class="form-control form-control-sm"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm mb-4" onclick="addEventRow('CAYm2')">+ Add CAYm2 Row</button>
+
+          <!-- CAYm3 -->
+          <div class="mb-2 fw-bold text-uppercase text-primary">CAYm3 <small class="text-muted">(<span id="lbl_caym3_hdr">—</span>)</small></div>
+          <div class="table-responsive mb-3">
+            <table class="table table-bordered table-hover">
+              <thead class="table-warning">
+                <tr>
+                  <th style="width:5%">S.N.</th>
+                  <th>Societies/Bodies/Chapters/Clubs</th>
+                  <th>The Event</th>
+                  <th>Level (National/International)</th>
+                  <th>Date of Event</th>
+                </tr>
+              </thead>
+              <tbody id="CAYm3_tbody">
+                <tr class="data-row">
+                  <td>1</td>
+                  <td>
+                    <select name="society_CAYm3[]" class="form-select form-select-sm">
+                      <option value="">-- Select --</option>
+                      {% for s in societies_for_dropdown %}
+                        <option value="{{ s.id }}">{{ s.name }}{% if s.type %} ({{ s.type }}){% endif %}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td>
+                    <input type="text" name="event_CAYm3[]" class="form-control form-control-sm" placeholder="Event name">
+                    <input type="text" name="body_CAYm3[]" class="form-control form-control-sm mt-1" placeholder="Body (optional)">
+                  </td>
+                  <td>
+                    <select name="level_CAYm3[]" class="form-select form-select-sm">
+                      <option value="State">State</option>
+                      <option value="National">National</option>
+                      <option value="International">International</option>
+                    </select>
+                  </td>
+                  <td><input type="date" name="date_CAYm3[]" class="form-control form-control-sm"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addEventRow('CAYm3')">+ Add CAYm3 Row</button>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-2"></i>Save Events</button>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Styles (same theme as other module pages) -->
+<style>
+:root { --primary-blue:#1a56db; --dark-blue:#1e3a8a; --medium-blue:#3b82f6; --border-color:#e2e8f0; --text-primary:#1e293b; --text-secondary:#64748b; }
+.admin-dashboard{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:var(--text-primary);}
+.dashboard-header{background:linear-gradient(135deg,var(--primary-blue),var(--dark-blue));color:#fff;border-radius:16px;padding:3rem 2rem;margin-bottom:2rem;}
+.card-header.bg-gradient-primary{background:linear-gradient(135deg,var(--primary-blue),var(--medium-blue))!important;border-bottom:none;}
+.header-icon{width:50px;height:50px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;}
+.section-header{border-bottom:2px solid var(--border-color);padding-bottom:1rem;margin-bottom:1rem;}
+.table-section{background:#fff;border-radius:12px;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.table th{background:linear-gradient(135deg,#374151,#4b5563)!important;color:#fff;border:none;}
+@media(max-width:768px){.dashboard-header{padding:2rem 1rem;} .card-body{padding:1.25rem!important;}}
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+/* Endpoints */
+const PAST_URL  = "{% url 'past_societies' %}";
+const BATCH_URL = "{% url 'get_batches_by_department' %}";
+
+/* Helpers */
+function removeRow(btn){ $(btn).closest('tr').remove(); renumber(); }
+function renumber(){
+  ['caym1_tbody','CAYm2_tbody','CAYm3_tbody'].forEach(id=>{
+    const rows = document.querySelectorAll(`#${id} tr.data-row`);
+    rows.forEach((tr, idx)=> tr.querySelector('td:first-child').textContent = String(idx+1));
+  });
+}
+function addSocietyRow(){
+  $('#societiesTable tbody').append(`
+    <tr>
+      <td><input type="text" name="society_name[]" class="form-control form-control-sm"></td>
+      <td><select name="society_type[]" class="form-select form-select-sm">
+            <option value="Society">Society</option><option value="Club">Club</option><option value="Chapter">Chapter</option>
+          </select></td>
+      <td><select name="society_scope[]" class="form-select form-select-sm">
+            <option value="">-- Select --</option><option value="State">State</option><option value="National">National</option><option value="International">International</option>
+          </select></td>
+      <td><input type="number" name="inauguration_year[]" class="form-control form-control-sm"></td>
+      <td class="text-center"><button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">✖</button></td>
+    </tr>`);
+}
+function addEventRow(bucket){
+  const bodyId = bucket === 'CAYm1' ? 'caym1_tbody' : `${bucket}_tbody`;
+  const options = `{% for s in societies_for_dropdown %}<option value="{{ s.id }}">{{ s.name }}{% if s.type %} ({{ s.type }}){% endif %}</option>{% endfor %}`;
+  const tbody = document.getElementById(bodyId);
+  tbody.insertAdjacentHTML('beforeend', `
+    <tr class="data-row">
+      <td></td>
+      <td><select name="society_${bucket}[]" class="form-select form-select-sm">
+            <option value="">-- Select --</option>${options}
+          </select></td>
+      <td><input type="text" name="event_${bucket}[]" class="form-control form-control-sm" placeholder="Event name">
+          <input type="text" name="body_${bucket}[]" class="form-control form-control-sm mt-1" placeholder="Body (optional)"></td>
+      <td><select name="level_${bucket}[]" class="form-select form-select-sm">
+            <option value="State">State</option><option value="National">National</option><option value="International">International</option>
+          </select></td>
+      <td><input type="date" name="date_${bucket}[]" class="form-control form-control-sm"></td>
+    </tr>`);
+  renumber();
+}
+
+/* Past panel + cards */
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function renderPast(resp){
+  const wrap = document.getElementById('past_cards');
+  const empty = document.getElementById('past_empty');
+  const count = document.getElementById('past_count');
+  wrap.innerHTML=''; empty.style.display='none'; count.textContent='';
+  if(!resp || !resp.ok || !Array.isArray(resp.entries) || resp.entries.length===0){
+    empty.style.display='block'; return;
+  }
+  count.textContent = `(${resp.entries.length} submissions)`;
+  resp.entries.forEach(x=>{
+    const marks = `${x.marks_awarded||'0.00'}/${x.max_marks||5}`;
+    const status = `<span class="badge ${x.is_verified ? 'bg-success text-white':'bg-warning text-dark'}">Status: ${x.is_verified?'Verified':'Not Verified'}</span>`;
+    const societies = (x.societies||[]).map(s=>`<li>${escapeHtml(s.name)}${s.type?' <span class="badge bg-light text-dark border ms-1">'+escapeHtml(s.type)+'</span>':''}${s.year?' ('+escapeHtml(s.year)+')':''}${s.scope?' — '+escapeHtml(s.scope):''}</li>`).join('') || '<li class="text-muted">—</li>';
+    const events = (x.events||[]).map(e=>`<li><b>${escapeHtml(e.event)}</b>${e.body?' — '+escapeHtml(e.body):''}${e.society?' — <i>'+escapeHtml(e.society)+'</i>':''}${e.level?' — '+escapeHtml(e.level):''}${e.date?' — '+escapeHtml(e.date):''}${e.bucket?' — <span class="badge bg-light text-dark border ms-1">'+escapeHtml(e.bucket)+'</span>':''}</li>`).join('') || '<li class="text-muted">—</li>';
+
+    wrap.insertAdjacentHTML('beforeend', `
+      <div class="col-md-6">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h6 class="mb-0">AY ${escapeHtml(x.academic_year_range || '')}</h6>
+              <div class="d-flex gap-1 flex-wrap">
+                <span class="badge bg-secondary">Marks ${marks}</span>
+                <span class="badge bg-info text-dark">N: ${x.national_events||0}</span>
+                <span class="badge bg-warning text-dark">I: ${x.international_events||0}</span>
+                ${status}
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <strong>Societies</strong>
+                <ul class="mb-2">${societies}</ul>
+              </div>
+              <div class="col">
+                <strong>Events</strong>
+                <ul class="mb-2">${events}</ul>
+              </div>
+            </div>
+            ${x.admin_remarks?`<div class="text-muted small mt-2"><strong>Remarks:</strong> ${escapeHtml(x.admin_remarks)}</div>`:''}
+          </div>
+        </div>
+      </div>`);
+  });
+}
+
+/* Batch derivation for CAY labels */
+function endShort(y){ return String((y + 1) % 100).padStart(2,'0'); }
+function mkLabel(y){ return `${y}-${endShort(y)}`; }
+function setCAYLabels(startYear){
+  const id = s=>document.getElementById(s);
+  const y = Number(startYear||0);
+  const v1 = y? mkLabel(y-1):'—';
+  const v2 = y? mkLabel(y-2):'—';
+  const v3 = y? mkLabel(y-3):'—';
+  if(id('lbl_caym1')) id('lbl_caym1').textContent=v1;
+  if(id('lbl_caym2')) id('lbl_caym2').textContent=v2;
+  if(id('lbl_caym3')) id('lbl_caym3').textContent=v3;
+  if(id('lbl_caym1_hdr')) id('lbl_caym1_hdr').textContent=v1;
+  if(id('lbl_caym2_hdr')) id('lbl_caym2_hdr').textContent=v2;
+  if(id('lbl_caym3_hdr')) id('lbl_caym3_hdr').textContent=v3;
+}
+async function loadBatches(deptId){
+  const sel = document.getElementById('batch_select');
+  if(!sel){ return; }
+  sel.innerHTML = '<option value="">Select Batch (start year)</option>';
+  setCAYLabels(null);
+  if(!deptId){ return; }
+  try{
+    const r = await fetch(`{% url 'get_batches_by_department' %}?department_id=${encodeURIComponent(deptId)}`, {credentials:'same-origin'});
+    const data = await r.json();
+    const arr = Array.isArray(data.batches)? data.batches: [];
+    arr.forEach(y=>{
+      const opt = document.createElement('option'); opt.value=y; opt.textContent=y; sel.appendChild(opt);
+    });
+    if(arr.length){ sel.value = arr[0]; setCAYLabels(arr[0]); }
+    sel.onchange = e => setCAYLabels(e.target.value);
+  }catch(e){ console.error(e); }
+}
+
+/* Toggle + fetch past */
+document.addEventListener('DOMContentLoaded', function(){
+  renumber();
+
+  const btn = document.getElementById('btn_toggle_past');
+  const panel = document.getElementById('past_panel');
+  const deptSelect = document.getElementById('department');
+
+  btn.addEventListener('click', async (e)=>{
+    e.preventDefault();
+    const open = panel.style.display === 'block';
+    if(!open){
+      panel.style.display='block';
+      btn.innerHTML = '<i class="fas fa-times me-2"></i>Hide Past';
+      const deptId = (deptSelect && deptSelect.value) ? deptSelect.value : "{{ selected_dept_id|default:'' }}";
+      if(!deptId){ renderPast({ok:true, entries:[]}); return; }
+      try{
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+        const r = await fetch(`${PAST_URL}?department_id=${encodeURIComponent(deptId)}`, {credentials:'same-origin'});
+        const data = await r.json();
+        renderPast(data);
+      }catch(err){
+        console.error(err); renderPast({ok:false});
+      }finally{
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-times me-2"></i>Hide Past';
+      }
+    }else{
+      panel.style.display='none';
+      btn.innerHTML = '<i class="fas fa-history me-2"></i>Show Past';
+    }
+  });
+
+  // Load batches for current department
+  const initialDept = (deptSelect && deptSelect.value) ? deptSelect.value : "{{ selected_dept_id|default:'' }}";
+  if(initialDept){ loadBatches(initialDept); }
+  if(deptSelect){ deptSelect.addEventListener('change', e => loadBatches(e.target.value)); }
+});
+</script>
+{% endblock %}

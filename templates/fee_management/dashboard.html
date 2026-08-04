@@ -1,0 +1,232 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fee Management Dashboard</title>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tailwind CSS -->
+          <link rel="website icon" type="png" href="{% static 'image/Edenberg.png' %}">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .dashboard-card { background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: transform 0.2s, box-shadow 0.2s; }
+        .dashboard-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .glow-indicator { width:10px; height:10px; border-radius:50%; animation:glow 1.5s infinite alternate; }
+        @keyframes glow { from{box-shadow:0 0 5px #3B82F6;} to{box-shadow:0 0 10px #3B82F6;} }
+        .filter-dropdown { background:white; border:1px solid #E5E7EB; border-radius:0.5rem; padding:0.5rem 1rem; appearance:none; background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat:no-repeat; background-position:right 0.5rem center; background-size:1em; }
+        label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+.filter-dropdown {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 0.25rem;
+    box-sizing: border-box;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800"><span class="text-blue-600">Fee</span> Analytics Dashboard</h1>
+        <div class="flex items-center space-x-4">
+            <span class="glow-indicator"></span>
+            <span class="text-gray-600">Live Data</span>
+        </div>
+    </div>
+
+  <!-- Filters -->
+<!-- Filters -->
+<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+    <div>
+        <label>Fee Type</label>
+        <select class="filter-dropdown" data-filter-key="fee_type">
+            <option value="">All Fee Types</option>
+            
+            {% for fee in fee_types %}
+            <option value="{{ fee }}"> {{ fee }}</option>
+                
+            {% endfor %}
+                
+             <option value="APP">Application Fee</option>
+            <option value="FEE">Semester Fee</option>
+            <option value="QUICK">Quick Fee</option> 
+        </select>
+    </div>
+    <div>
+        <label>Batch</label>
+        <select class="filter-dropdown" data-filter-key="batch">
+            <option value="">All Batches</option>
+        </select>
+    </div>
+    <div>
+        <label>Intake</label>
+        <select class="filter-dropdown" data-filter-key="intake">
+            <option value="">All Intake</option>
+        </select>
+    </div>
+    <div>
+        <label>Department</label>
+        <select class="filter-dropdown" data-filter-key="department_id">
+            <option value="">All Departments</option>
+        </select>
+    </div>
+    <div>
+        <label>Student</label>
+        <select class="filter-dropdown" data-filter-key="student_id">
+            <option value="">All Students</option>
+        </select>
+    </div>
+</div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+        <div class="dashboard-card">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Total Collected</p>
+                    <p id="totalCollected" class="text-3xl font-bold text-gray-800">ZMW 0.00</p>
+                </div>
+            </div>
+        </div>
+        <div class="dashboard-card">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Total Transactions</p>
+                    <p id="totalTransactions" class="text-3xl font-bold text-gray-800">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="dashboard-card">
+            <h3 class="text-lg font-semibold mb-4">Payment Trends</h3>
+            <canvas id="trendChart"></canvas>
+        </div>
+        <div class="dashboard-card">
+            <h3 class="text-lg font-semibold mb-4">Department Distribution</h3>
+            <canvas id="departmentChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="dashboard-card">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Recent Transactions</h3>
+            <!-- <button class="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-200 transition">Export CSV</button> -->
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="text-left text-gray-600 border-b">
+                        <th class="pb-3">Date</th>
+                        <th class="pb-3">Student</th>
+                        <th class="pb-3">Amount</th>
+                        <th class="pb-3">Semester</th>
+                        <th class="pb-3">Status</th>
+                        <th class="pb-3">Reciept</th>
+
+                    </tr>
+                </thead>
+                <tbody id="recentTransactionsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Full Data & Chart Update Script -->
+    <script>
+      // Initialize charts
+      const trendCtx = document.getElementById('trendChart').getContext('2d');
+      const deptCtx  = document.getElementById('departmentChart').getContext('2d');
+      const trendChart = new Chart(trendCtx, {
+        type: 'line', data: { labels: [], datasets: [{ label: 'Payments Collected', data: [], borderColor: '#3B82F6', tension: 0.4, fill: true, backgroundColor: 'rgba(59,130,246,0.05)' }] },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+      const deptChart = new Chart(deptCtx, {
+        type: 'bar', data: { labels: [], datasets: [{ label: 'Collections', data: [], backgroundColor: ['#3B82F6','#10B981','#F59E0B','#8B5CF6'] }] },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+
+      function loadDashboard() {
+        const params = new URLSearchParams();
+        document.querySelectorAll('.filter-dropdown').forEach(select => {
+          const key = select.dataset.filterKey;
+          if (select.value) params.set(key, select.value);
+        });
+        fetch(`/fee/api/fee-dashboard/?${params.toString()}`)
+      .then(r => r.json())
+      .then(data => {
+        // Update filters
+        const populate = (key, list, textKey='name') => {
+          const sel = document.querySelector(`[data-filter-key="${key}"]`);
+          const prev = sel.value;
+          sel.innerHTML = `<option value="">All</option>` +
+            list.map(item => {
+              const id   = item.Department_code ?? item.id ?? item;
+              const text = item[textKey] ?? item.Department ?? item;
+              return `<option value="${id}">${text}</option>`;
+            }).join('');
+          // restore previous if still exists
+          if (prev && Array.from(sel.options).some(o => o.value === prev)) {
+            sel.value = prev;
+          }
+        };
+        populate('batch',       data.filters.batches.map(b => ({id:b, name:b})), 'name');     
+        populate('intake',       data.filters.intake.map(b => ({id:b, name:b})), 'name');            
+        populate('department_id', data.filters.departments,             'Department');  
+        populate('student_id',   data.filters.students.map(s => ({
+                                 id: s.id,
+                                 name: `${s.first_name} ${s.surname}`
+                               })), 'name');
+
+            // Summary cards
+            document.getElementById('totalCollected').innerText = `ZMW ${data.summary.total_collected.toFixed(2)}`;
+            document.getElementById('totalTransactions').innerText = data.summary.total_transactions;
+
+            // Charts
+            trendChart.data.labels = data.trends.labels;
+            trendChart.data.datasets[0].data = data.trends.data;
+            trendChart.update();
+            deptChart.data.labels = data.dept_distribution.labels;
+            deptChart.data.datasets[0].data = data.dept_distribution.data;
+            deptChart.update();
+
+            // Recent table
+            const tbody = document.getElementById('recentTransactionsBody'); tbody.innerHTML='';
+            data.recent_transactions.forEach(tx => {
+              const tr = document.createElement('tr'); tr.className='border-b hover:bg-gray-50';
+                const receiptLink = tx.status === 'SUCCESS'
+        ? `<a href="/fee/receipt/${tx.id}/" class="text-blue-600 underline" target="_blank">Receipt</a>`
+        : '';
+              tr.innerHTML = `
+                <td class="py-3">${tx.date}</td>
+                <td>${tx.student}</td>
+                <td class="${tx.status==='SUCCESS'?'text-green-600':''}">ZMW ${tx.amount.toFixed(2)}</td>
+                <td>${tx.semester}</td>
+                <td><span class="px-2 py-1 rounded-full text-sm ${tx.status==='SUCCESS'?'bg-green-100 text-green-800':tx.status==='PENDING'?'bg-yellow-100 text-yellow-800':'bg-red-100 text-red-800'}">${tx.status}</span></td>
+                  <td>${receiptLink}</td>`;
+              tbody.appendChild(tr);
+            });
+          })
+          .catch(err => console.error('Dashboard error:', err));
+      }
+
+      document.querySelectorAll('.filter-dropdown').forEach(sel => sel.addEventListener('change', loadDashboard));
+      document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>

@@ -1,0 +1,426 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    .student-card {
+        font-family: monospace;
+        padding: 0;
+        margin-bottom: 30px;
+        background-color: white;
+        border: 1px solid #000;
+    }
+
+    .student-card .row.no-gutters {
+        display: flex;
+        align-items: stretch;
+    }
+
+    .student-card .table {
+        margin-bottom: 0;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .student-card .table:not(.student-details-table) th,
+    .student-card .table:not(.student-details-table) td {
+        border: none !important;
+        font-size: 14px;
+        padding: 6px 10px;
+    }
+
+    .student-card .table:not(.student-details-table) thead tr {
+        border-bottom: 1px solid #000;
+    }
+
+    .student-card .table:not(.student-details-table) tbody tr:last-child {
+        border-bottom: 1px solid #000;
+    }
+
+    .student-card .table:not(.student-details-table) tr td:nth-child(3),
+    .student-card .table:not(.student-details-table) tr th:nth-child(3) {
+        border-right: 1px solid #000 !important;
+    }
+
+    .student-details-table {
+        border: 1px solid #000;
+        border-collapse: collapse;
+    }
+
+    .student-details-table th,
+    .student-details-table td {
+        border: 1px solid #000;
+        font-size: 14px;
+        padding: 6px 10px;
+    }
+
+    .student-photo-container {
+        border-left: 1px solid #000;
+        display: flex;
+        padding: 0;
+    }
+
+    .student-photo-box {
+        border: 1px solid #000;
+        border-left: none;
+        border-top: none;
+        text-align: center;
+        padding: 5px;
+        font-size: 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .student-photo-box img {
+        max-height: 120px;
+        width: auto;
+        border: 1px solid #ddd;
+        margin-top: 10px;
+    }
+
+    /* Updated header with top-left logo */
+    .hall-ticket-header {
+        border-bottom: 1px solid #000;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+    }
+
+    .hall-ticket-header .logo-container {
+        flex-shrink: 0;
+        margin-right: 20px;
+    }
+
+    .hall-ticket-header .logo-container img {
+        height: 100px;
+    }
+
+    .hall-ticket-header .text-center {
+        text-align: center;
+        width: 100%;
+    }
+
+    .no-of-subjects {
+        padding: 0 15px 15px 15px;
+        margin-top: 10px;
+    }
+
+    .note-box {
+        border-top: 1px solid #000;
+        border-left: none;
+        border-right: none;
+        padding: 10px 15px;
+        font-size: 13px;
+    }
+
+    .note-box ul {
+        margin-bottom: 0;
+        padding-left: 20px;
+    }
+
+    .signature-section {
+        border: 1px solid #000;
+        border-collapse: collapse;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    .signature-section td {
+        border-right: 1px solid #000;
+        padding: 5px 10px 30px 10px;
+        text-align: center;
+        vertical-align: bottom;
+        height: 60px;
+        font-size: 13px;
+        position: relative;
+    }
+
+    .signature-section td:last-child {
+        border-right: none;
+    }
+
+    .signature-label {
+        position: absolute;
+        bottom: 5px;
+        left: 0;
+        width: 100%;
+        font-weight: bold;
+    }
+</style>
+
+<h1>Generate Hall Ticket</h1>
+
+<!-- Modal button -->
+<a href="#" id="generateHallTicket" data-toggle="modal" data-target="#hallTicketModal" class="btn btn-primary">
+    Generate Hall Ticket
+</a>
+
+<!-- Modal -->
+<div class="modal fade" id="hallTicketModal" tabindex="-1" role="dialog" aria-labelledby="hallTicketModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="hallTicketModalLabel">Generate Hall Ticket</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="hallTicketForm" method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="deptId">Select Department:</label>
+                        <select class="form-control" id="deptId" name="deptId" required>
+                            <option value="">Select Department...</option>
+                            {% for department in departments %}
+                            <option value="{{ department.id }}">{{ department.Department }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="programId">Select Program:</label>
+                        <select class="form-control" id="programId" name="programId" required>
+                            <option value="">Select a department first</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="semester">Select Semester:</label>
+                        <select class="form-control" id="semester" name="semester" required>
+                            <option value="">Select a program first</option>
+                        </select>
+                    </div>
+                    <button type="button" id="generateBtn" class="btn btn-primary">Generate</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PDF Download Button -->
+<div id="pdfDownloadContainer" style="display: none; position: absolute; top: 175px; right: 20px; z-index: 999;">
+    <button id="downloadPDF" class="btn btn-danger">Download PDF</button>
+</div>
+
+<!-- Student Section -->
+<div id="studentSection" class="mt-4" style="display: none; position: relative;">
+    <button id="cancelHallTicket" class="btn btn-sm btn-secondary" style="position: absolute; top: 0; right: 0; z-index: 1000;">
+        &times; Cancel
+    </button>
+    <h2>Student Hall Tickets</h2>
+    <div id="studentList"></div>
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Load from localStorage if available
+        function loadHallTicketsFromLocalStorage() {
+            const hallTicketHTML = localStorage.getItem("hallTicketHTML");
+            const departmentId = localStorage.getItem("departmentId");
+            const programId = localStorage.getItem("programId");
+            const semester = localStorage.getItem("semester");
+
+            if (hallTicketHTML) {
+                $('#studentList').html(hallTicketHTML);
+                $('#studentSection').show();
+                $('#pdfDownloadContainer').show();
+
+                // Restore dropdowns
+                $('#deptId').val(departmentId).trigger('change');
+                setTimeout(() => {
+                    $('#programId').val(programId).trigger('change');
+                }, 500);
+                setTimeout(() => {
+                    $('#semester').val(semester);
+                }, 1000);
+            }
+        }
+
+        loadHallTicketsFromLocalStorage();
+
+        $('#deptId').change(function () {
+            var departmentId = $(this).val();
+            $('#programId').html('<option value="">Loading...</option>');
+            $('#semester').html('<option value="">Select a program first</option>');
+            if (departmentId) {
+                $.getJSON("{% url 'get_programs' %}", { 'department_id': departmentId }, function (data) {
+                    $('#programId').html('<option value="">Select a program...</option>');
+                    $.each(data.programs, function (index, program) {
+                        $('#programId').append('<option value="' + program.id + '">' + program.program_name + '</option>');
+                    });
+                });
+            }
+        });
+
+        $('#programId').change(function () {
+            var programId = $(this).val();
+            $('#semester').html('<option value="">Loading...</option>');
+            if (programId) {
+                $.getJSON("{% url 'get_semesters' %}", { 'program_id': programId }, function (data) {
+                    $('#semester').html('<option value="">Select a semester...</option>');
+                    $.each(data.semesters, function (index, semester) {
+                        $('#semester').append('<option value="' + semester + '">' + semester + '</option>');
+                    });
+                });
+            }
+        });
+
+        $('#generateBtn').click(function () {
+            var departmentId = $('#deptId').val();
+            var programId = $('#programId').val();
+            var semester = $('#semester').val();
+            if (departmentId && programId && semester) {
+                $.getJSON("{% url 'fetch_students' %}", {
+                    'department_id': departmentId,
+                    'program_id': programId,
+                    'semester': semester
+                }, function (data) {
+                    $('#studentList').html('');
+                    if (data.students.length > 0) {
+                        $.each(data.students, function (index, student) {
+                            const courses = data.courses[student.register_number];
+                            let rows = '';
+                            for (let i = 0; i < 15; i++) {
+                                const left = courses[i] || null;
+                                const right = courses[i + 15] || null;
+                                rows += `
+                                    <tr>
+                                        <td>${left ? left.semester : '&nbsp;'}</td>
+                                        <td>${left ? left.course__course_code : '&nbsp;'}</td>
+                                        <td>${left ? left.course__title + " [" + left.date + " - " + left.session + "]" : '&nbsp;'}</td>
+                                        <td>${right ? right.semester : '&nbsp;'}</td>
+                                        <td>${right ? right.course__course_code : '&nbsp;'}</td>
+                                        <td>${right ? right.course__title + " [" + right.date + " - " + right.session + "]" : '&nbsp;'}</td>
+                                    </tr>`;
+                            }
+
+                            const studentDetails = `
+                                <div class="student-card">
+                                    <div class="row no-gutters">
+                                        <div class="col-md-10">
+                                            <div class="hall-ticket-header">
+                                                <div class="logo-container">
+                                                    <img src="{% static 'blog/images/edenberg_logo.jpeg' %}" alt="Anna University Logo">
+                                                </div>
+                                                <div class="text-center">
+                                                    <h4><strong>ANNA UNIVERSITY</strong></h4>
+                                                    <p>CHENNAI - 600 025</p>
+                                                    <p>UNIVERSITY EXAMINATIONS - November / December 2023</p>
+                                                    <h5><strong>HALL TICKET</strong></h5>
+                                                </div>
+                                            </div>
+                                            <table class="table student-details-table">
+                                                <tbody>
+                                                    <tr>
+                                                        <th>Register Number</th>
+                                                        <td>${student.register_number}</td>
+                                                        <th>Current Semester</th>
+                                                        <td>${student.current_semester}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Name</th>
+                                                        <td>${student.name}</td>
+                                                        <th>D.O.B</th>
+                                                        <td>${student.date_of_birth}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Degree & Branch</th>
+                                                        <td colspan="3">${student.degree_branch}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Examination Centre</th>
+                                                        <td colspan="3">${student.exam_center || "Chennai"}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-2 student-photo-container">
+                                            <div class="student-photo-box">
+                                                <p>Photo of the<br>Candidate</p>
+                                                <img src="${student.photo_url || '/static/default-photo.jpg'}" alt="Photo">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Sem</th>
+                                                <th>Sub Code</th>
+                                                <th>Subject Title [Date - Session]</th>
+                                                <th>Sem</th>
+                                                <th>Sub Code</th>
+                                                <th>Subject Title [Date - Session]</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>${rows}</tbody>
+                                    </table>
+                                    <p class="no-of-subjects"><strong>No of Subjects Registered: ${courses.length}</strong></p>
+                                    <div class="note-box">
+                                        <strong>Note:</strong>
+                                        <ul>
+                                            <li>Students must carry a valid ID card along with this hall ticket.</li>
+                                            <li>Electronic devices are strictly prohibited inside the exam hall.</li>
+                                            <li>Report at least 30 minutes before the start of the exam.</li>
+                                        </ul>
+                                    </div>
+                                    <table class="signature-section">
+                                        <tr>
+                                            <td><div class="signature-label">Signature of the Candidate</div></td>
+                                            <td><div class="signature-label">Signature of the Principal<br>with Seal</div></td>
+                                            <td><div class="signature-label">Controller of<br>Examinations</div></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            `;
+                            $('#studentList').append(studentDetails);
+                        });
+                        $('#studentSection').show();
+                        $('#pdfDownloadContainer').show();
+
+                        // Save to localStorage
+                        localStorage.setItem("hallTicketHTML", $('#studentList').html());
+                        localStorage.setItem("departmentId", departmentId);
+                        localStorage.setItem("programId", programId);
+                        localStorage.setItem("semester", semester);
+                    } else {
+                        $('#studentList').html('<p>No students found.</p>');
+                        $('#studentSection').show();
+                    }
+                });
+                $('#hallTicketModal').modal('hide');
+            } else {
+                alert("Please select all fields before generating the hall ticket.");
+            }
+        });
+
+        // Cancel button
+        $('#cancelHallTicket').click(function () {
+            $('#studentSection').hide();
+            $('#studentList').empty();
+            $('#pdfDownloadContainer').hide();
+            localStorage.removeItem("hallTicketHTML");
+            localStorage.removeItem("departmentId");
+            localStorage.removeItem("programId");
+            localStorage.removeItem("semester");
+        });
+
+        // PDF Download
+        $('#downloadPDF').click(function () {
+            const departmentId = $('#deptId').val();
+            const programId = $('#programId').val();
+            const semester = $('#semester').val();
+
+            if (departmentId && programId && semester) {
+                const url = `{% url 'download_hall_ticket_pdf' %}?department_id=${departmentId}&program_id=${programId}&semester=${semester}`;
+                window.open(url, '_blank');
+            } else {
+                alert("Please select Department, Program, and Semester.");
+            }
+        });
+    });
+</script>
+
+{% endblock %}

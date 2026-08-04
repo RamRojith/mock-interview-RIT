@@ -1,0 +1,880 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+:root {
+    --primary: #4361ee;
+    --primary-light: #4895ef;
+    --secondary: #3f37c9;
+    --success: #4cc9f0;
+    --warning: #f72585;
+    --danger: #e63946;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --gray: #6c757d;
+    --gray-light: #e9ecef;
+    --border-radius: 16px;
+    --box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: var(--border-radius);
+    padding: 40px;
+    margin-bottom: 40px;
+    box-shadow: var(--box-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.page-header-content {
+    position: relative;
+    z-index: 2;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.page-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.publication-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: white;
+    padding: 25px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+    transition: var(--transition);
+    border: 1px solid var(--gray-light);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 12px;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--primary);
+    display: block;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--gray);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.publication-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.publication-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    overflow: hidden;
+    border: 1px solid var(--gray-light);
+    position: relative;
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+.publication-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.publication-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+
+.card-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 2;
+}
+
+.badge-published {
+    background: #d1edff;
+    color: #0c5460;
+}
+
+.badge-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-accepted {
+    background: #d4edda;
+    color: #155724;
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    color: white;
+    padding: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-header::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    background: white;
+    border-radius: 50% 50% 0 0;
+    transform: scale(1.2);
+}
+
+.publication-icon {
+    width: 70px;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.card-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.4;
+    position: relative;
+    z-index: 1;
+}
+
+.card-body {
+    padding: 40px 25px 25px;
+}
+
+.detail-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 16px;
+    background: var(--light);
+    border-radius: 12px;
+    transition: var(--transition);
+    border: 1px solid transparent;
+}
+
+.detail-item:hover {
+    background: white;
+    border-color: var(--primary-light);
+    transform: translateX(5px);
+}
+
+.detail-icon {
+    color: var(--primary);
+    font-size: 18px;
+    margin-top: 2px;
+    min-width: 24px;
+    text-align: center;
+}
+
+.detail-content {
+    flex: 1;
+}
+
+.detail-label {
+    font-weight: 700;
+    color: var(--dark);
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-value {
+    color: var(--gray);
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.authors-list {
+    font-style: italic;
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.presentation-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.presentation-yes {
+    background: linear-gradient(135deg, #1dd1a1, #10ac84);
+    color: white;
+}
+
+.presentation-no {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    color: white;
+}
+
+.status-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--gray-light);
+    color: var(--gray);
+}
+
+.card-footer {
+    padding: 0 25px 25px;
+    display: flex;
+    gap: 12px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    flex: 1;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-edit {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+}
+
+.btn-edit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(67, 97, 238, 0.4);
+    color: white;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    grid-column: 1 / -1;
+}
+
+.empty-icon {
+    font-size: 5rem;
+    color: var(--gray-light);
+    margin-bottom: 30px;
+    opacity: 0.7;
+}
+
+.empty-state h3 {
+    color: var(--dark);
+    margin-bottom: 16px;
+    font-size: 1.8rem;
+}
+
+.empty-state p {
+    color: var(--gray);
+    margin-bottom: 0;
+    font-size: 1.1rem;
+}
+
+/* Modal Styles */
+.modal-content {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border-radius: 0;
+    padding: 25px 30px;
+    border: none;
+    position: relative;
+}
+
+.modal-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.modal-title {
+    font-weight: 700;
+    font-size: 1.4rem;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-label {
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 10px;
+    display: block;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-control {
+    border: 2px solid var(--gray-light);
+    border-radius: 10px;
+    padding: 14px 18px;
+    transition: var(--transition);
+    width: 100%;
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+    outline: none;
+    transform: translateY(-2px);
+}
+
+.form-select {
+    border: 2px solid var(--gray-light);
+    border-radius: 10px;
+    padding: 14px 18px;
+    transition: var(--transition);
+    width: 100%;
+    font-size: 1rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 18px center;
+    background-size: 16px;
+}
+
+.form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+    outline: none;
+    transform: translateY(-2px);
+}
+
+.status-display-field {
+    background: var(--light);
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 2px solid var(--gray-light);
+    font-weight: 600;
+    color: var(--gray);
+}
+
+.modal-footer {
+    border: none;
+    padding: 25px 30px;
+    gap: 15px;
+    background: var(--light);
+}
+
+.btn-secondary {
+    background: var(--gray);
+    color: white;
+    flex: 1;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    color: white;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    flex: 2;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, var(--secondary), var(--primary));
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .publication-grid {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .publication-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+    
+    .page-header {
+        padding: 30px 25px;
+        margin-bottom: 30px;
+    }
+    
+    .page-header h1 {
+        font-size: 2rem;
+    }
+    
+    .publication-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .card-footer {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .modal-body {
+        padding: 25px 20px;
+    }
+    
+    .modal-footer {
+        padding: 20px;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding: 0 20px;
+    }
+    
+    .page-header {
+        padding: 25px 20px;
+        text-align: center;
+    }
+    
+    .page-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .publication-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .card-body {
+        padding: 35px 20px 20px;
+    }
+    
+    .modal-body {
+        padding: 20px 15px;
+    }
+}
+.back-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+    margin-bottom: 30px;
+    box-shadow: var(--box-shadow);
+}
+
+.back-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(67, 97, 238, 0.3);
+    color: white;
+    text-decoration: none;
+}
+</style>
+
+<div class="container mt-4">
+    <!-- Back Button -->
+    <a href="{% url 'profile' %}" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Back to Dashboard
+    </a>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-content">
+            <h1>Your Publications</h1>
+            <p class="page-subtitle">Manage and track your academic publications and research work</p>
+
+            <!-- ✅ StudentDetails Academic Strip -->
+            <p class="page-subtitle" style="margin-top:10px;">
+                <strong>Reg No:</strong> {{ student.reg_no|default:"-" }} |
+                <strong>Dept:</strong> {{ department|default:"-" }} |
+                <strong>Year:</strong> {{ year|default:"-" }} |
+                <strong>Sem:</strong> {{ semester|default:"-" }} |
+                <strong>Batch:</strong> {{ batch|default:"-" }} |
+                <strong>Sec:</strong> {{ section|default:"-" }}
+            </p>
+        </div>
+    </div>
+
+    {% if publications %}
+        <div class="publication-grid">
+            {% for pub in publications %}
+                <div class="publication-card">
+
+                    <!-- ✅ Verification badge (model has is_verified) -->
+                    <div class="card-badge {% if pub.is_verified %}badge-published{% else %}badge-pending{% endif %}">
+                        {% if pub.is_verified %}Verified{% else %}Pending{% endif %}
+                    </div>
+
+                    <div class="card-header">
+                        <div class="publication-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <h3 class="card-title">{{ pub.title }}</h3>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="detail-grid">
+
+                            <div class="detail-item">
+                                <div class="detail-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Authors</div>
+                                    <div class="detail-value authors-list">{{ pub.authors }}</div>
+                                </div>
+                            </div>
+
+                            <div class="detail-item">
+                                <div class="detail-icon">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Program</div>
+                                    <div class="detail-value">{{ pub.program_name }}</div>
+                                </div>
+                            </div>
+
+                            <div class="detail-item">
+                                <div class="detail-icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Publication Date</div>
+                                    <div class="detail-value">{{ pub.publication_date }}</div>
+                                </div>
+                            </div>
+
+                            {% if pub.volume %}
+                            <div class="detail-item">
+                                <div class="detail-icon">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Volume</div>
+                                    <div class="detail-value">{{ pub.volume }}</div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="detail-item">
+                                <div class="detail-icon">
+                                    <i class="fas fa-microphone"></i>
+                                </div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Presented</div>
+                                    <div class="detail-value">
+                                        <span class="presentation-badge {% if pub.presented == 'Presented' %}presentation-yes{% else %}presentation-no{% endif %}">
+                                            <i class="fas fa-{% if pub.presented == 'Presented' %}check{% else %}times{% endif %}"></i>
+                                            {{ pub.get_presented_display|default:pub.presented }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ✅ Academic info (from StudentDetails, but show synced model values if present) -->
+                            <div class="detail-item">
+                                <div class="detail-icon">
+                                    <i class="fas fa-university"></i>
+                                </div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Academic Info</div>
+                                    <div class="detail-value">
+                                        Year: {{ year }}<br>
+                                        Semester: {{ semester }}<br>
+                                        Batch: {{ batch }}<br>
+                                        Section: {{ section }}
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <button class="btn btn-edit" data-bs-toggle="modal" data-bs-target="#editModal{{ pub.id }}">
+                            <i class="fas fa-edit"></i>
+                            Edit Publication
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Edit Modal -->
+                <div class="modal fade" id="editModal{{ pub.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="pub_id" value="{{ pub.id }}">
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-edit"></i>
+                                        Edit Publication
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label">Authors</label>
+                                                <input type="text" class="form-control" name="authors" value="{{ pub.authors|default:'' }}" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label">Program Name</label>
+                                                <input type="text" class="form-control" name="program_name" value="{{ pub.program_name|default:'' }}" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Publication Title</label>
+                                        <input type="text" class="form-control" name="title" value="{{ pub.title|default:'' }}" required>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label">Publication Date</label>
+                                                <input type="date" class="form-control" name="publication_date" value="{{ pub.publication_date|date:'Y-m-d' }}" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label">Volume</label>
+                                                <input type="text" class="form-control" name="volume" value="{{ pub.volume|default:'' }}" placeholder="Optional">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label">Presented</label>
+                                                <select class="form-select" name="presented" required>
+                                                    {% for val, label in PRESENTATION_CHOICES %}
+                                                        <option value="{{ val }}" {% if pub.presented == val %}selected{% endif %}>{{ label }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label">Verification</label>
+                                                <div class="status-display-field">
+                                                    <i class="fas fa-lock me-2"></i>
+                                                    {% if pub.is_verified %}Verified{% else %}Pending{% endif %}
+                                                </div>
+                                                <small class="text-muted">Verification cannot be edited</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ✅ StudentDetails academic info readonly -->
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label class="form-label">Year</label>
+                                                <input type="text" class="form-control" value="{{ year }}" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label class="form-label">Semester</label>
+                                                <input type="text" class="form-control" value="{{ semester }}" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label class="form-label">Batch</label>
+                                                <input type="text" class="form-control" value="{{ batch }}" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label class="form-label">Section</label>
+                                                <input type="text" class="form-control" value="{{ section }}" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="fas fa-times"></i>
+                                        Close
+                                    </button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save"></i>
+                                        Save Changes
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <h3>No Publications Found</h3>
+            <p>Start adding your publications to showcase your research work</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.publication-card');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.classList.add('visible');
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    cards.forEach(card => observer.observe(card));
+});
+</script>
+{% endblock content %}

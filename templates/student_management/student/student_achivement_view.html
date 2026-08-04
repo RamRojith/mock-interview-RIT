@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container">
+
+    <a href="{% url 'profile' %}" class="btn btn-secondary mb-4">
+        ← Back to Dashboard
+    </a>
+
+    <h2 class="mb-4">Your Achievements</h2>
+
+    {% if achievements %}
+        <div class="row">
+            {% for ach in achievements %}
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+
+                    <!-- Status -->
+                    <span class="badge {% if ach.is_verified %}bg-success{% else %}bg-warning{% endif %} position-absolute m-2">
+                        {% if ach.is_verified %}Approved{% else %}Pending{% endif %}
+                    </span>
+
+                    <div class="card-body">
+                        <h5 class="card-title">{{ ach.award_name }}</h5>
+
+                        <p><strong>Contest:</strong> {{ ach.contest }}</p>
+                        <p><strong>Organization:</strong> {{ ach.given_by }}</p>
+                        <p><strong>Date:</strong> {{ ach.date|date:"d M Y" }}</p>
+
+                        {% if ach.certificate %}
+                            <a href="{{ ach.certificate.url }}" target="_blank" class="btn btn-primary btn-sm">
+                                View Certificate
+                            </a>
+                        {% else %}
+                            <button class="btn btn-secondary btn-sm" disabled>No Certificate</button>
+                        {% endif %}
+
+                        <button class="btn btn-warning btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editModal{{ ach.id }}">
+                            Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Modal -->
+            <div class="modal fade" id="editModal{{ ach.id }}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" name="achievement_id" value="{{ ach.id }}">
+
+                            <div class="modal-header">
+                                <h5 class="modal-title">Edit Achievement</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Award Name</label>
+                                    <input type="text" name="award_name" value="{{ ach.award_name }}" class="form-control" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Contest</label>
+                                    <input type="text" name="contest" value="{{ ach.contest }}" class="form-control" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Organization</label>
+                                    <input type="text" name="given_by" value="{{ ach.given_by }}" class="form-control" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Date</label>
+                                    <input type="date" name="date" value="{{ ach.date|date:'Y-m-d' }}" class="form-control">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Certificate</label>
+                                    <input type="file" name="certificate" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button class="btn btn-success" type="submit">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            No achievements added yet.
+        </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

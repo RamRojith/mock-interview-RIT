@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+ 
+{% block content %}
+<div class="container">
+    <h2 class="text-center my-4">Student Mark Dashboard</h2>
+
+    <!-- Semester Selection -->
+    <div class="row">
+        {% for sem in semesters %}
+        <div class="col-md-3 mb-3">
+            <div class="card semester-card text-center" onclick="fetchMarks({{ sem }})">
+                <div class="card-body">
+                    <h5 class="card-title">Semester {{ sem }}</h5>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Student Marks Table -->
+    <div class="table-responsive mt-4">
+        <table class="table table-bordered" id="marksTable">
+            <thead class="table-dark">
+                <tr>
+                    <th>Student Name</th>
+                    <th>Reg No</th>
+                    <th>Course</th>
+                    <th>Assignment 1</th>
+                    <th>Assignment 2</th>
+                    <th>IAT 1</th>
+                    <th>End Semester</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>       
+    </div>
+
+    <!-- PDF Generation Button -->
+    <div class="text-center mt-4">
+        <button id="generatePDF" class="btn btn-danger" disabled>
+            <i class="fas fa-file-pdf"></i> Download PDF Report
+        </button>
+    </div>
+</div>
+
+<!-- jQuery for AJAX -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    var selectedSemester = null;
+
+    // Set the selected semester when a semester card is clicked
+    $(".semester-card").click(function() {
+        selectedSemester = $(this).find('.card-title').text().replace('Semester ', '');
+        fetchMarks(selectedSemester);
+        $('#generatePDF').prop('disabled', false);
+    });
+
+    // PDF generation
+    $('#generatePDF').click(function() {
+        if (selectedSemester) {
+            // Create a form to submit
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/course/course_details/generate_pdf/' + selectedSemester + '/';
+            
+            // Add CSRF token
+            var csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+});
+
+function fetchMarks(semester) {
+    console.log("Selected Semester:", semester);
+
+    $.ajax({
+        url: "{% url 'fetch_student_marks' %}", 
+        type: "GET",
+        data: { semester: semester }, 
+        success: function(response) {
+            console.log("Response Data:", response.data);
+            
+            var tableBody = $("#marksTable tbody");
+            tableBody.empty();
+
+            let studentData = {};
+
+            if (response.data.length > 0) {
+                response.data.forEach(function(mark) {
+                    let key = mark.student_reg_no + "_" + mark.course_name;
+
+                    if (!studentData[key]) {
+                        studentData[key] = {
+                            student_name: mark.student_name,
+                            student_reg_no: mark.student_reg_no,
+                            course_name: mark.course_name,
+                            Assignment1: "-",
+                            Assignment2: "-",
+                            IAT1: "-",
+                            EndSemester: "-"
+                        };
+                    }
+
+                    let assessmentType = mark.assessment.trim().toLowerCase().replaceAll(" ", "").replace("_", "");
+
+                    if (assessmentType === "assignment1") {
+                        studentData[key].Assignment1 = mark.mark || "-";
+                    } else if (assessmentType === "assignment2") {
+                        studentData[key].Assignment2 = mark.mark || "-";
+                    } else if (assessmentType === "internalassesment1") {
+                        studentData[key].IAT1 = mark.mark || "-";
+                    } else if (assessmentType === "endsemester") {
+                        studentData[key].EndSemester = mark.mark || "-";
+                    }
+
+                });
+
+                Object.values(studentData).forEach(function(mark) {
+                    var row = `<tr>
+                        <td>${mark.student_name}</td>
+                        <td>${mark.student_reg_no}</td>
+                        <td>${mark.course_name}</td>
+                        <td>${mark.Assignment1}</td>
+                        <td>${mark.Assignment2}</td>
+                        <td>${mark.IAT1}</td>
+                        <td>${mark.EndSemester}</td>
+                    </tr>`;
+                    tableBody.append(row);
+                });
+
+            } else {
+                tableBody.append('<tr><td colspan="7" class="text-center">No marks available</td></tr>');
+            }
+        },
+        error: function(error) {
+            console.log("Error fetching marks:", error);
+        }
+    });
+    <!-- In your template's JavaScript section -->
+$('#generatePDF').click(function() {
+    if (selectedSemester) {
+        // Create a form to submit
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{% url 'generate_pdf' semester=0 %}".replace('0', selectedSemester);
+        
+        // Add CSRF token
+        var csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = '{{ csrf_token }}';
+        form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+});
+}
+</script>
+
+<style>
+.semester-card {
+    background: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 20px;
+    transition: transform 0.2s;
+}
+.semester-card:hover {
+    transform: scale(1.05);
+}
+#generatePDF {
+    padding: 10px 20px;
+    font-size: 16px;
+}
+#generatePDF i {
+    margin-right: 8px;
+}
+</style>
+{% endblock %}

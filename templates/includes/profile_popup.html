@@ -1,0 +1,62 @@
+{% load static %}
+{% load user_tags %}
+
+<div class="profile-popup" id="profilePopup">
+         <div class="text-center">
+            <img 
+               src="{% if request.user.profile_img %}{{ request.user.profile_img.url }}{% else %}{% static 'images/profile.jpg' %}{% endif %}" 
+               onerror="this.onerror=null; this.src='{% static 'images/profile.jpg' %}';"
+               alt="Profile Image"
+               class="profile-popup-img">
+            <h5 class="profile-popup-name">{{ request.user.username }}</h5>
+            <p class="profile-popup-role">{{ request.user.role.role }}</p>
+            <p class="profile-popup-role">{{ request.user.Employee_id }}</p>
+            <p class="text-muted small mb-3">{{ request.user.Department.Department }}</p>
+            <div class="profile-popup-actions">
+               {% user_data_count request.user.Employee_id as udata %}
+               {% if udata > 1 %}
+               <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#switchUserModal">Switch User</button>
+               {% endif %} 
+               <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                  Change Password
+               </button>
+               <a href="{% url 'logout' %}" class="btn btn-outline-danger">Logout</a>
+            </div>
+         </div>
+      </div>
+
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+   <div class="modal-dialog modal-dialog-centered">
+      <form method="post" action="{% url 'change_logged_in_password' %}" class="modal-content border-0 shadow">
+         {% csrf_token %}
+         <input type="hidden" name="next" value="{{ request.get_full_path }}">
+         <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="changePasswordModalLabel">
+               <i class="fas fa-key me-2"></i>Change Password
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+         </div>
+         <div class="modal-body">
+            <div class="mb-3">
+               <label for="current_password" class="form-label fw-bold">Current Password</label>
+               <input type="password" class="form-control" id="current_password" name="current_password" required autocomplete="current-password">
+            </div>
+            <div class="mb-3">
+               <label for="new_password" class="form-label fw-bold">New Password</label>
+               <input type="password" class="form-control" id="new_password" name="new_password" required minlength="8" autocomplete="new-password">
+               <div class="form-text">Minimum 8 characters. Do not use 123.</div>
+            </div>
+            <div class="mb-0">
+               <label for="confirm_password" class="form-label fw-bold">Confirm New Password</label>
+               <input type="password" class="form-control" id="confirm_password" name="confirm_password" required minlength="8" autocomplete="new-password">
+            </div>
+         </div>
+         <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+               <i class="fas fa-save me-1"></i> Update Password
+            </button>
+         </div>
+      </form>
+   </div>
+</div>

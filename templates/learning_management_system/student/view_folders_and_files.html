@@ -1,0 +1,1743 @@
+{# learning_management_system/student/view_folders_and_files.html #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Fonts + Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+
+<style>
+/* ===== CSS Variables ===== */
+:root {
+  --primary-blue: #1a4b8c;
+  --primary-blue-light: #2c5aa0;
+  --primary-blue-dark: #0d3a6c;
+  --blue-light: #f0f9ff;
+  --blue-light-2: #e0f2fe;
+  --blue-border: #bae6fd;
+  --white: #ffffff;
+  --off-white: #f8fafc;
+  --gray-light: #f1f5f9;
+  --gray-border: #e2e8f0;
+  --gray-medium: #cbd5e1;
+  --gray-text: #64748b;
+  --dark-text: #1e293b;
+  --black: #000000;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
+  --shadow-blue: 0 4px 20px rgba(26, 75, 140, 0.15);
+  --shadow-blue-hover: 0 8px 40px rgba(26, 75, 140, 0.25);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Global Styles ===== */
+.cva-wrap {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, var(--off-white) 0%, var(--gray-light) 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  color: var(--dark-text);
+}
+
+/* ===== HERO Section ===== */
+.cva-hero {
+  max-width: 1400px;
+  margin: 0 auto 2.5rem auto;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  color: var(--white);
+  box-shadow: var(--shadow-blue-hover);
+}
+
+.cva-hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.cva-title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.cva-title i {
+  font-size: 1.8rem;
+}
+
+.cva-badge {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  padding: 0.5rem 1.25rem;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.cva-sub {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+/* ===== Controls ===== */
+.cva-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.cva-search {
+  flex: 1;
+  min-width: 250px;
+  position: relative;
+}
+
+.cva-search i {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--white);
+  opacity: 0.8;
+}
+
+.cva-search input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 3rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--white);
+  font-size: 0.95rem;
+  transition: var(--transition);
+}
+
+.cva-search input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.25);
+  border-color: var(--white);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+.cva-search input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cva-select {
+  position: relative;
+  min-width: 200px;
+}
+
+.cva-select i {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--white);
+  opacity: 0.8;
+  z-index: 1;
+}
+
+.cva-select select {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 3rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--white);
+  font-size: 0.95rem;
+  cursor: pointer;
+  appearance: none;
+  transition: var(--transition);
+}
+
+.cva-select select:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.25);
+  border-color: var(--white);
+}
+
+.cva-select select option {
+  background: var(--primary-blue);
+  color: var(--white);
+}
+
+/* ===== Buttons ===== */
+.cva-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.cva-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: var(--transition);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cva-btn-primary {
+  background: var(--white);
+  color: var(--primary-blue);
+  border: 2px solid transparent;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.cva-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  background: var(--off-white);
+}
+
+.cva-btn-ghost {
+  background: transparent;
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.cva-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--white);
+}
+
+/* ===== Board ===== */
+.cva-board {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ===== Folder Card ===== */
+.cva-folder {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: var(--transition);
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cva-folder:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--blue-border);
+}
+
+/* Folder Head */
+.cva-folder-head {
+  background: linear-gradient(135deg, var(--blue-light) 0%, var(--blue-light-2) 100%);
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  border-bottom: 1px solid var(--blue-border);
+  transition: var(--transition);
+}
+
+.cva-folder-head:hover {
+  background: linear-gradient(135deg, var(--blue-light-2) 0%, #dbeafe 100%);
+}
+
+.cva-folder-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.cva-folder-ic {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  background: var(--primary-blue);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.cva-folder-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.cva-folder-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--primary-blue-dark);
+  margin: 0 0 0.5rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cva-folder-stats {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.cva-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.875rem;
+  background: rgba(26, 75, 140, 0.1);
+  border: 1px solid rgba(26, 75, 140, 0.2);
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-blue);
+}
+
+.cva-folder-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cva-toggle {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-xs);
+  background: var(--white);
+  border: 1px solid var(--gray-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-blue);
+  transition: var(--transition);
+}
+
+.cva-folder.active .cva-toggle i {
+  transform: rotate(180deg);
+}
+
+/* Folder Body */
+.cva-folder-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cva-folder-inner {
+  padding: 1.5rem;
+}
+
+/* Tabs */
+.cva-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--gray-border);
+}
+
+.cva-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--off-white);
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gray-text);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cva-tab:hover {
+  background: var(--gray-light);
+  color: var(--dark-text);
+}
+
+.cva-tab.active {
+  background: var(--primary-blue);
+  color: var(--white);
+  border-color: var(--primary-blue);
+}
+
+/* Items Grid */
+.cva-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.cva-item {
+  background: var(--off-white);
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  transition: var(--transition);
+}
+
+.cva-item:hover {
+  background: var(--white);
+  border-color: var(--blue-border);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.cva-item-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.cva-item-ic {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: rgba(26, 75, 140, 0.1);
+  color: var(--primary-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.cva-video .cva-item-ic {
+  background: rgba(0, 0, 0, 0.1);
+  color: var(--black);
+}
+
+.cva-item-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--dark-text);
+  margin: 0 0 0.25rem 0;
+}
+
+.cva-item-desc {
+  font-size: 0.9rem;
+  color: var(--gray-text);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Item Meta */
+.cva-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--gray-border);
+}
+
+.cva-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.85rem;
+  color: var(--gray-text);
+  white-space: nowrap;
+}
+
+.cva-mini i {
+  opacity: 0.7;
+}
+
+/* Item Actions */
+.cva-item-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.cva-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--dark-text);
+  text-decoration: none;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.cva-pill:hover {
+  background: var(--gray-light);
+  transform: translateY(-1px);
+}
+
+.cva-pill-primary {
+  background: var(--primary-blue);
+  color: var(--white);
+  border-color: var(--primary-blue);
+}
+
+.cva-pill-primary:hover {
+  background: var(--primary-blue-dark);
+  border-color: var(--primary-blue-dark);
+}
+
+/* ===== Empty States ===== */
+.cva-empty {
+  max-width: 1400px;
+  margin: 0 auto;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 4rem 2rem;
+  text-align: center;
+  border: 1px solid var(--gray-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.cva-empty i {
+  font-size: 3.5rem;
+  color: var(--primary-blue);
+  margin-bottom: 1.5rem;
+  opacity: 0.8;
+}
+
+.cva-empty h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--dark-text);
+  margin: 0 0 1rem 0;
+}
+
+.cva-empty p {
+  color: var(--gray-text);
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* ===== Modal ===== */
+.cva-modal-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  backdrop-filter: blur(5px);
+}
+
+.cva-modal {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  width: 100%;
+  max-width: 1000px;
+  max-height: 90vh;
+  position: relative;
+  box-shadow: var(--shadow-lg);
+}
+
+.cva-modal iframe {
+  width: 100%;
+  height: 70vh;
+  border: none;
+}
+
+.cva-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--transition);
+  z-index: 1001;
+}
+
+.cva-close:hover {
+  background: var(--black);
+}
+
+/* ===== Muted Note ===== */
+.cva-muted-note {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-style: italic;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+  .cva-wrap {
+    padding: 1rem;
+  }
+  
+  .cva-hero {
+    padding: 1.5rem;
+  }
+  
+  .cva-title {
+    font-size: 1.75rem;
+  }
+  
+  .cva-hero-top {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .cva-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .cva-search,
+  .cva-select {
+    min-width: 100%;
+  }
+  
+  .cva-actions {
+    justify-content: center;
+  }
+  
+  .cva-folder-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .cva-folder-right {
+    justify-content: flex-end;
+  }
+  
+  .cva-item-actions {
+    flex-direction: column;
+  }
+  
+  .cva-pill {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .cva-title {
+    font-size: 1.5rem;
+  }
+  
+  .cva-folder-meta {
+    overflow: hidden;
+  }
+  
+  .cva-folder-stats {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .cva-tabs {
+    flex-direction: column;
+  }
+  
+  .cva-tab {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Animation delays for cards */
+.cva-folder:nth-child(1) { animation-delay: 0.1s; }
+.cva-folder:nth-child(2) { animation-delay: 0.2s; }
+.cva-folder:nth-child(3) { animation-delay: 0.3s; }
+.cva-folder:nth-child(4) { animation-delay: 0.4s; }
+.cva-folder:nth-child(5) { animation-delay: 0.5s; }
+.cva-folder:nth-child(6) { animation-delay: 0.6s; }
+</style>
+
+<div class="cva-wrap">
+
+  <!-- HERO -->
+  <div class="cva-hero">
+    <div class="cva-hero-top">
+      <div>
+        <h1 class="cva-title">
+          <i class="fa-solid fa-layer-group"></i>
+          Course Materials
+          <span class="cva-badge">{{ course.course_code }}{% if course.title %} · {{ course.title }}{% endif %}</span>
+        </h1>
+        <p class="cva-sub">
+          Year: {{ course.year|default:"—" }} · Semester: {{ course.semester|default:"—" }} · Batch: {{ batch|default:"—" }}
+        </p>
+      </div>
+
+      <div class="cva-actions">
+        <button class="cva-btn cva-btn-ghost" type="button" onclick="openAiChatModal()">
+          <i class="fa-solid fa-robot"></i> Chat with AI
+        </button>
+        <button class="cva-btn cva-btn-ghost" type="button" onclick="cvaExpandAll(true)">
+          <i class="fa-solid fa-up-right-and-down-left-from-center"></i> Expand All
+        </button>
+        <button class="cva-btn cva-btn-ghost" type="button" onclick="cvaExpandAll(false)">
+          <i class="fa-solid fa-compress"></i> Collapse
+        </button>
+      </div>
+    </div>
+
+    <div class="cva-controls">
+      <div class="cva-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="cvaSearch" type="text" placeholder="Search folders, files, videos..." autocomplete="off">
+      </div>
+
+      <div class="cva-select">
+        <i class="fa-solid fa-filter"></i>
+        <select id="cvaTypeFilter">
+          <option value="all">All items</option>
+          <option value="docs">Documents only</option>
+          <option value="videos">Videos only</option>
+        </select>
+      </div>
+
+      <div class="cva-actions" style="justify-content:flex-start;">
+        <button class="cva-btn cva-btn-primary" type="button" onclick="cvaClearFilters()">
+          <i class="fa-solid fa-broom"></i> Clear
+        </button>
+      </div>
+    </div>
+
+    <div class="cva-muted-note" style="margin-top:10px;">
+      Tip: Click a folder header to open it. Use search to auto-open matching folders.
+    </div>
+  </div>
+
+  {% if folders %}
+    <div class="cva-board" id="cvaBoard">
+
+      {% for folder in folders %}
+        <div class="cva-folder"
+             data-folder="{{ folder.folder_name|default:'Folder'|lower }}"
+             data-doc-count="{{ folder.lms_documents.all|length }}"
+             data-video-count="{{ folder.lms_videos.all|length }}">
+          <!-- Folder Head -->
+          <div class="cva-folder-head" onclick="cvaToggleFolder(this)">
+            <div class="cva-folder-left">
+              <div class="cva-folder-ic">
+                <i class="fa-solid fa-folder"></i>
+              </div>
+
+              <div class="cva-folder-meta">
+                <p class="cva-folder-name">
+                  {{ folder.folder_name|default:"Folder" }}
+                </p>
+
+                <div class="cva-folder-stats">
+                  <span class="cva-chip">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span class="cva-doc-count">{{ folder.lms_documents.all|length }}</span> Docs
+                  </span>
+                  <span class="cva-chip">
+                    <i class="fa-solid fa-video"></i>
+                    <span class="cva-video-count">{{ folder.lms_videos.all|length }}</span> Videos
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cva-folder-right">
+              <div class="cva-toggle">
+                <i class="fa-solid fa-chevron-down"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Folder Body -->
+          <div class="cva-folder-body">
+            <div class="cva-folder-inner">
+
+              <div class="cva-tabs">
+                <div class="cva-tab active" data-tab="all" onclick="cvaSwitchTab(event, this)">
+                  <i class="fa-solid fa-layer-group"></i> All
+                </div>
+                <div class="cva-tab" data-tab="docs" onclick="cvaSwitchTab(event, this)">
+                  <i class="fa-solid fa-file-lines"></i> Documents
+                </div>
+                <div class="cva-tab" data-tab="videos" onclick="cvaSwitchTab(event, this)">
+                  <i class="fa-solid fa-video"></i> Videos
+                </div>
+              </div>
+
+              <div class="cva-items">
+
+                {# ------------------- DOCUMENTS ------------------- #}
+                {% for document in folder.lms_documents.all %}
+                  <div class="cva-item cva-doc"
+                       data-type="docs"
+                       data-title="{{ document.document_title|default:'Untitled'|lower }}"
+                       data-folder="{{ folder.folder_name|default:'Folder'|lower }}">
+                    <div class="cva-item-top">
+                      <div class="cva-item-ic">
+                        <i class="fa-solid fa-file-lines"></i>
+                      </div>
+                      <div style="min-width:0;">
+                        <p class="cva-item-title">{{ document.document_title|default:"Untitled" }}</p>
+                        {% if document.description %}
+                          <p class="cva-item-desc">{{ document.description }}</p>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <div class="cva-item-meta">
+                      <span class="cva-mini">
+                        <i class="fa-solid fa-user"></i>
+                        {{ document.uploaded_by.name|default:document.uploaded_by }}
+                        {% if document.uploaded_by %} · {{ document.uploaded_by.department }}{% endif %}
+                      </span>
+                      <span class="cva-mini">
+                        <i class="fa-solid fa-calendar-day"></i>
+                        {{ document.uploaded_at|date:"M d, Y" }}
+                      </span>
+                      <span class="cva-mini">
+                        <i class="fa-solid fa-database"></i>
+                        {{ document.file.size|filesizeformat }}
+                      </span>
+                    </div>
+
+                    <div class="cva-item-actions">
+                      <button class="cva-pill cva-pill-primary" type="button"
+                              onclick="openDocumentModal('{{ document.file.url }}', '{{ document.file.url|slice:'-4:'|lower }}')">
+                        <i class="fa-solid fa-eye"></i> View
+                      </button>
+
+                      <a class="cva-pill" href="{{ document.file.url }}" download>
+                        <i class="fa-solid fa-download"></i> Download
+                      </a>
+                    </div>
+                  </div>
+                {% empty %}
+                  {# no docs - handled below by empty tiles only if both lists empty #}
+                {% endfor %}
+
+                {# ------------------- VIDEOS ------------------- #}
+                {% for video in folder.lms_videos.all %}
+                  <div class="cva-item cva-video"
+                       data-type="videos"
+                       data-title="{{ video.title|default:'Untitled Video'|lower }}"
+                       data-folder="{{ folder.folder_name|default:'Folder'|lower }}">
+                    <div class="cva-item-top">
+                      <div class="cva-item-ic">
+                        <i class="fa-solid fa-video"></i>
+                      </div>
+                      <div style="min-width:0;">
+                        <p class="cva-item-title">{{ video.title|default:"Untitled Video" }}</p>
+                        {% if video.description %}
+                          <p class="cva-item-desc">{{ video.description }}</p>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <div class="cva-item-meta">
+                      <span class="cva-mini">
+                        <i class="fa-solid fa-user"></i>
+                        {{ video.uploaded_by.name|default:video.uploaded_by }}
+                        {% if video.uploaded_by %} · {{ video.uploaded_by.department }}{% endif %}
+                      </span>
+                      <span class="cva-mini">
+                        <i class="fa-solid fa-calendar-day"></i>
+                        {{ video.uploaded_at|date:"M d, Y" }}
+                      </span>
+                      <span class="cva-mini">
+                        <i class="fa-brands fa-youtube"></i>
+                        YouTube
+                      </span>
+                    </div>
+
+                    <div class="cva-item-actions">
+                      <button class="cva-pill cva-pill-primary" type="button"
+                              onclick="openVideoModal('{{ video.youtube_video_id }}')">
+                        <i class="fa-solid fa-play"></i> Watch
+                      </button>
+
+                      <a class="cva-pill" target="_blank"
+                         href="https://www.youtube.com/watch?v={{ video.youtube_video_id }}">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Open
+                      </a>
+                    </div>
+                  </div>
+                {% endfor %}
+
+              </div>
+
+              {% if folder.lms_documents.all|length == 0 and folder.lms_videos.all|length == 0 %}
+                <div class="cva-empty" style="margin-top:12px; padding: 2rem; border-radius: var(--radius-md);">
+                  <i class="fa-regular fa-folder-open"></i>
+                  <h3 style="font-size: 1.1rem; margin: 0.5rem 0;">No items in this folder</h3>
+                  <p style="font-size: 0.9rem;">Documents or videos will appear here once uploaded.</p>
+                </div>
+              {% endif %}
+
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+
+    </div>
+  {% else %}
+    <div class="cva-empty">
+      <i class="fa-regular fa-folder-open"></i>
+      <h3>No Course Materials Available</h3>
+      <p>No folders or files have been uploaded for this course yet.</p>
+    </div>
+  {% endif %}
+
+</div>
+
+<!-- DOCUMENT VIEWER MODAL -->
+<div id="viewerModal" class="cva-modal-backdrop" aria-hidden="true">
+  <div class="cva-modal">
+    <iframe id="viewerIframe"></iframe>
+    <button class="cva-close" type="button" onclick="closeDocumentModal()">
+      <i class="fa-solid fa-xmark"></i> Close
+    </button>
+  </div>
+</div>
+
+<!-- VIDEO MODAL -->
+<div id="videoModal" class="cva-modal-backdrop" aria-hidden="true">
+  <div class="cva-modal">
+    <iframe id="ytIframe"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen
+      referrerpolicy="strict-origin-when-cross-origin"></iframe>
+
+    <button class="cva-close" type="button" onclick="closeVideoModal()">
+      <i class="fa-solid fa-xmark"></i> Close
+    </button>
+  </div>
+</div>
+
+<!-- AI CHAT MODAL - Full Screen Overlay -->
+<div id="aiChatModal" class="ai-chat-overlay" aria-hidden="true">
+  <div class="ai-chat-container">
+    <!-- Header -->
+    <div class="ai-chat-header">
+      <div class="ai-chat-header-left">
+        <div class="ai-chat-logo">
+          <i class="fa-solid fa-robot"></i>
+        </div>
+        <div class="ai-chat-title-wrap">
+          <h2 class="ai-chat-title">AI Learning Assistant</h2>
+          <span class="ai-chat-subtitle">Ask questions about your course materials</span>
+        </div>
+      </div>
+      <button class="ai-chat-close" type="button" onclick="closeAiChatModal()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Messages Area -->
+    <div class="ai-chat-messages" id="aiChatMessages">
+      <!-- Welcome Message -->
+      <div class="ai-message ai-message-bot">
+        <div class="ai-message-avatar">
+          <i class="fa-solid fa-robot"></i>
+        </div>
+        <div class="ai-message-content">
+          <div class="ai-message-text">
+            👋 Hello! I'm your AI Learning Assistant. I can help you understand the course materials for <strong>{{ course.course_code }}{% if course.title %} - {{ course.title }}{% endif %}</strong>.
+            <br><br>
+            Feel free to ask questions about any topic from your uploaded documents!
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="ai-chat-input-area">
+      <div class="ai-chat-input-wrap">
+        <textarea 
+          id="aiChatInput" 
+          class="ai-chat-input" 
+          placeholder="Type your question here..." 
+          rows="1"
+          onkeydown="handleAiChatKeydown(event)"
+          oninput="autoResizeTextarea(this)"
+        ></textarea>
+        <button class="ai-chat-send" type="button" onclick="sendAiChatMessage()" id="aiChatSendBtn">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+      <div class="ai-chat-disclaimer">
+        <i class="fa-solid fa-info-circle"></i>
+        AI responses are based on uploaded course materials. Always verify with your instructor.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AI Chat Styles -->
+<style>
+/* ===== AI Chat Overlay ===== */
+.ai-chat-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 2000;
+  backdrop-filter: blur(10px);
+}
+
+.ai-chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  background: var(--white);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Header */
+.ai-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  color: var(--white);
+  flex-shrink: 0;
+}
+
+.ai-chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ai-chat-logo {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.ai-chat-title-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-chat-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ai-chat-subtitle {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.ai-chat-close {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  color: var(--white);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-chat-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
+}
+
+/* Messages Area */
+.ai-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  background: var(--gray-light);
+}
+
+/* Message Bubbles */
+.ai-message {
+  display: flex;
+  gap: 0.75rem;
+  max-width: 85%;
+  animation: messageSlide 0.3s ease;
+}
+
+@keyframes messageSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-message-user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.ai-message-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+
+.ai-message-bot .ai-message-avatar {
+  background: var(--primary-blue);
+  color: var(--white);
+}
+
+.ai-message-user .ai-message-avatar {
+  background: var(--gray-medium);
+  color: var(--dark-text);
+}
+
+.ai-message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ai-message-text {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.ai-message-bot .ai-message-text {
+  background: var(--white);
+  color: var(--dark-text);
+  border: 1px solid var(--gray-border);
+  border-bottom-left-radius: 4px;
+}
+
+.ai-message-user .ai-message-text {
+  background: var(--primary-blue);
+  color: var(--white);
+  border-bottom-right-radius: 4px;
+}
+
+.ai-message-sources {
+  font-size: 0.8rem;
+  color: var(--gray-text);
+  padding-left: 0.5rem;
+}
+
+.ai-message-sources i {
+  margin-right: 0.25rem;
+}
+
+/* Typing Indicator */
+.ai-typing {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius-md);
+  border-bottom-left-radius: 4px;
+}
+
+.ai-typing-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--gray-medium);
+  border-radius: 50%;
+  animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+.ai-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.ai-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+
+/* Input Area */
+.ai-chat-input-area {
+  padding: 1rem 1.5rem;
+  background: var(--white);
+  border-top: 1px solid var(--gray-border);
+  flex-shrink: 0;
+}
+
+.ai-chat-input-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  background: var(--gray-light);
+  border: 2px solid var(--gray-border);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
+  transition: var(--transition);
+}
+
+.ai-chat-input-wrap:focus-within {
+  border-color: var(--primary-blue);
+  background: var(--white);
+}
+
+.ai-chat-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  resize: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  padding: 0.5rem;
+  max-height: 120px;
+  color: var(--dark-text);
+}
+
+.ai-chat-input:focus {
+  outline: none;
+}
+
+.ai-chat-input::placeholder {
+  color: var(--gray-text);
+}
+
+.ai-chat-send {
+  width: 44px;
+  height: 44px;
+  background: var(--primary-blue);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--white);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ai-chat-send:hover:not(:disabled) {
+  background: var(--primary-blue-dark);
+  transform: scale(1.05);
+}
+
+.ai-chat-send:disabled {
+  background: var(--gray-medium);
+  cursor: not-allowed;
+}
+
+.ai-chat-disclaimer {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--gray-text);
+  text-align: center;
+}
+
+.ai-chat-disclaimer i {
+  margin-right: 0.25rem;
+}
+
+/* Loading State */
+.ai-chat-send.loading i {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Error Message */
+.ai-message-error .ai-message-text {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ai-chat-container {
+    max-width: 100%;
+  }
+  
+  .ai-chat-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .ai-chat-title {
+    font-size: 1.1rem;
+  }
+  
+  .ai-chat-messages {
+    padding: 1rem;
+  }
+  
+  .ai-message {
+    max-width: 95%;
+  }
+  
+  .ai-chat-input-area {
+    padding: 0.75rem 1rem;
+  }
+}
+</style>
+
+<script>
+  // -------- Folder accordion ----------
+  function cvaToggleFolder(headEl){
+    const card = headEl.closest('.cva-folder');
+    const body = card.querySelector('.cva-folder-body');
+
+    card.classList.toggle('active');
+
+    if (body.style.maxHeight) {
+      body.style.maxHeight = null;
+    } else {
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  }
+
+  function cvaExpandAll(open){
+    document.querySelectorAll('.cva-folder').forEach(card=>{
+      const body = card.querySelector('.cva-folder-body');
+      if(open){
+        card.classList.add('active');
+        body.style.maxHeight = body.scrollHeight + 'px';
+      }else{
+        card.classList.remove('active');
+        body.style.maxHeight = null;
+      }
+    });
+  }
+
+  // -------- Per-folder tabs (All / Docs / Videos) ----------
+  function cvaSwitchTab(e, tabEl){
+    e.stopPropagation(); // don't toggle folder
+    const folder = tabEl.closest('.cva-folder');
+    const tabs = folder.querySelectorAll('.cva-tab');
+    tabs.forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+
+    const mode = tabEl.getAttribute('data-tab'); // all/docs/videos
+    folder.querySelectorAll('.cva-item').forEach(item=>{
+      const t = item.getAttribute('data-type');
+      if(mode === 'all' || mode === t){
+        item.style.display = '';
+      }else{
+        item.style.display = 'none';
+      }
+    });
+
+    // re-measure height for smooth open folders
+    const body = folder.querySelector('.cva-folder-body');
+    if(folder.classList.contains('active')){
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  }
+
+  // -------- Top filters ----------
+  function cvaClearFilters(){
+    const s = document.getElementById('cvaSearch');
+    const f = document.getElementById('cvaTypeFilter');
+    if(s) s.value = '';
+    if(f) f.value = 'all';
+    cvaApplyFilters();
+    cvaExpandAll(false);
+  }
+
+  function cvaApplyFilters(){
+    const searchValue = (document.getElementById('cvaSearch')?.value || '').trim().toLowerCase();
+    const typeValue = (document.getElementById('cvaTypeFilter')?.value || 'all');
+
+    document.querySelectorAll('.cva-folder').forEach(folder=>{
+      const folderName = (folder.getAttribute('data-folder') || '').toLowerCase();
+      const items = folder.querySelectorAll('.cva-item');
+
+      let folderHasMatch = false;
+      let anyItemShown = false;
+
+      items.forEach(item=>{
+        const itemTitle = (item.getAttribute('data-title') || '').toLowerCase();
+        const itemType  = item.getAttribute('data-type'); // docs/videos
+
+        const matchesSearch = !searchValue || folderName.includes(searchValue) || itemTitle.includes(searchValue);
+        const matchesType   = (typeValue === 'all') || (typeValue === itemType);
+
+        const show = matchesSearch && matchesType;
+        item.style.display = show ? '' : 'none';
+
+        if(show) { anyItemShown = true; }
+        if(matchesSearch) { folderHasMatch = true; }
+      });
+
+      // If folder name matches search, show folder even if items filtered to zero by type
+      // but collapse it unless items exist for display
+      const showFolder = folderHasMatch || anyItemShown;
+
+      folder.style.display = showFolder ? '' : 'none';
+
+      // Auto-open folders that have visible items OR folder name matches search
+      const body = folder.querySelector('.cva-folder-body');
+      if(showFolder && (searchValue || anyItemShown)){
+        folder.classList.add('active');
+        body.style.maxHeight = body.scrollHeight + 'px';
+      }else{
+        folder.classList.remove('active');
+        body.style.maxHeight = null;
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const s = document.getElementById('cvaSearch');
+    const f = document.getElementById('cvaTypeFilter');
+
+    if(s){ s.addEventListener('input', cvaApplyFilters); }
+    if(f){ f.addEventListener('change', cvaApplyFilters); }
+
+    // Start collapsed by default
+    cvaExpandAll(false);
+    
+    // Add animation delays to cards
+    const cards = document.querySelectorAll('.cva-folder');
+    cards.forEach((card, index) => {
+      card.style.animationDelay = `${index * 0.1}s`;
+    });
+  });
+
+  // -------- Modals ----------
+  function openDocumentModal(url, ext) {
+    ext = (ext || '').replace('.', '').toLowerCase();
+    const iframe = document.getElementById('viewerIframe');
+
+    // reset
+    iframe.removeAttribute('srcdoc');
+
+    if (ext === 'pdf') {
+      iframe.src = url;
+    } else if (ext === 'docx' || ext === 'doc') {
+      iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+    } else {
+      iframe.src = 'about:blank';
+      iframe.setAttribute('srcdoc', `
+        <div style="display:flex;justify-content:center;align-items:center;height:100%;
+                    font-family:Inter,sans-serif;background:#fff;color:#111827;padding:20px;text-align:center;">
+          <div>
+            <div style="font-size:18px;font-weight:800;margin-bottom:8px;">Preview not available</div>
+            <div style="color:#6B7280;font-weight:600;">This file type (${ext || 'unknown'}) cannot be previewed here. Please use Download.</div>
+          </div>
+        </div>
+      `);
+    }
+
+    document.getElementById('viewerModal').style.display = 'flex';
+  }
+
+  function closeDocumentModal() {
+    const iframe = document.getElementById('viewerIframe');
+    iframe.src = '';
+    iframe.removeAttribute('srcdoc');
+    document.getElementById('viewerModal').style.display = 'none';
+  }
+
+  function openVideoModal(videoId) {
+    const iframe = document.getElementById('ytIframe');
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&controls=1`;
+    iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    document.getElementById('videoModal').style.display = 'flex';
+  }
+
+  function closeVideoModal() {
+    const iframe = document.getElementById('ytIframe');
+    iframe.src = '';
+    document.getElementById('videoModal').style.display = 'none';
+  }
+
+  // Close modals on ESC
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape'){
+      const v1 = document.getElementById('viewerModal');
+      const v2 = document.getElementById('videoModal');
+      if(v1 && v1.style.display === 'flex') closeDocumentModal();
+      if(v2 && v2.style.display === 'flex') closeVideoModal();
+    }
+  });
+
+  // Close modals on backdrop click
+  document.addEventListener('click', (e)=>{
+    const viewer = document.getElementById('viewerModal');
+    const video = document.getElementById('videoModal');
+
+    if(viewer && e.target === viewer) closeDocumentModal();
+    if(video && e.target === video) closeVideoModal();
+  });
+
+  // ===== AI CHAT FUNCTIONALITY =====
+  const AI_CHAT_URL = "{% url 'ai_chat_view' course.id %}";
+  
+  // Open AI Chat Modal
+  function openAiChatModal() {
+    const modal = document.getElementById('aiChatModal');
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    
+    // Focus on input
+    setTimeout(() => {
+      document.getElementById('aiChatInput').focus();
+    }, 100);
+  }
+
+  // Close AI Chat Modal
+  function closeAiChatModal() {
+    const modal = document.getElementById('aiChatModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  // Handle keyboard shortcuts
+  function handleAiChatKeydown(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendAiChatMessage();
+    }
+  }
+
+  // Auto-resize textarea
+  function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+  }
+
+  // Add message to chat
+  function addChatMessage(content, isUser = false, sources = null, isError = false) {
+    const messagesContainer = document.getElementById('aiChatMessages');
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `ai-message ${isUser ? 'ai-message-user' : 'ai-message-bot'}${isError ? ' ai-message-error' : ''}`;
+    
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'ai-message-avatar';
+    avatarDiv.innerHTML = isUser ? '<i class="fa-solid fa-user"></i>' : '<i class="fa-solid fa-robot"></i>';
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'ai-message-content';
+    
+    const textDiv = document.createElement('div');
+    textDiv.className = 'ai-message-text';
+    textDiv.innerHTML = content;
+    
+    contentDiv.appendChild(textDiv);
+    
+    // Add sources if provided
+    if (sources && sources.length > 0) {
+      const sourcesDiv = document.createElement('div');
+      sourcesDiv.className = 'ai-message-sources';
+      sourcesDiv.innerHTML = `<i class="fa-solid fa-file-lines"></i> Sources: ${sources.join(', ')}`;
+      contentDiv.appendChild(sourcesDiv);
+    }
+    
+    messageDiv.appendChild(avatarDiv);
+    messageDiv.appendChild(contentDiv);
+    
+    messagesContainer.appendChild(messageDiv);
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  // Add typing indicator
+  function addTypingIndicator() {
+    const messagesContainer = document.getElementById('aiChatMessages');
+    
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'ai-message ai-message-bot';
+    typingDiv.id = 'aiTypingIndicator';
+    
+    typingDiv.innerHTML = `
+      <div class="ai-message-avatar">
+        <i class="fa-solid fa-robot"></i>
+      </div>
+      <div class="ai-typing">
+        <div class="ai-typing-dot"></div>
+        <div class="ai-typing-dot"></div>
+        <div class="ai-typing-dot"></div>
+      </div>
+    `;
+    
+    messagesContainer.appendChild(typingDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  // Remove typing indicator
+  function removeTypingIndicator() {
+    const typingIndicator = document.getElementById('aiTypingIndicator');
+    if (typingIndicator) {
+      typingIndicator.remove();
+    }
+  }
+
+  // Send chat message
+  async function sendAiChatMessage() {
+    const input = document.getElementById('aiChatInput');
+    const sendBtn = document.getElementById('aiChatSendBtn');
+    const query = input.value.trim();
+    
+    if (!query) return;
+    
+    // Disable input and button
+    input.disabled = true;
+    sendBtn.disabled = true;
+    sendBtn.classList.add('loading');
+    sendBtn.innerHTML = '<i class="fa-solid fa-spinner"></i>';
+    
+    // Add user message
+    addChatMessage(query, true);
+    
+    // Clear input
+    input.value = '';
+    input.style.height = 'auto';
+    
+    // Show typing indicator
+    addTypingIndicator();
+    
+    try {
+      const response = await fetch(AI_CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: query })
+      });
+      
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (e) {
+        removeTypingIndicator();
+        addChatMessage('AI service returned invalid response. Please try again.', false, null, true);
+        throw e;
+      }
+      
+      // Remove typing indicator
+      removeTypingIndicator();
+      
+      if (response.ok && data.success) {
+        // Format response with line breaks
+        const formattedResponse = marked.parse(data.response);
+        addChatMessage(formattedResponse, false, data.sources);
+      } else {
+        addChatMessage(data.error || 'An error occurred. Please try again.', false, null, true);
+      }
+      
+    } catch (error) {
+      // Remove typing indicator
+      removeTypingIndicator();
+      
+      addChatMessage('Failed to connect to the AI service. Please check your internet connection and try again.', false, null, true);
+      console.error('AI Chat Error:', error);
+    }
+    
+    // Re-enable input and button
+    input.disabled = false;
+    sendBtn.disabled = false;
+    sendBtn.classList.remove('loading');
+    sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+    input.focus();
+  }
+
+  // Close AI Chat on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const aiChatModal = document.getElementById('aiChatModal');
+      if (aiChatModal && aiChatModal.style.display === 'block') {
+        closeAiChatModal();
+      }
+    }
+  });
+</script>
+
+{% endblock %}

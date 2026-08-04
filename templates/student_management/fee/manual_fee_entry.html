@@ -1,0 +1,503 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<form style="display:none">{% csrf_token %}</form>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+  body{background:linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%);font-family:Inter,system-ui,sans-serif}
+  .container{max-width:1400px}
+  .page-header{background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);color:#fff;border-radius:16px;padding:2rem;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.1);margin-bottom:1.25rem}
+  .page-title{font-size:2rem;font-weight:900;margin:0;display:flex;gap:.75rem;justify-content:center;align-items:center}
+  .card{border:none;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.08);overflow:hidden;margin-bottom:1.25rem}
+  .card-header{background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);color:#fff;font-weight:900}
+  .table thead th{background:#1a4b8c;color:#fff;font-size:.82rem;text-transform:uppercase;letter-spacing:.35px;border:none;vertical-align:middle}
+  .table tbody td{vertical-align:middle;border-color:#eef2f7}
+  .btn{border-radius:10px;font-weight:900;border:none;display:inline-flex;gap:.5rem;align-items:center}
+  .btn-success{background:linear-gradient(135deg,#059669 0%,#10b981 100%)}
+  .btn-warning{background:linear-gradient(135deg,#f59e0b 0%,#fbbf24 100%);color:#111827}
+  .btn-primary{background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%)}
+  .fee-input,.txn-input{max-width:190px;text-align:center;font-weight:800}
+  .modal-content{border:none;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .modal-header{background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);color:#fff;border:none}
+  .modal-title{font-weight:900;display:flex;gap:.6rem;align-items:center}
+  .form-label{font-weight:900}
+
+  .receipt-modal-dialog{ max-width: 900px; }
+  .receipt-modal-dialog .modal-content{ height: 85vh; display:flex; }
+  .receipt-modal-dialog .modal-body{ flex:1; position:relative; background:#eef2f7; display:flex; align-items:center; justify-content:center; overflow:auto; }
+  .receipt-frame{ width:100%; height:100%; border:none; background:#fff; }
+  .receipt-image{ max-width:100%; max-height:100%; object-fit:contain; background:#fff; }
+  .receipt-loading{ display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:#1a4b8c; }
+  .receipt-unsupported{ display:flex; flex-direction:column; align-items:center; gap:.75rem; color:#64748b; font-weight:700; padding:2rem; text-align:center; }
+  .receipt-unsupported i{ font-size:2.5rem; }
+  @media (max-width: 768px){
+    .receipt-modal-dialog{ max-width:100%; margin:.5rem; }
+    .receipt-modal-dialog .modal-content{ height:75vh; }
+  }
+
+  .notice-modal-dialog{ max-width:400px; }
+  .notice-modal-dialog .modal-content{ border-radius:16px; }
+  .notice-icon{ font-size:2.75rem; margin-bottom:.75rem; }
+  .notice-icon.success{ color:#10b981; }
+  .notice-icon.error{ color:#dc2626; }
+  .notice-message{ font-weight:700; color:#1f2937; font-size:1.02rem; }
+</style>
+
+<div class="container mt-4">
+  <div class="page-header">
+    <h2 class="page-title"><i class="fa-solid fa-file-invoice-dollar"></i> Manual Fee Entry – {{ department }}</h2>
+    <div class="mt-2">Academic Year: <b>{{ academic_year }}</b></div>
+  </div>
+
+  <!-- ✅ PENDING -->
+  <div class="card">
+    <div class="card-header">Pending Receipts ({{ pending_receipts|length }})</div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Reg No</th>
+            <th>Academic Year</th>
+            <th class="text-center">Receipt</th>
+            <th class="text-center">Fee</th>
+            <th class="text-center">Txn ID</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in pending_receipts %}
+          <tr>
+            <td><b>{{ r.student.name }}</b></td>
+            <td><code>{{ r.student.reg_no }}</code></td>
+            <td><span class="badge bg-secondary">{{ academic_year }}</span></td>
+
+            <td class="text-center">
+              {% if r.fee_receipt %}
+              <button type="button" class="btn btn-primary btn-sm"
+                      data-view-receipt="{{ r.fee_receipt.url }}"
+                      data-view-title="{{ r.student.name }} - {{ r.student.reg_no }}">
+                <i class="fa-solid fa-file-invoice"></i> View
+              </button>
+              {% else %}
+              <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <input type="number" step="0.01" id="fee-{{ r.id }}" class="form-control fee-input mx-auto" placeholder="Amount">
+            </td>
+            <td class="text-center">
+              <input type="text" id="txn-{{ r.id }}" class="form-control txn-input mx-auto" placeholder="Txn ID">
+            </td>
+            <td class="text-center">
+              <button type="button" class="btn btn-success btn-sm" data-receipt-id="{{ r.id }}">
+                <i class="fa-solid fa-check"></i> Verify
+              </button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-center text-muted py-3">No pending receipts</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ✅ VERIFIED -->
+  <div class="card">
+    <div class="card-header">Verified Entries ({{ verified_entries|length }})</div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Reg No</th>
+            <th>Academic Year</th>
+            <th class="text-center">Receipt</th>
+            <th class="text-center">Fee</th>
+            <th class="text-center">Txn ID</th>
+            <th>Updated</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in verified_entries %}
+          <tr id="row-{{ e.id }}"
+              data-entry-id="{{ e.id }}"
+              data-student="{{ e.fee_receipt.student.name|default_if_none:'' }}"
+              data-reg="{{ e.fee_receipt.student.reg_no|default_if_none:'' }}"
+              data-fee="{{ e.entered_fee|default_if_none:'' }}"
+              data-txn="{{ e.transaction_id|default_if_none:'' }}"
+              data-updated="{{ e.updated_at|date:'d M Y, h:i A' }}">
+            <td><b>{{ e.fee_receipt.student.name }}</b></td>
+            <td><code>{{ e.fee_receipt.student.reg_no }}</code></td>
+            <td><span class="badge bg-secondary">{{ academic_year }}</span></td>
+            <td class="text-center">
+              {% if e.fee_receipt.fee_receipt %}
+              <button type="button" class="btn btn-primary btn-sm"
+                      data-view-receipt="{{ e.fee_receipt.fee_receipt.url }}"
+                      data-view-title="{{ e.fee_receipt.student.name }} - {{ e.fee_receipt.student.reg_no }}">
+                <i class="fa-solid fa-file-invoice"></i> View
+              </button>
+              {% else %}
+              <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td class="text-center"><span id="fee_text_{{ e.id }}">{{ e.entered_fee }}</span></td>
+            <td class="text-center"><span id="txn_text_{{ e.id }}">{{ e.transaction_id }}</span></td>
+            <td id="updated_text_{{ e.id }}">{{ e.updated_at|date:"d M Y, h:i A" }}</td>
+            <td class="text-center">
+              <button type="button"
+                      class="btn btn-warning btn-sm"
+                      data-bs-toggle="modal"
+                      data-bs-target="#editModal"
+                      data-entry-id="{{ e.id }}">
+                <i class="fa-solid fa-pen-to-square"></i> Update
+              </button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="text-center text-muted py-3">No verified entries</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Update Fee Entry</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <div id="editAlert" class="alert alert-danger d-none"></div>
+
+        <input type="hidden" id="m_entry_id">
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Student</label>
+            <input type="text" id="m_student" class="form-control" readonly>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Reg No</label>
+            <input type="text" id="m_reg" class="form-control" readonly>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Fee Amount</label>
+            <input type="number" step="0.01" id="m_fee" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Transaction ID</label>
+            <input type="text" id="m_txn" class="form-control">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Last Updated</label>
+            <input type="text" id="m_updated" class="form-control" readonly>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" id="saveBtn" class="btn btn-primary">
+          <i class="fa-solid fa-floppy-disk"></i> Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RECEIPT PREVIEW MODAL -->
+<div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered receipt-modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-file-invoice"></i> <span id="receiptModalTitle">Fee Receipt</span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-0">
+        <div id="receiptLoading" class="receipt-loading">
+          <div class="spinner-border" role="status"></div>
+        </div>
+        <iframe id="receiptFrame" class="receipt-frame d-none"></iframe>
+        <img id="receiptImage" class="receipt-image d-none" alt="Fee receipt">
+        <div id="receiptUnsupported" class="receipt-unsupported d-none">
+          <i class="fa-solid fa-file-circle-exclamation"></i>
+          <p>Preview isn't available for this file type.</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <a id="receiptOpenNewTab" href="#" target="_blank" rel="noopener" class="btn btn-primary">
+          <i class="fa-solid fa-up-right-from-square"></i> Open in New Tab
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTICE MODAL (replaces native alert()) -->
+<div class="modal fade" id="noticeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered notice-modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body text-center py-4 px-4">
+        <div id="noticeIcon" class="notice-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <p id="noticeMessage" class="notice-message mb-0"></p>
+      </div>
+      <div class="modal-footer justify-content-center border-0 pt-0">
+        <button type="button" id="noticeOkBtn" class="btn btn-primary px-4">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ⚠️ Remove this if base.html already loads bootstrap bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  const editModalEl = document.getElementById('editModal');
+  const editAlert = document.getElementById('editAlert');
+  const saveBtn = document.getElementById('saveBtn');
+
+  function showModalError(msg){
+    editAlert.classList.remove('d-none');
+    editAlert.textContent = msg || 'Error';
+  }
+  function clearModalError(){
+    editAlert.classList.add('d-none');
+    editAlert.textContent = '';
+  }
+
+  function forceModalCleanup(){
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+  }
+
+  editModalEl.addEventListener('show.bs.modal', (event) => {
+    clearModalError();
+    const triggerBtn = event.relatedTarget;
+    const entryId = triggerBtn?.getAttribute('data-entry-id');
+    const row = document.getElementById(`row-${entryId}`);
+    if(!row){ showModalError("Row not found."); return; }
+
+    document.getElementById('m_entry_id').value = row.dataset.entryId || entryId;
+    document.getElementById('m_student').value = row.dataset.student || "";
+    document.getElementById('m_reg').value = row.dataset.reg || "";
+    document.getElementById('m_fee').value = row.dataset.fee || "";
+    document.getElementById('m_txn').value = row.dataset.txn || "";
+    document.getElementById('m_updated').value = row.dataset.updated || "";
+  });
+
+  editModalEl.addEventListener('hidden.bs.modal', () => {
+    clearModalError();
+    forceModalCleanup();
+  });
+
+  // Receipt preview modal
+  const receiptModalEl = document.getElementById('receiptModal');
+  const receiptModal = new bootstrap.Modal(receiptModalEl);
+  const receiptFrame = document.getElementById('receiptFrame');
+  const receiptImage = document.getElementById('receiptImage');
+  const receiptLoading = document.getElementById('receiptLoading');
+  const receiptUnsupported = document.getElementById('receiptUnsupported');
+  const receiptOpenNewTab = document.getElementById('receiptOpenNewTab');
+  const receiptModalTitle = document.getElementById('receiptModalTitle');
+
+  function showReceipt(url, title){
+    receiptModalTitle.textContent = title || 'Fee Receipt';
+    receiptOpenNewTab.href = url;
+
+    receiptFrame.classList.add('d-none');
+    receiptImage.classList.add('d-none');
+    receiptUnsupported.classList.add('d-none');
+    receiptFrame.src = '';
+    receiptImage.src = '';
+    receiptLoading.classList.remove('d-none');
+
+    const ext = (url.split('?')[0].split('.').pop() || '').toLowerCase();
+
+    if(['jpg','jpeg','png','gif','webp'].includes(ext)){
+      receiptImage.onload = () => { receiptLoading.classList.add('d-none'); receiptImage.classList.remove('d-none'); };
+      receiptImage.onerror = () => { receiptLoading.classList.add('d-none'); receiptUnsupported.classList.remove('d-none'); };
+      receiptImage.src = url;
+    } else if(ext === 'pdf'){
+      receiptFrame.onload = () => { receiptLoading.classList.add('d-none'); receiptFrame.classList.remove('d-none'); };
+      receiptFrame.src = url;
+    } else {
+      receiptLoading.classList.add('d-none');
+      receiptUnsupported.classList.remove('d-none');
+    }
+
+    receiptModal.show();
+  }
+
+  document.querySelectorAll('[data-view-receipt]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      showReceipt(btn.getAttribute('data-view-receipt'), btn.getAttribute('data-view-title'));
+    });
+  });
+
+  receiptModalEl.addEventListener('hidden.bs.modal', () => {
+    receiptFrame.src = '';
+    receiptImage.src = '';
+    forceModalCleanup();
+  });
+
+  // Notice modal (replaces native alert())
+  const noticeModalEl = document.getElementById('noticeModal');
+  const noticeModal = new bootstrap.Modal(noticeModalEl);
+  const noticeIcon = document.getElementById('noticeIcon');
+  const noticeMessage = document.getElementById('noticeMessage');
+  const noticeOkBtn = document.getElementById('noticeOkBtn');
+
+  function showNotice(message, type){
+    noticeMessage.textContent = message;
+    const isError = type === 'error';
+    noticeIcon.className = 'notice-icon ' + (isError ? 'error' : 'success');
+    noticeIcon.innerHTML = isError
+      ? '<i class="fa-solid fa-circle-exclamation"></i>'
+      : '<i class="fa-solid fa-circle-check"></i>';
+    noticeModal.show();
+    return new Promise(resolve => {
+      const onOk = () => { noticeModal.hide(); resolve(); };
+      noticeOkBtn.addEventListener('click', onOk, { once: true });
+    });
+  }
+
+  noticeModalEl.addEventListener('hidden.bs.modal', forceModalCleanup);
+
+  // Pending verify
+  document.querySelectorAll('button[data-receipt-id]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const receiptId = btn.getAttribute('data-receipt-id');
+      const fee = document.getElementById(`fee-${receiptId}`).value.trim();
+      const txn = document.getElementById(`txn-${receiptId}`).value.trim();
+      if(!fee) return showNotice("Enter fee amount", "error");
+      if(!txn) return showNotice("Enter transaction id", "error");
+
+      btn.disabled = true;
+
+      const fd = new FormData();
+      fd.append("action","save_new");
+      fd.append("receipt_id", receiptId);
+      fd.append("fee_value", fee);
+      fd.append("transaction_id", txn);
+
+      const res = await fetch(window.location.href, {
+        method:"POST",
+        credentials:"same-origin",
+        headers:{
+          "X-Requested-With":"XMLHttpRequest",
+          "X-CSRFToken": csrftoken
+        },
+        body: fd
+      });
+
+      const data = await res.json();
+      btn.disabled = false;
+
+      if(!data.ok) return showNotice(data.error || "Failed", "error");
+      await showNotice(data.message || "Verified", "success");
+      window.location.reload();
+    });
+  });
+
+  // Save changes
+  saveBtn.addEventListener('click', async () => {
+    clearModalError();
+
+    const entryId = document.getElementById('m_entry_id').value.trim();
+    const fee = document.getElementById('m_fee').value.trim();
+    const txn = document.getElementById('m_txn').value.trim();
+
+    if(!entryId) return showModalError("Missing entry id");
+    if(!fee) return showModalError("Enter fee amount");
+    if(!txn) return showModalError("Enter transaction id");
+
+    saveBtn.disabled = true;
+    const oldHtml = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
+    const fd = new FormData();
+    fd.append("action","edit_existing");
+    fd.append("entry_id", entryId);
+    fd.append("fee_value", fee);
+    fd.append("transaction_id", txn);
+
+    const res = await fetch(window.location.href, {
+      method:"POST",
+      credentials:"same-origin",
+      headers:{
+        "X-Requested-With":"XMLHttpRequest",
+        "X-CSRFToken": csrftoken
+      },
+      body: fd
+    });
+
+    const data = await res.json();
+
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = oldHtml;
+
+    if(!data.ok){
+      showModalError(data.error || "Update failed");
+      return;
+    }
+
+    const payload = data.entry || {};
+    const feeNew = payload.entered_fee ?? fee;
+    const txnNew = payload.transaction_id ?? txn;
+    const updNew = payload.updated_at ?? "";
+
+    const row = document.getElementById(`row-${entryId}`);
+    if(row){
+      row.dataset.fee = feeNew;
+      row.dataset.txn = txnNew;
+      if(updNew) row.dataset.updated = updNew;
+
+      document.getElementById(`fee_text_${entryId}`).textContent = feeNew;
+      document.getElementById(`txn_text_${entryId}`).textContent = txnNew;
+      if(updNew) document.getElementById(`updated_text_${entryId}`).textContent = updNew;
+    }
+
+    const inst = bootstrap.Modal.getOrCreateInstance(editModalEl);
+    inst.hide();
+
+    setTimeout(forceModalCleanup, 50);
+    setTimeout(forceModalCleanup, 250);
+  });
+</script>
+
+{% endblock %}

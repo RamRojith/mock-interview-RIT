@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+  .lab-wrap{padding:1.25rem 2rem 3rem;max-width:1650px;margin:0 auto;}
+
+  /* ---- Page header ---- */
+  .lab-header{
+    background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);
+    border-radius:16px;padding:1.75rem 2rem;margin-bottom:1.75rem;color:#fff;
+    box-shadow:0 8px 24px rgba(26,75,140,.18);position:relative;overflow:hidden;
+  }
+  .lab-header::after{
+    content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;
+    background:rgba(255,255,255,.08);
+  }
+  .lab-header h2{margin:0;font-weight:700;font-size:1.6rem;}
+  .lab-header p{margin:.35rem 0 0;color:rgba(255,255,255,.85);font-size:.92rem;}
+
+  /* ---- Section card (generic content card) ---- */
+  .section-card{
+    background:#fff;border-radius:16px;padding:1.5rem 1.75rem;margin-bottom:1.5rem;
+    box-shadow:0 4px 20px rgba(15,23,42,.06);border:1px solid #eef1f5;
+  }
+  .section-head{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem;
+  }
+  .section-head h4{margin:0;font-weight:700;color:#1a4b8c;font-size:1.1rem;display:flex;align-items:center;gap:.55rem;}
+  .section-head h4 i{color:#2c5aa0;}
+
+  .btn-pdf{
+    border-radius:8px;font-weight:600;font-size:.82rem;white-space:nowrap;
+  }
+
+  /* ---- Selector card ---- */
+  .selector-card{
+    background:#fff;border-radius:16px;padding:1.5rem 1.75rem;margin-bottom:1.5rem;
+    box-shadow:0 4px 20px rgba(15,23,42,.06);border:1px solid #eef1f5;
+  }
+  .field-label{font-weight:600;color:#334155;font-size:.85rem;margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem;}
+  .field-label i{color:#1a4b8c;width:16px;text-align:center;}
+  .selector-card .form-select,.selector-card .form-control{
+    border-radius:10px;border:1.5px solid #e2e8f0;padding:.55rem .75rem;font-size:.9rem;
+  }
+  .selector-card .form-select:focus,.selector-card .form-control:focus{
+    border-color:#2c5aa0;box-shadow:0 0 0 .2rem rgba(44,90,160,.12);
+  }
+  .btn-open-lab{
+    background:linear-gradient(135deg,#1a4b8c,#2c5aa0);border:none;border-radius:10px;
+    padding:.6rem 1rem;font-weight:600;color:#fff;transition:transform .15s ease,box-shadow .15s ease;width:100%;
+  }
+  .btn-open-lab:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(26,75,140,.28);color:#fff;}
+
+  /* ---- Summary bar ---- */
+  .summary-bar{
+    background:#fff;border-radius:14px;padding:1.1rem 1.4rem;margin-bottom:1.25rem;
+    box-shadow:0 2px 10px rgba(15,23,42,.05);border:1px solid #eef1f5;
+    display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;justify-content:space-between;
+  }
+  .summary-pills{display:flex;flex-wrap:wrap;gap:.6rem;}
+  .summary-pill{
+    background:#f1f5fb;border:1px solid #dbe4f3;border-radius:999px;padding:.4rem .9rem;
+    font-size:.82rem;color:#1e3a5f;display:flex;align-items:center;gap:.4rem;
+  }
+  .summary-pill i{color:#2c5aa0;}
+  .summary-pill strong{color:#0f2c52;}
+  .summary-actions{display:flex;gap:.5rem;}
+
+  /* ---- All-labs overview table ---- */
+  .util-table{width:100%;border-collapse:separate;border-spacing:0;min-width:820px;}
+  .util-table th,.util-table td{padding:10px 12px;border-bottom:1px solid #eef1f5;vertical-align:middle;font-size:.86rem;}
+  .util-table thead th{
+    background:#f8fafc;color:#334155;font-weight:700;text-transform:uppercase;
+    font-size:.72rem;letter-spacing:.04em;border-bottom:2px solid #e6ebf2;white-space:nowrap;
+  }
+  .util-table tbody tr:hover{background:#f8fafc;}
+  .util-table td.lab-link a{color:#1a4b8c;font-weight:700;text-decoration:none;}
+  .util-table td.lab-link a:hover{text-decoration:underline;}
+  .util-scroll{overflow-x:auto;border-radius:12px;}
+
+  .mini-bar-wrap{display:flex;align-items:center;gap:.65rem;min-width:150px;}
+  .mini-bar-track{flex:1;background:#eef1f5;border-radius:999px;height:8px;overflow:hidden;}
+  .mini-bar-fill{height:100%;border-radius:999px;}
+  .mini-bar-fill.good{background:linear-gradient(90deg,#16a34a,#15803d);}
+  .mini-bar-fill.mid{background:linear-gradient(90deg,#f59e0b,#d97706);}
+  .mini-bar-fill.low{background:linear-gradient(90deg,#ef4444,#dc2626);}
+  .pct-badge{font-weight:700;font-size:.8rem;min-width:52px;text-align:right;display:inline-block;}
+  .pct-badge.good{color:#166534;}
+  .pct-badge.mid{color:#b45309;}
+  .pct-badge.low{color:#b91c1c;}
+
+  /* ---- Metric cards (weekly occupancy / daily utilization) ---- */
+  .metric-card{
+    background:#fff;border-radius:16px;padding:1.75rem;box-shadow:0 4px 20px rgba(15,23,42,.06);
+    border:1px solid #eef1f5;margin-bottom:1.5rem;
+  }
+  .metric-head{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:1.1rem;}
+  .metric-head h4{margin:0;font-weight:700;color:#1a4b8c;font-size:1.1rem;display:flex;align-items:center;gap:.55rem;}
+  .metric-head h4 i{color:#2c5aa0;}
+  .metric-card.daily .metric-head h4{color:#166534;}
+  .metric-card.daily .metric-head h4 i{color:#16a34a;}
+  .metric-sub{color:#64748b;font-size:.82rem;margin:.2rem 0 0;}
+  .metric-number{font-size:2.3rem;font-weight:800;color:#1a4b8c;line-height:1;}
+  .metric-card.daily .metric-number{color:#166534;}
+  .metric-number small{font-size:1.05rem;font-weight:600;color:#64748b;margin-left:.35rem;}
+  .metric-track{background:#eef1f5;border-radius:999px;height:14px;overflow:hidden;margin-top:1.1rem;}
+  .metric-fill{
+    height:100%;border-radius:999px;background:linear-gradient(135deg,#1a4b8c,#2c5aa0);
+    display:flex;align-items:center;justify-content:flex-end;padding-right:.6rem;color:#fff;
+    font-size:.68rem;font-weight:700;min-width:2.2rem;
+  }
+  .metric-fill.green{background:linear-gradient(135deg,#16a34a,#15803d);}
+
+  /* ---- Status badges ---- */
+  .badge-util{background:#e9f7ef;color:#166534;border:1px solid #bfe6cd;font-weight:600;padding:.35rem .7rem;border-radius:999px;font-size:.76rem;}
+  .badge-not-util{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-weight:600;padding:.35rem .7rem;border-radius:999px;font-size:.76rem;}
+
+  /* ---- Hint / note box ---- */
+  .hint-box{
+    background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:.7rem 1rem;
+    color:#64748b;font-size:.82rem;display:flex;gap:.6rem;align-items:flex-start;
+  }
+  .hint-box i{color:#2c5aa0;margin-top:.15rem;}
+
+  /* ---- Empty state ---- */
+  .empty-card{
+    background:#fff;border-radius:16px;padding:3rem 2rem;text-align:center;
+    box-shadow:0 4px 20px rgba(15,23,42,.06);border:1px solid #eef1f5;
+  }
+  .empty-card i{font-size:2.5rem;color:#cbd5e1;margin-bottom:1rem;}
+  .empty-card h5{color:#334155;font-weight:700;}
+  .empty-card p{color:#64748b;font-size:.9rem;}
+
+  @media (max-width:768px){
+    .lab-wrap{padding:1rem;}
+    .lab-header{padding:1.25rem 1.4rem;}
+    .selector-card,.section-card{padding:1.25rem;}
+    .metric-card{padding:1.25rem;}
+  }
+</style>
+
+<div class="lab-wrap">
+
+  <!-- ================= Header ================= -->
+  <div class="lab-header">
+    <h2><i class="fa-solid fa-clipboard-check me-2"></i>Lab Utility Log</h2>
+    <p>Track each lab's weekly timetable occupancy (out of 40 periods) and log actual daily usage. Viewing is open to anyone with access to this page; only the lab's assigned technician (or an admin) can mark a day.</p>
+  </div>
+
+  {% if messages %}{% for m in messages %}
+    <div class="alert alert-{{ m.tags }} alert-dismissible fade show">{{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}{% endif %}
+
+  <!-- ================= All Labs Overview ================= -->
+  <div class="section-card">
+    <div class="section-head">
+      <h4><i class="fa-solid fa-chart-pie"></i>All Labs — Weekly Utilization Overview</h4>
+      <a href="{% url 'lab_utility_log_pdf' %}" class="btn btn-outline-secondary btn-pdf"><i class="fas fa-file-pdf me-1"></i>Download PDF</a>
+    </div>
+    <div class="util-scroll">
+      <table class="util-table">
+        <thead>
+          <tr>
+            <th>Lab Code</th>
+            <th>Lab Name</th>
+            <th>Department</th>
+            <th>Technician</th>
+            <th>Scheduled</th>
+            <th>Weekly Utilization</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in labs_overview %}
+          <tr>
+            <td class="lab-link"><a href="?lab={{ row.lab.id }}">{{ row.lab.lab_code }}</a></td>
+            <td><a href="?lab={{ row.lab.id }}" class="text-decoration-none text-dark">{{ row.lab.lab_name }}</a></td>
+            <td>{{ row.lab.department.Department }}</td>
+            <td>{{ row.lab.technician.name|default:"Not assigned" }}</td>
+            <td class="text-center fw-semibold">{{ row.scheduled }}/{{ row.total }}</td>
+            <td>
+              <div class="mini-bar-wrap">
+                <div class="mini-bar-track">
+                  {% if row.pct >= 75 %}
+                    <div class="mini-bar-fill good" style="width:{{ row.pct }}%;"></div>
+                  {% elif row.pct >= 40 %}
+                    <div class="mini-bar-fill mid" style="width:{{ row.pct }}%;"></div>
+                  {% else %}
+                    <div class="mini-bar-fill low" style="width:{{ row.pct }}%;"></div>
+                  {% endif %}
+                </div>
+                <span class="pct-badge {% if row.pct >= 75 %}good{% elif row.pct >= 40 %}mid{% else %}low{% endif %}">{{ row.pct }}%</span>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center text-muted py-3">No labs found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================= Lab picker ================= -->
+  <div class="selector-card">
+    <form method="get">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-8">
+          <label class="field-label"><i class="fa-solid fa-flask"></i>Lab</label>
+          <select name="lab" class="form-select">
+            <option value="">-- Select --</option>
+            {% for l in labs %}
+              <option value="{{ l.id }}" {% if sel_lab == l.id|stringformat:'s' %}selected{% endif %}>{{ l.lab_code }} — {{ l.lab_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-open-lab"><i class="fas fa-folder-open me-1"></i>Open</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  {% if lab_obj %}
+    <!-- ================= Lab Detail: summary ================= -->
+    <div class="summary-bar">
+      <div class="summary-pills">
+        <span class="summary-pill"><i class="fa-solid fa-flask"></i>Lab: <strong>{{ lab_obj.lab_code }} — {{ lab_obj.lab_name }}</strong></span>
+        <span class="summary-pill"><i class="fa-solid fa-building"></i>Dept: <strong>{{ lab_obj.department.Department }}</strong></span>
+        <span class="summary-pill"><i class="fa-solid fa-user-gear"></i>Technician: <strong>{{ lab_obj.technician.name|default:"Not assigned" }}</strong></span>
+      </div>
+      <div class="summary-actions">
+        <a href="{% url 'lab_utility_log_pdf' %}?lab={{ sel_lab }}" class="btn btn-outline-secondary btn-pdf"><i class="fas fa-file-pdf me-1"></i>Download PDF</a>
+      </div>
+    </div>
+
+    <!-- ================= Weekly Timetable Occupancy ================= -->
+    <div class="metric-card">
+      <div class="metric-head">
+        <div>
+          <h4><i class="fa-solid fa-chart-pie"></i>Weekly Timetable Occupancy</h4>
+          <p class="metric-sub">Planned occupancy from the timetable — 5 days &times; 8 periods = 40 periods/week.</p>
+        </div>
+      </div>
+      <div class="metric-number">{{ scheduled_periods }}/{{ total_periods }} <small>periods scheduled</small></div>
+      <div class="metric-track">
+        <div class="metric-fill" style="width:{{ weekly_utilization_pct }}%;">{{ weekly_utilization_pct }}%</div>
+      </div>
+    </div>
+
+    <!-- ================= Course-wise Weekly Lab Hours ================= -->
+    <div class="section-card">
+      <div class="section-head">
+        <h4><i class="fa-solid fa-list-check"></i>Course-wise Weekly Lab Hours</h4>
+      </div>
+      <div class="util-scroll">
+        <table class="util-table">
+          <thead>
+            <tr><th>Course Code</th><th>Title</th><th class="text-center">Hours/Week</th></tr>
+          </thead>
+          <tbody>
+            {% for r in lab_hours_by_course %}
+            <tr><td>{{ r.code }}</td><td>{{ r.title }}</td><td class="text-center fw-semibold">{{ r.hours }}</td></tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center text-muted py-3">No lab hours scheduled in the timetable yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ================= Daily Utilization ================= -->
+    <div class="metric-card daily">
+      <div class="metric-head">
+        <div>
+          <h4><i class="fa-solid fa-calendar-check"></i>Daily Utilization</h4>
+          <p class="metric-sub">Actual daily usage marked by the technician — a separate measure from the planned timetable occupancy above.</p>
+        </div>
+      </div>
+      <div class="metric-number">{{ utilized_days }}/{{ total_days }} <small>days utilized</small></div>
+      <div class="metric-track">
+        <div class="metric-fill green" style="width:{{ utilization_pct }}%;">{{ utilization_pct }}%</div>
+      </div>
+    </div>
+
+    <!-- ================= Mark a Day ================= -->
+    <div class="section-card">
+      <div class="section-head">
+        <h4><i class="fa-solid fa-pen"></i>Mark a Day</h4>
+      </div>
+      {% if can_mark %}
+        <form method="post" action="">
+          {% csrf_token %}
+          <input type="hidden" name="lab" value="{{ lab_obj.id }}">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label class="field-label"><i class="fa-solid fa-calendar-check"></i>Date</label>
+              <input type="date" name="log_date" class="form-control" value="{{ today|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-3">
+              <label class="field-label d-block"><i class="fa-solid fa-clipboard-check"></i>Utilized</label>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="is_utilized" id="util_yes" value="yes" checked>
+                <label class="form-check-label" for="util_yes">Yes</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="is_utilized" id="util_no" value="no">
+                <label class="form-check-label" for="util_no">No</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="field-label"><i class="fa-solid fa-circle-info"></i>Remarks</label>
+              <input type="text" name="remarks" class="form-control" placeholder="Optional">
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-open-lab"><i class="fas fa-floppy-disk me-1"></i>Save</button>
+            </div>
+          </div>
+        </form>
+      {% else %}
+        <div class="hint-box">
+          <i class="fa-solid fa-circle-info"></i>
+          <div>Only the assigned technician for this lab (or an admin) can mark daily utilization here. You can still view all the utilization data below.</div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- ================= Daily log table ================= -->
+    <div class="section-card mb-0">
+      <div class="section-head">
+        <h4><i class="fa-solid fa-list-check"></i>Utilization Log</h4>
+      </div>
+      <div class="util-scroll">
+        <table class="util-table">
+          <thead>
+            <tr><th>Date</th><th>Status</th><th>Remarks</th><th>Marked By</th></tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+            <tr>
+              <td>{{ log.log_date|date:'d M Y' }}</td>
+              <td>
+                {% if log.is_utilized %}
+                  <span class="badge-util"><i class="fa-solid fa-calendar-check me-1"></i>Utilized</span>
+                {% else %}
+                  <span class="badge-not-util"><i class="fa-solid fa-calendar-xmark me-1"></i>Not Utilized</span>
+                {% endif %}
+              </td>
+              <td>{{ log.remarks|default:"-" }}</td>
+              <td>{{ log.marked_by.name|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center text-muted py-3">No log entries yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="empty-card">
+      <i class="fa-solid fa-flask"></i>
+      <h5>Select a lab above to see its detailed utilization.</h5>
+      <p>The all-labs overview above already shows every lab's weekly occupancy. Pick one to see its course-wise lab hours, daily utilization log and to mark a day.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock content %}

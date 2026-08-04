@@ -1,0 +1,946 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- Include DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+
+<style>
+.update-umis {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.update-umis .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.update-umis .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.update-umis .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.update-umis .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.update-umis .stats-bar {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.update-umis .stats-bar .title-info h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  margin: 0 0 0.25rem 0;
+}
+
+.update-umis .stats-bar .title-info p {
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+.update-umis .stats-numbers {
+  display: flex;
+  gap: 2rem;
+  text-align: center;
+}
+
+.update-umis .stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.update-umis .stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a4b8c;
+  line-height: 1;
+}
+
+.update-umis .stat-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.update-umis .filters-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.update-umis .filters-card .card-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #374151;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.update-umis .filters-card .card-header h5 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.update-umis .filters-card .card-header i {
+  margin-right: 0.75rem;
+  color: #1a4b8c;
+}
+
+.update-umis .filters-card .card-body {
+  padding: 1.5rem;
+}
+
+.update-umis .form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.update-umis .form-control,
+.update-umis .form-select {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.update-umis .form-control:focus,
+.update-umis .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+}
+
+.update-umis .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.update-umis .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.update-umis .btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.update-umis .btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+}
+
+.update-umis .btn-outline-primary {
+  border: 1px solid #1a4b8c;
+  color: #1a4b8c;
+  border-radius: 12px;
+  padding: 0.875rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.update-umis .btn-outline-primary:hover {
+  background: #1a4b8c;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.update-umis .table-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.update-umis .table-card .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.update-umis .table-card .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.update-umis .table-card .card-header i {
+  margin-right: 0.75rem;
+}
+
+.update-umis .student-count-badge {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.update-umis .table-container {
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+}
+
+.update-umis .dataTables-wrapper {
+  background: white;
+}
+
+.update-umis .table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.update-umis .table thead {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.update-umis .table th {
+  color: white;
+  font-weight: 700;
+  padding: 1rem;
+  text-align: left;
+  border: none;
+  position: relative;
+}
+
+.update-umis .table th:after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, transparent);
+}
+
+.update-umis .table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #4b5563;
+  vertical-align: middle;
+}
+
+.update-umis .table tbody tr:hover {
+  background-color: #f9fafb;
+  border-left: 3px solid #1a4b8c;
+  transform: translateX(2px);
+}
+
+.update-umis .table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.update-umis .student-avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.update-umis .table tbody tr:hover .student-avatar {
+  transform: scale(1.1);
+}
+
+.update-umis .action-buttons {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-top: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.update-umis .alert {
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border: none;
+  font-weight: 500;
+}
+
+.update-umis .alert-success {
+  background-color: #d1fae5;
+  color: #065f46;
+  border-left: 4px solid #10b981;
+}
+
+.update-umis .alert-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+  border-left: 4px solid #f59e0b;
+}
+
+.update-umis .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.update-umis .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.update-umis .loading-spinner {
+  text-align: center;
+  padding: 2rem;
+  display: none;
+}
+
+.update-umis .spinner-border {
+  color: #1a4b8c;
+}
+
+.update-umis .umis-input {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  background: linear-gradient(135deg, #f0fff4 0%, #e8f5e8 100%);
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  min-width: 150px;
+}
+
+.update-umis .umis-input:focus {
+  background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+  border-color: #28a745;
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+  transform: translateY(-1px);
+}
+
+/* DataTables Custom Styling */
+.update-umis .dataTables_length select {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.update-umis .dataTables_filter input {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.update-umis .dataTables_paginate .paginate_button {
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  margin: 0 2px;
+  padding: 0.5rem 0.75rem !important;
+}
+
+.update-umis .dataTables_paginate .paginate_button.current {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%) !important;
+  color: white !important;
+  border: none !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .update-umis .page-header {
+    padding: 1rem;
+  }
+  
+  .update-umis .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .update-umis .stats-bar {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .update-umis .stats-numbers {
+    gap: 1.5rem;
+  }
+  
+  .update-umis .table-card .card-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .update-umis .action-buttons {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .update-umis {
+    padding: 1rem;
+  }
+  
+  .update-umis .page-header {
+    padding: 0.75rem;
+  }
+  
+  .update-umis .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .update-umis .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .update-umis .filters-card .card-body {
+    padding: 1rem;
+  }
+  
+  .update-umis .table {
+    font-size: 0.8rem;
+  }
+  
+  .update-umis .table th,
+  .update-umis .table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .update-umis .umis-input {
+    font-size: 0.8rem;
+    min-width: 120px;
+    padding: 0.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .update-umis .table-card .card-header h5 {
+    font-size: 1.1rem;
+  }
+  
+  .update-umis .stats-bar .title-info h2 {
+    font-size: 1.25rem;
+  }
+  
+  .update-umis .stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .update-umis .student-count-badge {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.75rem;
+  }
+}
+</style>
+
+<div class="update-umis">
+
+<div class="page-container">
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="title-info">
+        <h2>UMIS ID Management</h2>
+        <p>Update and manage student UMIS identification numbers</p>
+      </div>
+      <div class="stats-numbers">
+        <div class="stat-item">
+          <span class="stat-value">{{ students|length|default:0 }}</span>
+          <span class="stat-label">Students</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ batches|length }}</span>
+          <span class="stat-label">Batches</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loadingSpinner">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2 text-muted">Processing your request...</p>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="filters-card">
+      <div class="card-header">
+        <h5><i class="fas fa-filter me-2"></i>Filter Criteria</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" id="filterForm">
+          {% csrf_token %}
+          <div class="row g-3 align-items-end">
+            <div class="col-md-6">
+              <label class="form-label">Department</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                value="{{ department.Department }}" 
+                readonly
+                style="background-color: #f8fafc; font-weight: 600;"
+              >
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Academic Batch</label>
+              <select name="batch" class="form-select" required>
+                <option value="" disabled selected>Select Batch</option>
+                {% for b in batches %}
+                  <option value="{{ b }}" {% if selected_batch == b %}selected{% endif %}>{{ b }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" name="load_students" class="btn btn-primary w-100">
+                <i class="fas fa-users me-2"></i> Load Students
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+ 
+    <!-- Students Data Table -->
+    {% if students %}
+    <div class="table-card">
+      <div class="card-header">
+        <h5><i class="fas fa-list-check me-2"></i>Student UMIS IDs</h5>
+        <div class="student-count-badge">
+          <i class="fas fa-user-graduate me-1"></i> {{ students|length }} Students
+        </div>
+      </div>
+      <div class="table-container">
+        <form method="POST" id="umisForm">
+          {% csrf_token %}
+          <input type="hidden" name="selected_batch" value="{{ selected_batch }}">
+          
+          <div class="dataTables-wrapper">
+            <table id="studentsTable" class="table display responsive nowrap" style="width:100%">
+              <thead>
+                <tr>
+                  <th width="5%" class="text-center">SL</th>
+                  <th width="35%">
+                    <i class="fas fa-user-tie me-2"></i>Student Name
+                  </th>
+                  <th width="25%">
+                    <i class="fas fa-id-card me-2"></i>Register No
+                  </th>
+                  <th width="35%" class="text-center">
+                    <i class="fas fa-key me-2"></i>UMIS ID
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for s in students %}
+                <tr>
+                  <td class="text-center fw-bold text-muted">{{ forloop.counter }}</td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="student-avatar">
+                        <i class="fas fa-user"></i>
+                      </div>
+                      <span class="fw-medium text-dark ms-2">{{ s.name }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <i class="fas fa-hashtag me-2 text-muted"></i>
+                      <span class="fw-semibold text-primary">{{ s.reg_no }}</span>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <input type="text" 
+                           name="umis_{{ s.id }}" 
+                           class="form-control umis-input" 
+                           value="{{ s.umis_id|default:'' }}"
+                           placeholder="Enter UMIS ID"
+                           maxlength="50">
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <div class="text-muted">
+              <i class="fas fa-info-circle me-1"></i>
+              Update UMIS IDs for all students in the table above
+            </div>
+            <div class="d-flex gap-2">
+              <button type="submit" name="save_umis" class="btn btn-success" id="saveBtn">
+                <i class="fas fa-save me-2"></i> Save UMIS IDs
+              </button>
+              {% comment %} <button type="button" class="btn btn-outline-primary" onclick="window.# print()">
+                <i class="fas fa-# print me-2"></i> Print
+              </button> {% endcomment %}
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% elif selected_batch and request.POST.load_students %}
+    <div class="alert alert-warning text-center">
+      <div class="d-flex align-items-center justify-content-center">
+        <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+        <div>
+          <h6 class="alert-heading mb-1">No Students Found</h6>
+          <p class="mb-0">No students were found for the selected batch.</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Include jQuery and DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+
+<script>
+// Enhanced UMIS ID Management System
+class UMISManager {
+  constructor() {
+    this.dataTable = null;
+    this.init();
+  }
+
+  init() {
+    this.initializeDataTable();
+    this.setupEventListeners();
+    this.handleUIState();
+    this.animateElements();
+  }
+
+  initializeDataTable() {
+    if ($('#studentsTable').length) {
+      this.dataTable = $('#studentsTable').DataTable({
+        paging: true,
+        pageLength: 25,
+        lengthChange: true,
+        searching: true,
+        ordering: true,
+        info: true,
+        autoWidth: false,
+        responsive: true,
+        order: [[1, 'asc']],
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+        language: {
+          search: "<i class='fas fa-search me-2'></i>Search:",
+          lengthMenu: "<i class='fas fa-list me-2'></i>Show _MENU_ entries",
+          info: "<i class='fas fa-info-circle me-2'></i>Showing _START_ to _END_ of _TOTAL_ students",
+          infoEmpty: "<i class='fas fa-info-circle me-2'></i>No students available",
+          infoFiltered: "<i class='fas fa-filter me-2'></i>(filtered from _MAX_ total students)",
+          zeroRecords: "<i class='fas fa-search me-2'></i>No matching students found",
+          paginate: {
+            first: "<i class='fas fa-angle-double-left'></i>",
+            last: "<i class='fas fa-angle-double-right'></i>",
+            next: "<i class='fas fa-angle-right'></i>",
+            previous: "<i class='fas fa-angle-left'></i>"
+          }
+        },
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        initComplete: function() {
+          this.applyCustomStyles();
+          this.animateTableRows();
+        }.bind(this),
+        drawCallback: function() {
+          this.handleResponsiveLayout();
+          this.animateTableRows();
+        }.bind(this)
+      });
+    }
+  }
+
+  animateTableRows() {
+    $('table.dataTable tbody tr').each(function(index) {
+      $(this).delay(index * 50).css({
+        'opacity': 0,
+        'transform': 'translateX(-20px)'
+      }).animate({
+        'opacity': 1,
+        'transform': 'translateX(0)'
+      }, 300);
+    });
+  }
+
+  animateElements() {
+    // Animate cards on load
+    $('.card').css({
+      'opacity': 0,
+      'transform': 'translateY(20px)'
+    }).animate({
+      'opacity': 1,
+      'transform': 'translateY(0)'
+    }, 500);
+  }
+
+  applyCustomStyles() {
+    // Style DataTables elements
+    $('.dataTables_length select').addClass('form-select form-select-sm');
+    $('.dataTables_filter input').addClass('form-control form-control-sm');
+    
+    // Style UMIS inputs in DataTables
+    $('.umis-input').addClass('form-control-sm');
+  }
+
+  handleResponsiveLayout() {
+    if (window.innerWidth < 768) {
+      $('.dataTables_wrapper').addClass('mobile-view');
+    } else {
+      $('.dataTables_wrapper').removeClass('mobile-view');
+    }
+  }
+
+  setupEventListeners() {
+    // Save button confirmation
+    $('#saveBtn').on('click', (e) => {
+      if (!this.validateSaveAction()) {
+        e.preventDefault();
+        return false;
+      }
+      
+      this.handleSaveButtonState();
+      this.showLoading(true);
+    });
+
+    // Form submission handling
+    $('#filterForm').on('submit', () => {
+      this.clearSuccessMessages();
+      this.showLoading(true);
+    });
+
+    $('#umisForm').on('submit', () => {
+      this.showLoading(true);
+    });
+
+    // Clear success message when filters change
+    $('select[name="batch"]').on('change', () => {
+      this.clearSuccessMessages();
+    });
+
+    // Window resize handling
+    $(window).on('resize', () => {
+      this.handleResponsiveLayout();
+    });
+
+    // UMIS input validation
+    $(document).on('input', '.umis-input', function() {
+      const value = $(this).val().trim();
+      if (value.length > 0 && !this.validateUMISFormat(value)) {
+        $(this).addClass('is-invalid');
+        this.showInputWarning($(this), 'Invalid UMIS format');
+      } else {
+        $(this).removeClass('is-invalid');
+        this.hideInputWarning($(this));
+      }
+    }.bind(this));
+  }
+
+  validateUMISFormat(umis) {
+    // Basic UMIS validation - adjust according to your requirements
+    const umisRegex = /^[A-Za-z0-9\-_]+$/;
+    return umisRegex.test(umis);
+  }
+
+  showInputWarning(input, message) {
+    let warning = input.parent().find('.umis-warning');
+    if (warning.length === 0) {
+      warning = $(`<small class="umis-warning text-danger mt-1 d-block"><i class="fas fa-exclamation-triangle me-1"></i>${message}</small>`);
+      input.parent().append(warning);
+    }
+  }
+
+  hideInputWarning(input) {
+    input.parent().find('.umis-warning').remove();
+  }
+
+  validateSaveAction() {
+    const studentCount = {{ students|length|default:0 }};
+    if (studentCount === 0) {
+      this.showNotification('No students available to update!', 'warning');
+      return false;
+    }
+    
+    // Check if any UMIS IDs have been modified
+    let hasChanges = false;
+    $('.umis-input').each(function() {
+      if ($(this).val().trim() !== '') {
+        hasChanges = true;
+        return false; // break loop
+      }
+    });
+
+    if (!hasChanges) {
+      this.showNotification('No UMIS IDs have been entered!', 'warning');
+      return false;
+    }
+
+    const invalidInputs = $('.umis-input.is-invalid');
+    if (invalidInputs.length > 0) {
+      this.showNotification('Please fix invalid UMIS formats before saving!', 'warning');
+      invalidInputs.first().focus();
+      return false;
+    }
+
+    const confirmation = confirm(
+      `UMIS ID Update Confirmation\n\n` +
+      `Batch: {{ selected_batch }}\n` +
+      `Department: {{ department.Department }}\n` +
+      `Students: ${studentCount}\n\n` +
+      `This will update UMIS IDs for all ${studentCount} students.\n` +
+      `Please ensure all data is correct before proceeding.`
+    );
+    
+    return confirmation;
+  }
+
+  handleSaveButtonState() {
+    const originalHtml = $('#saveBtn').html();
+    $('#saveBtn').html('<i class="fas fa-cog fa-spin me-2"></i>Saving...');
+    $('#saveBtn').prop('disabled', true);
+    
+    // Revert after 5 seconds if still on page
+    setTimeout(() => {
+      $('#saveBtn').html(originalHtml);
+      $('#saveBtn').prop('disabled', false);
+    }, 5000);
+  }
+
+  showLoading(show) {
+    if (show) {
+      $('#loadingSpinner').fadeIn(300);
+    } else {
+      $('#loadingSpinner').fadeOut(300);
+    }
+  }
+
+  clearSuccessMessages() {
+    $('.alert-success').alert('close');
+  }
+
+  showNotification(message, type = 'info') {
+    // Create a temporary notification
+    const notification = $(`
+      <div class="alert alert-${type} alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+        <i class="fas fa-${type === 'success' ? 'check' : type === 'warning' ? 'exclamation-triangle' : 'info'}-circle me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `);
+    
+    $('body').append(notification);
+    setTimeout(() => notification.alert('close'), 5000);
+  }
+
+  handleUIState() {
+    // Clear success message on page refresh
+    if (performance.navigation?.type === 1) {
+      this.clearSuccessMessages();
+    }
+    
+    // Initial responsive layout check
+    this.handleResponsiveLayout();
+    
+    // Hide loading spinner initially
+    this.showLoading(false);
+  }
+}
+
+// Initialize the application
+$(document).ready(function() {
+  const umisManager = new UMISManager();
+  
+  // Make manager available globally for debugging
+  window.umisManager = umisManager;
+});
+
+// Utility function for # print functionality
+function printUMISTable() {
+  window.# print();
+}
+</script>
+
+{% endblock %}

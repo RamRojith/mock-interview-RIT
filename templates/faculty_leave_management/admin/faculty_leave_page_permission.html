@@ -1,0 +1,624 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+    .flpp-page {
+        --flpp-border: #e5e7eb;
+        --flpp-muted: #64748b;
+        --flpp-ink: #0f172a;
+        --flpp-accent: #1a56db;
+        --flpp-surface: #f8fafc;
+        color: var(--flpp-ink);
+    }
+
+    .flpp-page .flpp-header {
+        margin-bottom: 1.75rem;
+    }
+
+    .flpp-page .flpp-header h4 {
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .flpp-page .flpp-header p {
+        color: var(--flpp-muted);
+        margin-bottom: 0;
+        font-size: 0.92rem;
+    }
+
+    .flpp-page .flpp-section {
+        background: #fff;
+        border: 1px solid var(--flpp-border);
+        border-radius: 14px;
+        margin-bottom: 1.5rem;
+    }
+
+    .flpp-page .flpp-section-head {
+        padding: 1.1rem 1.4rem;
+        border-bottom: 1px solid var(--flpp-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .flpp-page .flpp-section-head h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--flpp-ink);
+    }
+
+    .flpp-page .flpp-section-body {
+        padding: 1.4rem;
+    }
+
+    .flpp-page .flpp-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+        background: var(--flpp-surface);
+        border: 1px solid var(--flpp-border);
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        font-size: 0.86rem;
+        color: var(--flpp-muted);
+        margin-bottom: 1.25rem;
+    }
+
+    .flpp-page .flpp-note i {
+        color: var(--flpp-accent);
+        margin-top: 0.15rem;
+    }
+
+    .flpp-page .flpp-edit-banner {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .flpp-page .form-label {
+        font-weight: 600;
+        font-size: 0.82rem;
+        color: var(--flpp-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        margin-bottom: 0.4rem;
+    }
+
+    .flpp-page .form-control,
+    .flpp-page .form-select {
+        border-radius: 8px;
+        border-color: var(--flpp-border);
+        font-size: 0.9rem;
+    }
+
+    .flpp-page .form-control:focus,
+    .flpp-page .form-select:focus {
+        border-color: var(--flpp-accent);
+        box-shadow: 0 0 0 0.15rem rgba(26, 86, 219, 0.12);
+    }
+
+    .flpp-combo {
+        position: relative;
+    }
+
+    .flpp-combo-toggle {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        background: #fff;
+        cursor: pointer;
+    }
+
+    .flpp-combo-toggle:focus,
+    .flpp-combo-toggle:hover {
+        border-color: var(--flpp-accent);
+    }
+
+    .flpp-combo-toggle .flpp-combo-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .flpp-combo-toggle::after {
+        content: "";
+        flex-shrink: 0;
+        border-top: 5px solid var(--flpp-muted);
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+    }
+
+    .flpp-combo-menu {
+        width: 100%;
+        min-width: 100%;
+        padding: 0.5rem;
+        border-radius: 10px;
+        border-color: var(--flpp-border);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .flpp-combo-search {
+        margin-bottom: 0.4rem;
+    }
+
+    .flpp-combo-options {
+        max-height: 220px;
+        overflow-y: auto;
+    }
+
+    .flpp-combo-option {
+        border-radius: 6px;
+        font-size: 0.88rem;
+    }
+
+    .flpp-combo-option.active {
+        background: var(--flpp-surface);
+        color: var(--flpp-accent);
+        font-weight: 600;
+    }
+
+    .flpp-combo-empty {
+        font-size: 0.82rem;
+        color: var(--flpp-muted);
+        padding: 0.4rem 0.75rem;
+    }
+
+    .flpp-page .btn {
+        border-radius: 8px;
+        font-size: 0.86rem;
+        font-weight: 600;
+    }
+
+    .flpp-page .btn-primary {
+        background: var(--flpp-accent);
+        border-color: var(--flpp-accent);
+    }
+
+    .flpp-page .btn-primary:hover {
+        background: #163fa8;
+        border-color: #163fa8;
+    }
+
+    .flpp-user-list {
+        max-height: 720px;
+        overflow-y: auto;
+        border: 1px solid var(--flpp-border);
+        border-radius: 10px;
+    }
+
+    .flpp-page .table {
+        margin-bottom: 0;
+        font-size: 0.88rem;
+    }
+
+    .flpp-page .table thead th {
+        background: var(--flpp-surface);
+        color: var(--flpp-muted);
+        font-weight: 600;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        border-bottom: 1px solid var(--flpp-border);
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .flpp-user-list thead th {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+    }
+
+    .flpp-page .table td {
+        vertical-align: middle;
+        border-color: var(--flpp-border);
+    }
+
+    .flpp-page .badge {
+        font-weight: 600;
+        font-size: 0.72rem;
+        padding: 0.4em 0.65em;
+    }
+
+    .flpp-page .badge-visible {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    .flpp-page .badge-hidden {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .flpp-page .badge-configured {
+        background: #eff6ff;
+        color: var(--flpp-accent);
+    }
+
+    .flpp-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        padding-top: 1rem;
+        margin-top: 1rem;
+        border-top: 1px solid var(--flpp-border);
+    }
+
+    .flpp-pagination-info {
+        font-size: 0.82rem;
+        color: var(--flpp-muted);
+    }
+
+    .flpp-pagination-links {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .flpp-page-link {
+        border: 1px solid var(--flpp-border);
+        border-radius: 8px;
+        padding: 0.35rem 0.9rem;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--flpp-ink);
+        text-decoration: none;
+    }
+
+    .flpp-page-link:hover {
+        border-color: var(--flpp-accent);
+        color: var(--flpp-accent);
+    }
+
+    .flpp-page-link-disabled {
+        color: #cbd5e1;
+        cursor: not-allowed;
+    }
+
+    .flpp-page .action-link {
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-decoration: none;
+        margin-right: 0.9rem;
+    }
+
+    .flpp-page .action-link.text-danger:hover,
+    .flpp-page .action-link:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="container-fluid mt-4 flpp-page">
+
+    <div class="flpp-header">
+        <h4>Faculty Leave Page Permission</h4>
+        <p>By default, the Leave Application page is <strong>visible to every user</strong>. Select specific users below and mark them <strong>Hidden</strong> to restrict access.</p>
+    </div>
+
+    {% if edit_obj %}
+    <div class="flpp-edit-banner mb-3 d-flex justify-content-between align-items-center">
+        <div>
+            <i class="fas fa-pen me-2 text-primary"></i>
+            Editing permission for
+            <strong>{{ edit_obj.user_info.name|default:"Unknown User" }}</strong>
+            (Employee ID: {{ edit_obj.user_info.employee_id|default:"-" }})
+        </div>
+        <a href="{% url 'faculty_leave_page_permission' %}" class="btn btn-sm btn-outline-secondary">Cancel Edit</a>
+    </div>
+    {% endif %}
+
+    <!-- Search & Filters -->
+    <div class="flpp-section">
+        <div class="flpp-section-head">
+            <h6><i class="fas fa-filter me-2 text-muted"></i>Search &amp; Filter</h6>
+        </div>
+        <div class="flpp-section-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input
+                        type="text"
+                        name="q"
+                        class="form-control"
+                        placeholder="Search by name, employee ID, department, role..."
+                        value="{{ search_query }}"
+                    >
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Department</label>
+                    <div class="dropdown flpp-combo">
+                        <button type="button" class="form-select flpp-combo-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                            <span class="flpp-combo-label">{{ selected_department_label|default:"All Departments" }}</span>
+                        </button>
+                        <div class="dropdown-menu flpp-combo-menu">
+                            <input type="text" class="form-control form-control-sm flpp-combo-search" placeholder="Search department...">
+                            <div class="flpp-combo-options">
+                                <button type="button" class="dropdown-item flpp-combo-option {% if not selected_department %}active{% endif %}" data-value="">All Departments</button>
+                                {% for dept in departments %}
+                                    <button type="button" class="dropdown-item flpp-combo-option {% if selected_department|stringformat:'s' == dept.id|stringformat:'s' %}active{% endif %}" data-value="{{ dept.id }}">{{ dept.Department }}</button>
+                                {% endfor %}
+                            </div>
+                            <div class="flpp-combo-empty d-none">No matches found.</div>
+                        </div>
+                        <input type="hidden" name="department" value="{{ selected_department }}" class="flpp-combo-value">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Role</label>
+                    <div class="dropdown flpp-combo">
+                        <button type="button" class="form-select flpp-combo-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                            <span class="flpp-combo-label">{{ selected_role_label|default:"All Roles" }}</span>
+                        </button>
+                        <div class="dropdown-menu flpp-combo-menu">
+                            <input type="text" class="form-control form-control-sm flpp-combo-search" placeholder="Search role...">
+                            <div class="flpp-combo-options">
+                                <button type="button" class="dropdown-item flpp-combo-option {% if not selected_role %}active{% endif %}" data-value="">All Roles</button>
+                                {% for role in roles %}
+                                    <button type="button" class="dropdown-item flpp-combo-option {% if selected_role|stringformat:'s' == role.id|stringformat:'s' %}active{% endif %}" data-value="{{ role.id }}">{{ role.role }}</button>
+                                {% endfor %}
+                            </div>
+                            <div class="flpp-combo-empty d-none">No matches found.</div>
+                        </div>
+                        <input type="hidden" name="role" value="{{ selected_role }}" class="flpp-combo-value">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Roles per user</label>
+                    <select name="role_count" class="form-select">
+                        <option value="" {% if not selected_role_count %}selected{% endif %}>All users</option>
+                        <option value="single" {% if selected_role_count == 'single' %}selected{% endif %}>Single role</option>
+                        <option value="multiple" {% if selected_role_count == 'multiple' %}selected{% endif %}>Multiple roles</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="fas fa-search me-1"></i>Search
+                    </button>
+                    <a href="{% url 'faculty_leave_page_permission' %}" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Assign Permission -->
+    <div class="flpp-section">
+        <div class="flpp-section-head">
+            <h6><i class="fas fa-user-shield me-2 text-muted"></i>Assign Leave Page Permission</h6>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-success" id="flppSelectAll">Select All</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" id="flppDeselectAll">Deselect All</button>
+            </div>
+        </div>
+        <div class="flpp-section-body">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="save">
+                <input type="hidden" name="q" value="{{ search_query }}">
+                <input type="hidden" name="department" value="{{ selected_department }}">
+                <input type="hidden" name="role" value="{{ selected_role }}">
+                <input type="hidden" name="role_count" value="{{ selected_role_count }}">
+
+                <div class="flpp-user-list mb-2">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"><input type="checkbox" id="flppHeaderCheckbox"></th>
+                                <th>Employee ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Role</th>
+                                <th>Current Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                                <tr>
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            class="form-check-input flpp-user-checkbox"
+                                            name="user_ids"
+                                            value="{{ u.id }}"
+                                            {% if u.id in edit_selected_user_ids %}checked{% endif %}
+                                        >
+                                    </td>
+                                    <td>{{ u.Employee_id }}</td>
+                                    <td>{{ u.username }}</td>
+                                    <td>{{ u.Department.Department|default:"-" }}</td>
+                                    <td>{{ u.role.role|default:"-" }}</td>
+                                    <td>
+                                        {% if u.id in assigned_user_ids %}
+                                            <span class="badge badge-configured">Configured</span>
+                                        {% else %}
+                                            <span class="badge badge-visible">Default &middot; Visible</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">No users found for the selected filters.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row g-3 align-items-end mt-2">
+                    <div class="col-md-6">
+                        <label class="form-label">Leave Page Visibility</label>
+                        <select name="is_hidden" class="form-select">
+                            <option value="false" {% if not edit_obj or not edit_obj.is_hidden %}selected{% endif %}>Show Page (Visible)</option>
+                            <option value="true" {% if edit_obj.is_hidden %}selected{% endif %}>Hide Page (Restricted)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Permission(s)
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Existing Permissions -->
+    <div class="flpp-section">
+        <div class="flpp-section-head">
+            <h6><i class="fas fa-list me-2 text-muted"></i>Configured Permissions</h6>
+        </div>
+        <div class="flpp-section-body">
+            <form method="get" class="mb-3">
+                {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
+                {% if selected_department %}<input type="hidden" name="department" value="{{ selected_department }}">{% endif %}
+                {% if selected_role %}<input type="hidden" name="role" value="{{ selected_role }}">{% endif %}
+                {% if selected_role_count %}<input type="hidden" name="role_count" value="{{ selected_role_count }}">{% endif %}
+                <div class="input-group input-group-sm" style="max-width: 380px;">
+                    <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                    <input
+                        type="text"
+                        name="pq"
+                        class="form-control"
+                        placeholder="Search configured permissions..."
+                        value="{{ perm_search_query }}"
+                    >
+                    <button type="submit" class="btn btn-outline-secondary">Search</button>
+                    {% if perm_search_query %}
+                        <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_department %}department={{ selected_department }}&{% endif %}{% if selected_role %}role={{ selected_role }}&{% endif %}{% if selected_role_count %}role_count={{ selected_role_count }}&{% endif %}" class="btn btn-outline-secondary">Clear</a>
+                    {% endif %}
+                </div>
+            </form>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Employee ID</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th style="width: 150px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for perm in permissions %}
+                            <tr>
+                                <td>{{ forloop.counter0|add:permissions.start_index }}</td>
+                                <td>{{ perm.user_info.employee_id|default:"-" }}</td>
+                                <td>{{ perm.user_info.name|default:"Unknown User" }}</td>
+                                <td>{{ perm.user_info.department_label|default:"-" }}</td>
+                                <td>{{ perm.user_info.role_label|default:"-" }}</td>
+                                <td>
+                                    {% if perm.is_hidden %}
+                                        <span class="badge badge-hidden">Hidden</span>
+                                    {% else %}
+                                        <span class="badge badge-visible">Visible</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="?edit={{ perm.id }}" class="action-link">Edit</a>
+                                    <a href="?delete={{ perm.id }}"
+                                       class="action-link text-danger"
+                                       onclick="return confirm('Are you sure you want to delete this permission entry?');">
+                                        Delete
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">No permission entries configured yet.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% include "faculty_leave_management/admin/_flpp_pagination.html" with page_obj=permissions page_param="perm_page" querystring=perm_querystring %}
+        </div>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const headerCheckbox = document.getElementById('flppHeaderCheckbox');
+    const checkboxes = document.querySelectorAll('.flpp-user-checkbox');
+    const selectAllBtn = document.getElementById('flppSelectAll');
+    const deselectAllBtn = document.getElementById('flppDeselectAll');
+
+    function setAll(checked) {
+        checkboxes.forEach(cb => { cb.checked = checked; });
+        if (headerCheckbox) headerCheckbox.checked = checked;
+    }
+
+    if (headerCheckbox) {
+        headerCheckbox.addEventListener('change', () => setAll(headerCheckbox.checked));
+    }
+    if (selectAllBtn) selectAllBtn.addEventListener('click', () => setAll(true));
+    if (deselectAllBtn) deselectAllBtn.addEventListener('click', () => setAll(false));
+
+    // Searchable dropdown combo (Department / Role filters) — plain Bootstrap 5 dropdown + vanilla JS.
+    document.querySelectorAll('.flpp-combo').forEach(function (combo) {
+        const toggle = combo.querySelector('.flpp-combo-toggle');
+        const label = combo.querySelector('.flpp-combo-label');
+        const hiddenInput = combo.querySelector('.flpp-combo-value');
+        const searchInput = combo.querySelector('.flpp-combo-search');
+        const emptyState = combo.querySelector('.flpp-combo-empty');
+        const options = Array.from(combo.querySelectorAll('.flpp-combo-option'));
+
+        options.forEach(function (opt) {
+            opt.addEventListener('click', function () {
+                hiddenInput.value = opt.dataset.value;
+                label.textContent = opt.textContent.trim();
+                options.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+
+                if (window.bootstrap && window.bootstrap.Dropdown) {
+                    window.bootstrap.Dropdown.getOrCreateInstance(toggle).hide();
+                }
+            });
+        });
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                const term = searchInput.value.trim().toLowerCase();
+                let visibleCount = 0;
+                options.forEach(function (opt) {
+                    const match = !term || opt.textContent.toLowerCase().includes(term);
+                    opt.classList.toggle('d-none', !match);
+                    if (match) visibleCount += 1;
+                });
+                if (emptyState) emptyState.classList.toggle('d-none', visibleCount > 0);
+            });
+
+            searchInput.addEventListener('click', function (e) { e.stopPropagation(); });
+            searchInput.addEventListener('keydown', function (e) {
+                e.stopPropagation();
+                if (e.key === 'Enter') e.preventDefault();
+            });
+        }
+
+        combo.addEventListener('shown.bs.dropdown', function () {
+            if (searchInput) {
+                searchInput.value = '';
+                options.forEach(o => o.classList.remove('d-none'));
+                if (emptyState) emptyState.classList.add('d-none');
+                searchInput.focus();
+            }
+        });
+    });
+});
+</script>
+
+{% endblock content %}

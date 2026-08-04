@@ -1,0 +1,401 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">Retest Internal Marks</h2>
+      <p class="text-muted mb-2 mb-md-0">Manage retest marks for absent students</p>
+    </div>
+    <div class="d-flex align-items-center">
+      <span class="badge bg-primary fs-6">{{ assigned_subjects|length }} Subjects</span>
+    </div>
+  </div>
+
+  {% if assigned_subjects %}
+    <div class="row g-4 mb-5">
+      {% for subject in assigned_subjects %}
+        <div class="col-xl-4 col-lg-6 col-md-6">
+          <div class="card subject-card h-100 shadow-sm border-0 hover-lift"
+               data-course-id="{{ subject.course.id }}"
+               data-course-code="{{ subject.course.course_code }}"
+               data-course-title="{{ subject.course.title }}"
+               data-department="{{ subject.department_code }} - {{ subject.department_name }}"
+               data-department-id="{{ subject.department.id }}"
+               data-batch="{{ subject.batch }}"
+               data-section="{{ subject.section }}"
+               data-degree-id="{{ subject.degree_id }}"
+               data-degree-code="{{ subject.degree_code }}"
+               data-degree-name="{{ subject.degree_name }}"
+               data-exams='[{% for exam in subject.exam_names %}"{{ exam|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}]'>
+
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="course-badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-3">
+                  <h5 class="mb-0 fw-bold">{{ subject.course.course_code }}</h5>
+                </div>
+
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-outline-secondary border-0 dropdown-toggle"
+                          type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-three-dots-vertical"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#">View Details</a></li>
+                    <li><a class="dropdown-item" href="#">Absent Students</a></li>
+                  </ul>
+                </div>
+              </div>
+
+              <h6 class="card-title mb-3 text-dark">{{ subject.course.title }}</h6>
+
+              <div class="subject-meta mb-3">
+                <div class="d-flex align-items-center text-muted mb-2">
+                  <i class="bi bi-building me-2"></i>
+                  <small>{{ subject.department_code }} - {{ subject.department_name }}</small>
+                </div>
+
+                {% if subject.degree_code or subject.degree_name %}
+                <div class="d-flex align-items-center text-muted mb-2">
+                  <i class="bi bi-mortarboard me-2"></i>
+                  <small>
+                    {{ subject.degree_code }}
+                    {% if subject.degree_code and subject.degree_name %} — {% endif %}
+                    {{ subject.degree_name }}
+                  </small>
+                </div>
+                {% endif %}
+
+                {% if subject.batch or subject.section %}
+                <div class="d-flex gap-2 flex-wrap">
+                  {% if subject.batch %}
+                    <span class="badge bg-success">
+                      <i class="bi bi-people me-1"></i>Batch {{ subject.batch }}
+                    </span>
+                  {% endif %}
+                  {% if subject.section %}
+                    <span class="badge bg-info text-dark">
+                      <i class="bi bi-layout-split me-1"></i>Section {{ subject.section }}
+                    </span>
+                  {% endif %}
+                </div>
+                {% endif %}
+              </div>
+
+              <div class="text-center mt-3">
+                <button type="button" class="btn btn-primary px-4 select-subject-btn">
+                  <i class="bi bi-pencil-square me-2"></i>Enter Retest Marks
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div id="assessment-section" class="card shadow-sm border-0 mb-4" style="display:none;">
+      <div class="card-header bg-light py-3">
+        <h5 class="mb-0" id="selected-subject-title">
+          <i class="bi bi-journal-text me-2"></i>Select Assessment
+        </h5>
+      </div>
+      <div class="card-body p-4">
+        <div class="row align-items-end">
+          <div class="col-md-6">
+            <label for="exam-name-select" class="form-label fw-semibold">Assessment</label>
+            <select id="exam-name-select" class="form-select">
+              <option value="" selected disabled>Choose Assessment</option>
+            </select>
+            <div id="assessment-help" class="form-text">Choose exam name for this subject.</div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-primary px-4" id="load-students-btn">
+                <i class="bi bi-check-lg me-2"></i>Load Students
+              </button>
+              <button type="button" class="btn btn-outline-secondary" id="cancel-selection">
+                <i class="bi bi-x-lg me-2"></i>Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form id="selected-subject-form" method="POST" style="display:none;">
+      {% csrf_token %}
+      <input type="hidden" name="course_id" id="course_id">
+      <input type="hidden" name="course_code" id="course_code">
+      <input type="hidden" name="course_title" id="course_title">
+      <input type="hidden" name="department" id="department">
+      <input type="hidden" name="department_id" id="department_id">
+      <input type="hidden" name="batch" id="batch">
+      <input type="hidden" name="section" id="section">
+      <input type="hidden" name="degree_id" id="degree_id">
+      <input type="hidden" name="degree_code" id="degree_code">
+      <input type="hidden" name="degree_name" id="degree_name">
+      <input type="hidden" name="exam_name" id="exam_name">
+    </form>
+
+    {% if students %}
+    <div id="students-table" class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="mb-1">{{ selected_course_code }} - {{ selected_course_title }}</h5>
+            <div class="d-flex flex-wrap gap-3 text-muted">
+              {% if selected_batch %}
+                <span><i class="bi bi-people me-1"></i>Batch: {{ selected_batch }}</span>
+              {% endif %}
+              {% if selected_section %}
+                <span><i class="bi bi-layout-split me-1"></i>Section: {{ selected_section }}</span>
+              {% endif %}
+              {% if selected_department %}
+                <span><i class="bi bi-building me-1"></i>{{ selected_department }}</span>
+              {% endif %}
+              {% if selected_degree_code or selected_degree_name %}
+                <span><i class="bi bi-mortarboard me-1"></i>
+                  {{ selected_degree_code }}{% if selected_degree_code and selected_degree_name %} — {% endif %}{{ selected_degree_name }}
+                </span>
+              {% endif %}
+              {% if selected_exam_name %}
+                <span class="badge bg-danger">{{ selected_exam_name }}</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="text-muted">
+            {{ students|length }} absent students
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">Reg No</th>
+                <th>Student Name</th>
+                <th>Department</th>
+                <th class="text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for student in students %}
+                <tr>
+                  <td class="ps-4 fw-semibold">{{ student.reg_no }}</td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-sm bg-light rounded-circle d-flex align-items-center justify-content-center me-3">
+                        <i class="bi bi-person text-muted"></i>
+                      </div>
+                      {{ student.name }}
+                    </div>
+                  </td>
+                  <td>
+                    <small class="text-muted">{{ student.department_name }}</small>
+                  </td>
+                  <td class="text-center">
+                    <button type="button"
+                            class="btn btn-outline-primary btn-sm enter-mark-btn"
+                            data-reg-no="{{ student.reg_no }}"
+                            data-student-name="{{ student.name }}"
+                            data-course-id="{{ selected_course_id }}"
+                            data-course-code="{{ selected_course_code }}"
+                            data-course-title="{{ selected_course_title }}"
+                            data-batch="{{ selected_batch }}"
+                            data-section="{{ selected_section }}"
+                            data-exam-name="{{ selected_exam_name }}"
+                            data-department-name="{{ student.department_name }}"
+                            data-department-code="{{ student.department_code }}"
+                            data-department-id="{{ selected_department_id }}"
+                            data-degree-id="{{ student.degree_id }}"
+                            data-degree-code="{{ student.degree_code }}"
+                            data-degree-name="{{ student.degree_name }}">
+                      <i class="bi bi-pencil-square me-1"></i>Enter Mark
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  {% else %}
+    <div class="text-center py-5">
+      <div class="empty-state-icon mb-4">
+        <i class="bi bi-journal-x display-1 text-muted"></i>
+      </div>
+      <h4 class="text-muted mb-3">No Subjects Found</h4>
+      <p class="text-muted mb-4">No retest data available for your subjects.</p>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const cards = document.querySelectorAll('.subject-card');
+  const assessmentSection = document.getElementById('assessment-section');
+  const selectedTitle = document.getElementById('selected-subject-title');
+  const examSelect = document.getElementById('exam-name-select');
+  const form = document.getElementById('selected-subject-form');
+  const cancelBtn = document.getElementById('cancel-selection');
+  const loadStudentsBtn = document.getElementById('load-students-btn');
+
+  let selectedSubject = {};
+
+  function populateAssessmentOptions(exams) {
+    examSelect.innerHTML = '';
+
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    placeholder.textContent = 'Choose Assessment';
+    examSelect.appendChild(placeholder);
+
+    if (!exams || exams.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.disabled = true;
+      opt.textContent = 'No Assessment Found';
+      examSelect.appendChild(opt);
+      examSelect.disabled = true;
+      return;
+    }
+
+    exams.forEach(exam => {
+      const opt = document.createElement('option');
+      opt.value = exam;
+      opt.textContent = exam;
+      examSelect.appendChild(opt);
+    });
+
+    examSelect.disabled = false;
+  }
+
+  function captureCardData(card) {
+    selectedSubject = {
+      course_id: card.dataset.courseId || '',
+      course_code: card.dataset.courseCode || '',
+      course_title: card.dataset.courseTitle || '',
+      department: card.dataset.department || '',
+      department_id: card.dataset.departmentId || '',
+      batch: card.dataset.batch || '',
+      section: card.dataset.section || '',
+      degree_id: card.dataset.degreeId || '',
+      degree_code: card.dataset.degreeCode || '',
+      degree_name: card.dataset.degreeName || '',
+      exams: []
+    };
+
+    try {
+      selectedSubject.exams = JSON.parse(card.dataset.exams || '[]');
+    } catch (e) {
+      selectedSubject.exams = [];
+    }
+  }
+
+  cards.forEach(card => {
+    const btn = card.querySelector('.select-subject-btn');
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+
+      cards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+
+      captureCardData(card);
+
+      selectedTitle.innerHTML = `
+        <i class="bi bi-journal-text me-2"></i>
+        ${selectedSubject.course_code} - ${selectedSubject.course_title}
+      `;
+
+      populateAssessmentOptions(selectedSubject.exams);
+      assessmentSection.style.display = 'block';
+      assessmentSection.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  loadStudentsBtn.addEventListener('click', function () {
+    const selectedExam = examSelect.value;
+
+    if (!selectedExam) {
+      alert('Please choose an assessment.');
+      return;
+    }
+
+    document.getElementById('course_id').value = selectedSubject.course_id;
+    document.getElementById('course_code').value = selectedSubject.course_code;
+    document.getElementById('course_title').value = selectedSubject.course_title;
+    document.getElementById('department').value = selectedSubject.department;
+    document.getElementById('department_id').value = selectedSubject.department_id;
+    document.getElementById('batch').value = selectedSubject.batch;
+    document.getElementById('section').value = selectedSubject.section;
+    document.getElementById('degree_id').value = selectedSubject.degree_id;
+    document.getElementById('degree_code').value = selectedSubject.degree_code;
+    document.getElementById('degree_name').value = selectedSubject.degree_name;
+    document.getElementById('exam_name').value = selectedExam;
+
+    form.submit();
+  });
+
+  cancelBtn.addEventListener('click', function () {
+    assessmentSection.style.display = 'none';
+    cards.forEach(c => c.classList.remove('active'));
+  });
+
+  document.querySelectorAll('.enter-mark-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const params = new URLSearchParams({
+        reg_no: btn.dataset.regNo || '',
+        student_name: btn.dataset.studentName || '',
+        course_id: btn.dataset.courseId || '',
+        course_code: btn.dataset.courseCode || '',
+        course_title: btn.dataset.courseTitle || '',
+        batch: btn.dataset.batch || '',
+        section: btn.dataset.section || '',
+        exam_name: btn.dataset.examName || '',
+        department_name: btn.dataset.departmentName || '',
+        department_code: btn.dataset.departmentCode || '',
+        department_id: btn.dataset.departmentId || '',
+        degree_id: btn.dataset.degreeId || '',
+        degree_code: btn.dataset.degreeCode || '',
+        degree_name: btn.dataset.degreeName || ''
+      });
+
+      window.location.href = "{% url 'retest_enter_mark_page' %}?" + params.toString();
+    });
+  });
+});
+</script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+<style>
+.subject-card.active {
+  border: 2px solid #0d6efd !important;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, .15);
+}
+
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+}
+
+.avatar-sm {
+  width: 36px;
+  height: 36px;
+}
+</style>
+{% endblock %}

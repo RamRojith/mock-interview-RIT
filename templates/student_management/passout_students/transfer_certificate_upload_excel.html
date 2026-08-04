@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow border-0">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">TC Excel Upload</h5>
+    </div>
+    <div class="card-body">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+        <div class="col-md-8">
+          <label class="form-label">Upload TC Excel File</label>
+          <input type="file" name="tc_excel" class="form-control" accept=".xlsx,.xls" required>
+          <small class="text-muted">Expected format: TC sheets with header row containing "TC No", "Register No", etc.</small>
+        </div>
+        <div class="col-md-4 d-flex align-items-end gap-2">
+          <button type="submit" class="btn btn-primary">Upload & Save</button>
+          <a href="{% url 'transfer_certificate_template_excel' %}" class="btn btn-success">Download Template</a>
+          <a href="{% url 'transfer_certificate' %}" class="btn btn-outline-secondary">Go to TC Page</a>
+        </div>
+      </form>
+
+      {% if skipped_rows %}
+        <hr>
+        <h6 class="mb-2">Skipped Rows (first {{ skipped_rows|length }})</h6>
+        <ul class="mb-0">
+          {% for item in skipped_rows %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

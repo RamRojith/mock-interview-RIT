@@ -1,0 +1,960 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h5 class="mb-3">Select Degree / Department / Batch / Course</h5>
+
+      <div class="row g-3">
+
+        <!-- Degree -->
+        <div class="col-md-3">
+          <label class="form-label">Degree</label>
+          <select id="degreeSelect" class="form-select">
+            <option value="">-- Select Degree --</option>
+            {% for d in degrees %}
+              <option value="{{ d.id }}">{{ d.degree }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Department -->
+        <div class="col-md-3">
+          <label class="form-label">Department</label>
+          <select id="departmentSelect" class="form-select" disabled>
+            <option value="">-- Select Department --</option>
+          </select>
+        </div>
+
+        <!-- Batch -->
+        <div class="col-md-3">
+          <label class="form-label">Batch</label>
+          <select id="batchSelect" class="form-select" disabled>
+            <option value="">-- Select Batch --</option>
+          </select>
+        </div>
+
+        <!-- Course -->
+        <div class="col-md-3">
+          <label class="form-label">Course</label>
+          <select id="courseSelect" class="form-select" disabled>
+            <option value="">-- Select Course --</option>
+          </select>
+        </div>
+
+      </div>
+
+      <!-- Buttons -->
+      <div class="d-flex gap-2 mt-3">
+        <button id="filterBtn" class="btn btn-primary" disabled>
+          <i class="fas fa-filter"></i> Filter
+        </button>
+
+        <button id="addBatchBtn" class="btn btn-success" type="button" disabled>
+          <i class="fas fa-plus"></i> Add Batch
+        </button>
+
+        <button id="resetBtn" class="btn btn-outline-secondary" type="button">
+          Reset
+        </button>
+
+        <button id="saveBtn" class="btn btn-warning" type="button" disabled>
+          <i class="fas fa-save"></i> Save
+        </button>
+      </div>
+
+      <!-- ✅ Toast Notification Area -->
+      <div class="position-fixed top-0 end-0 p-3" style="z-index: 1090;">
+        <div id="liveToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="d-flex">
+            <div class="toast-body" id="toastMsg">Saved successfully.</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="mt-3">
+        <small class="text-muted" id="infoText"></small>
+      </div>
+
+      <!-- ✅ Total / Assigned / Remaining -->
+      <div class="mt-2">
+        <small class="text-muted" id="summaryText"></small>
+      </div>
+
+      <!-- ✅ HALL (SHOW ONLY AFTER FILTER) -->
+      <div class="mt-3" id="hallWrap" style="display:none;">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Hall</label>
+            <select id="hallSelect" class="form-select" disabled>
+              <option value="">-- Select Hall --</option>
+            </select>
+            <small class="text-muted d-block mt-1" id="hallInfo"></small>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ Batch Boxes (Cards) - SHOW ON TOP (ABOVE TABLE) -->
+      <div class="mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="mb-0">Batch Schedule (Cards)</h6>
+          <small class="text-muted" id="batchHint">Click <b>Add Batch</b> to create Batch-1 schedule box.</small>
+        </div>
+
+        <!-- Cards container -->
+        <div id="batchCards" class="row g-3"></div>
+      </div>
+
+      <!-- Student Result (Table stays below) -->
+      <div class="mt-4">
+        <h6 class="mb-2">Students (Auto Assigned to Batches)</h6>
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm" id="studentsTable" style="display:none;">
+            <thead class="table-light">
+              <tr>
+                <th style="width:80px;">S.No</th>
+                <th>Reg No</th>
+                <th style="width:120px;">Batch</th>
+                <th style="width:130px;">Date</th>
+                <th style="width:90px;">Session</th>
+                <th style="width:180px;">Time</th>
+                <th style="width:160px;">Hall</th>
+              </tr>
+            </thead>
+            <tbody id="studentsBody"></tbody>
+          </table>
+        </div>
+        <div id="noData" class="text-muted" style="display:none;">No students found.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const degreeSelect = document.getElementById("degreeSelect");
+  const departmentSelect = document.getElementById("departmentSelect");
+  const batchSelect = document.getElementById("batchSelect");
+  const courseSelect = document.getElementById("courseSelect");
+
+  const filterBtn = document.getElementById("filterBtn");
+  const addBatchBtn = document.getElementById("addBatchBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const saveBtn = document.getElementById("saveBtn");
+
+  const infoText = document.getElementById("infoText");
+  const summaryText = document.getElementById("summaryText");
+
+  const studentsTable = document.getElementById("studentsTable");
+  const studentsBody = document.getElementById("studentsBody");
+  const noData = document.getElementById("noData");
+
+  // ✅ Cards
+  const batchCards = document.getElementById("batchCards");
+  const batchHint = document.getElementById("batchHint");
+
+  // ✅ Hall
+  const hallWrap = document.getElementById("hallWrap");
+  const hallSelect = document.getElementById("hallSelect");
+  const hallInfo = document.getElementById("hallInfo");
+
+  // ✅ Toast
+  const liveToastEl = document.getElementById("liveToast");
+  const toastMsgEl = document.getElementById("toastMsg");
+
+  function showToast(message, type="success") {
+    liveToastEl.className = `toast align-items-center text-bg-${type} border-0`;
+    toastMsgEl.textContent = message || "Done.";
+    const toast = bootstrap.Toast.getOrCreateInstance(liveToastEl, { delay: 2500 });
+    toast.show();
+  }
+
+  // state
+  let studentsCache = []; // [{id, reg_no}]
+  let nextBatchNumber = 1;
+  let detectedSemester = null;
+
+  function resetSelect(selectEl, placeholderText) {
+    selectEl.innerHTML = `<option value="">${placeholderText}</option>`;
+    selectEl.disabled = true;
+  }
+
+  function setLoading(selectEl, loadingText) {
+    selectEl.innerHTML = `<option value="">${loadingText}</option>`;
+    selectEl.disabled = true;
+  }
+
+  function clearInfo() { infoText.textContent = ""; }
+
+  function clearHallUI() {
+    hallWrap.style.display = "none";
+    hallInfo.textContent = "";
+    resetSelect(hallSelect, "-- Select Hall --");
+  }
+
+  function clearStudentsUI() {
+    studentsCache = [];
+    studentsBody.innerHTML = "";
+    studentsTable.style.display = "none";
+    noData.style.display = "none";
+    addBatchBtn.disabled = true;
+    saveBtn.disabled = true;
+    summaryText.textContent = "";
+    clearHallUI();
+  }
+
+  function clearBatchUI() {
+    nextBatchNumber = 1;
+    batchCards.innerHTML = "";
+    batchHint.style.display = "inline";
+    updateSummary();
+    renderStudentsWithAssignments();
+    updateSaveBtnState();
+  }
+
+  function updateFilterBtnState() {
+    const deptOk = !!departmentSelect.value;
+    const batchOk = !!batchSelect.value;
+    filterBtn.disabled = !(deptOk && batchOk);
+  }
+
+  function todayISO() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function defaultSessionFor(batchNo) {
+    return (batchNo % 2 === 1) ? "FN" : "AN";
+  }
+
+  function getAssignedCount() {
+    let sum = 0;
+    batchCards.querySelectorAll(".batch-count").forEach(inp => {
+      const v = parseInt(inp.value, 10);
+      if (!isNaN(v) && v > 0) sum += v;
+    });
+    return sum;
+  }
+
+  function updateSummary() {
+    const total = studentsCache.length;
+    if (!total) { summaryText.textContent = ""; return; }
+
+    const assigned = getAssignedCount();
+    const remaining = Math.max(total - assigned, 0);
+
+    if (assigned > total) {
+      summaryText.innerHTML = `
+        Total Students: <b>${total}</b> |
+        Assigned: <b>${assigned}</b> |
+        Remaining: <b>0</b>
+        <span class="text-danger ms-2">(Assigned exceeds total)</span>
+      `;
+    } else {
+      summaryText.innerHTML = `
+        Total Students: <b>${total}</b> |
+        Assigned: <b>${assigned}</b> |
+        Remaining: <b>${remaining}</b>
+      `;
+    }
+  }
+
+  function getSelectedHallText() {
+    const opt = hallSelect.options[hallSelect.selectedIndex];
+    return opt ? (opt.textContent || "").trim() : "";
+  }
+
+  function getBatchConfigs() {
+    const boxes = Array.from(batchCards.querySelectorAll("[data-batch-no]"));
+    return boxes.map((box, idx) => {
+      const no = idx + 1;
+      const count = parseInt(box.querySelector(".batch-count")?.value || "0", 10) || 0;
+      const date = (box.querySelector(".batch-date")?.value || "").trim();
+      const time = (box.querySelector(".batch-time")?.value || "").trim();
+      const session = (box.querySelector(".batch-session")?.value || "").trim();
+      return { no, count, date, time, session, el: box };
+    });
+  }
+
+  function updateSaveBtnState() {
+    const hasStudents = studentsCache.length > 0;
+    const hasCourse = !!courseSelect.value;
+    const hasHall = !!hallSelect.value;
+    const batches = getBatchConfigs();
+    const hasBatches = batches.length > 0;
+
+    let batchesOk = true;
+    if (!hasBatches) batchesOk = false;
+
+    for (const b of batches) {
+      if (!b.count || b.count < 1) { batchesOk = false; break; }
+      if (!b.date) { batchesOk = false; break; }
+      if (!b.session) { batchesOk = false; break; }
+    }
+
+    const assigned = getAssignedCount();
+    const notExceed = assigned <= studentsCache.length;
+
+    saveBtn.disabled = !(hasStudents && hasCourse && hasHall && batchesOk && notExceed);
+  }
+
+  function renderStudentsWithAssignments() {
+    if (!studentsCache.length) {
+      studentsBody.innerHTML = "";
+      studentsTable.style.display = "none";
+      updateSaveBtnState();
+      return;
+    }
+
+    studentsTable.style.display = "table";
+
+    const total = studentsCache.length;
+    const hallText = getSelectedHallText() || "-";
+    const batches = getBatchConfigs();
+
+    if (batches.length === 0) {
+      studentsBody.innerHTML = studentsCache.map((s, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${(s.reg_no || "-")}</td>
+          <td><span class="badge bg-secondary">Not Assigned</span></td>
+          <td>-</td><td>-</td><td>-</td>
+          <td>${hallText}</td>
+        </tr>
+      `).join("");
+      updateSaveBtnState();
+      return;
+    }
+
+    let cursor = 0;
+    const assignments = new Array(total).fill(null);
+
+    batches.forEach(b => {
+      if (cursor >= total) return;
+
+      const take = Math.max(0, b.count || 0);
+      const start = cursor;
+      const end = Math.min(cursor + take, total);
+
+      const assignedNow = Math.max(0, end - start);
+      const badge = b.el.querySelector(".assigned-badge");
+      if (badge) badge.textContent = `Assigned: ${assignedNow}`;
+
+      for (let i = start; i < end; i++) {
+        assignments[i] = {
+          batch: `Batch-${b.no}`,
+          batch_no: b.no,
+          date: b.date || "-",
+          session: b.session || "-",
+          time: b.time || "-",
+          hall: hallText
+        };
+      }
+      cursor = end;
+    });
+
+    for (let i = 0; i < total; i++) {
+      if (!assignments[i]) {
+        assignments[i] = { batch: "Not Assigned", batch_no: null, date:"-", session:"-", time:"-", hall: hallText };
+      }
+    }
+
+    studentsBody.innerHTML = studentsCache.map((s, idx) => {
+      const a = assignments[idx];
+      const badgeClass = a.batch === "Not Assigned" ? "bg-secondary" : "bg-success";
+      return `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${(s.reg_no || "-")}</td>
+          <td><span class="badge ${badgeClass}">${a.batch}</span></td>
+          <td>${a.date}</td>
+          <td>${a.session}</td>
+          <td>${a.time}</td>
+          <td>${a.hall}</td>
+        </tr>
+      `;
+    }).join("");
+
+    updateSaveBtnState();
+  }
+
+  function buildAssignmentsPayload() {
+    const total = studentsCache.length;
+    const batches = getBatchConfigs();
+    if (!total || batches.length === 0) return [];
+
+    let cursor = 0;
+    const out = [];
+
+    for (const b of batches) {
+      if (cursor >= total) break;
+
+      const take = Math.max(0, b.count || 0);
+      const start = cursor;
+      const end = Math.min(cursor + take, total);
+
+      for (let i = start; i < end; i++) {
+        const s = studentsCache[i];
+        if (!s || !s.id) continue;
+        out.push({
+          student_id: s.id,
+          batch_no: b.no,
+          exam_date: b.date,
+          session: b.session,
+          exam_time: b.time || ""
+        });
+      }
+      cursor = end;
+    }
+    return out;
+  }
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + "=")) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // ✅ set hall selection if saved
+  function setHallSelected(hallId) {
+    if (!hallId) return;
+    const opt = Array.from(hallSelect.options).find(o => String(o.value) === String(hallId));
+    if (opt) hallSelect.value = String(hallId);
+  }
+
+  // ✅ build batch cards from saved schedule
+  function clearAndBuildBatchBoxesFromSaved(batch_boxes) {
+    nextBatchNumber = 1;
+    batchCards.innerHTML = "";
+    batchHint.style.display = (batch_boxes && batch_boxes.length) ? "none" : "inline";
+
+    (batch_boxes || []).forEach(b => {
+      const bno = parseInt(b.batch_no, 10) || 1;
+
+      const col = document.createElement("div");
+      col.className = "col-md-6 col-lg-4";
+      col.dataset.batchNo = String(bno);
+
+      col.innerHTML = `
+        <div class="card border-success h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+              <b>Batch-${bno}</b>
+              <small class="text-muted d-block">Schedule Box</small>
+              <small class="text-muted d-block assigned-badge">Assigned: ${b.count || 0}</small>
+            </div>
+            <button type="button" class="btn btn-sm btn-danger remove-batch">Remove</button>
+          </div>
+          <div class="card-body">
+
+            <div class="mb-2">
+              <label class="form-label mb-1">Count</label>
+              <input type="number" class="form-control form-control-sm batch-count" min="1" value="${b.count || 1}">
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label mb-1">Select Date</label>
+              <input type="date" class="form-control form-control-sm batch-date" value="${b.exam_date || todayISO()}">
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label mb-1">Time (Input)</label>
+              <input type="text" class="form-control form-control-sm batch-time" value="${(b.exam_time || "")}" placeholder="09:30 AM - 12:30 PM">
+            </div>
+
+            <div>
+              <label class="form-label mb-1">Session</label>
+              <select class="form-select form-select-sm batch-session">
+                <option value="FN" ${(b.session === "FN") ? "selected" : ""}>FN</option>
+                <option value="AN" ${(b.session === "AN") ? "selected" : ""}>AN</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+      `;
+      batchCards.appendChild(col);
+      nextBatchNumber = Math.max(nextBatchNumber, bno + 1);
+    });
+
+    updateSummary();
+    renderStudentsWithAssignments();
+    updateSaveBtnState();
+  }
+
+  // ✅ Load halls AFTER Filter
+  async function loadHallsAfterFilter() {
+    clearHallUI();
+    hallWrap.style.display = "block";
+    setLoading(hallSelect, "Loading halls...");
+
+    try {
+      const res = await fetch("{% url 'ajax_load_halls' %}");
+      const data = await res.json();
+
+      hallSelect.innerHTML = `<option value="">-- Select Hall --</option>`;
+      (data.halls || []).forEach(h => {
+        const opt = document.createElement("option");
+        opt.value = h.id;
+        opt.textContent = `${h.hall_name} (${h.benches} benches)`;
+        hallSelect.appendChild(opt);
+      });
+
+      hallSelect.disabled = false;
+
+      hallInfo.textContent = (!data.halls || data.halls.length === 0)
+        ? "No active halls found. Please add halls in Hall Master."
+        : `Loaded ${data.halls.length} halls.`;
+
+      updateSaveBtnState();
+
+    } catch (err) {
+      resetSelect(hallSelect, "-- Select Hall --");
+      hallInfo.textContent = "Failed to load halls. Check console.";
+      console.error(err);
+    }
+  }
+
+  function addBatchBox() {
+    if (!studentsCache.length) {
+      infoText.textContent = "Please click Filter first to load students, then add batches.";
+      return;
+    }
+
+    const batchNo = nextBatchNumber;
+    const session = defaultSessionFor(batchNo);
+    const defaultCount = Math.min(25, studentsCache.length);
+
+    batchHint.style.display = "none";
+
+    const col = document.createElement("div");
+    col.className = "col-md-6 col-lg-4";
+    col.dataset.batchNo = String(batchNo);
+
+    col.innerHTML = `
+      <div class="card border-success h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <div>
+            <b>Batch-${batchNo}</b>
+            <small class="text-muted d-block">Schedule Box</small>
+            <small class="text-muted d-block assigned-badge">Assigned: 0</small>
+          </div>
+          <button type="button" class="btn btn-sm btn-danger remove-batch">Remove</button>
+        </div>
+        <div class="card-body">
+
+          <div class="mb-2">
+            <label class="form-label mb-1">Count</label>
+            <input type="number" class="form-control form-control-sm batch-count" min="1" value="${defaultCount}">
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label mb-1">Select Date</label>
+            <input type="date" class="form-control form-control-sm batch-date" value="${todayISO()}">
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label mb-1">Time (Input)</label>
+            <input type="text" class="form-control form-control-sm batch-time" placeholder="09:30 AM - 12:30 PM">
+          </div>
+
+          <div>
+            <label class="form-label mb-1">Session</label>
+            <select class="form-select form-select-sm batch-session">
+              <option value="FN" ${session === "FN" ? "selected" : ""}>FN</option>
+              <option value="AN" ${session === "AN" ? "selected" : ""}>AN</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    batchCards.appendChild(col);
+    nextBatchNumber += 1;
+
+    updateSummary();
+    renderStudentsWithAssignments();
+  }
+
+  function renumberBatchBoxes() {
+    const boxes = Array.from(batchCards.querySelectorAll("[data-batch-no]"));
+    boxes.forEach((box, idx) => {
+      const newNo = idx + 1;
+      box.dataset.batchNo = String(newNo);
+      const headerTitle = box.querySelector(".card-header b");
+      if (headerTitle) headerTitle.textContent = `Batch-${newNo}`;
+    });
+    nextBatchNumber = boxes.length + 1;
+    if (boxes.length === 0) batchHint.style.display = "inline";
+  }
+
+  batchCards.addEventListener("click", function (e) {
+    const btn = e.target.closest(".remove-batch");
+    if (!btn) return;
+
+    const box = btn.closest("[data-batch-no]");
+    if (box) box.remove();
+
+    renumberBatchBoxes();
+    updateSummary();
+    renderStudentsWithAssignments();
+  });
+
+  batchCards.addEventListener("input", function (e) {
+    if (e.target.classList.contains("batch-count")) {
+      let val = parseInt(e.target.value, 10);
+      if (isNaN(val) || val < 1) val = 1;
+      e.target.value = val;
+      updateSummary();
+      renderStudentsWithAssignments();
+      return;
+    }
+    if (e.target.classList.contains("batch-time")) {
+      renderStudentsWithAssignments();
+      return;
+    }
+  });
+
+  batchCards.addEventListener("change", function (e) {
+    if (e.target.classList.contains("batch-date") || e.target.classList.contains("batch-session")) {
+      renderStudentsWithAssignments();
+    }
+  });
+
+  hallSelect.addEventListener("change", function () {
+    renderStudentsWithAssignments();
+  });
+
+  addBatchBtn.addEventListener("click", function () {
+    addBatchBox();
+  });
+
+  // ---------------- Degree -> Departments ----------------
+  degreeSelect.addEventListener("change", async function () {
+    const degreeId = this.value;
+
+    clearInfo();
+    clearStudentsUI();
+    clearBatchUI();
+    detectedSemester = null;
+
+    resetSelect(departmentSelect, "-- Select Department --");
+    resetSelect(batchSelect, "-- Select Batch --");
+    resetSelect(courseSelect, "-- Select Course --");
+    filterBtn.disabled = true;
+
+    if (!degreeId) return;
+
+    setLoading(departmentSelect, "Loading departments...");
+
+    try {
+      const res = await fetch("{% url 'ajax_load_prac_departments' %}?degree_id=" + encodeURIComponent(degreeId));
+      const data = await res.json();
+
+      departmentSelect.innerHTML = `<option value="">-- Select Department --</option>`;
+      (data.departments || []).forEach(dep => {
+        const opt = document.createElement("option");
+        opt.value = dep.id;
+        opt.textContent = dep.name;
+        departmentSelect.appendChild(opt);
+      });
+
+      departmentSelect.disabled = false;
+
+    } catch (err) {
+      resetSelect(departmentSelect, "-- Select Department --");
+      infoText.textContent = "Failed to load departments. Check console.";
+      console.error(err);
+    }
+  });
+
+  // ---------------- Department -> Batches ----------------
+  departmentSelect.addEventListener("change", async function () {
+    const deptId = this.value;
+
+    clearInfo();
+    clearStudentsUI();
+    clearBatchUI();
+    detectedSemester = null;
+
+    resetSelect(batchSelect, "-- Select Batch --");
+    resetSelect(courseSelect, "-- Select Course --");
+    filterBtn.disabled = true;
+
+    if (!deptId) return;
+
+    setLoading(batchSelect, "Loading batches...");
+
+    try {
+      const res = await fetch("{% url 'ajax_load_prac_batches' %}?department_id=" + encodeURIComponent(deptId));
+      const data = await res.json();
+
+      batchSelect.innerHTML = `<option value="">-- Select Batch --</option>`;
+      (data.batches || []).forEach(batch => {
+        const opt = document.createElement("option");
+        opt.value = batch;
+        opt.textContent = batch;
+        batchSelect.appendChild(opt);
+      });
+
+      batchSelect.disabled = false;
+
+    } catch (err) {
+      resetSelect(batchSelect, "-- Select Batch --");
+      infoText.textContent = "Failed to load batches. Check console.";
+      console.error(err);
+    }
+  });
+
+  // ---------------- Batch -> Courses ----------------
+  batchSelect.addEventListener("change", async function () {
+    const deptId = departmentSelect.value;
+    const batch = this.value;
+
+    clearInfo();
+    clearStudentsUI();
+    clearBatchUI();
+    detectedSemester = null;
+
+    resetSelect(courseSelect, "-- Select Course --");
+    updateFilterBtnState();
+
+    if (!deptId || !batch) return;
+
+    setLoading(courseSelect, "Loading courses...");
+
+    try {
+      const url =
+        "{% url 'ajax_load_prac_courses' %}" +
+        "?department_id=" + encodeURIComponent(deptId) +
+        "&batch=" + encodeURIComponent(batch);
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      courseSelect.innerHTML = `<option value="">-- Select Course --</option>`;
+      (data.courses || []).forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.text;
+        courseSelect.appendChild(opt);
+      });
+
+      courseSelect.disabled = false;
+
+      if (data.semester !== undefined && data.semester !== null && data.semester !== "") {
+        detectedSemester = data.semester;
+        infoText.textContent = "Detected semester: " + data.semester;
+      }
+
+    } catch (err) {
+      resetSelect(courseSelect, "-- Select Course --");
+      infoText.textContent = "Failed to load courses. Check console.";
+      console.error(err);
+    }
+  });
+
+  // ---------------- Filter Button -> Load Students + Load Halls + Load Saved Schedule ----------------
+  filterBtn.addEventListener("click", async function () {
+    const deptId = departmentSelect.value;
+    const batch = batchSelect.value;
+    const courseId = courseSelect.value;
+
+    clearInfo();
+    clearStudentsUI();
+    clearBatchUI();
+
+    if (!courseId) {
+      infoText.textContent = "Please select a course, then click Filter.";
+      return;
+    }
+
+    filterBtn.disabled = true;
+    filterBtn.textContent = "Filtering...";
+
+    try {
+      const url =
+        "{% url 'ajax_load_prac_students' %}" +
+        "?department_id=" + encodeURIComponent(deptId) +
+        "&batch=" + encodeURIComponent(batch);
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      studentsCache = data.students || [];
+
+      if (studentsCache.length === 0) {
+        noData.style.display = "block";
+        studentsTable.style.display = "none";
+        showToast("No students found.", "warning");
+      } else {
+        noData.style.display = "none";
+        studentsTable.style.display = "table";
+        renderStudentsWithAssignments();
+        addBatchBtn.disabled = false;
+
+        // ✅ load halls
+        await loadHallsAfterFilter();
+
+        // ✅ then check if saved schedule exists
+        try {
+          const checkUrl =
+            "{% url 'ajax_get_prac_saved_schedule' %}" +
+            "?department_id=" + encodeURIComponent(deptId) +
+            "&batch=" + encodeURIComponent(batch) +
+            "&course_id=" + encodeURIComponent(courseId);
+
+          const r2 = await fetch(checkUrl);
+          const saved = await r2.json();
+
+          if (saved.ok && saved.exists) {
+            setHallSelected(saved.hall_id);
+            clearAndBuildBatchBoxesFromSaved(saved.batch_boxes);
+            showToast(saved.message || "Loaded saved schedule.", "info");
+            infoText.textContent = saved.message || "Loaded saved schedule.";
+          } else {
+            showToast("No saved schedule found for this selection.", "warning");
+          }
+        } catch (e) {
+          console.error(e);
+          showToast("Failed to load previously saved schedule.", "danger");
+        }
+      }
+
+      updateSummary();
+
+      if (data.semester !== undefined && data.semester !== null && data.semester !== "") {
+        detectedSemester = data.semester;
+        infoText.textContent = "Detected semester: " + data.semester;
+      }
+
+    } catch (err) {
+      infoText.textContent = "Failed to load students. Check console.";
+      showToast("Failed to load students.", "danger");
+      console.error(err);
+    } finally {
+      filterBtn.textContent = "Filter";
+      updateFilterBtnState();
+      updateSaveBtnState();
+    }
+  });
+
+  // ---------------- ✅ SAVE Button -> POST to ajax_save_prac_schedule ----------------
+  saveBtn.addEventListener("click", async function () {
+    clearInfo();
+
+    const degreeId = degreeSelect.value;
+    const deptId = departmentSelect.value;
+    const batch = batchSelect.value;
+    const courseId = courseSelect.value;
+    const hallId = hallSelect.value || null;
+
+    const assignments = buildAssignmentsPayload();
+
+    if (!degreeId || !deptId || !batch || !courseId) {
+      infoText.textContent = "Missing Degree/Department/Batch/Course. Please select and filter again.";
+      showToast("Missing required selections.", "danger");
+      return;
+    }
+
+    if (!hallId) {
+      infoText.textContent = "Please select Hall before saving.";
+      showToast("Please select Hall before saving.", "warning");
+      return;
+    }
+
+    if (!assignments.length) {
+      infoText.textContent = "No assignments found. Please add batch boxes and set counts.";
+      showToast("No assignments found.", "warning");
+      return;
+    }
+
+    if (getAssignedCount() > studentsCache.length) {
+      infoText.textContent = "Assigned exceeds total students. Please reduce counts.";
+      showToast("Assigned exceeds total students.", "danger");
+      return;
+    }
+
+    saveBtn.disabled = true;
+    const oldText = saveBtn.innerHTML;
+    saveBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
+
+    try {
+      const payload = {
+        degree_id: degreeId,
+        department_id: deptId,
+        batch: batch,
+        course_id: courseId,
+        semester: detectedSemester,
+        hall_id: hallId,
+        assignments: assignments
+      };
+
+      const res = await fetch("{% url 'ajax_save_prac_schedule' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        infoText.textContent = data.message || "Save failed.";
+        showToast(data.message || "Save failed.", "danger");
+        return;
+      }
+
+      infoText.textContent = data.message || "Saved successfully.";
+      showToast(data.message || "Saved successfully!", "success");
+
+    } catch (err) {
+      console.error(err);
+      infoText.textContent = "Save failed. Check console.";
+      showToast("Save failed. Check console.", "danger");
+    } finally {
+      saveBtn.innerHTML = oldText;
+      updateSaveBtnState();
+    }
+  });
+
+  // ---------------- Reset Button ----------------
+  resetBtn.addEventListener("click", function () {
+    degreeSelect.value = "";
+    resetSelect(departmentSelect, "-- Select Department --");
+    resetSelect(batchSelect, "-- Select Batch --");
+    resetSelect(courseSelect, "-- Select Course --");
+    detectedSemester = null;
+
+    clearInfo();
+    clearStudentsUI();
+    clearBatchUI();
+
+    filterBtn.disabled = true;
+    addBatchBtn.disabled = true;
+    saveBtn.disabled = true;
+
+    summaryText.textContent = "";
+    clearHallUI();
+  });
+</script>
+
+{% endblock %}

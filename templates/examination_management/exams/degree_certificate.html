@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load fee_tags %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-graduation-cap me-2"></i> Degree Certificate</h4>
+            <a target="blank" href="{% url 'check_degree_certificate' %}" class="btn btn-light btn-sm">
+                <i class="fas fa-search me-1"></i> Check Certificate
+            </a>
+        </div>
+        
+        <div class="card-body">
+            <!-- Filter Form -->
+            <form method="get" action="" id="filterForm" class="row g-3 needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <!-- Programme of Study -->
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <select class="form-select" id="programme" name="programme" required onchange="fetchDepartments()">
+                            <option value="" disabled selected>Select Programme</option>
+                            <option value="Certificate" {% if current_filters.programme == "Certificate" %}selected{% endif %}>Certificate</option>
+                            <option value="Diploma" {% if current_filters.programme == "Diploma" %}selected{% endif %}>Diploma</option>
+                            <option value="Advanced Diploma" {% if current_filters.programme == "Advanced Diploma" %}selected{% endif %}>Advanced Diploma</option>
+                            <option value="Bachelor Degree" {% if current_filters.programme == "Bachelor Degree" %}selected{% endif %}>Bachelor Degree</option>
+                            <option value="Postgraduate Diploma" {% if current_filters.programme == "Postgraduate Diploma" %}selected{% endif %}>Postgraduate Diploma</option>
+                            <option value="Master Degree" {% if current_filters.programme == "Master Degree" %}selected{% endif %}>Master Degree</option>
+                        </select>
+                        <label for="programme" class="form-label">Programme of Study <span class="text-danger">*</span></label>
+                        <div class="invalid-feedback">
+                            Please select a programme.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Department -->
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <select class="form-select" id="department" name="department" {% if not current_filters.programme %}disabled{% endif %} required onchange="fetchPrograms()">
+                            <option value="" selected>Select Department</option>
+                            {% if departments %}
+                                {% for dept in departments %}
+                                    <option value="{{ dept.Department_code }}" {% if current_filters.department == dept.Department_code %}selected{% endif %}>
+                                        {{ dept.Department }}
+                                    </option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                        <label for="department" class="form-label">Department <span class="text-danger">*</span></label>
+                        <div class="invalid-feedback">
+                            Please select a department.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Program -->
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <select class="form-select" id="program" name="program" {% if not current_filters.department %}disabled{% endif %} required>
+                            <option value="" selected>Select Program</option>
+                            {% if programs %}
+                                {% for prog in programs %}
+                                    <option value="{{ prog.id }}" {% if current_filters.program == prog.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ prog.program_name }}
+                                    </option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                        <label for="program" class="form-label">Program <span class="text-danger">*</span></label>
+                        <div class="invalid-feedback">
+                            Please select a program.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Intake -->
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="intake" name="intake">
+                            <option value="" selected>Select Intake</option>
+                            {% intakes as intakes %}
+                            {% for intake in intakes %}
+                                <option value="{{ intake }}" {% if current_filters.intake == intake %}selected{% endif %}>{{ intake }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="intake" class="form-label">Intake</label>
+                    </div>
+                </div>
+
+                <!-- Batch -->
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="batch" name="batch">
+                            <option value="" selected>Select Batch</option>
+                            {% batches as batches %}
+                            {% for batch in batches %}
+                                <option value="{{ batch }}" {% if current_filters.batch == batch %}selected{% endif %}>{{ batch }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="batch" class="form-label">Batch</label>
+                    </div>
+                </div>
+
+                <!-- Filter Buttons -->
+                <div class="col-md-6 d-flex align-items-end justify-content-end gap-2">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-filter me-2"></i>Filter Students
+                    </button>
+                    <a href="{% url 'degree_certificate' %}" class="btn btn-outline-secondary px-4">
+                        <i class="fas fa-undo me-2"></i>Reset
+                    </a>
+                </div>
+            </form>
+
+            <!-- Results Section -->
+            {% if students %}
+            <div class="mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>Filtered Students
+                        <span class="badge bg-primary rounded-pill ms-2">{{ students.count }}</span>
+                    </h5>
+                    
+                    <!-- Bulk PDF Generation Button -->
+                    <div class="d-flex gap-2">
+                        <form method="post" action="{% url 'generate_bulk_degree_certificate_pdf' %}" class="mb-0">
+                            {% csrf_token %}
+                            <input type="hidden" name="programme" value="{{ current_filters.programme }}">
+                            <input type="hidden" name="department" value="{{ current_filters.department }}">
+                            <input type="hidden" name="program" value="{{ current_filters.program }}">
+                            <input type="hidden" name="intake" value="{{ current_filters.intake }}">
+                            <input type="hidden" name="batch" value="{{ current_filters.batch }}">
+                            
+                            <button type="submit" class="btn btn-success px-4" onclick="return confirmBulkDownload({{ students.count }})">
+                                <i class="fas fa-file-pdf me-2"></i>
+                                {% if students.count == 1 %}
+                                    Download Certificate
+                                {% else %}
+                                    Download All Certificates ({{ students.count }})
+                                {% endif %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="table-responsive rounded-3 border">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="10%">Reg No</th>
+                                <th width="15%">Name</th>
+                                <th width="10%">Programme of Study</th>
+                                <th width="15%">Department</th>
+                                <th width="20%">Program</th>
+                                <th width="7%">Intake</th>
+                                <th width="5%">Batch</th>
+                                <th width="8%">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td class="fw-bold">{{ student.student_reg_no }}</td>
+                                <td>{{ student.student_name }}</td>
+                                <td>{{ student.programme_of_study }}</td>
+                                <td>{{ student.department }}</td>
+                                <td>{{ student.program }}</td>
+                                <td>{{ student.Intake }}</td>
+                                <td>{{ student.batch }}</td>
+                                <td>
+                                    <a target="blank" href="{% url 'generate_single_degree_certificate_pdf' student.id %}" 
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Download Individual Certificate">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Form validation
+    (function () {
+        'use strict'
+        const forms = document.querySelectorAll('.needs-validation')
+        
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+
+    // Initialize form with existing values
+    document.addEventListener('DOMContentLoaded', function() {
+        const programme = "{{ current_filters.programme }}";
+        if (programme) {
+            fetchDepartments();
+            
+            setTimeout(() => {
+                const departmentSelect = document.getElementById('department');
+                if (departmentSelect) {
+                    departmentSelect.value = "{{ current_filters.department }}";
+                    if ("{{ current_filters.department }}") {
+                        fetchPrograms();
+                        
+                        setTimeout(() => {
+                            const programSelect = document.getElementById('program');
+                            if (programSelect) {
+                                programSelect.value = "{{ current_filters.program }}";
+                            }
+                        }, 300);
+                    }
+                }
+            }, 300);
+        }
+    });
+
+    function fetchDepartments() {
+        const programme = document.getElementById('programme').value;
+        const departmentSelect = document.getElementById('department');
+        const programSelect = document.getElementById('program');
+
+        if (!programme) return;
+
+        fetch(`/fee/api/departments/?programme=${encodeURIComponent(programme)}`)
+            .then(res => res.json())
+            .then(data => {
+                departmentSelect.innerHTML = '<option value="" selected>Select Department</option>';
+                data.forEach(dept => {
+                    departmentSelect.innerHTML += `<option value="${dept.Department_code}">${dept.Department}</option>`;
+                });
+                departmentSelect.disabled = false;
+                departmentSelect.required = true;
+
+                programSelect.innerHTML = '<option value="" selected>Select Program</option>';
+                programSelect.disabled = true;
+                programSelect.required = false;
+            });
+    }
+
+    function fetchPrograms() {
+        const programme = document.getElementById('programme').value;
+        const department = document.getElementById('department').value;
+        const programSelect = document.getElementById('program');
+
+        if (!programme || !department) return;
+
+        fetch(`/fee/api/programs/?department=${encodeURIComponent(department)}&programme=${encodeURIComponent(programme)}`)
+            .then(res => res.json())
+            .then(data => {
+                programSelect.innerHTML = '<option value="" selected>Select Program</option>';
+                data.forEach(program => {
+                    programSelect.innerHTML += `<option value="${program.id}">${program.program_name}</option>`;
+                });
+                programSelect.disabled = false;
+                programSelect.required = true;
+            });
+    }
+
+    function confirmBulkDownload(count) {
+        if (count > 10) {
+            return confirm(`You are about to download ${count} certificates. This may take some time. Continue?`);
+        }
+        return true;
+    }
+</script>
+
+<style>
+    .form-control:focus, .form-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .table th {
+        white-space: nowrap;
+    }
+    .badge {
+        font-size: 0.85em;
+        padding: 0.35em 0.65em;
+    }
+</style>
+{% endblock %}

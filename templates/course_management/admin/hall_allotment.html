@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+    <div>
+      <h3 class="fw-bold text-primary mb-1">Hall Allotment</h3>
+      <p class="text-muted mb-0"></p>
+    </div>
+  </div>
+
+  <!-- Card -->
+  <div class="row g-4">
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm h-100"
+           role="button"
+           data-bs-toggle="modal"
+           data-bs-target="#hallAllotmentPopup"
+           style="cursor:pointer;">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-4 d-flex align-items-center justify-content-center"
+                 style="width:52px;height:52px;background:rgba(13,110,253,.12);">
+              <span class="fw-bold text-primary" style="font-size:20px;">HA</span>
+            </div>
+            <div>
+              <h5 class="mb-1 fw-semibold">Hall Allotment</h5>
+              <p class="mb-0 text-muted small">Open popup to select filters and continue.</p>
+            </div>
+          </div>
+
+          <hr class="my-3">
+
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Popup Form</span>
+            <span class="text-primary fw-semibold small">Click to Continue →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="hallAllotmentPopup" tabindex="-1" aria-labelledby="hallAllotmentPopupLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title fw-bold text-primary" id="hallAllotmentPopupLabel">Hall Allotment</h5>
+            <div class="text-muted small"></div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <form id="hallAllotmentFilterForm" autocomplete="off">
+            <div class="row g-3">
+
+              <!-- ✅ Degree -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Degree</label>
+                <select class="form-select" id="degree_id" required>
+                  <option value="">-- Select Degree --</option>
+                  {% for d in degrees %}
+                    <option value="{{ d.id }}">{{ d.degree_code }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- ✅ Batch -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Batch</label>
+                <select class="form-select" id="batch" required>
+                  <option value="">-- Select Batch --</option>
+                  {% for b in batches %}
+                    <option value="{{ b }}">{{ b }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- ✅ Year -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Year</label>
+                <select class="form-select" id="year" required>
+                  <option value="">-- Select Year --</option>
+                  {% for y in years %}
+                    <option value="{{ y }}">{{ y }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- ✅ Exam Type -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Exam Type</label>
+                <select class="form-select" id="exam_type" required>
+                  <option value="">-- Select Exam Type --</option>
+                  <option value="iat">IAT Exam</option>
+                  <option value="sem">Semester Exam</option>
+                </select>
+                <div class="form-text text-muted">Choose IAT or Semester.</div>
+              </div>
+
+              <!-- ✅ IAT (ONLY for IAT Exam) -->
+              <div class="col-md-12 d-none" id="iatWrap">
+                <label class="form-label fw-semibold">IAT</label>
+                <select class="form-select" id="iat_no">
+                  <option value="">-- Select IAT --</option>
+                  {% for ia in iat %}
+                    <option value="{{ ia.id }}" data-degree="{{ ia.degree_id }}">{{ ia.iat }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- ✅ SINGLE SEMESTER FIELD (ONLY ONE TIME) -->
+              <div class="col-md-12" id="extraSemesterWrap">
+                <label class="form-label fw-semibold">Semester</label>
+                <select class="form-select" id="extra_semester" required>
+                  <option value="">-- Select Semester --</option>
+                  {% for s in semesters %}
+                    <option value="{{ s }}">{{ s }}</option>
+                  {% endfor %}
+                </select>
+                <div class="form-text text-muted"></div>
+              </div>
+
+              <div class="col-12">
+                <div id="popupError" class="alert alert-danger d-none mb-0"></div>
+              </div>
+
+            </div>
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="proceedBtn">Proceed</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  const degreeEl      = document.getElementById("degree_id");
+  const examTypeEl    = document.getElementById("exam_type");
+
+  const iatWrap       = document.getElementById("iatWrap");
+  const iatEl         = document.getElementById("iat_no");
+
+  const extraSemEl    = document.getElementById("extra_semester");
+
+  const errEl         = document.getElementById("popupError");
+  const proceed       = document.getElementById("proceedBtn");
+  const modalEl       = document.getElementById("hallAllotmentPopup");
+
+  const allIatOptions = Array.from(iatEl.querySelectorAll("option"));
+
+  function setError(msg) {
+    errEl.classList.toggle("d-none", !msg);
+    errEl.innerText = msg || "";
+  }
+
+  function filterIAT() {
+    const degreeId = degreeEl.value;
+
+    iatEl.disabled = false;
+    iatEl.innerHTML = "";
+
+    allIatOptions.forEach(opt => {
+      if (!opt.value) {
+        iatEl.appendChild(opt.cloneNode(true));
+        return;
+      }
+      const optDeg = opt.getAttribute("data-degree");
+      if (!degreeId || String(optDeg) === String(degreeId)) {
+        iatEl.appendChild(opt.cloneNode(true));
+      }
+    });
+  }
+
+  function applyExamTypeUI() {
+    const type = examTypeEl.value;
+
+    iatEl.value = "";
+
+    if (type === "iat") {
+      iatWrap.classList.remove("d-none");
+      filterIAT();
+    } else {
+      iatWrap.classList.add("d-none");
+    }
+  }
+
+  degreeEl.addEventListener("change", function () {
+    if (examTypeEl.value === "iat") filterIAT();
+    setError("");
+  });
+
+  examTypeEl.addEventListener("change", function () {
+    applyExamTypeUI();
+    setError("");
+  });
+
+  modalEl.addEventListener("shown.bs.modal", function () {
+    filterIAT();
+
+    examTypeEl.value = "";
+    iatWrap.classList.add("d-none");
+
+    iatEl.value = "";
+    extraSemEl.value = "";
+
+    setError("");
+  });
+
+  proceed.addEventListener("click", function () {
+    setError("");
+
+    const degree_id      = degreeEl.value.trim();
+    const batch          = document.getElementById("batch").value.trim();
+    const year           = document.getElementById("year").value.trim();
+    const exam_type      = examTypeEl.value.trim();
+
+    const iat_no         = iatEl.value.trim();          // only if iat
+    const extra_semester = extraSemEl.value.trim();     // ✅ single semester field
+
+    if (!degree_id || !batch || !year || !exam_type) {
+      return setError("Please select Degree, Batch, Year and Exam Type.");
+    }
+
+    if (!extra_semester) {
+      return setError("Please select Semester.");
+    }
+
+    if (exam_type === "iat" && !iat_no) {
+      return setError("Please select IAT.");
+    }
+
+    const baseUrl = "{% url 'hall_allotment_detail' %}";
+    const params = new URLSearchParams();
+
+    // ✅ Option B: DO NOT send hall_id
+    params.set("degree_id", degree_id);
+    params.set("batch", batch);
+    params.set("year", year);
+    params.set("exam_type", exam_type);
+
+    if (exam_type === "iat") params.set("iat_no", iat_no);
+
+    // ✅ semester exam -> send semester using same value
+    if (exam_type === "sem") params.set("semester", extra_semester);
+
+    // ✅ extra_semester always
+    params.set("extra_semester", extra_semester);
+
+    window.location.href = baseUrl + "?" + params.toString();
+  });
+})();
+</script>
+
+{% endblock %}

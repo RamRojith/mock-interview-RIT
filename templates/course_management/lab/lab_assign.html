@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid py-4" style="max-width:1300px;">
+  <h2 class="fw-bold text-primary mb-3"><i class="fa-solid fa-flask me-2"></i>Lab Assignment — Create Lab &amp; Assign Technician</h2>
+
+  {% if messages %}{% for m in messages %}
+    <div class="alert alert-{{ m.tags }} alert-dismissible fade show">{{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}{% endif %}
+
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white fw-semibold">Add Lab</div>
+        <div class="card-body">
+          <form method="post" action="{% url 'lab_timetable_assign' %}">{% csrf_token %}
+            <input type="hidden" name="action" value="add_lab">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Department <span class="text-danger">*</span></label>
+              {% if lock_dept %}
+                <input type="hidden" name="department" id="add_dept_locked" value="{{ user_dept.id }}">
+                <input type="text" class="form-control bg-light" value="{{ user_dept.Department }}" readonly>
+                <small class="text-muted"><i class="fas fa-lock me-1"></i>Locked to your department.</small>
+              {% else %}
+                <select name="department" id="add_dept" class="form-select" required>
+                  <option value="">-- Select --</option>
+                  {% for d in departments %}<option value="{{ d.id }}" {% if user_dept and user_dept.id == d.id %}selected{% endif %}>{{ d.Department }}</option>{% endfor %}
+                </select>
+              {% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Lab Name <span class="text-danger">*</span></label>
+              <input type="text" name="lab_name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Lab Code <span class="text-danger">*</span></label>
+              <input type="text" name="lab_code" class="form-control text-uppercase" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Technician</label>
+              <select name="technician" id="add_tech" class="form-select">
+                <option value="">-- Select a department first --</option>
+              </select>
+              <small class="text-muted">Only the selected department's faculty/staff appear here.</small>
+            </div>
+            <button class="btn btn-primary"><i class="fas fa-save me-1"></i>Save Lab</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-light fw-semibold">Existing Labs</div>
+        <div class="table-responsive">
+          <table class="table table-bordered mb-0 align-middle">
+            <thead class="table-light text-center"><tr><th>Code</th><th>Name</th><th>Department</th><th>Technician</th><th>Action</th></tr></thead>
+            <tbody>
+              {% for l in labs %}
+              <tr>
+                <td>{{ l.lab_code }}</td>
+                <td>{{ l.lab_name }}</td>
+                <td>{{ l.department.Department }}</td>
+                <td>{{ l.technician.name|default:"-" }}</td>
+                <td style="min-width:260px;">
+                  <form method="post" action="{% url 'lab_timetable_assign' %}" class="d-flex gap-2 align-items-center">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="assign_tech">
+                    <input type="hidden" name="lab_id" value="{{ l.id }}">
+                    <select name="technician" class="form-select form-select-sm row-tech" data-dept="{{ l.department_id }}">
+                      <option value="">-- Select --</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-primary">Assign</button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="5" class="text-center text-muted py-3">No labs added yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const TECH_URL = "{% url 'lab_get_technicians' %}";
+
+  // Reusable: fetch technicians for a department id and fill the given <select>
+  // with a leading blank option. Any existing options are replaced.
+  function fillTechnicians(selectEl, deptId) {
+    if (!selectEl) return;
+    selectEl.innerHTML = '<option value="">-- Select --</option>';
+    if (!deptId) return;
+    fetch(TECH_URL + "?dept=" + encodeURIComponent(deptId))
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        const list = (data && data.technicians) ? data.technicians : [];
+        list.forEach(function (t) {
+          const opt = document.createElement("option");
+          opt.value = t.id;
+          opt.textContent = t.name + " — " + (t.designation || "");
+          selectEl.appendChild(opt);
+        });
+      })
+      .catch(function () { /* leave the blank option in place */ });
+  }
+
+  // Add-form: repopulate technician list whenever the department changes.
+  const addDept = document.getElementById("add_dept");
+  const addTech = document.getElementById("add_tech");
+  if (addDept && addTech) {
+    addDept.addEventListener("change", function () {
+      fillTechnicians(addTech, this.value);
+    });
+    // If the department is pre-selected, load its technicians on page load.
+    if (addDept.value) fillTechnicians(addTech, addDept.value);
+  }
+
+  // Locked department: load its technicians on page load.
+  const lockedDeptEl = document.getElementById("add_dept_locked");
+  if (addTech && lockedDeptEl && lockedDeptEl.value) {
+    fillTechnicians(addTech, lockedDeptEl.value);
+  }
+
+  // Each existing-lab row: populate its technician select on load using data-dept.
+  document.querySelectorAll("select.row-tech").forEach(function (sel) {
+    fillTechnicians(sel, sel.getAttribute("data-dept"));
+  });
+});
+</script>
+{% endblock content %}

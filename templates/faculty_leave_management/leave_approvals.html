@@ -1,0 +1,684 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- FontAwesome CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+<!-- jQuery & DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<style>
+/* ========================================
+   LEAVE APPROVALS PORTAL STYLES
+   ======================================== */
+.leave-approvals-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.leave-approvals-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.leave-approvals-portal .page-header h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.leave-approvals-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+.leave-approvals-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Alert Styling */
+.leave-approvals-portal .alert-custom {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Stats Cards */
+.leave-approvals-portal .stats-grid {
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.leave-approvals-portal .stat-card {
+  flex: 1;
+  min-width: 140px;
+  background: white;
+  border-radius: 16px;
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0,0,0,0.03);
+  transition: all 0.3s ease;
+}
+
+.leave-approvals-portal .stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.leave-approvals-portal .stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.leave-approvals-portal .stat-icon.pending { background: #fef3c7; color: #d97706; }
+.leave-approvals-portal .stat-icon.approved { background: #d1fae5; color: #059669; }
+.leave-approvals-portal .stat-icon.rejected { background: #fee2e2; color: #dc2626; }
+.leave-approvals-portal .stat-icon.total { background: #e0f2fe; color: #0284c7; }
+
+.leave-approvals-portal .stat-info .stat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+.leave-approvals-portal .stat-info .stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+/* Main Card */
+.leave-approvals-portal .approvals-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.5s ease forwards;
+  opacity: 0;
+}
+
+.leave-approvals-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.leave-approvals-portal .card-header-custom h5 {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1a4b8c;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.leave-approvals-portal .badge-count {
+  background: #e2e8f0;
+  color: #475569;
+  padding: 0.25rem 0.7rem;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* Table Styling */
+.leave-approvals-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.leave-approvals-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.leave-approvals-portal .data-table td {
+  padding: 1rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.leave-approvals-portal .data-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.leave-approvals-portal .data-table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.03);
+  transform: translateY(-1px);
+}
+
+/* Checkbox Styling */
+.leave-approvals-portal .checkbox-cell {
+  text-align: center;
+  width: 40px;
+}
+
+.leave-approvals-portal .form-check-input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #1a4b8c;
+}
+
+/* Badges */
+.leave-approvals-portal .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.leave-approvals-portal .badge-pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.leave-approvals-portal .badge-approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.leave-approvals-portal .badge-rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Action Buttons */
+.leave-approvals-portal .action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.leave-approvals-portal .btn-approve {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.leave-approvals-portal .btn-approve:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+}
+
+.leave-approvals-portal .btn-reject {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.leave-approvals-portal .btn-reject:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+}
+
+/* Empty State */
+.leave-approvals-portal .empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.leave-approvals-portal .empty-state i {
+  font-size: 3rem;
+  color: #cbd5e1;
+  margin-bottom: 0.5rem;
+}
+
+.leave-approvals-portal .empty-state p {
+  color: #94a3b8;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Modal Styling */
+.leave-approvals-portal .modal-content-custom {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.leave-approvals-portal .modal-header-custom {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  padding: 1rem 1.5rem;
+  border: none;
+}
+
+.leave-approvals-portal .modal-header-custom h5 {
+  color: white;
+  font-weight: 700;
+}
+
+/* DataTables Customization */
+.leave-approvals-portal .dataTables_wrapper {
+  padding: 1rem;
+}
+
+.leave-approvals-portal .dataTables_filter input {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  margin-left: 0.5rem;
+}
+
+.leave-approvals-portal .dataTables_length select {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.4rem 2rem 0.4rem 0.75rem;
+}
+
+.leave-approvals-portal .dataTables_info {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.leave-approvals-portal .dataTables_paginate .paginate_button {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  margin: 0 0.2rem;
+  padding: 0.4rem 0.7rem !important;
+}
+
+.leave-approvals-portal .dataTables_paginate .paginate_button.current {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%) !important;
+  color: white !important;
+  border: none !important;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .leave-approvals-portal {
+    padding: 1rem;
+  }
+  .leave-approvals-portal .page-header {
+    padding: 1rem;
+  }
+  .leave-approvals-portal .page-header h2 {
+    font-size: 1.4rem;
+  }
+  .leave-approvals-portal .stats-grid {
+    gap: 0.8rem;
+  }
+  .leave-approvals-portal .stat-card {
+    min-width: calc(50% - 0.8rem);
+  }
+  .leave-approvals-portal .action-buttons {
+    flex-direction: column;
+  }
+  .leave-approvals-portal .action-buttons .btn {
+    width: 100%;
+  }
+  .leave-approvals-portal .data-table th,
+  .leave-approvals-portal .data-table td {
+    white-space: nowrap;
+  }
+  .leave-approvals-portal .table-responsive {
+    overflow-x: auto;
+  }
+}
+</style>
+
+<div class="leave-approvals-portal">
+  <div class="page-header">
+    <h2><i class="fas fa-user-check me-2"></i> Leave Approvals</h2>
+    <p class="header-subtitle">Review and manage leave applications pending your approval</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Django Messages -->
+    {% if messages %}
+      <div class="mb-3">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show alert-custom" role="alert">
+            <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Stats Summary -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon total"><i class="fas fa-envelope"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Total Received</div>
+          <div class="stat-value">{{ leave_approvals|length }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon pending"><i class="fas fa-clock"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Pending</div>
+          <div class="stat-value">{{ pending_count|default:0 }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon approved"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Approved</div>
+          <div class="stat-value">{{ approved_count|default:0 }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon rejected"><i class="fas fa-times-circle"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Rejected</div>
+          <div class="stat-value">{{ rejected_count|default:0 }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Approvals Form -->
+    <form method="post" id="approval-form" action="{% url 'leave_approvals' %}">
+      {% csrf_token %}
+      <input type="hidden" name="rejection_reason" id="rejection-reason">
+
+      <div class="approvals-card">
+        <div class="card-header-custom">
+          <h5>
+            <i class="fas fa-clipboard-list me-2"></i>
+            Pending Approvals
+            <span class="badge-count ms-2">{{ pending_count|default:0 }} awaiting action</span>
+          </h5>
+          <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-info-circle text-muted"></i>
+            <small class="text-muted">Select applications below</small>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table table w-100" id="approvalsTable">
+            <thead>
+              <tr>
+                <th class="checkbox-cell">
+                  <input type="checkbox" id="select-all" class="form-check-input" aria-label="Select all">
+                </th>
+                <th>Leave Application</th>
+                <th>Designation</th>
+                <th>Reason</th>
+                <th>Requested By</th>
+                <th>Requested On</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if leave_approvals %}
+                {% for approval in leave_approvals %}
+                <tr>
+                  <td class="checkbox-cell">
+                    <input type="checkbox" name="selected_ids" value="{{ approval.id }}" class="row-checkbox form-check-input">
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-primary">{{ approval.leave_application }}</div>
+                    <div class="small text-muted mt-1">
+                      <i class="fas fa-tag me-1"></i>{{ approval.leave_application.leave_type.name|default:"Leave" }}
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-dark">
+                      <i class="fas fa-briefcase me-1"></i>{{ approval.leave_application.designation.name|default:"N/A" }}
+                    </span>
+                  </td>
+                  <td style="max-width: 250px;">
+                    <div class="reason-preview" title="{{ approval.leave_application.reason }}">
+                      {{ approval.leave_application.reason|truncatechars:60 }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="fw-semibold">{{ approval.creator_id.name|default:"Unknown" }}</div>
+                    {% if approval.creator_id.faculty_id %}
+                      <div class="small text-muted">
+                        <i class="fas fa-id-card me-1"></i>{{ approval.creator_id.faculty_id }}
+                      </div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="date-display">
+                      <i class="far fa-calendar-alt me-1 text-muted"></i>
+                      {{ approval.leave_application.requested_date|date:"d M Y"|default:"—" }}
+                    </div>
+                    {% if approval.leave_application.requested_date %}
+                      <div class="small text-muted">
+                        <i class="far fa-clock me-1"></i>{{ approval.leave_application.requested_date|date:"H:i" }}
+                      </div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge-status 
+                      {% if approval.status == 'PENDING' %}badge-pending
+                      {% elif approval.status == 'APPROVED' %}badge-approved
+                      {% elif approval.status == 'REJECTED' %}badge-rejected
+                      {% endif %}">
+                      {% if approval.status == 'PENDING' %}
+                        <i class="fas fa-clock"></i> Pending
+                      {% elif approval.status == 'APPROVED' %}
+                        <i class="fas fa-check-circle"></i> Approved
+                      {% elif approval.status == 'REJECTED' %}
+                        <i class="fas fa-times-circle"></i> Rejected
+                      {% else %}
+                        {{ approval.get_status_display|default:approval.status }}
+                      {% endif %}
+                    </span>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="7">
+                    <div class="empty-state">
+                      <i class="fas fa-inbox"></i>
+                      <p>No pending approvals at this time.</p>
+                    </div>
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="action-buttons">
+          <button type="submit" name="action" value="approve" class="btn-approve">
+            <i class="fas fa-check-circle me-2"></i> Approve Selected
+          </button>
+          <button type="button" class="btn-reject" id="reject-btn">
+            <i class="fas fa-times-circle me-2"></i> Reject Selected
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Rejection Reason Modal -->
+<div class="modal fade" id="reject-modal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-content-custom">
+      <div class="modal-header modal-header-custom">
+        <h5 class="modal-title" id="rejectModalLabel">
+          <i class="fas fa-exclamation-triangle me-2"></i> Rejection Reason
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <label for="modal-rejection-reason" class="form-label fw-semibold">Please provide a reason for rejection:</label>
+        <textarea class="form-control mt-2" id="modal-rejection-reason" rows="4" placeholder="Enter detailed reason for rejection..." required style="border-radius: 12px;"></textarea>
+        <div class="form-text text-muted mt-3">
+          <i class="fas fa-info-circle me-1"></i> This message will help the applicant understand the reason for rejection.
+        </div>
+      </div>
+      <div class="modal-footer border-0 pb-4 px-4">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 10px;">
+          <i class="fas fa-times me-1"></i> Cancel
+        </button>
+        <button type="button" class="btn-reject" id="submit-reject" style="border-radius: 10px;">
+          <i class="fas fa-paper-plane me-1"></i> Submit Rejection
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Initialize DataTables
+  if (typeof $.fn.DataTable !== 'undefined' && $('#approvalsTable tbody tr').length > 1 && $('#approvalsTable tbody tr td:first').not('.empty-state').length) {
+    $('#approvalsTable').DataTable({
+      paging: true,
+      searching: true,
+      ordering: true,
+      pageLength: 10,
+      lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+      order: [[5, 'desc']], // Sort by requested date descending
+      language: {
+        search: "<i class='fas fa-search'></i> Search:",
+        searchPlaceholder: "Search approvals...",
+        lengthMenu: "Show _MENU_ entries",
+        info: "Showing _START_ to _END_ of _TOTAL_ approvals",
+        infoEmpty: "No approvals found",
+        paginate: {
+          previous: "<i class='fas fa-chevron-left'></i>",
+          next: "<i class='fas fa-chevron-right'></i>"
+        }
+      },
+      columnDefs: [
+        { orderable: false, targets: [0, 3, 4] } // Disable sorting on checkbox, reason, requested by
+      ]
+    });
+  }
+
+  // Select All toggle
+  const selectAllCheckbox = document.getElementById('select-all');
+  if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', function() {
+      const checkboxes = document.querySelectorAll('.row-checkbox');
+      checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+  }
+
+  // Show Reject Modal
+  const rejectBtn = document.getElementById('reject-btn');
+  if (rejectBtn) {
+    rejectBtn.addEventListener('click', function() {
+      const checked = document.querySelectorAll('.row-checkbox:checked');
+      if (checked.length === 0) {
+        alert("⚠️ Please select at least one application to reject.");
+        return;
+      }
+      new bootstrap.Modal(document.getElementById('reject-modal')).show();
+    });
+  }
+
+  // Submit form with rejection reason
+  const submitRejectBtn = document.getElementById('submit-reject');
+  if (submitRejectBtn) {
+    submitRejectBtn.addEventListener('click', function() {
+      const reason = document.getElementById('modal-rejection-reason').value.trim();
+      if (reason === "") {
+        alert("⚠️ Please provide a rejection reason.");
+        return;
+      }
+      document.getElementById('rejection-reason').value = reason;
+
+      const form = document.getElementById('approval-form');
+      // Remove any existing action input to avoid duplicates
+      const existingAction = form.querySelector('input[name="action"]');
+      if (existingAction) existingAction.remove();
+      
+      const actionInput = document.createElement('input');
+      actionInput.type = 'hidden';
+      actionInput.name = 'action';
+      actionInput.value = 'reject';
+      form.appendChild(actionInput);
+      
+      form.submit();
+    });
+  }
+
+  // Update select-all state when individual checkboxes change
+  const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+  if (selectAllCheckbox && rowCheckboxes.length) {
+    rowCheckboxes.forEach(cb => {
+      cb.addEventListener('change', function() {
+        const allChecked = Array.from(rowCheckboxes).every(c => c.checked);
+        selectAllCheckbox.checked = allChecked;
+        selectAllCheckbox.indeterminate = !allChecked && Array.from(rowCheckboxes).some(c => c.checked);
+      });
+    });
+  }
+});
+</script>
+
+{% endblock %}

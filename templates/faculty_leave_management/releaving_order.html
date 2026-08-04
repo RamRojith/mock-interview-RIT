@@ -1,0 +1,556 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  .releaving-order-page {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .releaving-order-shell {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .report-header {
+    max-width: 1200px;
+    margin: 0 auto 2rem auto;
+    text-align: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    border-radius: 16px;
+    color: white;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .report-header h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 0;
+    color: white;
+  }
+
+  .filter-panel {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f1f5f9;
+  }
+
+  .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    align-items: end;
+  }
+
+  .filter-field label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .filter-field select {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    min-height: 44px;
+    color: #1e293b;
+    background: #fff;
+  }
+
+  .filter-field select:focus {
+    border-color: #1a4b8c;
+    box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+    outline: none;
+  }
+
+  .filter-field input[type="text"] {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    min-height: 44px;
+    color: #1e293b;
+    background: #fff;
+  }
+
+  .filter-field input[type="text"]:focus {
+    border-color: #1a4b8c;
+    box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+    outline: none;
+  }
+
+  .filter-actions {
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+  }
+
+  .filter-btn, .reset-btn {
+    min-height: 44px;
+    border-radius: 12px;
+    padding: 0.6rem 1.1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    white-space: nowrap;
+    border: none;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .filter-btn {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+  }
+
+  .filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+  }
+
+  .reset-btn {
+    background: #f1f5f9;
+    color: #475569;
+  }
+
+  .reset-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+  }
+
+  .data-section {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+  }
+
+  .section-heading {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .section-heading h2 {
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #1a4b8c;
+    margin: 0;
+  }
+
+  .section-count {
+    color: #64748b;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .report-table {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+  }
+
+  .report-table th {
+    background: #f8fafc;
+    color: #1a4b8c;
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.85rem 0.65rem;
+    border-bottom: 2px solid #e2e8f0;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .report-table td {
+    padding: 0.75rem 0.65rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    color: #374151;
+    font-size: 0.87rem;
+  }
+
+  .report-table tbody tr:hover {
+    background: #f8fafc;
+  }
+
+  .empty-state {
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    color: #64748b;
+  }
+
+  .relieve-btn {
+    border: none;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .relieve-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  }
+
+  .relieved-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: #dcfce7;
+    color: #15803d;
+    border-radius: 10px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .relieved-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .pdf-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: #eff6ff;
+    color: #1a4b8c;
+    border: none;
+    border-radius: 10px;
+    padding: 0.4rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .pdf-link:hover {
+    background: #dbeafe;
+  }
+
+  .relieve-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .relieve-modal-overlay.open {
+    display: flex;
+  }
+
+  .relieve-modal {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 360px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  }
+
+  .relieve-modal h3 {
+    margin: 0 0 0.35rem;
+    color: #1a4b8c;
+    font-size: 1.1rem;
+  }
+
+  .relieve-modal p {
+    margin: 0 0 1rem;
+    color: #64748b;
+    font-size: 0.85rem;
+  }
+
+  .relieve-modal label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .relieve-modal input[type="date"] {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    min-height: 44px;
+    margin-bottom: 1.25rem;
+  }
+
+  .relieve-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.55rem;
+  }
+
+  .pdf-modal {
+    max-width: 480px;
+  }
+
+  .pdf-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.9rem 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .pdf-modal-grid input[type="number"],
+  .pdf-modal-grid input[type="text"] {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.9rem;
+    min-height: 42px;
+  }
+</style>
+
+<div class="releaving-order-page">
+  <div class="report-header">
+    <h1><i class="fa-solid fa-file-signature"></i> Relieving Order</h1>
+  </div>
+
+  <div class="releaving-order-shell">
+    <form method="get" class="filter-panel">
+      <div class="filter-grid">
+        <div class="filter-field">
+          <label for="employee_id">Employee ID</label>
+          <input
+            type="text"
+            name="employee_id"
+            id="employee_id"
+            value="{{ filters.employee_id }}"
+            placeholder="Search by employee ID"
+          >
+        </div>
+
+        <div class="filter-field">
+          <label for="department">Department</label>
+          <select name="department" id="department">
+            <option value="">All Departments</option>
+            {% for department in departments %}
+              {% with department_id=department.id|stringformat:"s" %}
+                <option value="{{ department.id }}" {% if filters.department == department_id %}selected{% endif %}>
+                  {{ department.Department }}
+                </option>
+              {% endwith %}
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label for="designation">Designation</label>
+          <select name="designation" id="designation">
+            <option value="">All Designations</option>
+            {% for designation in designations %}
+              {% with designation_id=designation.id|stringformat:"s" %}
+                <option value="{{ designation.id }}" {% if filters.designation == designation_id %}selected{% endif %}>
+                  {{ designation.designation_name }}
+                </option>
+              {% endwith %}
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button type="submit" class="filter-btn">
+            <i class="fa-solid fa-filter"></i>
+            Apply
+          </button>
+          <a href="?" class="reset-btn">
+            <i class="fa-solid fa-rotate-left"></i>
+            Reset
+          </a>
+        </div>
+      </div>
+    </form>
+
+    <div class="data-section">
+      <div class="section-heading">
+        <h2>Faculty</h2>
+        <span class="section-count">{{ faculty_list|length }} record{{ faculty_list|length|pluralize }}</span>
+      </div>
+      <div class="table-wrap">
+        {% if faculty_list %}
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>Faculty ID</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Relieve</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for faculty in faculty_list %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ faculty.faculty_id|default:"-" }}</td>
+                  <td>{{ faculty.name|default:"-" }}</td>
+                  <td>{{ faculty.department.Department|default:"Not Set" }}</td>
+                  <td>{{ faculty.designation.designation_name|default:"Not Set" }}</td>
+                  <td>
+                    {% if faculty.dor %}
+                      <div class="relieved-cell">
+                        <span class="relieved-badge"><i class="fa-solid fa-circle-check"></i> Relieved on {{ faculty.dor|date:"d-M-Y" }}</span>
+                        <button
+                          type="button"
+                          class="pdf-link"
+                          title="Generate Relieving Order PDF"
+                          onclick="openPdfModal('{% url 'relieving_order_pdf' faculty.id %}', '{{ faculty.name|escapejs }}')"
+                        >
+                          <i class="fa-solid fa-file-pdf"></i> PDF
+                        </button>
+                      </div>
+                    {% else %}
+                      <button
+                        type="button"
+                        class="relieve-btn"
+                        onclick="openRelieveModal('{% url 'relieve_faculty' faculty.id %}?{{ request.GET.urlencode }}', '{{ faculty.name|escapejs }}')"
+                      >
+                        Relieve
+                      </button>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="empty-state">
+            <i class="fa-solid fa-users-slash" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
+            No faculty found for the selected filters.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="relieve-modal-overlay" id="relieveModalOverlay">
+    <div class="relieve-modal">
+      <h3>Relieve Faculty</h3>
+      <p id="relieveModalFacultyName"></p>
+      <form method="post" id="relieveForm">
+        {% csrf_token %}
+        <label for="relieveDateInput">Date of Relieving</label>
+        <input type="date" name="relieve_date" id="relieveDateInput" required>
+        <div class="relieve-modal-actions">
+          <button type="button" class="reset-btn" onclick="closeRelieveModal()">Cancel</button>
+          <button type="submit" class="filter-btn">Relieve</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="relieve-modal-overlay" id="pdfModalOverlay">
+    <div class="relieve-modal pdf-modal">
+      <h3>Generate Relieving Order PDF</h3>
+      <p id="pdfModalFacultyName"></p>
+      <form method="get" id="pdfForm" target="_blank">
+        <div class="pdf-modal-grid">
+          <div>
+            <label for="pdfBasicPay">Basic Salary</label>
+            <input type="number" step="0.01" min="0" name="basic_pay" id="pdfBasicPay">
+          </div>
+          <div>
+            <label for="pdfAgp">AGP</label>
+            <input type="number" step="0.01" min="0" name="agp" id="pdfAgp">
+          </div>
+          <div>
+            <label for="pdfDa">DA (Dearness Allowance)</label>
+            <input type="number" step="0.01" min="0" name="da" id="pdfDa">
+          </div>
+          <div>
+            <label for="pdfHra">HRA</label>
+            <input type="number" step="0.01" min="0" name="hra" id="pdfHra">
+          </div>
+          <div>
+            <label for="pdfSpecialAllowance">Special Allowance</label>
+            <input type="number" step="0.01" min="0" name="special_allowance" id="pdfSpecialAllowance">
+          </div>
+          <div></div>
+          <div>
+            <label for="pdfOnWork">On Work</label>
+            <input type="text" name="on_work" id="pdfOnWork" placeholder="Good">
+          </div>
+          <div>
+            <label for="pdfOnConduct">On Conduct</label>
+            <input type="text" name="on_conduct" id="pdfOnConduct" placeholder="Good">
+          </div>
+        </div>
+        <div class="relieve-modal-actions">
+          <button type="button" class="reset-btn" onclick="closePdfModal()">Cancel</button>
+          <button type="submit" class="filter-btn">Generate PDF</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openRelieveModal(actionUrl, facultyName) {
+    document.getElementById('relieveForm').action = actionUrl;
+    document.getElementById('relieveModalFacultyName').textContent = 'Enter the relieving date for ' + facultyName + '.';
+    document.getElementById('relieveDateInput').value = '';
+    document.getElementById('relieveModalOverlay').classList.add('open');
+  }
+
+  function closeRelieveModal() {
+    document.getElementById('relieveModalOverlay').classList.remove('open');
+  }
+
+  function openPdfModal(actionUrl, facultyName) {
+    document.getElementById('pdfForm').action = actionUrl;
+    document.getElementById('pdfModalFacultyName').textContent = 'Enter details for ' + facultyName + "'s relieving order.";
+    document.getElementById('pdfForm').reset();
+    document.getElementById('pdfModalOverlay').classList.add('open');
+  }
+
+  function closePdfModal() {
+    document.getElementById('pdfModalOverlay').classList.remove('open');
+  }
+</script>
+{% endblock %}

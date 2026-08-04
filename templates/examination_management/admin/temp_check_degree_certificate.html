@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Degree Certificate Verification System</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for vintage typewriter font -->
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3c2f2f;
+            --secondary: #6b4e31;
+            --accent: #f39c12;
+            --light-bg: #f5f5dc;
+            --dark-text: #3c2f2f;
+        }
+
+        body {
+            background: linear-gradient(120deg, #f4e4bc 0%, #d9c2a6 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Special Elite', monospace;
+            color: var(--dark-text);
+        }
+
+        .header-bar {
+            background: var(--primary);
+            height: 8px;
+            width: 100%;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .verification-card {
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            margin: 2rem auto;
+            background: var(--light-bg);
+        }
+
+        .verification-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: #f5f5dc;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .form-control {
+            border-radius: 5px;
+            padding: 0.8rem;
+            border: 2px solid var(--primary);
+            background: #fff8e1;
+            font-family: 'Special Elite', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 8px rgba(107, 78, 49, 0.4);
+            background: #ffffff;
+        }
+
+        .btn-primary {
+            border-radius: 5px;
+            padding: 0.8rem 2rem;
+            font-weight: 600;
+            background: var(--secondary);
+            border: 2px solid var(--primary);
+            color: #f5f5dc;
+            font-family: 'Special Elite', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: #503c2a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(80, 60, 42, 0.4);
+        }
+
+        .alert {
+            border-radius: 5px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            border: 2px solid var(--primary);
+            background: #fff8e1;
+            color: var(--dark-text);
+            font-family: 'Special Elite', monospace;
+            opacity: 0;
+            animation: typewriter 1.5s steps(20) forwards;
+            overflow: hidden;
+        }
+
+        @keyframes typewriter {
+            0% { opacity: 0; width: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 1; width: 100%; }
+        }
+
+        .alert-success {
+            background: #e6f0e1;
+            border-color: #4a7043;
+            color: #4a7043;
+        }
+
+        .alert-danger {
+            background: #f8e1e1;
+            border-color: #8b2e2e;
+            color: #8b2e2e;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(60, 47, 47, 0.7);
+            z-index: 1050;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .vinyl-spinner {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 50%;
+            background: radial-gradient(circle, #000000 10%, #3c2f2f 60%, #000000 100%);
+            position: relative;
+            animation: spin 1s linear infinite;
+        }
+
+        .vinyl-spinner::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0.8rem;
+            height: 0.8rem;
+            background: #f5f5dc;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .student-details {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .detail-row {
+            display: flex;
+            margin-bottom: 0.8rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.8rem;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            min-width: 200px;
+            color: var(--primary);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary) !important;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 1.5rem;
+            text-align: center;
+            color: #6c757d;
+            background: #fff8e1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-graduation-cap me-2"></i>University Verify
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="fas fa-home me-1"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-info-circle me-1"></i> About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-envelope me-1"></i> Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="text-center mb-5">
+                    <h1 class="display-4 fw-bold mb-3">Degree Certificate Verification</h1>
+                    <p class="lead">Verify the authenticity of academic degrees and certificates issued by our institution</p>
+                </div>
+
+                <div class="verification-card card mb-5">
+                    <div class="header-bar"></div>
+                    <div class="card-header">
+                        <i class="fas fa-certificate fa-3x mb-3"></i>
+                        <h3 class="card-title mb-0">Check Certificate Validity</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" id="verificationForm">
+                            {% csrf_token %}
+                            <div class="mb-4">
+                                <label for="serial_number" class="form-label fw-semibold">Enter Certificate Serial Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                                    <input type="text" id="serial_number" name="serial_number" class="form-control form-control-lg" 
+                                           placeholder="e.g., DC-2023-78901" required>
+                                </div>
+                                <div class="form-text mt-2">Enter the unique serial number located at the bottom of your certificate</div>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-search me-2"></i>Verify Certificate
+                                </button>
+                            </div>
+                        </form>
+
+                        <div id="loadingContainer" class="loading-overlay">
+                            <div class="vinyl-spinner"></div>
+                        </div>
+
+                        {% if student %}
+                            <div class="alert alert-success" role="alert">
+                                <div class="text-center">
+                                    <i class="fas fa-check-circle fa-4x mb-3"></i>
+                                    <h3>Certificate Verified Successfully!</h3>
+                                    <p class="mb-2"><strong>Serial Number:</strong> {{ student.serial_number }}</p>
+                                    <p class="mb-2"><strong>Status:</strong> Valid and Authentic</p>
+                                </div>
+                                <div class="student-details">
+                                    <h4 class="mb-3">Student Details</h4>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Registration Number:</span>
+                                        <span>{{ student.student_reg_no }}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Student Name:</span>
+                                        <span>{{ student.student_name }}</span>
+                                    </div>
+                                    {% if student.programme_of_study %}
+                                        <div class="detail-row">
+                                            <span class="detail-label">Programme of Study:</span>
+                                            <span>{{ student.programme_of_study }}</span>
+                                        </div>
+                                    {% endif %}
+                                    {% if student.department %}
+                                        <div class="detail-row">
+                                            <span class="detail-label">Department:</span>
+                                            <span>{{ student.department }}</span>
+                                        </div>
+                                    {% endif %}
+                                    {% if student.program %}
+                                        <div class="detail-row">
+                                            <span class="detail-label">Program:</span>
+                                            <span>{{ student.program }}</span>
+                                        </div>
+                                    {% endif %}
+                                    <div class="detail-row">
+                                        <span class="detail-label">Year of Passing:</span>
+                                        <span>{{ student.year_of_passing }}</span>
+                                    </div>
+                                    {% if student.batch %}
+                                        <div class="detail-row">
+                                            <span class="detail-label">Batch:</span>
+                                            <span>{{ student.batch }}</span>
+                                        </div>
+                                    {% endif %}
+                                    {% if student.Intake %}
+                                        <div class="detail-row">
+                                            <span class="detail-label">Intake:</span>
+                                            <span>{{ student.Intake }}</span>
+                                        </div>
+                                    {% endif %}
+                                    {% if student.mode_of_study %}
+                                        <div class="detail-row">
+                                            <span class="detail-label">Mode of Study:</span>
+                                            <span>{{ student.mode_of_study }}</span>
+                                        </div>
+                                    {% endif %}
+                                    {% if student.regulation %}
+                                        <div class="detail-row">
+                                            <span class="detail-label">Regulation:</span>
+                                            <span>{{ student.regulation }}</span>
+                                        </div>
+                                    {% endif %}
+                                    {% if student.email_address %}
+                                        <div class="detail-row">
+                                            <span class="detail-label">Email Address:</span>
+                                            <span>{{ student.email_address }}</span>
+                                        </div>
+                                    {% endif %}
+                                    {% if student.mobile_number %}
+                                        <div class="detail-row">
+                                            <span class="detail-label">Mobile Number:</span>
+                                            <span>{{ student.mobile_number }}</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="mt-3 text-center">
+                                    <p><i class="fas fa-check-circle me-1"></i> This certificate has been successfully verified against our official records.</p>
+                                </div>
+                            </div>
+                        {% elif message %}
+                            <div class="alert alert-danger" role="alert">
+                                <div class="text-center">
+                                    <i class="fas fa-times-circle fa-4x mb-3"></i>
+                                    <h3>Certificate Verification Failed</h3>
+                                    <p class="mb-1"><strong>Serial Number:</strong> {{ serial_number }}</p>
+                                    <p class="mb-1"><strong>Status:</strong> Not Found in Database</p>
+                                    <p class="mt-3">{{ message }}</p>
+                                    <p>Please check the number and try again, or contact the registrar's office for assistance.</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 University Certificate Verification System | Ensuring Academic Integrity</p>
+            <p class="small">This is a demonstration system for certificate verification</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('verificationForm').addEventListener('submit', function() {
+            // Show loading overlay
+            document.getElementById('loadingContainer').classList.add('show');
+        });
+    </script>
+</body>
+</html>

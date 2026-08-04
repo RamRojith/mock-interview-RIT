@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <h3 class="text-center mb-4">STAFF WI-FI ACCESS REQUEST FORM</h3>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- ================= GENERAL INFORMATION ================= -->
+        <h5>I. GENERAL INFORMATION</h5>
+        <hr>
+
+        <div class="row">
+            <div class="col-md-6">
+                <label>Name (CAPITAL)</label>
+                <input type="text" class="form-control"
+                       value="{{ faculty.name|upper|default:'' }}" readonly>
+            </div>
+
+            <div class="col-md-6">
+                <label>Staff ID</label>
+                <input type="text" class="form-control"
+                       value="{{ faculty.faculty_id|default:'' }}" readonly>
+            </div>
+
+            <div class="col-md-6 mt-2">
+                <label>Department</label>
+                <input type="text" class="form-control"
+                       value="{{ faculty.department|default:'' }}" readonly>
+            </div>
+
+            <div class="col-md-6 mt-2">
+                <label>Date of Birth</label>
+                <input type="text" class="form-control"
+                       value="{{ faculty.dob|date:'Y-m-d'|default:'' }}" readonly>
+            </div>
+
+            <div class="col-md-6 mt-2">
+                <label>Email</label>
+                <input type="text" class="form-control"
+                       value="{{ faculty.college_email|default:'' }}" readonly>
+            </div>
+
+            <div class="col-md-6 mt-2">
+                <label>Mobile</label>
+                <input type="text" class="form-control"
+                       value="{{ faculty.phone|default:'' }}" readonly>
+            </div>
+        </div>
+
+        <!-- ================= TECHNICAL INFORMATION ================= -->
+        <h5 class="mt-4">II. TECHNICAL INFORMATION</h5>
+        <hr>
+
+        <div class="row">
+            <div class="col-md-6">
+                <label>Device Type</label>
+                <select name="device_type" class="form-control" required>
+                    <option value="">Select</option>
+                    <option>Laptop</option>
+                    <option>Desktop</option>
+                    <option>Others</option>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label>Make / Model & Serial No</label>
+                <input type="text" name="device_make" class="form-control" required>
+            </div>
+
+            <div class="col-md-6 mt-2">
+                <label>MAC (Ethernet)</label>
+                <input type="text" name="mac_ethernet" class="form-control">
+            </div>
+
+            <div class="col-md-6 mt-2">
+                <label>MAC (Wireless)</label>
+                <input type="text" name="mac_wireless" class="form-control">
+            </div>
+
+            <div class="col-md-6 mt-2">
+                <label>Mobile MAC</label>
+                <input type="text" name="mobile_mac" class="form-control">
+            </div>
+
+            <div class="col-md-6 mt-2">
+                <label>Operating System</label>
+                <select name="operating_system" class="form-control">
+                    <option>Windows</option>
+                    <option>Linux</option>
+                    <option>Mac</option>
+                </select>
+            </div>
+
+            <div class="col-md-12 mt-2">
+                <label>Purpose</label>
+                <textarea name="purpose" class="form-control" rows="2"></textarea>
+            </div>
+        </div>
+
+        <div class="text-center mt-3">
+            <button type="submit" name="create_request" class="btn btn-primary">
+                Submit Request
+            </button>
+        </div>
+    </form>
+
+    <!-- ================= LIST REQUESTS ================= -->
+    <hr>
+    <h5 class="mt-4">My Submitted Requests</h5>
+
+    <table class="table table-bordered mt-2">
+        <tr>
+            <th>Device</th>
+            <th>Make</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+
+        {% for req in staff_requests %}
+        <tr>
+            <td>{{ req.device_type }}</td>
+            <td>{{ req.device_make }}</td>
+            <td>{{ req.status }}</td>
+            <td>
+                <!-- Edit -->
+                <button class="btn btn-sm btn-warning" onclick="editStaff{{req.id}}()">Edit</button>
+
+                <!-- Delete -->
+                <form method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="request_id" value="{{req.id}}">
+                    <button name="delete_request" class="btn btn-sm btn-danger"
+                            onclick="return confirm('Delete this request?')">Delete</button>
+                </form>
+            </td>
+        </tr>
+
+        <script>
+        function editStaff{{req.id}}(){
+            document.querySelector('[name=device_type]').value = "{{req.device_type}}";
+            document.querySelector('[name=device_make]').value = "{{req.device_make}}";
+            document.querySelector('[name=mac_ethernet]').value = "{{req.mac_ethernet}}";
+            document.querySelector('[name=mac_wireless]').value = "{{req.mac_wireless}}";
+            document.querySelector('[name=mobile_mac]').value = "{{req.mobile_mac}}";
+            document.querySelector('[name=operating_system]').value = "{{req.operating_system}}";
+            document.querySelector('[name=purpose]').value = "{{req.purpose}}";
+
+            let rid = document.createElement("input");
+            rid.type="hidden"; rid.name="request_id"; rid.value="{{req.id}}";
+            document.forms[0].appendChild(rid);
+
+            let upd = document.createElement("input");
+            upd.type="hidden"; upd.name="update_request"; upd.value="1";
+            document.forms[0].appendChild(upd);
+        }
+        </script>
+
+        {% empty %}
+        <tr><td colspan="4" class="text-center">No Requests Found</td></tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}

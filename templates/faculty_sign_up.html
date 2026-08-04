@@ -1,0 +1,492 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faculty Sign Up — Ramco Institute of Technology</title>
+  <link rel="icon" type="image/png" href="{% static 'images/ritlogo.png' %}">
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.js' %}"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background: #f1f5f9;
+      display: flex; align-items: stretch; justify-content: center;
+    }
+
+    /* ── page shell ─────────────────────────────── */
+    .page {
+      display: flex;
+      width: 100%; max-width: 1100px;
+      min-height: 100vh;
+      box-shadow: 0 0 80px rgba(2,6,23,.18);
+    }
+
+    /* ── LEFT PANEL ─────────────────────────────── */
+    .left {
+      flex: 0 0 420px;
+      background: linear-gradient(160deg, #0d1f42 0%, #1a4b8c 55%, #2563b0 100%);
+      padding: 48px 44px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      position: relative; overflow: hidden;
+    }
+    .left::before {
+      content: ''; position: absolute;
+      width: 340px; height: 340px; border-radius: 50%;
+      background: rgba(255,255,255,.05);
+      top: -100px; right: -100px; pointer-events: none;
+    }
+    .left::after {
+      content: ''; position: absolute;
+      width: 220px; height: 220px; border-radius: 50%;
+      background: rgba(255,255,255,.04);
+      bottom: -60px; left: -60px; pointer-events: none;
+    }
+
+    .left-top { position: relative; z-index: 1; }
+
+    .logo-row {
+      display: flex; align-items: center; gap: 13px; margin-bottom: 48px;
+    }
+    .logo-row img { width: 52px; height: 52px; object-fit: contain; }
+    .logo-row .inst { line-height: 1.25; }
+    .logo-row .inst .n1 { font-size: .72rem; font-weight: 800; color: rgba(255,255,255,.7); text-transform: uppercase; letter-spacing: .8px; }
+    .logo-row .inst .n2 { font-size: .88rem; font-weight: 900; color: #fff; }
+
+    .left h2 {
+      font-size: 1.85rem; font-weight: 900; color: #fff;
+      line-height: 1.2; margin-bottom: 14px;
+    }
+    .left h2 span { color: #93c5fd; }
+
+    .left .tagline {
+      font-size: .9rem; color: rgba(255,255,255,.72);
+      line-height: 1.6; margin-bottom: 36px;
+    }
+
+    .feat-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+    .feat-list li {
+      display: flex; align-items: flex-start; gap: 12px;
+      font-size: .83rem; color: rgba(255,255,255,.82); line-height: 1.45;
+    }
+    .feat-ico {
+      width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem; color: #93c5fd;
+    }
+
+    .left-bottom {
+      position: relative; z-index: 1;
+      padding-top: 32px; border-top: 1px solid rgba(255,255,255,.1);
+    }
+    .left-bottom p { font-size: .75rem; color: rgba(255,255,255,.5); line-height: 1.5; }
+    .left-bottom a { color: rgba(255,255,255,.7); text-decoration: none; }
+    .left-bottom a:hover { color: #fff; }
+
+    /* ── RIGHT PANEL ────────────────────────────── */
+    .right {
+      flex: 1;
+      background: #fff;
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .right-inner {
+      flex: 1;
+      padding: 40px 48px 40px;
+      max-width: 540px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* back */
+    .back-link {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: .8rem; font-weight: 700; color: #64748b;
+      text-decoration: none; margin-bottom: 32px;
+      transition: color .15s, gap .15s;
+    }
+    .back-link:hover { color: #1a4b8c; gap: 10px; }
+    .back-link i { font-size: .75rem; }
+
+    /* form heading */
+    .form-heading { margin-bottom: 28px; }
+    .form-heading h3 {
+      font-size: 1.5rem; font-weight: 900; color: #0f172a; margin-bottom: 5px;
+    }
+    .form-heading p { font-size: .83rem; color: #64748b; line-height: 1.5; }
+
+    /* avatar */
+    .avatar-zone {
+      display: flex; align-items: center; gap: 18px; margin-bottom: 26px;
+      padding: 16px; background: #f8faff;
+      border: 1.5px dashed #c7d2fe; border-radius: 14px;
+    }
+    .avatar-ring {
+      width: 68px; height: 68px; border-radius: 50%; flex-shrink: 0;
+      overflow: hidden; cursor: pointer; position: relative;
+      border: 2.5px solid #e0e7ff;
+      box-shadow: 0 4px 12px rgba(99,102,241,.15);
+      transition: border-color .2s;
+    }
+    .avatar-ring:hover { border-color: #6366f1; }
+    .avatar-ring img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .avatar-ring .av-ov {
+      position: absolute; inset: 0; background: rgba(99,102,241,.5);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity .2s; border-radius: 50%;
+    }
+    .avatar-ring:hover .av-ov { opacity: 1; }
+    .av-ov i { color: #fff; font-size: 1rem; }
+    .avatar-info { flex: 1; }
+    .avatar-info .ai-title { font-size: .82rem; font-weight: 700; color: #334155; margin-bottom: 3px; }
+    .avatar-info .ai-hint  { font-size: .72rem; color: #94a3b8; line-height: 1.4; }
+    .avatar-info .ai-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      margin-top: 7px; padding: 5px 12px; border-radius: 7px;
+      background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe;
+      font-size: .72rem; font-weight: 700; cursor: pointer;
+      transition: background .15s;
+    }
+    .avatar-info .ai-btn:hover { background: #e0e7ff; }
+
+    /* section label */
+    .sec {
+      font-size: .67rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .8px; color: #94a3b8;
+      display: flex; align-items: center; gap: 8px;
+      margin: 22px 0 12px;
+    }
+    .sec::after { content:''; flex:1; height:1px; background:#f1f5f9; }
+
+    /* field */
+    .frow { margin-bottom: 14px; }
+    .fl {
+      font-size: .75rem; font-weight: 700; color: #374151;
+      display: block; margin-bottom: 5px;
+    }
+    .fl .req { color: #ef4444; margin-left: 2px; }
+
+    .fi-wrap { position: relative; }
+    .fi-ico {
+      position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+      color: #94a3b8; font-size: .82rem; pointer-events: none;
+    }
+    .fi {
+      width: 100%; padding: 10px 13px 10px 36px;
+      border: 1.5px solid #e5e7eb; border-radius: 10px;
+      font-size: .875rem; color: #1e293b; background: #fafafa;
+      outline: none; font-family: inherit;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+      appearance: none; -webkit-appearance: none;
+    }
+    .fi:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+      background: #fff;
+    }
+    .fi::placeholder { color: #c0ccd8; }
+    select.fi {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 13px center;
+      padding-right: 36px;
+    }
+
+    /* password eye */
+    .fi-eye {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; padding: 0; cursor: pointer;
+      color: #94a3b8; font-size: .82rem; line-height: 1;
+    }
+    .fi-eye:hover { color: #6366f1; }
+
+    /* password with eye: no left icon padding needed differently */
+    .fi-pw { padding-left: 36px; padding-right: 38px; }
+
+    /* submit */
+    .btn-submit {
+      width: 100%; padding: 13px;
+      border: none; border-radius: 11px;
+      background: linear-gradient(135deg, #1a4b8c 0%, #3b6bc4 100%);
+      color: #fff; font-weight: 800; font-size: .95rem; font-family: inherit;
+      cursor: pointer; letter-spacing: .2px;
+      box-shadow: 0 8px 24px rgba(26,75,140,.28);
+      transition: opacity .15s, transform .15s, box-shadow .15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 8px;
+    }
+    .btn-submit:hover {
+      opacity: .92; transform: translateY(-1px);
+      box-shadow: 0 12px 30px rgba(26,75,140,.35);
+    }
+    .btn-submit:active { transform: translateY(0); }
+
+    /* footer */
+    .form-footer {
+      text-align: center; margin-top: 20px;
+      font-size: .82rem; color: #6b7280;
+    }
+    .form-footer a { color: #1a4b8c; font-weight: 700; text-decoration: none; }
+    .form-footer a:hover { text-decoration: underline; }
+
+    /* messages */
+    .msg {
+      padding: 11px 14px; border-radius: 10px; font-size: .82rem;
+      font-weight: 600; margin-bottom: 16px;
+      display: flex; align-items: flex-start; gap: 9px;
+    }
+    .msg.error   { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+    .msg.success { background:#f0fdf4; color:#14532d; border:1px solid #bbf7d0; }
+    .msg.warning { background:#fffbeb; color:#92400e; border:1px solid #fde68a; }
+    .msg.info    { background:#eff6ff; color:#1e3a8a; border:1px solid #bfdbfe; }
+
+    /* ── responsive ─────────────────────────────── */
+    @media (max-width: 860px) {
+      .page { flex-direction: column; max-width: 560px; }
+      .left { flex: none; padding: 32px 32px 28px; }
+      .feat-list { display: none; }
+      .left h2 { font-size: 1.4rem; margin-bottom: 8px; }
+      .left .tagline { margin-bottom: 0; font-size: .82rem; }
+      .left-bottom { display: none; }
+      .right-inner { padding: 28px 24px 36px; }
+    }
+    @media (max-width: 480px) {
+      .left { padding: 24px 20px 20px; }
+      .avatar-zone { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="page">
+
+  <!-- ── LEFT PANEL ─────────────────────────────── -->
+  <div class="left">
+    <div class="left-top">
+      <div class="logo-row">
+        <img src="{% static 'images/ritlogo.png' %}" alt="RIT"
+             onerror="this.style.display='none'">
+        <div class="inst">
+          <div class="n1">Ramco Institute</div>
+          <div class="n2">of Technology</div>
+        </div>
+      </div>
+
+      <h2>Join the<br><span>Faculty Portal</span></h2>
+      <p class="tagline">
+        Create your account to access teaching tools, manage courses,
+        track leave, and collaborate with your department.
+      </p>
+
+      <ul class="feat-list">
+        <li>
+          <div class="feat-ico"><i class="fa-solid fa-book-open"></i></div>
+          <div>Manage courses, timetables and subject willingness</div>
+        </li>
+        <li>
+          <div class="feat-ico"><i class="fa-solid fa-users"></i></div>
+          <div>Access student records, mentee data and assessments</div>
+        </li>
+        <li>
+          <div class="feat-ico"><i class="fa-solid fa-calendar-check"></i></div>
+          <div>Apply for leave and track leave balances</div>
+        </li>
+        <li>
+          <div class="feat-ico"><i class="fa-solid fa-shield-halved"></i></div>
+          <div>Your Employee ID must be pre-registered by the admin</div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="left-bottom">
+      <p>
+        &copy; 2026 Ramco Institute of Technology.<br>
+        For support contact Administration.</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- ── RIGHT PANEL ────────────────────────────── -->
+  <div class="right">
+    <div class="right-inner">
+
+      <a href="javascript:history.back()" class="back-link">
+        <i class="fa-solid fa-arrow-left"></i> Back
+      </a>
+
+      <div class="form-heading">
+        <h3>Create Your Account</h3>
+        <p>Fill in your details below. Your Employee ID must already be registered by the administrator.</p>
+      </div>
+
+      <!-- Messages -->
+      {% if messages %}
+        {% for message in messages %}
+          <div class="msg {{ message.tags }}">
+            <i class="fa-solid {% if 'error' in message.tags %}fa-circle-xmark{% elif 'success' in message.tags %}fa-circle-check{% elif 'warning' in message.tags %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+            <span>{{ message }}</span>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post" action="{% url 'faculty_sign_up' %}" enctype="multipart/form-data" autocomplete="off">
+        {% csrf_token %}
+
+        <!-- Profile Photo -->
+        <div class="avatar-zone">
+          <label for="profile_img">
+            <div class="avatar-ring">
+              <img src="{% static 'images/profile.jpg' %}" alt="Photo" id="profile-preview"
+                   onerror="this.src='{% static 'images/ritlogo.png' %}'">
+              <div class="av-ov"><i class="fa-solid fa-camera"></i></div>
+            </div>
+          </label>
+          <div class="avatar-info">
+            <div class="ai-title">Profile Photo</div>
+            <div class="ai-hint">JPEG or PNG · Max 2 MB · Optional</div>
+            <label for="profile_img" class="ai-btn">
+              <i class="fa-solid fa-arrow-up-from-bracket"></i> Upload Photo
+            </label>
+          </div>
+          <input type="file" id="profile_img" name="profile_img"
+                 accept="image/png,image/jpeg,image/jpg" class="d-none" onchange="previewImg(this)">
+        </div>
+
+        <!-- Account Info -->
+        <div class="sec"><i class="fa-solid fa-user-circle"></i>Account Information</div>
+
+        <div class="frow">
+          <label class="fl">Full Name <span class="req">*</span></label>
+          <div class="fi-wrap">
+            <i class="fi-ico fa-solid fa-user"></i>
+            <input type="text" name="username" class="fi" placeholder="e.g. Kishorrekumar S" required autofocus autocomplete="off">
+          </div>
+        </div>
+
+        <div class="frow">
+          <label class="fl">Employee ID <span class="req">*</span></label>
+          <div class="fi-wrap">
+            <i class="fi-ico fa-solid fa-id-badge"></i>
+            <input type="text" name="Employee_id" class="fi" placeholder="e.g. 1023" required autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Department & Role -->
+        <div class="sec"><i class="fa-solid fa-building-columns"></i>Department & Role</div>
+
+        <div class="row g-3 mb-0">
+          <div class="col-sm-6">
+            <div class="frow mb-0">
+              <label class="fl">Department <span class="req">*</span></label>
+              <div class="fi-wrap">
+                <i class="fi-ico fa-solid fa-sitemap"></i>
+                <select name="Department" class="fi" required>
+                  <option value="" disabled selected>Select Department</option>
+                  {% for dept in departments %}
+                  <option value="{{ dept.id }}">{{ dept.Department }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="frow mb-0">
+              <label class="fl">Role <span class="req">*</span></label>
+              <div class="fi-wrap">
+                <i class="fi-ico fa-solid fa-user-tag"></i>
+                <select name="role" class="fi" required>
+                  <option value="" disabled selected>Select Role</option>
+                  {% for role in roles %}
+                  <option value="{{ role.id }}">{{ role.role }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Credentials -->
+        <div class="sec"><i class="fa-solid fa-lock"></i>Login Credentials</div>
+
+        <div class="frow">
+          <label class="fl">College Email Address <span class="req">*</span></label>
+          <div class="fi-wrap">
+            <i class="fi-ico fa-solid fa-envelope"></i>
+            <input type="email" name="email" class="fi" placeholder="953623243049@ritrjpm.ac.in" required autocomplete="off">
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div class="frow mb-0">
+              <label class="fl">Password <span class="req">*</span></label>
+              <div class="fi-wrap">
+                <i class="fi-ico fa-solid fa-key"></i>
+                <input type="password" name="password" id="pw1" class="fi fi-pw"
+                       placeholder="Min. 8 characters" required minlength="8" autocomplete="new-password">
+                <button type="button" class="fi-eye" onclick="togglePw('pw1',this)" tabindex="-1">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="frow mb-0">
+              <label class="fl">Confirm Password <span class="req">*</span></label>
+              <div class="fi-wrap">
+                <i class="fi-ico fa-solid fa-key"></i>
+                <input type="password" name="confirm_password" id="pw2" class="fi fi-pw"
+                       placeholder="Re-enter password" required autocomplete="new-password">
+                <button type="button" class="fi-eye" onclick="togglePw('pw2',this)" tabindex="-1">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <i class="fa-solid fa-user-plus"></i> Create Account
+        </button>
+      </form>
+
+      <div class="form-footer">
+        Already have an account? <a href="{% url 'login_view' %}">Sign in here</a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+function previewImg(input) {
+  if (!input.files || !input.files[0]) return;
+  const f = input.files[0];
+  if (!['image/png','image/jpeg','image/jpg'].includes(f.type)) {
+    alert('Only PNG or JPEG images are allowed.');
+    input.value = '';
+    return;
+  }
+  const r = new FileReader();
+  r.onload = e => document.getElementById('profile-preview').src = e.target.result;
+  r.readAsDataURL(f);
+}
+
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.querySelector('i').className = show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+}
+</script>
+</body>
+</html>

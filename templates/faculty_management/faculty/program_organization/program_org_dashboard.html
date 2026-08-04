@@ -1,0 +1,1044 @@
+{% extends "base.html" %}
+{% load static %}
+{% load fm_tags %}
+
+{% block content %}
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: #f5f7fb;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #1e293b;
+    line-height: 1.5;
+  }
+
+  /* Hide top navbar from base template */
+  .navbar, nav:not(.minimal-nav) {
+    display: none !important;
+  }
+
+  /* Minimal navigation - only two buttons */
+  .minimal-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid #eef2f8;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .nav-brand {
+    font-weight: 700;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, #1e293b, #2d3a4f);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .nav-buttons {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .nav-btn {
+    background: transparent;
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem 1.2rem;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #4a5a72;
+  }
+
+  .nav-btn i {
+    font-size: 0.9rem;
+  }
+
+  .nav-btn.active {
+    background: #1e3a8a;
+    border-color: #1e3a8a;
+    color: white;
+  }
+
+  .nav-btn:hover:not(.active) {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+  }
+
+  .minimal-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 1.5rem 1.5rem 2.5rem;
+  }
+
+  .greeting-card {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 1.25rem 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    border: 1px solid #eef2f6;
+  }
+
+  .greeting-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #1e293b, #2d3a4f);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 0.25rem;
+  }
+
+  .greeting-sub {
+    color: #5b6e8c;
+    font-size: 0.85rem;
+    border-left: 3px solid #4361ee;
+    padding-left: 0.75rem;
+  }
+
+  /* Main content panels */
+  .main-panel {
+    background: #ffffff;
+    border-radius: 24px;
+    border: 1px solid #eef2f8;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+
+  .panel {
+    display: none;
+    padding: 1.75rem 2rem;
+    animation: fade 0.2s ease;
+  }
+
+  .panel.active {
+    display: block;
+  }
+
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Dashboard Cards */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .action-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 1.5rem;
+    border: 1px solid #edf2f8;
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  }
+
+  .action-card:hover {
+    transform: translateY(-3px);
+    border-color: #dce3ec;
+    box-shadow: 0 12px 20px -12px rgba(0, 0, 0, 0.08);
+  }
+
+  .card-icon {
+    width: 48px;
+    height: 48px;
+    background: #f0f4fe;
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.2rem;
+    color: #2c5f9a;
+    font-size: 1.5rem;
+  }
+
+  .card-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+
+  .card-desc {
+    color: #5b6e8c;
+    font-size: 0.85rem;
+    margin-bottom: 1.3rem;
+    line-height: 1.4;
+  }
+
+  .btn-min {
+    background: #f1f4f9;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 40px;
+    font-weight: 500;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+    color: #1f3a6b;
+  }
+
+  .btn-min-primary {
+    background: #1e3a8a;
+    color: white;
+  }
+
+  .btn-min-primary:hover {
+    background: #1e2f5a;
+    transform: translateY(-1px);
+  }
+
+  .btn-min-outline {
+    background: transparent;
+    border: 1px solid #cdd9ed;
+  }
+
+  .btn-min-outline:hover {
+    background: #f8fafc;
+  }
+
+  /* Forms */
+  .form-card {
+    background: transparent;
+  }
+
+  .form-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field label {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #334155;
+  }
+
+  input, select, textarea {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 0.7rem 1rem;
+    font-size: 0.85rem;
+    background: #fff;
+    transition: 0.2s;
+    font-family: inherit;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #8b9dc3;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+  }
+
+  .selection-group {
+    background: #fafcff;
+    border-radius: 18px;
+    border: 1px solid #eef2fa;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .selection-row-inner {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    align-items: end;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    border-radius: 18px;
+    border: 1px solid #eff3f9;
+    background: white;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+  }
+
+  th {
+    text-align: left;
+    padding: 0.9rem 1rem;
+    background: #f8fafd;
+    font-weight: 600;
+    color: #2c3e5c;
+    border-bottom: 1px solid #e9edf2;
+  }
+
+  td {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid #f0f3f8;
+    vertical-align: middle;
+  }
+
+  .badge-min {
+    background: #eef2ff;
+    color: #1e40af;
+    border-radius: 40px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  .status-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.75rem;
+    border-radius: 30px;
+  }
+
+  .status-approved {
+    background: #e0f2e9;
+    color: #0a5c3e;
+  }
+
+  .status-pending {
+    background: #fff0db;
+    color: #b45309;
+  }
+
+  .status-hod {
+    background: #e0e7ff;
+    color: #2e3b8c;
+  }
+
+  .status-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .flex-between {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .filter-bar {
+    background: #f8fafd;
+    border-radius: 20px;
+    padding: 1rem 1.3rem;
+    margin-bottom: 1.4rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 140px;
+  }
+
+  .filter-group label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #5b6e8c;
+  }
+
+  .marks-input {
+    width: 85px;
+    text-align: center;
+    padding: 0.4rem;
+    border-radius: 12px;
+  }
+
+  .marks-valid {
+    border-color: #10b981;
+    background: #f0fdf4;
+  }
+
+  .marks-invalid {
+    border-color: #ef4444;
+    background: #fef2f2;
+  }
+
+  /* Modal styles */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-container {
+    background: white;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 85vh;
+    overflow: auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+
+  .modal-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #eef2f8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+  }
+
+  .modal-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #94a3b8;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #eef2f8;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    position: sticky;
+    bottom: 0;
+    background: white;
+  }
+
+  @media (max-width: 680px) {
+    .minimal-container {
+      padding: 1rem;
+    }
+    .panel {
+      padding: 1.2rem;
+    }
+    .minimal-nav {
+      padding: 0.5rem 1rem;
+    }
+  }
+
+
+  /* ===== Responsive fixes for tracker actions, marks modals and tables ===== */
+  .full-width{grid-column:1/-1;}
+  .action-stack{display:flex;flex-direction:column;gap:8px;min-width:150px;}
+  .table-wrapper{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:18px;border:1px solid #eff3f9;background:white;}
+  .table-wrapper table{min-width:760px;width:100%;}
+  #programsTable{min-width:900px;}
+  .marks-table{min-width:900px;width:100%;}
+  .marks-cell{display:flex;justify-content:center;align-items:center;}
+  .marks-input{width:90px;height:40px;text-align:center;padding:.4rem;border-radius:12px;border:1px solid #dbe2ea;font-weight:600;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.58);backdrop-filter:blur(4px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.show{display:flex;}
+  .modal-container{width:min(1100px,100%);max-height:90vh;background:#fff;border-radius:22px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(15,23,42,.25);}
+  .modal-header{padding:16px 22px;border-bottom:1px solid #eef2f8;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-shrink:0;position:static;background:#fff;}
+  .modal-header h3{font-size:1.05rem;font-weight:800;margin:0;line-height:1.35;}
+  .modal-close{background:#f8fafc;border:1px solid #e5e7eb;width:36px;height:36px;border-radius:50%;font-size:1.3rem;cursor:pointer;color:#64748b;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .modal-body{padding:18px;overflow:auto;flex:1;}
+  .modal-footer{padding:14px 18px;border-top:1px solid #eef2f8;display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;position:static;background:#fff;}
+  .modal-info{background:#f8fafd;border:1px solid #eef2f8;border-radius:16px;padding:10px 12px;margin-bottom:14px;color:#5b6e8c;font-size:.82rem;}
+  .empty-state{text-align:center;padding:2rem;color:#64748b;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  @media(max-width:768px){
+    .minimal-nav{position:relative}.nav-buttons{width:100%;display:grid;grid-template-columns:1fr 1fr}.nav-btn{justify-content:center;width:100%;padding:.55rem .75rem}.minimal-container{padding:1rem}.panel{padding:1rem}.greeting-card,.main-panel{border-radius:18px}.form-grid-2,.selection-row-inner,.filter-bar{grid-template-columns:1fr;display:grid}.filter-group{width:100%}.btn-min{justify-content:center}.action-stack{width:100%}.modal-overlay{padding:0;align-items:stretch}.modal-container{width:100%;height:100%;max-height:100%;border-radius:0}.modal-header,.modal-body,.modal-footer{padding:12px}.modal-footer{flex-direction:column}.modal-footer .btn-min,.modal-actions .btn-min{width:100%;justify-content:center}.table-wrapper table,#programsTable,.marks-table{min-width:820px}.cards-grid{grid-template-columns:1fr}
+  }
+
+</style>
+
+
+
+<div class="minimal-container">
+  <div class="greeting-card">
+    
+    <div class="greeting-title">Program Organization</div>
+    
+    <div class="greeting-sub">
+      Welcome, {{ faculty_name|default:"Faculty" }}
+      {% if dept_name %} • {{ dept_name }}{% endif %}
+      {% if academic_year %} • AY: {{ academic_year }}{% endif %}
+    </div>
+  </div>
+
+  <div class="main-panel">
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboard-view" class="panel active">
+      <div class="cards-grid">
+        <div class="action-card">
+          <div class="card-icon"><i class="fas fa-plus-circle"></i></div>
+          <div class="card-title">New Program</div>
+          <div class="card-desc">Organize workshop, seminar or event</div>
+          <button class="btn-min btn-min-primary" onclick="switchView('apply-view')">
+            <i class="fas fa-arrow-right"></i> Apply
+          </button>
+        </div>
+
+        <div class="action-card">
+          <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+          <div class="card-title">Approval Tracker</div>
+          <div class="card-desc">Track status, enter marks & view student marks</div>
+          <button class="btn-min btn-min-outline" onclick="switchView('tracker-view')">
+            <i class="fas fa-eye"></i> View Tracker
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPLY VIEW (New Program Form) -->
+    <div id="apply-view" class="panel">
+      <div class="form-card">
+        <form method="post" action="{% url 'program_org_dashboard' %}" id="applyForm" autocomplete="off">
+          {% csrf_token %}
+          <div class="form-grid-2">
+            <div class="field"><label>Degree</label><input type="text" value="{{ faculty_degree.degree_code }} - {{ faculty_degree.degree }}" readonly><input type="hidden" name="degree" value="{{ faculty_degree.id }}"></div>
+            <div class="field"><label>Department</label><select name="department" id="deptSelect" required>{% for dept in departments %}<option value="{{ dept.id }}" {% if dept.id == selected_department_id %}selected{% endif %}>{{ dept.Department }}</option>{% endfor %}</select></div>
+            <div class="field"><label>Program Name</label><input type="text" name="program_name" placeholder="e.g., AI Workshop" required></div>
+            <div class="field"><label>Resource Person</label><input type="text" name="resource_person" placeholder="Name / Designation" required></div>
+            <div class="field"><label>Professional Society</label><select name="professional_society"><option value="">Select Professional Society</option>{% for s in professional_societies %}<option value="{{ s.id }}">{{ s.society_name }}</option>{% endfor %}</select></div>
+            <div class="field"><label>Type of Program</label><select name="program_type"><option value="">Select Type</option>{% for pt in program_types %}<option value="{{ pt.id }}">{{ pt.program_type_name }}</option>{% endfor %}</select></div>
+            <div class="field"><label>Mode</label><select name="mode_of_program"><option value="offline">Offline</option><option value="online">Online</option></select></div>
+            <div class="field"><label>From Date</label><input type="date" name="from_date" id="fromDate" required></div>
+            <div class="field"><label>To Date</label><input type="date" name="to_date" id="toDate" required></div>
+            <div class="field"><label># Days</label><input type="text" name="no_of_days" id="daysCount" readonly placeholder="auto"></div>
+            <div class="field full-width"><label>Venue / Address</label><textarea name="address" rows="2" placeholder="Full address / venue" required></textarea></div>
+          </div>
+
+          <div style="margin: 1rem 0;"><strong><i class="fas fa-layer-group"></i> Academic Mapping</strong> <button type="button" class="btn-min" id="addRowBtn">+ Add row</button></div>
+          <div id="dynamicRowsContainer">
+            <div class="selection-group" data-row="0">
+              <div class="selection-row-inner">
+                <select name="year[]" class="year-sel" required><option value="">Year</option>{% for y in available_years %}<option>{{ y }}</option>{% endfor %}</select>
+                <select name="section[]" class="section-sel" required><option value="">Section</option>{% for s in section_choices %}<option>{{ s }}</option>{% endfor %}</select>
+                <select name="semester[]" class="sem-sel" required disabled><option>Select year first</option></select>
+                <select name="student_selection_type[]" class="student-type-sel" onchange="toggleStudentSelect(this)"><option value="both">Both</option><option value="boys_only">Boys only</option><option value="girls_only">Girls only</option><option value="specific_students">Specific students</option></select>
+                <input type="hidden" name="specific_reg_numbers[]" class="specificRegsHidden" value="">
+                <button type="button" class="btn-min removeRowBtn" style="background:#fee2e2;" disabled>✖</button>
+              </div>
+              <div class="student-select-area" style="display:none; margin-top: 12px;"></div>
+            </div>
+          </div>
+
+          <div style="margin: 1rem 0; border-top:1px solid #eef2f8; padding-top:1rem;">
+            <div class="flex-between"><strong>Program Outcomes (POs)</strong><button type="button" class="btn-min" onclick="viewPOList()">View all POs</button></div>
+            <select id="poTypeSelect" style="margin: 8px 0; width:200px;"><option value="">-- PO Type --</option><option value="revised">Revised POs</option><option value="original">Original POs</option></select>
+            <div id="revisedPOContainer" style="display:none; max-height:220px; overflow:auto; border:1px solid #ecf3fa; border-radius:16px; padding:8px;">{% for po in revised_program_outcomes %}<label style="display:flex; gap:8px; padding:6px;"><input type="checkbox" name="selected_program_outcomes[]" value="{{ po.id }}" class="po-checkbox"> <span><strong>PO{{ po.program_number }}</strong> {{ po.program_name|truncatechars:60 }}</span></label>{% empty %}<div class="field">No revised POs</div>{% endfor %}</div>
+            <div id="originalPOContainer" style="display:none; max-height:220px; overflow:auto; border:1px solid #ecf3fa; border-radius:16px; padding:8px;">{% for po in non_revised_program_outcomes %}<label style="display:flex; gap:8px; padding:6px;"><input type="checkbox" name="selected_program_outcomes[]" value="{{ po.id }}" class="po-checkbox"> <span><strong>PO{{ po.program_number }}</strong> {{ po.program_name|truncatechars:60 }}</span></label>{% empty %}<div>No original POs</div>{% endfor %}</div>
+          </div>
+
+          <div class="flex-between" style="margin-top: 1.2rem;"><button type="reset" class="btn-min">Reset</button><button type="submit" class="btn-min btn-min-primary">Save Program</button></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- APPROVAL TRACKER VIEW (Combined: Status + Enter Marks + View Marks) -->
+    <div id="tracker-view" class="panel">
+      <div class="filter-bar">
+        <div class="filter-group"><label>🔍 Search</label><input type="text" id="statusSearch" placeholder="Program name / person"></div>
+        <div class="filter-group"><label>Status</label><select id="statusFilter"><option value="">All</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></div>
+        <div class="filter-group"><label>Year</label><select id="yearFilter"><option value="">All</option>{% for y in available_years %}<option>{{ y }}</option>{% endfor %}</select></div>
+        <button class="btn-min" id="applyFilterBtn"><i class="fas fa-filter"></i> Filter</button>
+        <button class="btn-min" id="clearFilterBtn">Clear</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="programsTable" width="100%">
+          <thead>
+            <tr>
+              <th>Program</th>
+              <th>Program Dept</th>
+              <th>Year/Sec</th>
+              <th>Dates</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for prog in programs %}
+            <tr data-program-id="{{ prog.program_id }}" data-record-id="{{ prog.id }}" data-year="{{ prog.year }}" data-status="{{ prog.approval|default:'Pending'|lower }}" data-program-dept-id="{% if prog.department %}{{ prog.department.id }}{% else %}{{ selected_department_id }}{% endif %}">
+              <td><strong>{{ prog.program_name }}</strong><br><small>{{ prog.resource_person|default:"-" }}</small></td>
+              <td>{% if prog.department %}<span class="badge-min">{{ prog.department.Department }}</span>{% else %}<span class="badge-min">Not Mapped</span>{% endif %}</td>
+              <td>Y{{ prog.year }} • Sec {{ prog.section }} • Sem {{ prog.semester }}</td>
+              <td>{{ prog.from_date|date:"d M" }} – {{ prog.to_date|date:"d M" }}</td>
+              <td>{% if prog.approval == 'Approved' %}<span class="status-badge status-approved">Approved</span>{% elif prog.approval == 'HOD_Approved' %}<span class="status-badge status-hod">HOD Approved</span>{% elif prog.approval == 'Rejected' %}<span class="status-badge status-rejected">Rejected</span>{% else %}<span class="status-badge status-pending">Pending</span>{% endif %}</td>
+              <td>
+                {% if prog.approval == 'Approved' %}
+                <div class="action-stack">
+                  <button class="btn-min btn-min-primary" onclick="openEnterMarksModal('{{ prog.program_id }}','{{ prog.year }}','{{ prog.id }}','{% if prog.department %}{{ prog.department.id }}{% else %}{{ selected_department_id }}{% endif %}','{{ prog.program_name|escapejs }}')"><i class="fas fa-edit"></i> Enter Marks</button>
+                  <button class="btn-min btn-min-outline" onclick="openViewMarksModal('{{ prog.program_id }}','{{ prog.year }}','{{ prog.id }}','{% if prog.department %}{{ prog.department.id }}{% else %}{{ selected_department_id }}{% endif %}','{{ prog.program_name|escapejs }}')"><i class="fas fa-eye"></i> View Marks</button>
+                </div>
+                {% else %}
+                <span class="badge-min">Awaiting approval</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align:center;">No programs found</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Enter Marks Modal -->
+<div id="enterMarksModal" class="modal-overlay">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3><i class="fas fa-pen-fancy"></i> Enter Student Marks — <span id="modalProgramName"></span></h3>
+      <button class="modal-close" onclick="closeEnterMarksModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="modalMarksProgramInfo" style="font-size:0.8rem; margin-bottom:1rem; color:#5b6e8c;"></div>
+      <form method="post" action="{% url 'program_org_dashboard' %}" id="modalMarksForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_marks">
+        <input type="hidden" name="program_id" id="modalMarksProgramId">
+        <input type="hidden" name="year" id="modalMarksYear">
+        <input type="hidden" name="department" id="modalMarksDeptId">
+        <div id="modalStudentsMarksContainer" style="margin-top:1rem;">
+          <div style="text-align:center; padding:2rem;">Loading students...</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-min" onclick="closeEnterMarksModal()">Cancel</button>
+          <button type="submit" class="btn-min btn-min-primary" id="modalSaveMarksBtn">Save Marks</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- View Marks Modal -->
+<div id="viewMarksModal" class="modal-overlay">
+  <div class="modal-container" style="max-width: 1000px;">
+    <div class="modal-header">
+      <h3><i class="fas fa-table-list"></i> Student Marks — <span id="viewModalProgramName"></span></h3>
+      <button class="modal-close" onclick="closeViewMarksModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="flex-between" style="margin-bottom: 1rem;">
+        <div></div>
+        <div>
+          <button class="btn-min" onclick="exportModalMarksPDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+          <button class="btn-min" onclick="exportModalMarksExcel()"><i class="fas fa-file-excel"></i> Export Excel</button>
+        </div>
+      </div>
+      <div id="modalMarksViewContainer" style="overflow-x:auto;">
+        <div style="text-align:center; padding:2rem;">Loading marks...</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-min" onclick="closeViewMarksModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Program Outcomes Modal -->
+<div id="poModal" class="modal-overlay">
+  <div class="modal-container" style="max-width:1000px;">
+    <div class="modal-header">
+      <h3><i class="fas fa-graduation-cap"></i> Program Outcomes</h3>
+      <button class="modal-close" onclick="closePOModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="poModalContent"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-min" onclick="closePOModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+{{ program_outcomes|json_script:"program-outcomes-data" }}
+
+<script>
+  // Global variables for marks
+  let currentModalProgramId = null;
+  let currentModalYear = null;
+  let currentModalRecordId = null;
+  let currentModalDeptId = null;
+
+  function switchView(viewId) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+    const matchingBtn = Array.from(document.querySelectorAll('.nav-btn')).find(btn => btn.getAttribute('data-view') === viewId);
+    if (matchingBtn) matchingBtn.classList.add('active');
+  }
+
+  function getSelectedApplyDeptId() {
+    const deptSelect = document.getElementById('deptSelect');
+    return deptSelect ? deptSelect.value : '{{ selected_department_id|default:"" }}';
+  }
+
+  function updateSemesterOptions(yrSelect, semSelect) {
+    const year = yrSelect.value;
+    if (!year) { semSelect.disabled = true; semSelect.innerHTML = '<option>Select year first</option>'; return; }
+    const deptId = getSelectedApplyDeptId();
+    fetch(window.location.pathname + '?get_semesters=1&year=' + encodeURIComponent(year) + '&department=' + encodeURIComponent(deptId), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(r => r.json()).then(data => {
+        semSelect.disabled = false;
+        semSelect.innerHTML = '<option value="">Semester</option>';
+        (data.semesters || []).forEach(s => { let opt = document.createElement('option'); opt.value = s; opt.textContent = 'Sem ' + s; semSelect.appendChild(opt); });
+      }).catch(() => { semSelect.disabled = true; });
+  }
+
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('year-sel')) {
+      const rowDiv = e.target.closest('.selection-group');
+      const semSel = rowDiv.querySelector('.sem-sel');
+      updateSemesterOptions(e.target, semSel);
+    }
+    if (e.target.classList.contains('section-sel') || e.target.classList.contains('sem-sel')) {
+      const rowDiv = e.target.closest('.selection-group');
+      const studentType = rowDiv.querySelector('.student-type-sel');
+      if (studentType && studentType.value === 'specific_students') loadSpecificStudents(rowDiv);
+    }
+    if (e.target.classList.contains('student-type-sel')) toggleStudentSelect(e.target);
+  });
+
+  function toggleStudentSelect(sel) {
+    const rowDiv = sel.closest('.selection-group');
+    const area = rowDiv.querySelector('.student-select-area');
+    if (sel.value === 'specific_students') {
+      area.style.display = 'block';
+      if (area.innerHTML.trim() === '') area.innerHTML = '<div class="field">Select year/section/semester first to load students</div>';
+      loadSpecificStudents(rowDiv);
+    } else { area.style.display = 'none'; rowDiv.querySelector('.specificRegsHidden').value = ''; }
+  }
+
+  function loadSpecificStudents(rowDiv) {
+    const year = rowDiv.querySelector('.year-sel').value;
+    const section = rowDiv.querySelector('.section-sel').value;
+    const sem = rowDiv.querySelector('.sem-sel').value;
+    const deptId = getSelectedApplyDeptId();
+    if (!year || !section || !sem) return;
+    const area = rowDiv.querySelector('.student-select-area');
+    area.innerHTML = '<div>loading...</div>';
+    fetch(window.location.pathname + '?get_students_for_selection=1&year=' + encodeURIComponent(year) + '&section=' + encodeURIComponent(section) + '&semester=' + encodeURIComponent(sem) + '&department=' + encodeURIComponent(deptId), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(r => r.json()).then(data => {
+        const students = data.students || [];
+        if (!students.length) { area.innerHTML = '<div>No students found</div>'; return; }
+        let html = '<div style="max-height:180px; overflow:auto; border:1px solid #eef; border-radius:12px; padding:6px;">';
+        students.forEach(s => { html += `<label style="display:flex; gap:8px; margin:6px;"><input type="checkbox" class="studentCheckSpecific" value="${s.reg_no}"> ${s.reg_no} - ${s.name} (${s.gender})</label>`; });
+        html += `<div><button type="button" class="btn-min" onclick="updateSpecificRegs(this)">Apply selection</button></div></div>`;
+        area.innerHTML = html;
+      }).catch(() => { area.innerHTML = '<div>error loading</div>'; });
+  }
+
+  window.updateSpecificRegs = function(btn) {
+    const rowDiv = btn.closest('.selection-group');
+    const selected = Array.from(rowDiv.querySelectorAll('.studentCheckSpecific:checked')).map(cb => cb.value);
+    rowDiv.querySelector('.specificRegsHidden').value = selected.join(',');
+    alert(selected.length + ' student(s) selected');
+  };
+
+  document.getElementById('addRowBtn')?.addEventListener('click', function() {
+    const container = document.getElementById('dynamicRowsContainer');
+    const idx = Date.now();
+    const newDiv = document.createElement('div');
+    newDiv.className = 'selection-group';
+    newDiv.setAttribute('data-row', idx);
+    newDiv.innerHTML = `<div class="selection-row-inner"><select name="year[]" class="year-sel" required><option value="">Year</option>{% for y in available_years %}<option>{{ y }}</option>{% endfor %}</select><select name="section[]" class="section-sel" required><option value="">Section</option>{% for s in section_choices %}<option>{{ s }}</option>{% endfor %}</select><select name="semester[]" class="sem-sel" required disabled><option>Select year first</option></select><select name="student_selection_type[]" class="student-type-sel" onchange="toggleStudentSelect(this)"><option value="both">Both</option><option value="boys_only">Boys only</option><option value="girls_only">Girls only</option><option value="specific_students">Specific students</option></select><input type="hidden" name="specific_reg_numbers[]" class="specificRegsHidden" value=""><button type="button" class="btn-min removeRowBtn" style="background:#fee2e2;" onclick="this.closest('.selection-group').remove()">✖</button></div><div class="student-select-area" style="display:none; margin-top:12px;"></div>`;
+    container.appendChild(newDiv);
+  });
+
+  const fromDate = document.getElementById('fromDate'), toDate = document.getElementById('toDate'), daysField = document.getElementById('daysCount');
+  function calcDays() { if (fromDate.value && toDate.value) { const diff = (new Date(toDate.value) - new Date(fromDate.value)) / 86400000; if (diff >= 0) daysField.value = diff + 1; else daysField.value = ''; } }
+  fromDate?.addEventListener('change', calcDays); toDate?.addEventListener('change', calcDays);
+
+  document.getElementById('poTypeSelect')?.addEventListener('change', function() {
+    document.getElementById('revisedPOContainer').style.display = this.value === 'revised' ? 'block' : 'none';
+    document.getElementById('originalPOContainer').style.display = this.value === 'original' ? 'block' : 'none';
+  });
+
+  function filterStatusTable() {
+    const search = document.getElementById('statusSearch').value.toLowerCase();
+    const statusVal = document.getElementById('statusFilter').value.toLowerCase();
+    const yearVal = document.getElementById('yearFilter').value;
+    const rows = document.querySelectorAll('#programsTable tbody tr');
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      const rowStatus = (row.dataset.status || '').toLowerCase();
+      const yearCell = row.cells[2]?.innerText.toLowerCase() || '';
+      const match = (!search || text.includes(search)) && (!statusVal || rowStatus === statusVal) && (!yearVal || yearCell.includes('y' + yearVal));
+      row.style.display = match ? '' : 'none';
+    });
+  }
+  document.getElementById('applyFilterBtn')?.addEventListener('click', filterStatusTable);
+  document.getElementById('clearFilterBtn')?.addEventListener('click', function() { document.getElementById('statusSearch').value = ''; document.getElementById('statusFilter').value = ''; document.getElementById('yearFilter').value = ''; filterStatusTable(); });
+
+  // Enter Marks Modal Functions
+  window.openEnterMarksModal = function(progId, year, recordId, deptId, progName) {
+    currentModalProgramId = progId;
+    currentModalYear = year;
+    currentModalRecordId = recordId;
+    currentModalDeptId = deptId;
+
+    document.getElementById('modalProgramName').innerText = progName;
+    document.getElementById('modalMarksProgramId').value = progId;
+    document.getElementById('modalMarksYear').value = year;
+    document.getElementById('modalMarksDeptId').value = deptId;
+    document.getElementById('modalMarksProgramInfo').innerHTML = `Program ID: ${progId} | Year: ${year}`;
+
+    const modal = document.getElementById('enterMarksModal');
+    modal.classList.add('show');
+
+    loadModalStudentMarksList();
+  };
+
+  function loadModalStudentMarksList() {
+    const container = document.getElementById('modalStudentsMarksContainer');
+    if (!currentModalProgramId) {
+      container.innerHTML = '<div>No program selected</div>';
+      return;
+    }
+
+    container.innerHTML = '<div style="text-align:center;">loading students...</div>';
+
+    const url = window.location.pathname + '?ajax_students=1&program_id=' + encodeURIComponent(currentModalProgramId) + '&year=' + encodeURIComponent(currentModalYear || '') + '&record_id=' + encodeURIComponent(currentModalRecordId || '') + '&department=' + encodeURIComponent(currentModalDeptId || '');
+
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(r => r.json()).then(data => {
+        if (data.error) {
+          container.innerHTML = '<div>' + data.error + '</div>';
+          document.getElementById('modalSaveMarksBtn').style.display = 'none';
+          return;
+        }
+        const students = data.students || [];
+        if (!students.length) {
+          container.innerHTML = '<div>No students mapped.</div>';
+          document.getElementById('modalSaveMarksBtn').style.display = 'none';
+          return;
+        }
+        let html = '<div class="table-wrapper"><table class="marks-table" width="100%"><thead><tr><th>Reg No</th><th>Name</th><th>Gender</th><th>Year</th><th>Section</th><th>Marks (0-100)</th></tr></thead><tbody>';
+        students.forEach(s => {
+          html += `<tr><td>${s.reg_no || '-'}</td><td>${s.name || '-'}</td><td>${s.gender || '-'}</td><td>${s.year || '-'}</td><td>${s.section || '-'}</td><td><div class="marks-cell"><input type="number" class="marks-input" name="student_marks[${s.id}]" value="${s.existing_marks ?? ''}" min="0" max="100" step="0.01" oninput="validateMarks(this)"></div></td></tr>`;
+        });
+        html += '</tbody></table></div>'; 
+        container.innerHTML = html;
+        document.getElementById('modalSaveMarksBtn').style.display = 'inline-flex';
+      }).catch(() => {
+        container.innerHTML = '<div>Error loading students</div>';
+        document.getElementById('modalSaveMarksBtn').style.display = 'none';
+      });
+  }
+
+  window.validateMarks = function(inp) {
+    const v = parseFloat(inp.value);
+    inp.classList.remove('marks-valid', 'marks-invalid');
+    if (inp.value === '') return;
+    if (isNaN(v) || v < 0 || v > 100) inp.classList.add('marks-invalid');
+    else inp.classList.add('marks-valid');
+  };
+
+  window.closeEnterMarksModal = function() {
+    document.getElementById('enterMarksModal').classList.remove('show');
+  };
+
+  // View Marks Modal Functions
+  window.openViewMarksModal = function(progId, year, recordId, deptId, progName) {
+    currentModalProgramId = progId;
+    currentModalYear = year;
+    currentModalRecordId = recordId;
+    currentModalDeptId = deptId;
+
+    document.getElementById('viewModalProgramName').innerText = progName;
+    const modal = document.getElementById('viewMarksModal');
+    modal.classList.add('show');
+
+    loadModalMarksView();
+  };
+
+  function loadModalMarksView() {
+    const container = document.getElementById('modalMarksViewContainer');
+    container.innerHTML = '<div style="text-align:center;">loading marks...</div>';
+
+    const url = window.location.pathname + '?ajax_get_marks=1&program_id=' + encodeURIComponent(currentModalProgramId) + '&record_id=' + encodeURIComponent(currentModalRecordId || '') + '&department=' + encodeURIComponent(currentModalDeptId || '');
+
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(r => r.json()).then(data => {
+        const marks = data.marks || [];
+        if (!marks.length) {
+          container.innerHTML = '<div style="text-align:center; padding:2rem;">No marks entered yet.</div>';
+          return;
+        }
+        let html = '<div class="table-wrapper"><table class="marks-table"><thead><tr><th>Reg No</th><th>Name</th><th>Year/Sec</th><th>Marks</th><th>POs</th></tr></thead><tbody>';
+        marks.forEach(m => {
+          html += `<tr><td>${m.reg_no || '-'}</td><td>${m.student_name || '-'}</td><td>Y${m.year || '-'} Sec ${m.section || '-'}</td><td><strong>${m.marks ?? '-'}</strong></td><td>${m.program_outcome || 'N/A'}</td></tr>`;
+        });
+        html += '</tbody></table></div>'; 
+        container.innerHTML = html;
+      }).catch(() => {
+        container.innerHTML = '<div>Failed to load marks</div>';
+      });
+  }
+
+  window.closeViewMarksModal = function() {
+    document.getElementById('viewMarksModal').classList.remove('show');
+  };
+
+  window.exportModalMarksPDF = function() {
+    if (currentModalProgramId) {
+      window.open('/faculty_management/faculty/program-org-pdf/?program_id=' + encodeURIComponent(currentModalProgramId) + '&department=' + encodeURIComponent(currentModalDeptId || ''), '_blank');
+    } else {
+      alert('No program selected');
+    }
+  };
+
+  window.exportModalMarksExcel = function() {
+    if (currentModalProgramId) {
+      window.location.href = '/faculty_management/faculty/program-org-excel/?type=marks&program_id=' + encodeURIComponent(currentModalProgramId) + '&department=' + encodeURIComponent(currentModalDeptId || '');
+    } else {
+      alert('No program selected');
+    }
+  };
+
+  window.viewPOList = function() {
+    const modal = document.getElementById('poModal');
+    const content = document.getElementById('poModalContent');
+    const jsonEl = document.getElementById('program-outcomes-data');
+    let data = [];
+    if (jsonEl) {
+      try { data = JSON.parse(jsonEl.textContent || '[]'); } catch(e) { data = []; }
+    }
+    if (!data.length) {
+      content.innerHTML = `<div class="empty-state">No Program Outcomes found.</div>`;
+    } else {
+      let html = `<div class="table-wrapper"><table class="marks-table"><thead><tr><th>PO No</th><th>Program Name</th><th>Description</th></tr></thead><tbody>`;
+      data.forEach(po => {
+        html += `<tr><td><strong>PO${po.program_number || '-'}</strong></td><td>${po.program_name || '-'}</td><td>${po.program_description || '-'}</td></tr>`;
+      });
+      html += `</tbody></table></div>`;
+      content.innerHTML = html;
+    }
+    modal.classList.add('show');
+  };
+
+  window.closePOModal = function() {
+    document.getElementById('poModal').classList.remove('show');
+  };
+
+
+  function validateApplyForm() {
+    const form = document.getElementById('applyForm');
+    if (!form) return true;
+    const requiredFields = form.querySelectorAll('[required]');
+    for (const field of requiredFields) {
+      if (!field.disabled && !String(field.value || '').trim()) {
+        alert('Please fill all required fields.');
+        field.focus();
+        return false;
+      }
+    }
+    const selectedPOs = form.querySelectorAll('input[name="selected_program_outcomes[]"]:checked');
+    if (!selectedPOs.length) {
+      alert('Please select at least one Program Outcome.');
+      return false;
+    }
+    const studentTypes = form.querySelectorAll('.student-type-sel');
+    for (const sel of studentTypes) {
+      if (sel.value === 'specific_students') {
+        const row = sel.closest('.selection-group');
+        const hidden = row.querySelector('.specificRegsHidden');
+        if (!hidden || !hidden.value.trim()) {
+          alert('Please select specific students and click Apply selection.');
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  document.getElementById('applyForm')?.addEventListener('submit', function(e) {
+    if (!validateApplyForm()) e.preventDefault();
+  });
+
+  document.getElementById('modalMarksForm')?.addEventListener('submit', function(e) {
+    const invalid = Array.from(document.querySelectorAll('#modalMarksForm .marks-input')).some(inp => {
+      const v = parseFloat(inp.value);
+      return inp.value !== '' && (isNaN(v) || v < 0 || v > 100);
+    });
+    if (invalid) {
+      e.preventDefault();
+      alert('Marks must be between 0 and 100.');
+    }
+  });
+
+  document.getElementById('deptSelect')?.addEventListener('change', function() {
+    window.location.href = window.location.pathname + '?department=' + this.value + '#apply';
+  });
+
+  filterStatusTable();
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const hash = window.location.hash.replace('#','');
+    if (hash === 'apply') switchView('apply-view');
+    else if (hash === 'tracker') switchView('tracker-view');
+    else switchView('dashboard-view');
+  });
+
+
+  // Close modals on outside click
+  window.onclick = function(event) {
+    const enterModal = document.getElementById('enterMarksModal');
+    const viewModal = document.getElementById('viewMarksModal');
+    const poModal = document.getElementById('poModal');
+    if (event.target === enterModal) closeEnterMarksModal();
+    if (event.target === viewModal) closeViewMarksModal();
+    if (event.target === poModal) closePOModal();
+  };
+</script>
+{% endblock %}
+

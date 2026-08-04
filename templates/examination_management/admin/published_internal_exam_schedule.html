@@ -1,0 +1,417 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <h4 class="mb-3">Internal Timetable Filter</h4>
+
+  <div class="row g-3">
+
+    <div class="col-md-3">
+      <label class="form-label fw-semibold">Degree</label>
+      <select id="degree" class="form-select">
+        <option value="">Select Degree</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label fw-semibold">Department <span class="text-muted fw-normal">(Optional)</span></label>
+      <select id="department" class="form-select" disabled>
+        <option value="">All Departments</option>
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label fw-semibold">Batch</label>
+      <select id="batch" class="form-select" disabled>
+        <option value="">Select Batch</option>
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label fw-semibold">Semester</label>
+      <select id="semester" class="form-select" disabled>
+        <option value="">Select Semester</option>
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label fw-semibold">IAT</label>
+      <select id="iat" class="form-select" disabled>
+        <option value="">Select IAT</option>
+      </select>
+    </div>
+
+  </div>
+
+  <!-- Buttons -->
+  <div class="d-flex gap-2 mt-3">
+    <button type="button" id="applyFilter" class="btn btn-primary">
+      <i class="fas fa-filter me-1"></i> Apply Filter
+    </button>
+
+    <!-- ✅ ADDED: PDF Button -->
+    <a href="javascript:void(0)" id="downloadPdf" class="btn btn-dark disabled" aria-disabled="true"
+   target="_blank" rel="noopener">
+
+      <i class="fas fa-file-pdf me-1"></i> Download PDF
+    </a>
+
+    <button type="button" id="clearAll" class="btn btn-outline-danger">
+      <i class="fas fa-eraser me-1"></i> Clear All
+    </button>
+  </div>
+
+  <!-- Preview -->
+  <div class="mt-4">
+    <div id="appliedPreviewBox" class="alert alert-light border rounded-3 mb-0 d-none">
+      <div class="d-flex flex-wrap gap-3">
+        <div><span class="fw-semibold">Degree:</span> <span id="showDegree">-</span></div>
+        <div><span class="fw-semibold">Department:</span> <span id="showDept">All</span></div>
+        <div><span class="fw-semibold">Batch:</span> <span id="showBatch">-</span></div>
+        <div><span class="fw-semibold">Semester:</span> <span id="showSem">-</span></div>
+        <div><span class="fw-semibold">IAT:</span> <span id="showIat">-</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Table -->
+  <div class="card shadow-sm border-0 rounded-3 mt-4">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">Filtered Exam Schedule</span>
+      <span id="resultCount" class="badge bg-light text-dark">0</span>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle mb-0" id="timetableTable">
+          <thead class="table-light" id="timetableHead">
+            <tr>
+              <th style="width:220px;">Exam Date / Session</th>
+              <th class="text-center text-muted">Select filter and click Apply</th>
+            </tr>
+          </thead>
+          <tbody id="timetableBody">
+            <tr>            
+              <td colspan="2" class="text-center text-muted py-4">Apply filter to view timetable</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(function () {
+
+  function resetSelect(id, label){
+    $("#" + id).empty().append(`<option value="">${label}</option>`).prop("disabled", true);
+  }
+
+  function fillSelectObject(id, label, data){
+    resetSelect(id, label);
+    $("#" + id).prop("disabled", false);
+    data.forEach(item => $("#" + id).append(`<option value="${item.id}">${item.text}</option>`));
+  }
+
+  function fillSelectList(id, label, data){
+    resetSelect(id, label);
+    $("#" + id).prop("disabled", false);
+    data.forEach(item => $("#" + id).append(`<option value="${item}">${item}</option>`));
+  }
+
+  function updatePreview(){
+    const deptText = $("#department").val() ? ($("#department option:selected").text() || "-") : "All";
+    $("#showDegree").text($("#degree option:selected").text() || "-");
+    $("#showDept").text(deptText);
+    $("#showBatch").text($("#batch").val() || "-");
+    $("#showSem").text($("#semester").val() || "-");
+    $("#showIat").text($("#iat option:selected").text() || "-");
+  }
+
+  function clearTable(msg="Apply filter to view timetable"){
+    $("#timetableHead").html(`
+      <tr>
+        <th style="width:220px;">Exam Date / Session</th>
+        <th class="text-center text-muted">Select filter and click Apply</th>
+      </tr>
+    `);
+
+    $("#timetableBody").html(`
+      <tr>
+        <td colspan="2" class="text-center text-muted py-4">${msg}</td>
+      </tr>
+    `);
+    $("#resultCount").text("0");
+  }
+
+  // ✅ ADDED: disable PDF
+  function disablePdf(){
+    $("#downloadPdf").addClass("disabled").attr("aria-disabled", "true").attr("href", "javascript:void(0)");
+  }
+  function enablePdf(){
+    $("#downloadPdf").removeClass("disabled").attr("aria-disabled", "false");
+  }
+
+  // initial
+  resetSelect("department", "All Departments");
+  resetSelect("batch", "Select Batch");
+  resetSelect("semester", "Select Semester");
+  resetSelect("iat", "Select IAT");
+  clearTable();
+  disablePdf(); // ✅ ADDED
+
+  // Load Degrees
+  $.get("{% url 'load_degrees' %}", function (data) {
+    $("#degree").empty().append(`<option value="">Select Degree</option>`);
+    data.forEach(item => $("#degree").append(`<option value="${item.id}">${item.text}</option>`));
+  });
+
+  // Degree → Department (optional)
+  $("#degree").on("change", function () {
+    let degreeId = $(this).val();
+
+    // Department is optional, so enable it after degree is chosen
+    resetSelect("department", "All Departments");
+    $("#department").prop("disabled", !degreeId);
+
+    resetSelect("batch", "Select Batch");
+    resetSelect("semester", "Select Semester");
+    resetSelect("iat", "Select IAT");
+    clearTable("Apply filter to view timetable");
+    $("#appliedPreviewBox").addClass("d-none");
+    disablePdf(); // ✅ ADDED
+
+    if (!degreeId) return;
+
+    // Load departments (still allow "All Departments" with empty value)
+    $.get("{% url 'load_departments' %}", { degree_id: degreeId }, function (data) {
+      // keep All option + add list
+      $("#department").empty().append(`<option value="">All Departments</option>`);
+      data.forEach(item => $("#department").append(`<option value="${item.id}">${item.text}</option>`));
+    });
+
+    // Also load batches immediately (since department can be skipped)
+    $.get("{% url 'load_batches' %}", { degree_id: degreeId, department_id: "" }, function (data) {
+      fillSelectList("batch", "Select Batch", data);
+    });
+  });
+
+  // Department → Batch (works even if dept is empty)
+  $("#department").on("change", function () {
+    let degreeId = $("#degree").val();
+    let deptId = $(this).val() || ""; // optional
+
+    resetSelect("batch", "Select Batch");
+    resetSelect("semester", "Select Semester");
+    resetSelect("iat", "Select IAT");
+    clearTable("Apply filter to view timetable");
+    $("#appliedPreviewBox").addClass("d-none");
+    disablePdf(); // ✅ ADDED
+
+    if (!degreeId) return;
+
+    $.get("{% url 'load_batches' %}", { degree_id: degreeId, department_id: deptId }, function (data) {
+      fillSelectList("batch", "Select Batch", data);
+    });
+  });
+
+  // Batch → Semester
+  $("#batch").on("change", function () {
+    let batch = $(this).val();
+
+    resetSelect("semester", "Select Semester");
+    resetSelect("iat", "Select IAT");
+    clearTable("Apply filter to view timetable");
+    $("#appliedPreviewBox").addClass("d-none");
+    disablePdf(); // ✅ ADDED
+
+    if (!batch) return;
+
+    $.get("{% url 'load_semesters' %}", {
+      degree_id: $("#degree").val(),
+      department_id: $("#department").val() || "", // optional
+      batch: batch
+    }, function (data) {
+      fillSelectList("semester", "Select Semester", data);
+    });
+  });
+
+  // Semester → IAT
+  $("#semester").on("change", function () {
+    let sem = $(this).val();
+
+    resetSelect("iat", "Select IAT");
+    clearTable("Apply filter to view timetable");
+    $("#appliedPreviewBox").addClass("d-none");
+    disablePdf(); // ✅ ADDED
+
+    if (!sem) return;
+
+    $.get("{% url 'load_iats' %}", {
+      degree_id: $("#degree").val(),
+      department_id: $("#department").val() || "", // optional
+      batch: $("#batch").val(),
+      semester: sem
+    }, function (data) {
+      fillSelectObject("iat", "Select IAT", data);
+    });
+  });
+
+  $("#iat").on("change", function () {
+    clearTable("Apply filter to view timetable");
+    $("#appliedPreviewBox").addClass("d-none");
+    disablePdf(); // ✅ ADDED
+  });
+
+  // ✅ Apply Filter → Matrix Table
+  $("#applyFilter").on("click", function () {
+
+    // department is optional now
+    if(!$("#degree").val() || !$("#batch").val() || !$("#semester").val() || !$("#iat").val()){
+      clearTable("Please select Degree, Batch, Semester and IAT then click Apply Filter (Department is optional)");
+      disablePdf(); // ✅ ADDED
+      return;
+    }
+
+    $("#appliedPreviewBox").removeClass("d-none");
+    updatePreview();
+
+    // Loading
+    $("#timetableBody").html(`
+      <tr>
+        <td colspan="2" class="text-center text-muted py-4">Loading...</td>
+      </tr>
+    `);
+
+    $.get("{% url 'load_timetable' %}", {
+      degree_id: $("#degree").val(),
+      department_id: $("#department").val() || "", // optional
+      batch: $("#batch").val(),
+      semester: $("#semester").val(),
+      iat_id: $("#iat").val()
+    }, function (rows) {
+
+      $("#resultCount").text(rows.length);
+
+      // ✅ ADDED: set PDF url only if data exists
+      if(rows && rows.length){
+        const qs = $.param({
+          degree_id: $("#degree").val(),
+          department_id: $("#department").val() || "",
+          batch: $("#batch").val(),
+          semester: $("#semester").val(),
+          iat_id: $("#iat").val()
+        });
+        $("#downloadPdf").attr("href", "{% url 'admin_internal_timetable_pdf' %}?" + qs);
+        enablePdf();
+      } else {
+        disablePdf();
+      }
+
+      if(!rows.length){
+        $("#timetableHead").html(`
+          <tr>
+            <th style="width:220px;">Exam Date / Session</th>
+            <th class="text-center text-muted">No data</th>
+          </tr>
+        `);
+        $("#timetableBody").html(`
+          <tr>
+            <td colspan="2" class="text-center text-muted py-4">No timetable found for selected filter</td>
+          </tr>
+        `);
+        return;
+      }
+
+      const deptSet = new Set();
+      rows.forEach(r => deptSet.add((r.department_code || r.department || "").trim() || "—"));
+      const depts = Array.from(deptSet);
+
+      const keySet = new Set();
+      const cellMap = {};
+
+      rows.forEach(r => {
+        const examDate = (r.exam_date || "—").trim();
+        const session = (r.session || "—").trim();
+        const key = `${examDate}||${session}`;
+
+        const dept = ((r.department_code || r.department || "—") + "").trim() || "—";
+        keySet.add(key);
+
+        if(!cellMap[key]) cellMap[key] = {};
+        if(!cellMap[key][dept]) cellMap[key][dept] = [];
+
+        const courseText = (r.course_title || r.course_code || "").trim() || "—";
+        cellMap[key][dept].push(courseText);
+      });
+
+      const keys = Array.from(keySet);
+
+      let headHtml = `<tr><th style="width:220px;">Exam Date / Session</th>`;
+      depts.forEach(d => { headHtml += `<th class="text-center">${d}</th>`; });
+      headHtml += `</tr>`;
+      $("#timetableHead").html(headHtml);
+
+      let bodyHtml = "";
+      keys.forEach(k => {
+        const parts = k.split("||");
+        const d = parts[0] || "—";
+        const s = parts[1] || "—";
+
+        bodyHtml += `<tr>`;
+        bodyHtml += `
+          <td>
+            <div class="fw-semibold">${d}</div>
+            <div class="small text-muted">${s}</div>
+          </td>
+        `;
+
+        depts.forEach(dept => {
+          const items = (cellMap[k] && cellMap[k][dept]) ? cellMap[k][dept] : [];
+          bodyHtml += !items.length
+            ? `<td class="text-center text-muted">—</td>`
+            : `<td>${items.map(x => `<div class="mb-1">${x}</div>`).join("")}</td>`;
+        });
+
+        bodyHtml += `</tr>`;
+      });
+
+      $("#timetableBody").html(bodyHtml);
+
+    }).fail(function(xhr){
+      $("#timetableBody").html(`
+        <tr>
+          <td colspan="99" class="text-center text-danger py-4">
+            Error while loading timetable. Check console.
+          </td>
+        </tr>
+      `);
+      disablePdf(); // ✅ ADDED
+      console.log("Timetable AJAX error:", xhr.status, xhr.responseText);
+    });
+
+  });
+
+  // ✅ Clear All
+  $("#clearAll").on("click", function () {
+    $("#degree").val("");
+
+    resetSelect("department", "All Departments");
+    resetSelect("batch", "Select Batch");
+    resetSelect("semester", "Select Semester");
+    resetSelect("iat", "Select IAT");
+
+    $("#appliedPreviewBox").addClass("d-none");
+    clearTable("Apply filter to view timetable");
+    disablePdf(); // ✅ ADDED
+  });
+
+});
+</script>
+{% endblock %}

@@ -1,0 +1,645 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+/* ── root ─────────────────────────────────────────────── */
+.fp{
+  --navy:#1a4b8c; --navy2:#2c5aa0; --navy3:#3b6bc4;
+  --border:#e5e7eb; --soft:#f8faff; --muted:#6b7280;
+  --green:#059669; --amber:#d97706; --red:#dc2626;
+}
+
+/* ── hero ─────────────────────────────────────────────── */
+.fp .hero{
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy3) 60%,#3b82f6 100%);
+  border-radius:20px; padding:36px 36px 0; color:#fff;
+  margin-bottom:0; position:relative; overflow:hidden;
+}
+.fp .hero::before{
+  content:''; position:absolute; top:-60px; right:-60px;
+  width:240px; height:240px; border-radius:50%;
+  background:rgba(255,255,255,.06); pointer-events:none;
+}
+.fp .hero::after{
+  content:''; position:absolute; bottom:-40px; left:30%;
+  width:160px; height:160px; border-radius:50%;
+  background:rgba(255,255,255,.04); pointer-events:none;
+}
+
+.fp .hero-top{ display:flex; align-items:flex-start; gap:24px; flex-wrap:wrap; }
+
+.fp .avatar-ring{
+  width:100px; height:100px; border-radius:50%; flex-shrink:0;
+  border:4px solid rgba(255,255,255,.35); overflow:hidden;
+  background:rgba(255,255,255,.15);
+  display:flex; align-items:center; justify-content:center;
+  font-size:2.4rem; color:rgba(255,255,255,.8);
+}
+.fp .avatar-ring img{ width:100%; height:100%; object-fit:cover; }
+
+.fp .hero-info{ flex:1; min-width:200px; }
+.fp .hero-info h2{ margin:0; font-weight:800; font-size:1.6rem; }
+.fp .hero-info .sub{
+  color:rgba(255,255,255,.8); font-size:.9rem; margin-top:6px;
+  display:flex; flex-wrap:wrap; gap:14px;
+}
+.fp .hero-info .sub span{ display:inline-flex; align-items:center; gap:5px; }
+
+.fp .chip{
+  display:inline-flex; align-items:center; gap:5px;
+  padding:4px 13px; border-radius:20px; font-size:.78rem; font-weight:600;
+  margin-top:10px;
+}
+.fp .chip.approved{ background:#d1fae5; color:#065f46; }
+.fp .chip.pending { background:#fef3c7; color:#92400e; }
+
+.fp .hero-actions{ display:flex; align-items:flex-start; gap:8px; flex-shrink:0; }
+
+/* stat bar inside hero */
+.fp .hero-stats{
+  display:flex; gap:0; border-top:1px solid rgba(255,255,255,.15);
+  margin-top:24px; position:relative; z-index:1;
+}
+.fp .hstat{
+  flex:1; padding:14px 20px; text-align:center;
+  border-right:1px solid rgba(255,255,255,.12);
+}
+.fp .hstat:last-child{ border-right:none; }
+.fp .hstat .val{ font-size:1.15rem; font-weight:700; }
+.fp .hstat .lbl{ font-size:.72rem; color:rgba(255,255,255,.65); text-transform:uppercase; letter-spacing:.5px; margin-top:2px; }
+
+/* ── tabs ─────────────────────────────────────────────── */
+.fp .tab-row{
+  display:flex; gap:4px; background:#fff;
+  border:1px solid var(--border); border-radius:14px;
+  padding:6px; margin:20px 0;
+  overflow-x:auto; flex-wrap:nowrap;
+}
+.fp .tab-row::-webkit-scrollbar{ height:3px; }
+.fp .tab-row::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:3px; }
+.fp .tab-btn{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:8px 18px; border-radius:10px; border:none; background:transparent;
+  font-size:.875rem; font-weight:600; color:var(--muted); cursor:pointer;
+  white-space:nowrap; transition:all .18s;
+}
+.fp .tab-btn:hover{ background:var(--soft); color:var(--navy); }
+.fp .tab-btn.active{ background:var(--navy); color:#fff; }
+
+/* ── panels ───────────────────────────────────────────── */
+.fp .tab-panel{ display:none; }
+.fp .tab-panel.show{ display:block; }
+
+/* ── section card ─────────────────────────────────────── */
+.fp .sc{
+  background:#fff; border:1px solid var(--border); border-radius:14px;
+  margin-bottom:18px; overflow:hidden;
+}
+.fp .sc-head{
+  padding:13px 20px; font-weight:700; font-size:.88rem;
+  color:var(--navy); border-bottom:1px solid var(--border);
+  background:var(--soft); display:flex; align-items:center; gap:8px;
+}
+.fp .sc-body{ padding:22px 24px; }
+
+/* ── info grid ────────────────────────────────────────── */
+.fp .ig{ display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:18px; }
+.fp .ig.col2{ grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
+.fp .ii label{
+  font-size:.72rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:.6px; color:var(--muted); display:block; margin-bottom:4px;
+}
+.fp .ii .val{
+  font-size:.9rem; color:#111827; font-weight:500; word-break:break-word;
+  padding:7px 10px; background:#f9fafb; border-radius:8px; border:1px solid #f3f4f6;
+}
+.fp .ii .val.empty{ color:#9ca3af; font-style:italic; font-weight:400; }
+.fp .ii.span2{ grid-column:span 2; }
+.fp .ii.span3{ grid-column:span 3; }
+
+.fp .file-pill{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:5px 12px; border-radius:8px; font-size:.82rem; font-weight:600;
+  background:#eff6ff; color:#1d4ed8; text-decoration:none; border:1px solid #bfdbfe;
+}
+.fp .file-pill:hover{ background:#dbeafe; }
+
+/* ── table ────────────────────────────────────────────── */
+.fp .tw{ overflow-x:auto; }
+.fp .tw table{ width:100%; border-collapse:collapse; font-size:.875rem; }
+.fp .tw thead tr{ background:#1e293b; color:#fff; }
+.fp .tw thead th{ padding:11px 16px; font-weight:600; white-space:nowrap; }
+.fp .tw tbody tr{ border-bottom:1px solid #f1f5f9; transition:background .12s; }
+.fp .tw tbody tr:hover{ background:#f8faff; }
+.fp .tw tbody td{ padding:11px 16px; color:#374151; vertical-align:middle; }
+.fp .tw tbody tr:last-child{ border-bottom:none; }
+
+.fp .empty-row{ text-align:center; padding:36px; color:var(--muted); font-size:.875rem; }
+
+/* ── timeline (experience) ────────────────────────────── */
+.fp .timeline{ position:relative; padding-left:28px; }
+.fp .timeline::before{
+  content:''; position:absolute; left:9px; top:4px; bottom:4px;
+  width:2px; background:#e2e8f0;
+}
+.fp .tl-item{ position:relative; margin-bottom:20px; }
+.fp .tl-item:last-child{ margin-bottom:0; }
+.fp .tl-dot{
+  position:absolute; left:-24px; top:14px;
+  width:12px; height:12px; border-radius:50%;
+  background:var(--navy); border:2px solid #fff; box-shadow:0 0 0 2px var(--navy);
+}
+.fp .tl-card{
+  background:#fff; border:1px solid var(--border); border-radius:12px;
+  padding:16px 20px;
+}
+.fp .tl-card .tl-title{ font-weight:700; color:#111827; font-size:.93rem; }
+.fp .tl-card .tl-role{ font-size:.83rem; color:var(--navy); font-weight:600; margin-top:2px; }
+.fp .tl-card .tl-meta{
+  display:flex; gap:16px; flex-wrap:wrap; margin-top:8px; font-size:.78rem; color:var(--muted);
+}
+.fp .tl-card .tl-meta span{ display:inline-flex; align-items:center; gap:4px; }
+.fp .tl-dur{
+  display:inline-block; padding:2px 10px; border-radius:12px;
+  background:#eff6ff; color:#1d4ed8; font-size:.75rem; font-weight:600; margin-top:6px;
+}
+
+/* ── degree card ──────────────────────────────────────── */
+.fp .deg-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+.fp .deg-card{
+  border:1px solid var(--border); border-radius:12px; padding:16px 18px;
+  position:relative; overflow:hidden;
+}
+.fp .deg-card::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg,var(--navy),var(--navy3));
+}
+.fp .deg-card .deg-name{ font-weight:700; font-size:.9rem; color:var(--navy); }
+.fp .deg-card .deg-title{ font-size:.83rem; color:#374151; margin-top:2px; }
+.fp .deg-card .deg-meta{ font-size:.78rem; color:var(--muted); margin-top:6px; display:flex; gap:12px; flex-wrap:wrap; }
+
+/* ── back link ────────────────────────────────────────── */
+.fp .back-link{
+  display:inline-flex; align-items:center; gap:6px;
+  color:var(--navy); text-decoration:none; font-size:.85rem; font-weight:600;
+  margin-bottom:16px;
+}
+.fp .back-link:hover{ color:var(--navy2); }
+</style>
+
+<div class="fp">
+
+  <a href="{% url 'employee_details' %}" class="back-link">
+    <i class="fa-solid fa-arrow-left"></i> Back to Faculty List
+  </a>
+
+  <!-- ── HERO ── -->
+  <div class="hero mb-0">
+    <div class="hero-top">
+
+      <div class="avatar-ring">
+        {% if faculty.profile_photo %}
+          <img src="{{ faculty.profile_photo.url }}" alt="{{ faculty.name }}">
+        {% else %}
+          <i class="fa-solid fa-user"></i>
+        {% endif %}
+      </div>
+
+      <div class="hero-info">
+        <h2>{{ faculty.name|default:"—" }}</h2>
+        <div class="sub">
+          <span><i class="fa-solid fa-id-badge"></i>{{ faculty.faculty_id|default:"—" }}</span>
+          {% if faculty.department %}<span><i class="fa-solid fa-building"></i>{{ faculty.department.Department }}</span>{% endif %}
+          {% if faculty.designation %}<span><i class="fa-solid fa-user-tie"></i>{{ faculty.designation.designation_name }}</span>{% endif %}
+          {% if faculty.doj %}<span><i class="fa-solid fa-calendar-check"></i>Joined {{ faculty.doj|date:"M Y" }}</span>{% endif %}
+        </div>
+        <div>
+          <span class="chip {% if faculty.approval == 'Approved' %}approved{% else %}pending{% endif %}">
+            {% if faculty.approval == 'Approved' %}<i class="fa-solid fa-circle-check"></i>{% else %}<i class="fa-solid fa-clock"></i>{% endif %}
+            {{ faculty.approval|default:"Pending" }}
+          </span>
+          {% if faculty.appointment_type %}
+          <span class="chip pending ms-2">{{ faculty.appointment_type }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <a href="{% url 'admin_edit_faculty_details' faculty.id %}" class="btn btn-light btn-sm fw-semibold">
+          <i class="fa-solid fa-pen-to-square me-1"></i>Edit
+        </a>
+      </div>
+    </div>
+
+    <!-- stat strip -->
+    <div class="hero-stats">
+      <div class="hstat">
+        <div class="val">{{ academic_bg|length }}</div>
+        <div class="lbl">Qualifications</div>
+      </div>
+      <div class="hstat">
+        <div class="val">{{ academic_exp|length }}</div>
+        <div class="lbl">Academic Exp.</div>
+      </div>
+      <div class="hstat">
+        <div class="val">{{ industry_exp|length }}</div>
+        <div class="lbl">Industry Exp.</div>
+      </div>
+      <div class="hstat">
+        <div class="val">{{ research_exp|length }}</div>
+        <div class="lbl">Research Exp.</div>
+      </div>
+      {% if faculty.basic_pay %}
+      <div class="hstat">
+        <div class="val">₹{{ faculty.basic_pay }}</div>
+        <div class="lbl">Basic Pay</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── TABS ── -->
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="switchTab('personal',this)">
+      <i class="fa-solid fa-circle-user"></i> Personal
+    </button>
+    <button class="tab-btn" onclick="switchTab('employment',this)">
+      <i class="fa-solid fa-briefcase"></i> Employment
+    </button>
+    <button class="tab-btn" onclick="switchTab('ids',this)">
+      <i class="fa-solid fa-id-card"></i> IDs &amp; Docs
+    </button>
+    <button class="tab-btn" onclick="switchTab('academic',this)">
+      <i class="fa-solid fa-graduation-cap"></i> Academic
+    </button>
+    <button class="tab-btn" onclick="switchTab('experience',this)">
+      <i class="fa-solid fa-clock-rotate-left"></i> Experience
+    </button>
+  </div>
+
+  <!-- ══ TAB: PERSONAL ══════════════════════════════════ -->
+  <div class="tab-panel show" id="tab-personal">
+
+    <div class="sc">
+      <div class="sc-head"><i class="fa-solid fa-user"></i> Basic Information</div>
+      <div class="sc-body">
+        <div class="ig">
+          <div class="ii">
+            <label>Full Name</label>
+            <div class="val">{{ faculty.name|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Employee ID</label>
+            <div class="val">{{ faculty.faculty_id|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Gender</label>
+            <div class="val">{{ faculty.gender|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Date of Birth</label>
+            <div class="val">{{ faculty.dob|date:"d M Y"|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Blood Group</label>
+            <div class="val">{{ faculty.blood_group|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Religion</label>
+            <div class="val">{{ faculty.religion|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Community</label>
+            <div class="val">{{ faculty.community|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Caste</label>
+            <div class="val">{{ faculty.caste|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sc">
+      <div class="sc-head"><i class="fa-solid fa-envelope"></i> Contact Details</div>
+      <div class="sc-body">
+        <div class="ig col2">
+          <div class="ii">
+            <label>Phone</label>
+            <div class="val">{{ faculty.phone|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Personal Email</label>
+            <div class="val">{{ faculty.personal_email|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>College Email</label>
+            <div class="val">{{ faculty.college_email|default:"—" }}</div>
+          </div>
+          <div class="ii span2">
+            <label>Address</label>
+            <div class="val">{{ faculty.address|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: EMPLOYMENT ════════════════════════════════ -->
+  <div class="tab-panel" id="tab-employment">
+
+    <div class="sc">
+      <div class="sc-head"><i class="fa-solid fa-building-user"></i> Position</div>
+      <div class="sc-body">
+        <div class="ig">
+          <div class="ii">
+            <label>Department</label>
+            <div class="val">{{ faculty.department.Department|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Designation</label>
+            <div class="val">{{ faculty.designation.designation_name|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Category</label>
+            <div class="val">{{ faculty.category.category_name|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Date of Joining</label>
+            <div class="val">{{ faculty.doj|date:"d M Y"|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Appointment Type</label>
+            <div class="val">{{ faculty.appointment_type|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Recruitment Mode</label>
+            <div class="val">{{ faculty.recruitment_mode|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Nature of Duties</label>
+            <div class="val">{{ faculty.nature_of_duties|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Shift</label>
+            <div class="val">{{ faculty.shift|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sc">
+      <div class="sc-head"><i class="fa-solid fa-indian-rupee-sign"></i> Pay Details</div>
+      <div class="sc-body">
+        <div class="ig">
+          <div class="ii">
+            <label>Basic Pay</label>
+            <div class="val">{% if faculty.basic_pay %}₹ {{ faculty.basic_pay }}{% else %}—{% endif %}</div>
+          </div>
+          <div class="ii">
+            <label>AGP</label>
+            <div class="val">{% if faculty.agp %}₹ {{ faculty.agp }}{% else %}—{% endif %}</div>
+          </div>
+          <div class="ii">
+            <label>Allowances</label>
+            <div class="val">{% if faculty.allowances %}₹ {{ faculty.allowances }}{% else %}—{% endif %}</div>
+          </div>
+          <div class="ii span3">
+            <label>Scale of Pay (AICTE / 7th CPC)</label>
+            <div class="val">{{ faculty.pay_scale_notes|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sc">
+      <div class="sc-head"><i class="fa-solid fa-file-contract"></i> Probation &amp; Confirmation</div>
+      <div class="sc-body">
+        <div class="ig col2">
+          <div class="ii">
+            <label>Confirmation Date</label>
+            <div class="val">{{ faculty.confirmation_date|date:"d M Y"|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Probation Period (months)</label>
+            <div class="val">{{ faculty.probation_period_months|default:"—" }}</div>
+          </div>
+          <div class="ii span2">
+            <label>Probation Order Reference</label>
+            <div class="val">{{ faculty.probation_confirmation_reference|default:"—" }}</div>
+          </div>
+          {% if faculty.probation_confirmation_document %}
+          <div class="ii">
+            <label>Probation Document</label>
+            <div class="val" style="background:transparent;border-color:transparent;padding:0;">
+              <a href="{{ faculty.probation_confirmation_document.url }}" target="_blank" class="file-pill">
+                <i class="fa-solid fa-file-pdf"></i> View PDF
+              </a>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: IDs & DOCS ════════════════════════════════ -->
+  <div class="tab-panel" id="tab-ids">
+
+    <div class="sc">
+      <div class="sc-head"><i class="fa-solid fa-fingerprint"></i> Government Identifiers</div>
+      <div class="sc-body">
+        <div class="ig col2">
+          <div class="ii">
+            <label>PAN Number</label>
+            <div class="val">{{ faculty.PAN_number|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Aadhar Number</label>
+            <div class="val">{{ faculty.Aadhar_number|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>APAAR ID</label>
+            <div class="val">{{ faculty.apaar_id|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>ANU ID</label>
+            <div class="val">{{ faculty.anu_id|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>AICTE ID</label>
+            <div class="val">{{ faculty.aicte_id|default:"—" }}</div>
+          </div>
+          <div class="ii">
+            <label>Anna University Affiliation ID</label>
+            <div class="val">{{ faculty.annauniversity_affiliation_id|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sc">
+      <div class="sc-head"><i class="fa-solid fa-file-shield"></i> Uploaded Certificates</div>
+      <div class="sc-body">
+        <div style="display:flex; flex-wrap:wrap; gap:14px;">
+          {% if faculty.PAN_certificate %}
+          <div style="background:#f9fafb;border:1px solid var(--border);border-radius:12px;padding:16px 20px;min-width:200px;">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.5px;margin-bottom:10px;">PAN Certificate</div>
+            <a href="{{ faculty.PAN_certificate.url }}" target="_blank" class="file-pill">
+              <i class="fa-solid fa-file-pdf"></i> View PDF
+            </a>
+          </div>
+          {% endif %}
+          {% if faculty.Aadhar_certificate %}
+          <div style="background:#f9fafb;border:1px solid var(--border);border-radius:12px;padding:16px 20px;min-width:200px;">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.5px;margin-bottom:10px;">Aadhar Certificate</div>
+            <a href="{{ faculty.Aadhar_certificate.url }}" target="_blank" class="file-pill">
+              <i class="fa-solid fa-file-pdf"></i> View PDF
+            </a>
+          </div>
+          {% endif %}
+          {% if not faculty.PAN_certificate and not faculty.Aadhar_certificate %}
+          <p class="text-muted small mb-0"><i class="fa-solid fa-folder-open me-1"></i>No certificates uploaded.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: ACADEMIC ══════════════════════════════════ -->
+  <div class="tab-panel" id="tab-academic">
+
+    <div class="sc">
+      <div class="sc-head"><i class="fa-solid fa-graduation-cap"></i> Academic Qualifications</div>
+      <div class="sc-body">
+        {% if academic_bg %}
+        <div class="deg-grid">
+          {% for bg in academic_bg %}
+          <div class="deg-card">
+            <div class="deg-name">{{ bg.get_degree_display|default:"—" }}</div>
+            <div class="deg-title">{{ bg.title|default:"" }}</div>
+            <div class="deg-meta">
+              {% if bg.board_university %}<span><i class="fa-solid fa-university"></i>{{ bg.board_university }}</span>{% endif %}
+              {% if bg.year_of_passing %}<span><i class="fa-solid fa-calendar"></i>{{ bg.year_of_passing }}</span>{% endif %}
+              {% if bg.marks_percentage %}<span><i class="fa-solid fa-percent"></i>{{ bg.marks_percentage }}%</span>{% endif %}
+            </div>
+            <div style="margin-top:8px;">
+              <span class="badge {% if bg.status == 'Approved' %}bg-success{% elif bg.status == 'Rejected' %}bg-danger{% else %}bg-warning text-dark{% endif %}" style="font-size:.72rem;">
+                {{ bg.status }}
+              </span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-row mb-0"><i class="fa-solid fa-inbox me-2"></i>No academic qualification records found.</p>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: EXPERIENCE ════════════════════════════════ -->
+  <div class="tab-panel" id="tab-experience">
+
+    {% if academic_exp %}
+    <div class="sc">
+      <div class="sc-head"><i class="fa-solid fa-chalkboard-user"></i> Academic Experience</div>
+      <div class="sc-body">
+        <div class="timeline">
+          {% for exp in academic_exp %}
+          <div class="tl-item">
+            <div class="tl-dot"></div>
+            <div class="tl-card">
+              <div class="tl-title">{{ exp.institute_name|default:"—" }}</div>
+              <div class="tl-role">{{ exp.designation|default:"" }}</div>
+              <div class="tl-meta">
+                <span><i class="fa-regular fa-calendar"></i>
+                  {{ exp.from_date|date:"M Y"|default:"—" }} — {% if exp.to_date %}{{ exp.to_date|date:"M Y" }}{% else %}Present{% endif %}
+                </span>
+              </div>
+              {% with exp.get_duration as dur %}{% if dur %}<span class="tl-dur"><i class="fa-solid fa-hourglass-half me-1"></i>{{ dur }}</span>{% endif %}{% endwith %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if industry_exp %}
+    <div class="sc">
+      <div class="sc-head"><i class="fa-solid fa-industry"></i> Industry Experience</div>
+      <div class="sc-body">
+        <div class="timeline">
+          {% for exp in industry_exp %}
+          <div class="tl-item">
+            <div class="tl-dot" style="background:#059669;box-shadow:0 0 0 2px #059669;"></div>
+            <div class="tl-card">
+              <div class="tl-title">{{ exp.company_name|default:"—" }}</div>
+              <div class="tl-role" style="color:#059669;">{{ exp.designation.designation_name|default:"" }}</div>
+              <div class="tl-meta">
+                <span><i class="fa-regular fa-calendar"></i>
+                  {{ exp.from_date|date:"M Y"|default:"—" }} — {% if exp.to_date %}{{ exp.to_date|date:"M Y" }}{% else %}Present{% endif %}
+                </span>
+              </div>
+              {% with exp.get_duration as dur %}{% if dur %}<span class="tl-dur" style="background:#d1fae5;color:#065f46;"><i class="fa-solid fa-hourglass-half me-1"></i>{{ dur }}</span>{% endif %}{% endwith %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if research_exp %}
+    <div class="sc">
+      <div class="sc-head"><i class="fa-solid fa-flask"></i> Research Experience</div>
+      <div class="sc-body">
+        <div class="timeline">
+          {% for exp in research_exp %}
+          <div class="tl-item">
+            <div class="tl-dot" style="background:#7c3aed;box-shadow:0 0 0 2px #7c3aed;"></div>
+            <div class="tl-card">
+              <div class="tl-title">{{ exp.research_area|default:"—" }}</div>
+              <div class="tl-role" style="color:#7c3aed;">{{ exp.institute|default:"" }}</div>
+              <div class="tl-meta">
+                <span><i class="fa-regular fa-calendar"></i>
+                  {{ exp.from_date|date:"M Y"|default:"—" }} — {% if exp.to_date %}{{ exp.to_date|date:"M Y" }}{% else %}Present{% endif %}
+                </span>
+              </div>
+              {% with exp.get_duration as dur %}{% if dur %}<span class="tl-dur" style="background:#ede9fe;color:#6d28d9;"><i class="fa-solid fa-hourglass-half me-1"></i>{{ dur }}</span>{% endif %}{% endwith %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if not academic_exp and not industry_exp and not research_exp %}
+    <div class="sc">
+      <div class="sc-body">
+        <p class="empty-row mb-0"><i class="fa-solid fa-inbox me-2"></i>No experience records found.</p>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+</div>
+
+<script>
+function switchTab(name, btn) {
+  document.querySelectorAll('.fp .tab-panel').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll('.fp .tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('show');
+  btn.classList.add('active');
+}
+</script>
+
+{% endblock %}

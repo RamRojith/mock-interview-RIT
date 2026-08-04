@@ -1,0 +1,638 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load fee_tags %}
+{% departments as departments %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="container-fluid py-4 admin-dashboard">
+    <!-- Header Section -->
+    <div class="dashboard-header mb-5">
+        <div class="header-content text-center">
+            <i class=""></i>
+            <h1 class="display-6 fw-bold text-white mb-2">Edit Fee Entry</h1>
+            <p class="lead text-white-50"></p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-10 col-lg-12">
+            <!-- Main Card -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-gradient-primary text-white py-4">
+                    <div class="d-flex align-items-center">
+                        <div class="header-icon me-3">
+                            <i class="fas fa-money-bill-wave fa-lg"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h4 class="mb-1 fw-bold"><i class="fas fa-edit me-2"></i>Edit Fee Structure</h4>
+                            <p class="mb-0 opacity-75">Update fee details for {{ fee_entry.fee_category.name }}</p>
+                        </div>
+                        <div class="badge bg-white text-primary px-3 py-2 rounded-pill">
+                            ID: {{ fee_entry.id }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-5">
+                    <!-- Messages -->
+                    {% if messages %}
+                        <div class="messages-container mb-5">
+                            {% for message in messages %}
+                                <div class="alert alert-dismissible alert-{{ message.tags }} fade show mb-3" role="alert">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-triangle{% endif %} me-2"></i>
+                                        <span class="flex-grow-1">{{ message }}</span>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Edit Form -->
+                    <form method="POST" action="{% url 'edit_fee_type' fee_entry.id %}" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information Section -->
+                        <div class="row mb-5">
+                            <div class="col-12">
+                                <h5 class="section-title mb-4">
+                                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                                    Basic Information
+                                </h5>
+                            </div>
+
+                            <!-- Department -->
+                            <div class="col-md-6 col-lg-4">
+                                <div class="form-group mb-4">
+                                    <label for="department" class="form-label small fw-semibold text-muted mb-2">
+                                        <i class="fas fa-building me-1"></i>
+                                        DEPARTMENT
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-university text-primary"></i>
+                                        </span>
+                                        <select class="form-select border-start-0" id="department" name="department" required>
+                                            {% for dept in departments %}
+                                                <option value="{{ dept.id }}" {% if dept.id|stringformat:"s" == fee_entry.department_id %}selected{% endif %}>
+                                                    {{ dept.Department }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Batch -->
+                            <div class="col-md-6 col-lg-4">
+                                <div class="form-group mb-4">
+                                    <label for="batch" class="form-label small fw-semibold text-muted mb-2">
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        BATCH
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-calendar text-primary"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-start-0" id="batch" name="batch" 
+                                               value="{{ fee_entry.batch|default_if_none:'0' }}" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Quota -->
+                            <div class="col-md-6 col-lg-4">
+                                <div class="form-group mb-4">
+                                    <label for="quota" class="form-label small fw-semibold text-muted mb-2">
+                                        <i class="fas fa-users me-1"></i>
+                                        QUOTA
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-user-friends text-primary"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-start-0" id="quota" name="quota" 
+                                               value="{{ fee_entry.quota|default_if_none:'' }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fee Configuration Section -->
+                        <div class="row mb-5">
+                            <div class="col-12">
+                                <h5 class="section-title mb-4">
+                                    <i class="fas fa-cog me-2 text-primary"></i>
+                                    Fee Configuration
+                                </h5>
+                            </div>
+
+                            <!-- Fee Category -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-4">
+                                    <label for="fee_category" class="form-label small fw-semibold text-muted mb-2">
+                                        <i class="fas fa-tag me-1"></i>
+                                        FEE CATEGORY
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-receipt text-primary"></i>
+                                        </span>
+                                        <select class="form-select border-start-0" id="fee_category" name="fee_category" required>
+                                            {% for ft in fee_types %}
+                                                <option value="{{ ft.id }}" {% if fee_entry.fee_category.id == ft.id %}selected{% endif %}>
+                                                    {{ ft.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Degree -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-4">
+                                    <label for="degreeId" class="form-label small fw-semibold text-muted mb-2">
+                                        <i class="fas fa-graduation-cap me-1"></i>
+                                        DEGREE
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-user-graduate text-primary"></i>
+                                        </span>
+                                        <select class="form-select border-start-0" id="degreeId" name="degree_id" required>
+                                            <option value="">Select Degree</option>
+                                            {% for d in degrees %}
+                                                <option value="{{ d.id }}"
+                                                        data-duration="{{ d.duration|default:0 }}"
+                                                        {% if fee_entry.degree_id == d.id %}selected{% endif %}>
+                                                    {{ d.degree_code }} - {{ d.degree }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-text" id="degreeInfo">
+                                        Select a degree to see available years
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Yearly Fees Section -->
+                        <div class="row mb-5">
+                            <div class="col-12">
+                                <h5 class="section-title mb-4">
+                                    <i class="fas fa-calendar-day me-2 text-primary"></i>
+                                    Yearly Fees
+                                    <small class="text-muted ms-2" id="yearCount">(0 years)</small>
+                                </h5>
+                            </div>
+
+                            <!-- Year Inputs -->
+                            <div class="col-12">
+                                <div class="row g-4" id="yearFeesContainer">
+                                    <!-- Year 1 -->
+                                    <div class="col-xl-3 col-lg-6" id="year1Group">
+                                        <div class="fee-year-card">
+                                            <div class="card border-0 bg-gradient-light h-100">
+                                                <div class="card-body text-center p-4">
+                                                    <div class="year-badge mb-3">
+                                                        <span class="badge bg-primary rounded-circle p-3">1</span>
+                                                    </div>
+                                                    <h6 class="card-title text-muted mb-3">First Year</h6>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-white border-end-0">
+                                                            <i class="fas fa-rupee-sign text-muted"></i>
+                                                        </span>
+                                                        <input type="number" step="0.01" class="form-control border-start-0 text-center fw-bold" 
+                                                               id="year_1" name="year_1" placeholder="0.00"
+                                                               value="{{ fee_entry.year_1 }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Year 2 -->
+                                    <div class="col-xl-3 col-lg-6" id="year2Group">
+                                        <div class="fee-year-card">
+                                            <div class="card border-0 bg-gradient-light h-100">
+                                                <div class="card-body text-center p-4">
+                                                    <div class="year-badge mb-3">
+                                                        <span class="badge bg-success rounded-circle p-3">2</span>
+                                                    </div>
+                                                    <h6 class="card-title text-muted mb-3">Second Year</h6>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-white border-end-0">
+                                                            <i class="fas fa-rupee-sign text-muted"></i>
+                                                        </span>
+                                                        <input type="number" step="0.01" class="form-control border-start-0 text-center fw-bold" 
+                                                               id="year_2" name="year_2" placeholder="0.00"
+                                                               value="{{ fee_entry.year_2 }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Year 3 -->
+                                    <div class="col-xl-3 col-lg-6" id="year3Group">
+                                        <div class="fee-year-card">
+                                            <div class="card border-0 bg-gradient-light h-100">
+                                                <div class="card-body text-center p-4">
+                                                    <div class="year-badge mb-3">
+                                                        <span class="badge bg-warning rounded-circle p-3">3</span>
+                                                    </div>
+                                                    <h6 class="card-title text-muted mb-3">Third Year</h6>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-white border-end-0">
+                                                            <i class="fas fa-rupee-sign text-muted"></i>
+                                                        </span>
+                                                        <input type="number" step="0.01" class="form-control border-start-0 text-center fw-bold" 
+                                                               id="year_3" name="year_3" placeholder="0.00"
+                                                               value="{{ fee_entry.year_3 }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Year 4 -->
+                                    <div class="col-xl-3 col-lg-6" id="year4Group">
+                                        <div class="fee-year-card">
+                                            <div class="card border-0 bg-gradient-light h-100">
+                                                <div class="card-body text-center p-4">
+                                                    <div class="year-badge mb-3">
+                                                        <span class="badge bg-danger rounded-circle p-3">4</span>
+                                                    </div>
+                                                    <h6 class="card-title text-muted mb-3">Fourth Year</h6>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-white border-end-0">
+                                                            <i class="fas fa-rupee-sign text-muted"></i>
+                                                        </span>
+                                                        <input type="number" step="0.01" class="form-control border-start-0 text-center fw-bold" 
+                                                               id="year_4" name="year_4" placeholder="0.00"
+                                                               value="{{ fee_entry.year_4 }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row mt-5">
+                            <div class="col-12">
+                                <div class="d-flex gap-3 justify-content-end border-top pt-4">
+                                    <a href="" class="btn btn-outline-secondary px-4 py-2">
+                                        <i class="fas fa-arrow-left me-2"></i>
+                                        Back to List
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger px-4 py-2" onclick="resetForm()">
+                                        <i class="fas fa-undo me-2"></i>
+                                        Reset
+                                    </button>
+                                    <button type="submit" class="btn btn-primary px-4 py-2" id="submitBtn">
+                                        <i class="fas fa-save me-2"></i>
+                                        Update Fee Entry
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Professional Blue & White Theme */
+:root {
+    --primary-blue: #1a56db;
+    --dark-blue: #1e3a8a;
+    --medium-blue: #3b82f6;
+    --light-blue: #dbeafe;
+    --accent-blue: #2563eb;
+    --white: #ffffff;
+    --light-gray: #f8fafc;
+    --border-color: #e2e8f0;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+}
+
+.admin-dashboard {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background-color: #f1f5f9;
+    color: var(--text-primary);
+}
+
+/* Header Styles */
+.dashboard-header {
+    background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+    color: white;
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+.header-content .header-icon {
+    opacity: 0.9;
+}
+
+/* Card Header */
+.card-header.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue)) !important;
+    border-bottom: none;
+}
+
+.header-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Section Titles */
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.input-group-text {
+    background-color: var(--light-gray);
+    border-color: var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--medium-blue);
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.1);
+}
+
+.form-control:focus + .input-group-text {
+    border-color: var(--medium-blue);
+    background-color: var(--light-blue);
+}
+
+/* Year Fee Cards */
+.fee-year-card {
+    transition: all 0.3s ease;
+}
+
+.fee-year-card:hover {
+    transform: translateY(-5px);
+}
+
+.fee-year-card .card {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.fee-year-card:hover .card {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.year-badge .badge {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.bg-gradient-light {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+}
+
+/* Alert Styles */
+.alert {
+    border: none;
+    border-radius: 8px;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d1fae5, #ecfdf5);
+    color: #065f46;
+    border-left-color: #10b981;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #fee2e2, #fef2f2);
+    color: #991b1b;
+    border-left-color: #ef4444;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-header {
+        padding: 2rem 1rem;
+    }
+    
+    .card-body {
+        padding: 2rem !important;
+    }
+    
+    .d-flex.gap-3 {
+        flex-direction: column;
+    }
+    
+    .d-flex.gap-3 .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .fee-year-card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Animation for year cards */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fee-year-card {
+    animation: fadeInUp 0.5s ease;
+}
+
+/* Loading state */
+.submitting {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.submitting::after {
+    content: ' Updating...';
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const degreeSel = document.getElementById('degreeId');
+    const yearCount = document.getElementById('yearCount');
+    const degreeInfo = document.getElementById('degreeInfo');
+    const submitBtn = document.getElementById('submitBtn');
+
+    const yearGroups = [
+        { group: document.getElementById('year1Group'), input: document.getElementById('year_1') },
+        { group: document.getElementById('year2Group'), input: document.getElementById('year_2') },
+        { group: document.getElementById('year3Group'), input: document.getElementById('year_3') },
+        { group: document.getElementById('year4Group'), input: document.getElementById('year_4') }
+    ];
+
+    function applyDuration(duration) {
+        const dur = Math.max(0, Math.min(parseInt(duration || 0, 10) || 0, 4));
+        
+        // Update year count display
+        yearCount.textContent = `(${dur} year${dur !== 1 ? 's' : ''})`;
+        
+        // Update degree info
+        if (dur > 0) {
+            degreeInfo.textContent = `${dur}-year program structure`;
+            degreeInfo.className = 'form-text text-success';
+        } else {
+            degreeInfo.textContent = 'Select a degree to see available years';
+            degreeInfo.className = 'form-text text-muted';
+        }
+
+        // Show/hide year groups
+        yearGroups.forEach((yg, idx) => {
+            const show = idx < dur;
+            if (yg.group) {
+                yg.group.style.display = show ? 'block' : 'none';
+                if (yg.input) {
+                    yg.input.disabled = !show;
+                    yg.input.required = show;
+                }
+            }
+        });
+    }
+
+    function onDegreeChange() {
+        const opt = degreeSel.options[degreeSel.selectedIndex];
+        const duration = opt ? opt.getAttribute('data-duration') : 0;
+        applyDuration(duration);
+    }
+
+    // Initialize
+    if (degreeSel) {
+        degreeSel.addEventListener('change', onDegreeChange);
+        // Set initial state based on current selection
+        const initialOpt = degreeSel.options[degreeSel.selectedIndex];
+        const initialDuration = initialOpt ? initialOpt.getAttribute('data-duration') : 0;
+        applyDuration(initialDuration);
+    }
+
+    // Form submission handling
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(event) {
+        if (!this.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Add visual feedback for invalid fields
+            const invalidFields = this.querySelectorAll(':invalid');
+            invalidFields.forEach(field => {
+                field.style.borderColor = '#ef4444';
+            });
+        } else {
+            // Add loading state
+            submitBtn.classList.add('submitting');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+        }
+        this.classList.add('was-validated');
+    }, false);
+
+    // Reset form function
+    window.resetForm = function() {
+        if (confirm('Are you sure you want to reset all changes?')) {
+            form.reset();
+            form.classList.remove('was-validated');
+            
+            // Reset field styles
+            const fields = form.querySelectorAll('.form-control, .form-select');
+            fields.forEach(field => {
+                field.style.borderColor = '';
+            });
+            
+            // Reset to initial degree state
+            onDegreeChange();
+            
+            // Reset submit button
+            submitBtn.classList.remove('submitting');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Update Fee Entry';
+        }
+    };
+
+    // Real-time validation feedback
+    const inputs = form.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.checkValidity()) {
+                this.style.borderColor = '#10b981';
+            } else {
+                this.style.borderColor = '';
+            }
+        });
+        
+        input.addEventListener('blur', function() {
+            if (!this.checkValidity()) {
+                this.style.borderColor = '#ef4444';
+            }
+        });
+    });
+
+    // Format amount inputs on blur
+    const amountInputs = form.querySelectorAll('input[type="number"]');
+    amountInputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value) {
+                this.value = parseFloat(this.value).toFixed(2);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

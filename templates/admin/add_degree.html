@@ -1,0 +1,689 @@
+{# templates/admin/add_degree.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+.degree-page{
+  --bg:#f6f8fb;
+  --card:#ffffff;
+  --ink:#0f172a;
+  --muted:#64748b;
+  --border:#e5e7eb;
+  --pri:#0d6efd;
+  --success:#198754;
+  --shadow: 0 10px 30px rgba(2,6,23,.08);
+  --radius: 18px;
+}
+
+.degree-page .wrap{
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: calc(100vh - 40px);
+  padding: 22px 12px;
+}
+
+.degree-page .container-max{
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.degree-page .header{
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 20px;
+  padding: 20px 20px;
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(2,6,23,.18);
+}
+
+.degree-page .header h3{
+  margin:0;
+  font-weight: 900;
+}
+
+.degree-page .header .sub{
+  color: rgba(255,255,255,.85);
+  margin-top: 6px;
+}
+
+.degree-page .cardx{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+}
+
+.degree-page .chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.22);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.degree-page .table-wrap{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.degree-page .table thead th{
+  background: #0b1220;
+  color: #fff;
+  border-bottom: 0;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.degree-page .table tbody td{
+  vertical-align: middle;
+}
+
+.degree-page .badge-soft{
+  background: #eef2ff;
+  color: #1e40af;
+  border: 1px solid #c7d2fe;
+  font-weight: 800;
+  padding: .45rem .6rem;
+}
+
+.degree-page .pagination .page-link{
+  border-radius: 10px;
+  margin: 0 3px;
+  font-weight: 700;
+}
+
+.degree-page .pagination .page-item.active .page-link{
+  background: var(--pri);
+  border-color: var(--pri);
+}
+
+.degree-page .btn-icon{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+
+.degree-page .modal-content{
+  border-radius: 16px;
+  overflow:hidden;
+}
+
+.degree-page .modal-header{
+  background: #0d6efd;
+  color: #fff;
+}
+
+.degree-page .modal-header .btn-close{
+  filter: invert(1);
+}
+</style>
+
+<div class="degree-page">
+  <div class="wrap">
+    <div class="container-max">
+
+      <!-- Header -->
+      <div class="header mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <h3><i class="fa-solid fa-graduation-cap me-2"></i>Manage Degree</h3>
+            <div class="sub">Search, filter, paginate, add/edit/delete degrees, and export to Excel</div>
+          </div>
+          <div class="chip">
+            <span class="badge bg-light text-dark" id="resultCount">0</span>
+            <span>Degrees (Filtered)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters + Actions -->
+      <div class="cardx mb-3">
+        <div class="p-3 p-md-4">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div class="fw-black" style="font-weight:900;color:var(--ink);">
+              <i class="fa-solid fa-filter me-2 text-primary"></i>Filters
+            </div>
+            <div class="text-muted small" id="showingText">Showing 0–0 of 0</div>
+          </div>
+
+          <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Search (Any Field)</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input
+                  type="text"
+                  id="globalSearch"
+                  class="form-control"
+                  placeholder="code / degree / duration / graduate type / active..."
+                >
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label fw-bold">Graduate Type</label>
+              <select id="graduateFilter" class="form-select">
+                <option value="">All</option>
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label fw-bold">Active</label>
+              <select id="activeFilter" class="form-select">
+                <option value="">All</option>
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+              </select>
+            </div>
+
+            <div class="col-md-2">
+              <label class="form-label fw-bold">Page Size</label>
+              <select id="pageSize" class="form-select">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+
+            <div class="col-12 d-flex flex-wrap gap-2 mt-2">
+              <button
+                class="btn btn-primary btn-icon"
+                data-bs-toggle="modal"
+                data-bs-target="#addDegreeModal"
+                type="button"
+              >
+                <i class="fa-solid fa-plus"></i> Add Degree
+              </button>
+
+              <button class="btn btn-outline-success btn-icon" id="exportExcelBtn" type="button">
+                <i class="fa-solid fa-file-excel"></i> Export Excel
+              </button>
+
+              <button class="btn btn-outline-secondary btn-icon" id="clearAll" type="button">
+                <i class="fa-solid fa-eraser"></i> Clear
+              </button>
+
+              <button class="btn btn-outline-primary btn-icon" id="refreshBtn" type="button">
+                <i class="fa-solid fa-rotate"></i> Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <div class="table-responsive">
+          <table class="table table-hover table-striped align-middle mb-0">
+            <thead>
+              <tr>
+                <th style="width:55px">#</th>
+                <th style="width:120px">Code</th>
+                <th>Degree</th>
+                <th style="width:150px">Duration (Years)</th>
+                <th style="width:210px">Graduate Type</th>
+                <th style="width:120px">Active</th>
+                <th class="text-center" style="width:190px">Action</th>
+              </tr>
+            </thead>
+            <tbody id="degreeTbody">
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                  <i class="fa-solid fa-spinner fa-spin me-2"></i>Loading...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+        <div class="text-muted small" id="pageInfo">Page 1 of 1</div>
+        <nav>
+          <ul class="pagination pagination-sm mb-0" id="paginationUl"></ul>
+        </nav>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Add Modal -->
+  <div class="modal fade" id="addDegreeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="POST">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus me-2"></i>Add New Degree</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Degree Code</label>
+              <input type="text" name="degree_code" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Degree Name</label>
+              <input type="text" name="degree" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Duration (Years)</label>
+              <input type="number" name="duration" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Degree Graduate</label>
+              <input
+                type="text"
+                name="degree_graduate"
+                class="form-control"
+                placeholder="e.g., Undergraduate / Postgraduate"
+              >
+            </div>
+            <div class="form-check">
+              <input type="checkbox" name="is_active" class="form-check-input" id="addActiveCheck" checked>
+              <label class="form-check-label" for="addActiveCheck">Active</label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" name="add_degree" class="btn btn-primary">
+              <i class="fa-solid fa-check me-1"></i> Add
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editDegreeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="degree_id" id="edit_degree_id">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Degree</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Degree Code</label>
+              <input type="text" name="degree_code" class="form-control" id="edit_degree_code" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Degree Name</label>
+              <input type="text" name="degree" class="form-control" id="edit_degree" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Duration (Years)</label>
+              <input type="number" name="duration" class="form-control" id="edit_duration" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Degree Graduate</label>
+              <input type="text" name="degree_graduate" class="form-control" id="edit_degree_graduate">
+            </div>
+            <div class="form-check">
+              <input type="checkbox" name="is_active" class="form-check-input" id="edit_is_active">
+              <label class="form-check-label" for="edit_is_active">Active</label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" name="edit_degree" class="btn btn-success">
+              <i class="fa-solid fa-floppy-disk me-1"></i> Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div class="modal fade" id="deleteDegreeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="degree_id" id="delete_degree_id">
+          <div class="modal-header" style="background:#dc3545;color:#fff;">
+            <h5 class="modal-title fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i>Delete Degree</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1);"></button>
+          </div>
+          <div class="modal-body">
+            Are you sure you want to delete <span class="fw-bold" id="delete_degree_name">this degree</span>?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" name="delete_degree" class="btn btn-danger">
+              <i class="fa-solid fa-trash me-1"></i> Delete
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const dataUrl = "{% url 'add_degree_data' %}";
+  const exportUrl = "{% url 'export_degree_excel' %}";
+
+  let currentPage = 1;
+  let lastMeta = null;
+  let searchTimer = null;
+
+  const $ = (sel, root=document) => root.querySelector(sel);
+
+  function escapeHtml(text){
+    if(text === null || text === undefined) return "";
+    return String(text)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function setLoading(){
+    $("#degreeTbody").innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center text-muted py-4">
+          <i class="fa-solid fa-spinner fa-spin me-2"></i>Loading...
+        </td>
+      </tr>
+    `;
+  }
+
+  function renderGraduateOptions(options){
+    const sel = $("#graduateFilter");
+    const selected = sel.value || "";
+    let html = `<option value="">All</option>`;
+
+    (options || []).forEach(opt => {
+      const o = escapeHtml(opt);
+      html += `<option value="${o}">${o}</option>`;
+    });
+
+    sel.innerHTML = html;
+
+    if(selected){
+      sel.value = selected;
+      if(sel.value !== selected) sel.value = "";
+    }
+  }
+
+  function renderRows(rows){
+    const tbody = $("#degreeTbody");
+
+    if(!rows || rows.length === 0){
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center text-muted py-4">No degrees found.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r => {
+      const activeBadge = r.is_active
+        ? `<span class="badge bg-success">Active</span>`
+        : `<span class="badge bg-secondary">Inactive</span>`;
+
+      const grad = r.degree_graduate ? escapeHtml(r.degree_graduate) : "-";
+
+      return `
+        <tr>
+          <td>${r.sno}</td>
+          <td><span class="badge badge-soft">${escapeHtml(r.degree_code)}</span></td>
+          <td class="fw-semibold">${escapeHtml(r.degree)}</td>
+          <td>${escapeHtml(r.duration)}</td>
+          <td>${grad}</td>
+          <td>${activeBadge}</td>
+          <td class="text-center">
+            <div class="btn-group btn-group-sm" role="group">
+              <button
+                type="button"
+                class="btn btn-outline-warning btn-icon edit-btn"
+                data-id="${r.id}"
+                data-degree_code="${escapeHtml(r.degree_code)}"
+                data-degree="${escapeHtml(r.degree)}"
+                data-duration="${escapeHtml(r.duration)}"
+                data-degree_graduate="${escapeHtml(r.degree_graduate || "")}"
+                data-is_active="${r.is_active ? "1" : "0"}"
+              >
+                <i class="fa-solid fa-pen-to-square"></i>
+                <span class="d-none d-sm-inline">Edit</span>
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-outline-danger btn-icon delete-btn"
+                data-id="${r.id}"
+                data-name="${escapeHtml(r.degree)}"
+              >
+                <i class="fa-solid fa-trash"></i>
+                <span class="d-none d-sm-inline">Delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  function renderPagination(meta){
+    const ul = $("#paginationUl");
+
+    if(!meta){
+      ul.innerHTML = "";
+      $("#pageInfo").textContent = "Page 1 of 1";
+      $("#showingText").textContent = "Showing 0–0 of 0";
+      $("#resultCount").textContent = "0";
+      return;
+    }
+
+    const page = meta.page;
+    const totalPages = meta.total_pages || 1;
+
+    $("#pageInfo").textContent = `Page ${page} of ${totalPages}`;
+
+    const total = meta.total || 0;
+    const pageSize = meta.page_size || 25;
+    const start = total === 0 ? 0 : ((page - 1) * pageSize) + 1;
+    const end = Math.min(page * pageSize, total);
+
+    $("#showingText").textContent = `Showing ${start}–${end} of ${total}`;
+    $("#resultCount").textContent = String(total);
+
+    function li(disabled, label, targetPage, active=false){
+      const d = disabled ? "disabled" : "";
+      const a = active ? "active" : "";
+      const aria = active ? 'aria-current="page"' : "";
+      return `
+        <li class="page-item ${d} ${a}">
+          <a class="page-link" href="#" data-page="${targetPage}" ${aria}>${label}</a>
+        </li>
+      `;
+    }
+
+    let html = "";
+    html += li(page <= 1, "&laquo;", 1);
+    html += li(!meta.has_prev, "&lsaquo;", page - 1);
+
+    const windowSize = 2;
+    const startP = Math.max(1, page - windowSize);
+    const endP = Math.min(totalPages, page + windowSize);
+
+    if(startP > 1){
+      html += li(false, "1", 1, page === 1);
+      if(startP > 2){
+        html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+      }
+    }
+
+    for(let p = startP; p <= endP; p++){
+      html += li(false, String(p), p, p === page);
+    }
+
+    if(endP < totalPages){
+      if(endP < totalPages - 1){
+        html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+      }
+      html += li(false, String(totalPages), totalPages, page === totalPages);
+    }
+
+    html += li(!meta.has_next, "&rsaquo;", page + 1);
+    html += li(page >= totalPages, "&raquo;", totalPages);
+
+    ul.innerHTML = html;
+  }
+
+  async function loadDegrees(){
+    const q = $("#globalSearch").value.trim();
+    const graduate = $("#graduateFilter").value.trim();
+    const active = $("#activeFilter").value.trim();
+    const pageSize = $("#pageSize").value;
+
+    setLoading();
+
+    const params = new URLSearchParams({
+      q,
+      graduate,
+      active,
+      page: String(currentPage),
+      page_size: String(pageSize),
+    });
+
+    try{
+      const resp = await fetch(`${dataUrl}?${params.toString()}`, {
+        method: "GET",
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      });
+
+      if(!resp.ok){
+        throw new Error("Network error");
+      }
+
+      const data = await resp.json();
+
+      renderGraduateOptions(data.graduate_options || []);
+      renderRows(data.results || []);
+      lastMeta = data.pagination || null;
+      renderPagination(lastMeta);
+
+    }catch(e){
+      $("#degreeTbody").innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center text-danger py-4">
+            Failed to load degrees. Please refresh.
+          </td>
+        </tr>
+      `;
+      $("#paginationUl").innerHTML = "";
+    }
+  }
+
+  $("#globalSearch").addEventListener("keyup", function(){
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function(){
+      currentPage = 1;
+      loadDegrees();
+    }, 250);
+  });
+
+  ["graduateFilter","activeFilter","pageSize"].forEach(id => {
+    $("#" + id).addEventListener("change", function(){
+      currentPage = 1;
+      loadDegrees();
+    });
+  });
+
+  $("#clearAll").addEventListener("click", function(){
+    $("#globalSearch").value = "";
+    $("#graduateFilter").value = "";
+    $("#activeFilter").value = "";
+    $("#pageSize").value = "25";
+    currentPage = 1;
+    loadDegrees();
+  });
+
+  $("#refreshBtn").addEventListener("click", function(){
+    loadDegrees();
+  });
+
+  $("#exportExcelBtn").addEventListener("click", function(){
+    const q = $("#globalSearch").value.trim();
+    const graduate = $("#graduateFilter").value.trim();
+    const active = $("#activeFilter").value.trim();
+
+    const params = new URLSearchParams({
+      q: q,
+      graduate: graduate,
+      active: active
+    });
+
+    window.location.href = `${exportUrl}?${params.toString()}`;
+  });
+
+  $("#paginationUl").addEventListener("click", function(e){
+    const a = e.target.closest("a.page-link");
+    if(!a) return;
+
+    e.preventDefault();
+
+    const p = parseInt(a.dataset.page, 10);
+    if(!p || p < 1) return;
+    if(lastMeta && p > (lastMeta.total_pages || 1)) return;
+
+    currentPage = p;
+    loadDegrees();
+  });
+
+  document.addEventListener("click", function(e){
+    const editBtn = e.target.closest(".edit-btn");
+    if(editBtn){
+      $("#edit_degree_id").value = editBtn.dataset.id || "";
+      $("#edit_degree_code").value = editBtn.dataset.degree_code || "";
+      $("#edit_degree").value = editBtn.dataset.degree || "";
+      $("#edit_duration").value = editBtn.dataset.duration || "";
+      $("#edit_degree_graduate").value = editBtn.dataset.degree_graduate || "";
+      $("#edit_is_active").checked = (editBtn.dataset.is_active === "1");
+
+      if(window.bootstrap && window.bootstrap.Modal){
+        new bootstrap.Modal(document.getElementById("editDegreeModal")).show();
+      }else{
+        alert("Bootstrap JS not loaded in base.html");
+      }
+      return;
+    }
+
+    const delBtn = e.target.closest(".delete-btn");
+    if(delBtn){
+      $("#delete_degree_id").value = delBtn.dataset.id || "";
+      $("#delete_degree_name").textContent = delBtn.dataset.name || "this degree";
+
+      if(window.bootstrap && window.bootstrap.Modal){
+        new bootstrap.Modal(document.getElementById("deleteDegreeModal")).show();
+      }else{
+        alert("Bootstrap JS not loaded in base.html");
+      }
+      return;
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", function(){
+    loadDegrees();
+  });
+})();
+</script>
+
+{% endblock %}

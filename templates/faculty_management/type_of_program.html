@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="mb-4 p-4 rounded-3 shadow text-white" style="background:#0d47a1;">
+        <h2 class="fw-bold mb-1">
+            <i class="fas fa-graduation-cap me-2"></i>Type of Program Management
+        </h2>
+        <p class="mb-0">Add, edit, delete and search program types department-wise</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card shadow border-0 mb-4">
+        <div class="card-body">
+            <form id="programTypeForm">
+                {% csrf_token %}
+                <input type="hidden" id="program_type_id">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="fw-bold">Program Type Name</label>
+                        <input type="text" id="program_type_name" class="form-control form-control-lg" required>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="fw-bold">Department</label>
+                        <select id="department" class="form-select form-select-lg" required>
+                            <option value="">-- Select Department --</option>
+                            {% for d in departments %}
+                            <option value="{{ d.id }}">{{ d.Department }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn w-100 btn-lg text-white" style="background:#0d47a1;">
+                            <i class="fas fa-save me-1"></i> Save
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card shadow border-0">
+        <div class="card-body">
+            <!-- Search -->
+            <div class="mb-3">
+                <input type="text" id="search" class="form-control" placeholder="🔍 Search by program type or department">
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead style="background:#e3f2fd;color:#0d47a1;">
+                        <tr>
+                            <th style="width:60px">#</th>
+                            <th>Program Type Name</th>
+                            <th>Department</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        {% for p in program_types %}
+                        <tr id="row{{ p.id }}">
+                            <td></td>
+                            <td class="name">{{ p.program_type_name }}</td>
+                            <td class="dept">{{ p.department.Department }}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editRow('{{ p.id }}','{{ p.program_type_name }}','{{ p.department.id }}')">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteRow('{{ p.id }}')">Delete</button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr id="noData">
+                            <td colspan="4" class="text-center text-muted py-4">No program types added</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const csrfToken = "{{ csrf_token }}";
+
+// Serial number
+function updateNumbers(){
+    let i=1;
+    document.querySelectorAll("#tableBody tr").forEach(row=>{
+        if(row.id!=="noData"){
+            row.children[0].innerText=i++;
+        }
+    });
+}
+updateNumbers();
+
+// Submit form
+document.getElementById("programTypeForm").addEventListener("submit",function(e){
+    e.preventDefault();
+
+    let id=document.getElementById("program_type_id").value;
+    let name=document.getElementById("program_type_name").value;
+    let dept=document.getElementById("department").value;
+
+    fetch("",{
+        method:"POST",
+        headers:{
+            "X-CSRFToken":csrfToken,
+            "Content-Type":"application/x-www-form-urlencoded"
+        },
+        body:`id=${id}&program_type_name=${name}&department=${dept}`
+    })
+    .then(res=>res.json())
+    .then(res=>{
+        if(id){ // update
+            let row=document.getElementById("row"+id);
+            row.querySelector(".name").innerText=res.name;
+            row.querySelector(".dept").innerText=res.dept;
+        }else{ // add
+            document.getElementById("noData")?.remove();
+            let tr=document.createElement("tr");
+            tr.id="row"+res.id;
+            tr.innerHTML=`
+                <td></td>
+                <td class="name">${res.name}</td>
+                <td class="dept">${res.dept}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary"
+                        onclick="editRow('${res.id}','${res.name}','${res.dept_id}')">Edit</button>
+                    <button class="btn btn-sm btn-outline-danger"
+                        onclick="deleteRow('${res.id}')">Delete</button>
+                </td>`;
+            document.getElementById("tableBody").appendChild(tr);
+        }
+        updateNumbers();
+        this.reset();
+        document.getElementById("program_type_id").value="";
+    });
+});
+
+// Edit
+function editRow(id,name,dept){
+    document.getElementById("program_type_id").value=id;
+    document.getElementById("program_type_name").value=name;
+    document.getElementById("department").value=dept;
+    window.scrollTo({top:0,behavior:"smooth"});
+}
+
+// Delete
+function deleteRow(id){
+    if(!confirm("Delete this program type?"))return;
+
+    fetch("",{
+        method:"POST",
+        headers:{
+            "X-CSRFToken":csrfToken,
+            "Content-Type":"application/x-www-form-urlencoded"
+        },
+        body:`delete_id=${id}`
+    })
+    .then(res=>res.json())
+    .then(()=>{
+        document.getElementById("row"+id).remove();
+        if(document.querySelectorAll("#tableBody tr").length===0){
+            document.getElementById("tableBody").innerHTML=
+            `<tr id="noData"><td colspan="4" class="text-center">No program types added</td></tr>`;
+        }
+        updateNumbers();
+    });
+}
+
+// Search
+document.getElementById("search").addEventListener("keyup",function(){
+    let v=this.value.toLowerCase();
+    document.querySelectorAll("#tableBody tr").forEach(r=>{
+        let name=r.querySelector(".name")?.innerText.toLowerCase();
+        let dept=r.querySelector(".dept")?.innerText.toLowerCase();
+        r.style.display=(name?.includes(v)||dept?.includes(v))?"":"none";
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-3">Assessments Weightage</h2>
+
+  <form id="weightage-form" class="row g-3" autocomplete="off">
+    {% csrf_token %}
+
+    <!-- Degree -->
+    <div class="col-md-4">
+      <label for="degreeSelect" class="form-label">Degree</label>
+      <select id="degreeSelect" class="form-select" required>
+        <option value="" selected disabled>— Select Degree —</option>
+      </select>
+      <div class="form-text">Pick the program first.</div>
+    </div>
+
+    <!-- Regulation -->
+    <div class="col-md-4">
+      <label for="regulationSelect" class="form-label">Regulation</label>
+      <select id="regulationSelect" class="form-select" disabled required>
+        <option value="" selected disabled>— Select Regulation —</option>
+      </select>
+      <div class="form-text">Choose the regulation after selecting degree.</div>
+    </div>
+
+    <!-- INPUTS: show instantly once Degree + Regulation are chosen -->
+    <div id="allAssessmentsBox" class="col-12" style="display:none;">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="selectedAssessmentPct" class="form-label">Give selected assessment percentage</label>
+          <input type="number"
+                 class="form-control"
+                 id="selectedAssessmentPct"
+                 name="selected_assessment_percentage"
+                 min="0" max="100" step="0.01"
+                 placeholder="e.g., 60">
+        </div>
+        <div class="col-md-6">
+          <label for="activityPct" class="form-label">Activity percentage</label>
+          <input type="number"
+                 class="form-control"
+                 id="activityPct"
+                 name="activity_percentage"
+                 min="0" max="100" step="0.01"
+                 placeholder="e.g., 40">
+        </div>
+        <div class="col-12">
+          <div class="form-text">Ensure the two fields sum to 100.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <button type="submit" class="btn btn-success">Save</button>
+    </div>
+  </form>
+
+  <div id="status" class="mt-3 small"></div>
+</div>
+
+<script>
+  const degreeSelect = document.getElementById("degreeSelect");
+  const regulationSelect = document.getElementById("regulationSelect");
+  const allAssessmentsBox = document.getElementById("allAssessmentsBox");
+  const selectedAssessmentPct = document.getElementById("selectedAssessmentPct");
+  const activityPct = document.getElementById("activityPct");
+  const statusBox = document.getElementById("status");
+
+  function setStatus(msg, ok = true) {
+    statusBox.textContent = msg || "";
+    statusBox.style.color = ok ? "green" : "red";
+  }
+
+  function resetSelect(selectEl, placeholder, disabled = true) {
+    selectEl.innerHTML = "";
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.disabled = true;
+    opt.selected = true;
+    opt.textContent = placeholder;
+    selectEl.appendChild(opt);
+    selectEl.disabled = disabled;
+  }
+
+  function populateSelect(selectEl, items, getLabel, getValue) {
+    items.forEach(item => {
+      const opt = document.createElement("option");
+      opt.value = getValue(item);
+      opt.textContent = getLabel(item);
+      selectEl.appendChild(opt);
+    });
+  }
+
+  function toggleInputs() {
+    const ready = Boolean(degreeSelect.value) && Boolean(regulationSelect.value);
+    allAssessmentsBox.style.display = ready ? "" : "none";
+    selectedAssessmentPct.required = ready;
+    activityPct.required = ready;
+    if (!ready) {
+      selectedAssessmentPct.value = "";
+      activityPct.value = "";
+    }
+  }
+
+  async function loadDegrees() {
+    resetSelect(degreeSelect, "— Select Degree —", false);
+    setStatus("Loading degrees…", true);
+    try {
+      const res = await fetch("{% url 'api_degrees' %}");
+      const data = await res.json();
+      populateSelect(degreeSelect, data.results || [],
+        d => d.degree || "(Unnamed)",
+        d => d.id
+      );
+      setStatus("");
+    } catch {
+      setStatus("Failed to load degrees.", false);
+    }
+  }
+
+  async function loadRegulations() {
+    resetSelect(regulationSelect, "— Select Regulation —", true);
+    setStatus("Loading regulations…", true);
+    try {
+      const res = await fetch("{% url 'api_regulations' %}");
+      const data = await res.json();
+      populateSelect(regulationSelect, data.results || [],
+        r => `Regulation ${r.year}`,
+        r => r.id
+      );
+      setStatus("");
+    } catch {
+      setStatus("Failed to load regulations.", false);
+    }
+  }
+
+  degreeSelect.addEventListener("change", async () => {
+    resetSelect(regulationSelect, "— Select Regulation —", true);
+    toggleInputs();
+    await loadRegulations();
+    regulationSelect.disabled = false;
+  });
+
+  regulationSelect.addEventListener("change", toggleInputs);
+
+  // Save handler (POST to the same view)
+  document.getElementById("weightage-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (allAssessmentsBox.style.display === "none") {
+      alert("Select both Degree and Regulation before saving.");
+      return;
+    }
+
+    const a = parseFloat(selectedAssessmentPct.value || "0");
+    const b = parseFloat(activityPct.value || "0");
+    if (isNaN(a) || isNaN(b)) {
+      alert("Percentages must be valid numbers.");
+      return;
+    }
+    if (Math.abs(a + b - 100) > 0.001) {
+      alert("Selected assessment percentage + Activity percentage must total 100.");
+      return;
+    }
+
+    const csrftokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    const csrftoken = csrftokenInput ? csrftokenInput.value : "";
+
+    try {
+      const res = await fetch("{% url 'assessments_weightage' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrftoken
+        },
+        body: JSON.stringify({
+          degree_id: degreeSelect.value,
+          regulation_id: regulationSelect.value,
+          selected_assessment_percentage: a,
+          activity_percentage: b
+        })
+      });
+
+      const data = await res.json();
+      if (data && data.success) {
+        setStatus("Saved successfully.", true);
+        // Optional: reset form
+        e.target.reset();
+        resetSelect(regulationSelect, "— Select Regulation —", true);
+        toggleInputs();
+      } else {
+        setStatus(data && data.error ? data.error : "Save failed.", false);
+      }
+    } catch {
+      setStatus("Network or server error while saving.", false);
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", loadDegrees);
+</script>
+{% endblock %}

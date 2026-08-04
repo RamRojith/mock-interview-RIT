@@ -1,0 +1,1229 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="{% static 'bootstrap/js/bootstrap.bundle.js' %}"></script>
+
+<style>
+  .audit-page{
+    --ink:#122033;
+    --ink-soft:#56657a;
+    --panel:#ffffff;
+    --line:#d8e2ef;
+    --line-strong:#c2d2e6;
+    --blue:#1947a7;
+    --blue-deep:#102c70;
+    --blue-soft:#eef4ff;
+    --teal:#0d8b9a;
+    --green:#1c8c5e;
+    --amber:#c47b18;
+    --red:#c95252;
+    --slate:#6b7c93;
+    --shadow:0 18px 46px rgba(16,32,61,.08);
+    --shadow-soft:0 8px 24px rgba(16,32,61,.06);
+  }
+
+  .audit-page .page-wrap{
+    min-height: calc(100vh - 40px);
+    padding: 28px 14px 40px;
+    background:
+      radial-gradient(circle at top right, rgba(25,71,167,.10), transparent 26%),
+      radial-gradient(circle at top left, rgba(13,139,154,.08), transparent 24%),
+      linear-gradient(180deg, #f6f9fc 0%, #edf3f9 100%);
+  }
+
+  .audit-page .container-max{
+    max-width: 1540px;
+    margin: 0 auto;
+  }
+
+  .audit-page .hero{
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px;
+    padding: 28px 28px 26px;
+    color: #fff;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 38%),
+      linear-gradient(135deg, var(--blue) 0%, var(--blue-deep) 100%);
+    box-shadow: 0 20px 55px rgba(16,44,112,.28);
+  }
+
+  .audit-page .hero::before,
+  .audit-page .hero::after{
+    content:"";
+    position:absolute;
+    border-radius:50%;
+    pointer-events:none;
+  }
+
+  .audit-page .hero::before{
+    width: 280px;
+    height: 280px;
+    right: -70px;
+    top: -110px;
+    background: radial-gradient(circle, rgba(255,255,255,.20), rgba(255,255,255,0) 70%);
+  }
+
+  .audit-page .hero::after{
+    width: 220px;
+    height: 220px;
+    left: -90px;
+    bottom: -120px;
+    background: radial-gradient(circle, rgba(13,139,154,.35), rgba(13,139,154,0) 70%);
+  }
+
+  .audit-page .hero-grid{
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  .audit-page .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.18);
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .audit-page .hero-title{
+    font-size: clamp(2rem, 3.8vw, 3rem);
+    line-height: 1.04;
+    font-weight: 900;
+    margin: 0;
+    letter-spacing: -.03em;
+  }
+
+  .audit-page .hero-sub{
+    margin-top: 12px;
+    max-width: 760px;
+    color: rgba(255,255,255,.88);
+    font-size: 1.04rem;
+    line-height: 1.65;
+  }
+
+  .audit-page .hero-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-top: 18px;
+  }
+
+  .audit-page .meta-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:9px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.18);
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .audit-page .meta-chip i{
+    color: #b9d4ff;
+  }
+
+  .audit-page .hero-actions{
+    display:grid;
+    gap: 12px;
+  }
+
+  .audit-page .action-card{
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 22px;
+    padding: 18px;
+    backdrop-filter: blur(8px);
+  }
+
+  .audit-page .action-label{
+    font-size: .8rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.72);
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .audit-page .action-card .btn{
+    border-radius: 14px;
+    font-weight: 800;
+    padding: 12px 15px;
+  }
+
+  .audit-page .action-stack{
+    display:grid;
+    gap:10px;
+  }
+
+  .audit-page .stat-card{
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    padding: 22px 22px 18px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .audit-page .stat-card::before{
+    content:"";
+    position:absolute;
+    inset:0 auto 0 0;
+    width: 5px;
+    border-radius: 22px 0 0 22px;
+    background: var(--accent, var(--blue));
+  }
+
+  .audit-page .stat-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+  }
+
+  .audit-page .stat-icon{
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 1.08rem;
+    color: var(--accent, var(--blue));
+    background: color-mix(in srgb, var(--accent, var(--blue)) 12%, white);
+  }
+
+  .audit-page .stat-label{
+    color: var(--ink-soft);
+    font-size: .92rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .audit-page .stat-value{
+    margin-top: 18px;
+    font-size: 2.15rem;
+    line-height: 1;
+    font-weight: 900;
+    color: var(--ink);
+    letter-spacing: -.03em;
+  }
+
+  .audit-page .stat-foot{
+    margin-top: 8px;
+    font-size: .88rem;
+    color: var(--ink-soft);
+  }
+
+  .audit-page .theme-total{ --accent: var(--blue); }
+  .audit-page .theme-login{ --accent: var(--green); }
+  .audit-page .theme-visit{ --accent: var(--teal); }
+  .audit-page .theme-change{ --accent: var(--amber); }
+
+  .audit-page .panel{
+    background: rgba(255,255,255,.86);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(8px);
+    overflow: hidden;
+  }
+
+  .audit-page .panel-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:18px;
+    padding: 24px 24px 12px;
+  }
+
+  .audit-page .panel-title{
+    margin:0;
+    color: var(--ink);
+    font-size: 1.22rem;
+    font-weight: 900;
+    letter-spacing: -.02em;
+  }
+
+  .audit-page .panel-copy{
+    margin-top: 5px;
+    color: var(--ink-soft);
+    max-width: 620px;
+  }
+
+  .audit-page .panel-tools{
+    color: var(--ink-soft);
+    font-size: .92rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .audit-page .filters-grid{
+    padding: 8px 24px 24px;
+    display:grid;
+    grid-template-columns: 1.45fr repeat(4, minmax(140px, .75fr)) 1fr;
+    gap: 16px;
+    align-items:end;
+  }
+
+  .audit-page .date-grid{
+    padding: 0 24px 24px;
+    display:grid;
+    grid-template-columns: repeat(3, minmax(160px, 220px)) minmax(280px, 1fr);
+    gap: 16px;
+    align-items:end;
+  }
+
+  .audit-page .filter-field label{
+    display:block;
+    margin-bottom: 8px;
+    color: var(--ink);
+    font-weight: 800;
+    font-size: .93rem;
+  }
+
+  .audit-page .filter-field .form-control,
+  .audit-page .filter-field .form-select,
+  .audit-page .filter-field .input-group-text{
+    min-height: 48px;
+    border-radius: 14px;
+    border-color: var(--line-strong);
+    box-shadow: none;
+  }
+
+  .audit-page .filter-field .form-control:focus,
+  .audit-page .filter-field .form-select:focus{
+    border-color: #8ab1ff;
+    box-shadow: 0 0 0 .2rem rgba(25,71,167,.08);
+  }
+
+  .audit-page .filter-field .input-group-text{
+    background: #fff;
+    color: var(--ink-soft);
+  }
+
+  .audit-page .filter-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap: 10px;
+    align-items:center;
+    justify-content:flex-start;
+  }
+
+  .audit-page .filter-actions .btn{
+    min-height: 48px;
+    border-radius: 14px;
+    font-weight: 800;
+    padding: 10px 16px;
+  }
+
+  .audit-page .showing-note{
+    color: var(--ink-soft);
+    font-weight: 700;
+  }
+
+  .audit-page .table-shell{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .audit-page .table-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding: 22px 24px 0;
+  }
+
+  .audit-page .table-top h3{
+    margin:0;
+    color: var(--ink);
+    font-size: 1.18rem;
+    font-weight: 900;
+  }
+
+  .audit-page .table-top p{
+    margin: 4px 0 0;
+    color: var(--ink-soft);
+  }
+
+  .audit-page .table-status{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: var(--blue-soft);
+    color: var(--blue);
+    font-weight: 800;
+  }
+
+  .audit-page .table{
+    margin: 18px 0 0;
+  }
+
+  .audit-page .table thead th{
+    background: linear-gradient(180deg, #11233f 0%, #0d1b30 100%);
+    color:#fff;
+    border-bottom:0;
+    padding: 16px 14px;
+    white-space: nowrap;
+    vertical-align: middle;
+    font-weight: 900;
+    letter-spacing: .02em;
+  }
+
+  .audit-page .table tbody td{
+    vertical-align: top;
+    padding: 18px 14px;
+    font-size: .94rem;
+    border-color: #e7edf5;
+  }
+
+  .audit-page .table tbody tr{
+    transition: background-color .18s ease, transform .18s ease;
+  }
+
+  .audit-page .table tbody tr:hover{
+    background: #f8fbff;
+  }
+
+  .audit-page .sno-badge{
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight: 900;
+    color: var(--blue);
+    background: #edf3ff;
+  }
+
+  .audit-page .time-card{
+    min-width: 152px;
+  }
+
+  .audit-page .time-date{
+    display:block;
+    color: var(--ink);
+    font-weight: 900;
+    line-height: 1.3;
+  }
+
+  .audit-page .time-hour{
+    display:block;
+    margin-top: 4px;
+    color: var(--ink-soft);
+    font-weight: 700;
+  }
+
+  .audit-page .http-badge{
+    display:inline-flex;
+    align-items:center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #edf6ff;
+    color: #2b6cb0;
+    font-size: .78rem;
+    font-weight: 800;
+  }
+
+  .audit-page .ip-badge{
+    display:inline-flex;
+    align-items:center;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #f3f8f4;
+    color: var(--green);
+    font-size: .78rem;
+    font-weight: 800;
+  }
+
+  .audit-page .badge-event{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width: 108px;
+    padding: 9px 12px;
+    border-radius: 999px;
+    font-weight: 900;
+    font-size: .82rem;
+    letter-spacing: .02em;
+    border: 1px solid transparent;
+  }
+
+  .audit-page .badge-login{ background: rgba(28,140,94,.10); color: var(--green); border-color: rgba(28,140,94,.18); }
+  .audit-page .badge-logout{ background: rgba(201,82,82,.10); color: var(--red); border-color: rgba(201,82,82,.18); }
+  .audit-page .badge-page_visit{ background: rgba(13,139,154,.10); color: var(--teal); border-color: rgba(13,139,154,.18); }
+  .audit-page .badge-data_create{ background: rgba(28,140,94,.10); color: var(--green); border-color: rgba(28,140,94,.18); }
+  .audit-page .badge-data_update{ background: rgba(196,123,24,.10); color: var(--amber); border-color: rgba(196,123,24,.18); }
+  .audit-page .badge-data_delete{ background: rgba(201,82,82,.10); color: var(--red); border-color: rgba(201,82,82,.18); }
+
+  .audit-page .cell-title{
+    color: var(--ink);
+    font-weight: 900;
+    line-height: 1.35;
+  }
+
+  .audit-page .cell-sub{
+    margin-top: 4px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  .audit-page .cell-sub + .cell-sub{
+    margin-top: 2px;
+  }
+
+  .audit-page .mono{
+    font-family: Consolas, "Courier New", monospace;
+    font-size: .82rem;
+    word-break: break-word;
+  }
+
+  .audit-page .desc-box{
+    display:grid;
+    gap: 10px;
+  }
+
+  .audit-page .desc-main{
+    color: var(--ink);
+    line-height: 1.55;
+    font-weight: 700;
+  }
+
+  .audit-page .desc-tag{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    width: fit-content;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #f4f7fb;
+    color: var(--ink-soft);
+    font-size: .78rem;
+    font-weight: 800;
+  }
+
+  .audit-page .detail-btn{
+    min-width: 88px;
+    min-height: 42px;
+    border-radius: 12px;
+    font-weight: 800;
+  }
+
+  .audit-page .pagination{
+    margin: 0;
+  }
+
+  .audit-page .pagination .page-link{
+    border-radius: 12px;
+    margin: 0 4px;
+    min-width: 42px;
+    text-align: center;
+    border-color: var(--line-strong);
+    color: var(--ink);
+    font-weight: 800;
+    box-shadow: none;
+  }
+
+  .audit-page .pagination .page-item.active .page-link{
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+  }
+
+  .audit-page .empty-row{
+    color: var(--ink-soft);
+    text-align:center;
+    padding: 54px 0 !important;
+  }
+
+  .audit-page .detail-modal .modal-content{
+    border: 0;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(12,24,48,.22);
+  }
+
+  .audit-page .detail-modal .modal-header{
+    padding: 18px 22px;
+    background: linear-gradient(135deg, #11233f 0%, #0d1b30 100%);
+    color: #fff;
+  }
+
+  .audit-page .detail-modal .modal-body{
+    background: #f8fbff;
+    padding: 20px;
+  }
+
+  .audit-page #detailPre{
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+    margin: 0;
+    max-height: 460px;
+    overflow: auto;
+    color: var(--ink);
+    font-size: .88rem;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+  }
+
+  @media (max-width: 1200px){
+    .audit-page .hero-grid{
+      grid-template-columns: 1fr;
+    }
+
+    .audit-page .filters-grid{
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .audit-page .date-grid{
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 768px){
+    .audit-page .page-wrap{
+      padding: 18px 10px 28px;
+    }
+
+    .audit-page .hero{
+      padding: 22px 18px;
+      border-radius: 22px;
+    }
+
+    .audit-page .panel-head,
+    .audit-page .filters-grid,
+    .audit-page .date-grid,
+    .audit-page .table-top{
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    .audit-page .filters-grid,
+    .audit-page .date-grid{
+      grid-template-columns: 1fr;
+    }
+
+    .audit-page .table tbody td{
+      padding: 14px 10px;
+    }
+
+    .audit-page .stat-value{
+      font-size: 1.75rem;
+    }
+  }
+</style>
+
+<div class="audit-page">
+  <div class="page-wrap">
+    <div class="container-max">
+
+      <div class="hero mb-4">
+        <div class="hero-grid">
+          <div>
+            <div class="eyebrow">
+              <i class="fa-solid fa-shield-halved"></i>
+              Security Monitoring
+            </div>
+            <h1 class="hero-title">System Audit Logs</h1>
+            <div class="hero-sub">
+              Central activity intelligence for user logins, page movement, and record updates. Review history clearly, filter quickly, and download professionally structured daily audit documents.
+            </div>
+            
+          </div>
+
+          
+        </div>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-md-6 col-xl-3">
+          <div class="stat-card theme-total">
+            <div class="stat-top">
+              <div class="stat-label">Total Logs</div>
+              <div class="stat-icon"><i class="fa-solid fa-layer-group"></i></div>
+            </div>
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-foot">All matching activity entries in the selected view.</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="stat-card theme-login">
+            <div class="stat-top">
+              <div class="stat-label">Logins</div>
+              <div class="stat-icon"><i class="fa-solid fa-right-to-bracket"></i></div>
+            </div>
+            <div class="stat-value" id="statLogins">0</div>
+            <div class="stat-foot">Authentication events captured from the ERP.</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="stat-card theme-visit">
+            <div class="stat-top">
+              <div class="stat-label">Page Visits</div>
+              <div class="stat-icon"><i class="fa-solid fa-compass-drafting"></i></div>
+            </div>
+            <div class="stat-value" id="statVisits">0</div>
+            <div class="stat-foot">Tracked navigation across authenticated pages.</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="stat-card theme-change">
+            <div class="stat-top">
+              <div class="stat-label">Data Changes</div>
+              <div class="stat-icon"><i class="fa-solid fa-pen-ruler"></i></div>
+            </div>
+            <div class="stat-value" id="statChanges">0</div>
+            <div class="stat-foot">Create, update, and delete actions logged in documents.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel mb-4">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title"><i class="fa-solid fa-sliders me-2 text-primary"></i>Filter Workspace</h2>
+            <div class="panel-copy">Search by user, page, model, description, or narrow the log history by event type, application, and date range.</div>
+          </div>
+          <div class="panel-tools">Fast filtering • Document-backed • Admin review ready</div>
+        </div>
+
+        <div class="filters-grid">
+          <div class="filter-field">
+            <label for="globalSearch">Search</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+              <input type="text" id="globalSearch" class="form-control" placeholder="user, employee id, page, model, description...">
+            </div>
+          </div>
+
+          <div class="filter-field">
+            <label for="eventTypeFilter">Event Type</label>
+            <select id="eventTypeFilter" class="form-select">
+              <option value="">All Events</option>
+              {% for value, label in event_choices %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="appFilter">Application</label>
+            <select id="appFilter" class="form-select">
+              <option value="">All Apps</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="modelFilter">Model</label>
+            <select id="modelFilter" class="form-select">
+              <option value="">All Models</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="pageSize">Page Size</label>
+            <select id="pageSize" class="form-select">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="logDateFilter">Single Day</label>
+            <input type="date" id="logDateFilter" class="form-control">
+          </div>
+        </div>
+
+        <div class="date-grid">
+          <div class="filter-field">
+            <label for="fromDateFilter">From Date</label>
+            <input type="date" id="fromDateFilter" class="form-control">
+          </div>
+
+          <div class="filter-field">
+            <label for="toDateFilter">To Date</label>
+            <input type="date" id="toDateFilter" class="form-control">
+          </div>
+
+          <div class="filter-field">
+            <label>&nbsp;</label>
+            <a href="#" class="btn btn-success w-100 disabled" id="selectedDocxBtn">
+              <i class="fa-solid fa-file-word me-2"></i>Open Selected Day DOCX
+            </a>
+          </div>
+
+          <div class="filter-field">
+            <label>&nbsp;</label>
+            <div class="filter-actions">
+              <button class="btn btn-outline-secondary" id="clearFiltersBtn" type="button">
+                <i class="fa-solid fa-eraser me-2"></i>Clear Filters
+              </button>
+              <button class="btn btn-outline-primary" id="refreshBtn" type="button">
+                <i class="fa-solid fa-rotate me-2"></i>Refresh
+              </button>
+              <div class="showing-note" id="showingText">Showing 0-0 of 0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-shell">
+        <div class="table-top">
+          <div>
+            <h3>Audit Timeline</h3>
+            <p>Readable operational history with quick detail access for each logged event.</p>
+          </div>
+          <div class="table-status">
+            <i class="fa-solid fa-timeline"></i>
+            <span id="pageInfo">Page 1 of 1</span>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th style="width:76px">#</th>
+                <th style="min-width:170px">Time</th>
+                <th style="width:150px">Event</th>
+                <th style="min-width:210px">User</th>
+                <th style="min-width:190px">Role / Department</th>
+                <th style="min-width:250px">Page / Path</th>
+                <th style="min-width:230px">Model / Record</th>
+                <th style="min-width:270px">Description</th>
+                <th style="width:112px" class="text-center">Details</th>
+              </tr>
+            </thead>
+            <tbody id="auditTbody">
+              <tr>
+                <td colspan="9" class="empty-row">
+                  <i class="fa-solid fa-spinner fa-spin me-2"></i>Loading logs...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 px-4 py-3 border-top">
+          <div class="small text-secondary fw-semibold">Document-backed audit history</div>
+          <ul class="pagination pagination-sm mb-0" id="paginationUl"></ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="modal fade detail-modal" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fa-solid fa-circle-info me-2"></i>Log Details</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <pre id="detailPre"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const dataUrl = "{% url 'system_audit_logs_data' %}";
+  const detailModalEl = document.getElementById("detailModal");
+  const detailModal = new bootstrap.Modal(detailModalEl);
+  let currentPage = 1;
+  let lastMeta = null;
+  let searchTimer = null;
+  let detailMap = {};
+
+  function escapeHtml(value){
+    if(value === null || value === undefined) return "";
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function setLoading(){
+    document.getElementById("auditTbody").innerHTML =
+      '<tr><td colspan="9" class="empty-row"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading logs...</td></tr>';
+  }
+
+  function eventBadgeClass(eventType){
+    return "badge-event badge-" + (eventType || "page_visit");
+  }
+
+  function renderOptions(selectId, items, emptyLabel){
+    const select = document.getElementById(selectId);
+    const selected = select.value;
+    let html = `<option value="">${emptyLabel}</option>`;
+    (items || []).forEach(item => {
+      const safe = escapeHtml(item);
+      html += `<option value="${safe}">${safe}</option>`;
+    });
+    select.innerHTML = html;
+    if(selected){
+      select.value = selected;
+    }
+  }
+
+  function renderStats(stats){
+  if(!stats) return;
+
+  const total = document.getElementById("statTotal");
+  const logins = document.getElementById("statLogins");
+  const visits = document.getElementById("statVisits");
+  const changes = document.getElementById("statChanges");
+
+  if(total) total.textContent = stats.total || 0;
+  if(logins) logins.textContent = stats.logins || 0;
+  if(visits) visits.textContent = stats.page_visits || 0;
+  if(changes) changes.textContent = stats.changes || 0;
+}
+
+  function renderRows(rows){
+    detailMap = {};
+    const tbody = document.getElementById("auditTbody");
+
+    if(!rows || rows.length === 0){
+      tbody.innerHTML = '<tr><td colspan="9" class="empty-row"><i class="fa-regular fa-folder-open me-2"></i>No logs found for the current filters.</td></tr>';
+      return;
+    }
+
+    const htmlRows = [];
+
+    rows.forEach((row, index) => {
+      try {
+        const safeRow = row || {};
+        const createdAtText = String(safeRow.created_at || "-");
+        const firstSpace = createdAtText.indexOf(" ");
+        const createdDate = firstSpace > -1 ? createdAtText.slice(0, firstSpace) : createdAtText;
+        const createdTime = firstSpace > -1 ? createdAtText.slice(firstSpace + 1) : "-";
+        const changedFields = (safeRow.changed_fields && typeof safeRow.changed_fields === "object" && !Array.isArray(safeRow.changed_fields))
+          ? safeRow.changed_fields
+          : {};
+        const safeId = safeRow.id || `row-${index}`;
+        const modelTitle = safeRow.model_name && safeRow.model_name !== "-"
+          ? `${escapeHtml(safeRow.app_label || "")}.${escapeHtml(safeRow.model_name)}`
+          : `${escapeHtml(safeRow.app_label || "")}`;
+
+        detailMap[safeId] = {
+          "Description": safeRow.description || "-",
+          "Changed Fields": changedFields,
+          "Path": safeRow.path || "-",
+          "View": safeRow.view_name || "-",
+          "App": safeRow.app_label || "-",
+          "Model": safeRow.model_name || "-",
+          "Record": safeRow.object_repr || "-",
+          "IP Address": safeRow.ip_address || "-",
+          "Status Code": safeRow.status_code || "-"
+        };
+
+        const statusBadge = safeRow.status_code
+          ? `<div class="http-badge"><i class="fa-solid fa-wave-square"></i>HTTP ${escapeHtml(safeRow.status_code)}</div>`
+          : "";
+        const ipBadge = safeRow.ip_address && safeRow.ip_address !== "-"
+          ? `<div class="ip-badge"><i class="fa-solid fa-network-wired"></i>IP ${escapeHtml(safeRow.ip_address)}</div>`
+          : "";
+        const recordCaption = safeRow.object_repr && safeRow.object_repr !== "-"
+          ? `<div class="cell-sub mono">${escapeHtml(safeRow.object_repr)}</div>`
+          : `<div class="cell-sub">No record caption available</div>`;
+        const pageCaption = safeRow.path && safeRow.path !== "-"
+          ? `<div class="cell-sub mono">${escapeHtml(safeRow.path)}</div>`
+          : `<div class="cell-sub">No page path available</div>`;
+        const changeCount = Object.keys(changedFields).length;
+        const changeTag = changeCount
+          ? `<div class="desc-tag"><i class="fa-solid fa-list-check"></i>${changeCount} changed field(s)</div>`
+          : `<div class="desc-tag"><i class="fa-solid fa-circle-info"></i>No field diff recorded</div>`;
+
+        htmlRows.push(`
+          <tr>
+            <td><div class="sno-badge">${escapeHtml(safeRow.sno || "")}</div></td>
+            <td>
+              <div class="time-card">
+                <span class="time-date">${escapeHtml(createdDate)}</span>
+                <span class="time-hour">${escapeHtml(createdTime)}</span>
+                ${statusBadge}
+                ${ipBadge}
+              </div>
+            </td>
+            <td><span class="${eventBadgeClass(safeRow.event_type)}">${escapeHtml(safeRow.event_label || "-")}</span></td>
+            <td>
+              <div class="cell-title">${escapeHtml(safeRow.username || "-")}</div>
+              <div class="cell-sub">${escapeHtml(safeRow.employee_id || "-")}</div>
+              <div class="cell-sub">${escapeHtml(safeRow.email || "-")}</div>
+            </td>
+            <td>
+              <div class="cell-title">${escapeHtml(safeRow.role_name || "-")}</div>
+              <div class="cell-sub">${escapeHtml(safeRow.department_name || "-")}</div>
+            </td>
+            <td>
+              <div class="cell-title">${escapeHtml(safeRow.view_name || "-")}</div>
+              ${pageCaption}
+            </td>
+            <td>
+              <div class="cell-title">${modelTitle || "-"}</div>
+              ${recordCaption}
+            </td>
+            <td>
+              <div class="desc-box">
+                <div class="desc-main">${escapeHtml(safeRow.description || "-")}</div>
+                ${changeTag}
+              </div>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-outline-dark btn-sm detail-btn" data-log-id="${escapeHtml(safeId)}" type="button">
+                <i class="fa-solid fa-eye me-1"></i>View
+              </button>
+            </td>
+          </tr>
+        `);
+      } catch (error) {
+        console.error("Failed to render audit row:", row, error);
+        htmlRows.push(`
+          <tr>
+            <td colspan="9" class="text-danger fw-semibold py-4">
+              <i class="fa-solid fa-triangle-exclamation me-2"></i>One log row could not be rendered.
+            </td>
+          </tr>
+        `);
+      }
+    });
+
+    tbody.innerHTML = htmlRows.join("");
+  }
+
+  function renderPagination(meta){
+    const pageInfo = document.getElementById("pageInfo");
+    const showingText = document.getElementById("showingText");
+    const pagination = document.getElementById("paginationUl");
+
+    if(!meta){
+      pageInfo.textContent = "Page 1 of 1";
+      showingText.textContent = "Showing 0-0 of 0";
+      pagination.innerHTML = "";
+      return;
+    }
+
+    const total = meta.total || 0;
+    const page = meta.page || 1;
+    const totalPages = meta.total_pages || 1;
+    const pageSize = meta.page_size || 25;
+    const start = total === 0 ? 0 : ((page - 1) * pageSize) + 1;
+    const end = Math.min(page * pageSize, total);
+
+    pageInfo.textContent = `Page ${page} of ${totalPages}`;
+    showingText.textContent = `Showing ${start}-${end} of ${total}`;
+
+    function item(label, targetPage, disabled, active){
+      return `
+        <li class="page-item ${disabled ? "disabled" : ""} ${active ? "active" : ""}">
+          <a class="page-link" href="#" data-page="${targetPage}">${label}</a>
+        </li>
+      `;
+    }
+
+    let html = "";
+    html += item("&laquo;", 1, page <= 1, false);
+    html += item("&lsaquo;", page - 1, !meta.has_prev, false);
+
+    const windowSize = 2;
+    const startPage = Math.max(1, page - windowSize);
+    const endPage = Math.min(totalPages, page + windowSize);
+
+    if(startPage > 1){
+      html += item("1", 1, false, page === 1);
+      if(startPage > 2){
+        html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+      }
+    }
+
+    for(let i = startPage; i <= endPage; i++){
+      html += item(i, i, false, i === page);
+    }
+
+    if(endPage < totalPages){
+      if(endPage < totalPages - 1){
+        html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+      }
+      html += item(totalPages, totalPages, false, page === totalPages);
+    }
+
+    html += item("&rsaquo;", page + 1, !meta.has_next, false);
+    html += item("&raquo;", totalPages, page >= totalPages, false);
+
+    pagination.innerHTML = html;
+  }
+
+  function setDownloadLink(elementId, url){
+  const button = document.getElementById(elementId);
+  if(!button) return; // ✅ Prevent null crash
+
+  if(url){
+    button.href = url;
+    button.classList.remove("disabled");
+  } else {
+    button.href = "#";
+    button.classList.add("disabled");
+  }
+}
+
+  function buildQuery(){
+    const params = new URLSearchParams();
+    params.set("page", currentPage);
+    params.set("page_size", document.getElementById("pageSize").value);
+
+    const q = document.getElementById("globalSearch").value.trim();
+    const eventType = document.getElementById("eventTypeFilter").value.trim();
+    const appLabel = document.getElementById("appFilter").value.trim();
+    const modelName = document.getElementById("modelFilter").value.trim();
+    const logDate = document.getElementById("logDateFilter").value;
+    const fromDate = document.getElementById("fromDateFilter").value;
+    const toDate = document.getElementById("toDateFilter").value;
+
+    if(q) params.set("q", q);
+    if(eventType) params.set("event_type", eventType);
+    if(appLabel) params.set("app_label", appLabel);
+    if(modelName) params.set("model_name", modelName);
+    if(logDate) params.set("log_date", logDate);
+    if(fromDate) params.set("from_date", fromDate);
+    if(toDate) params.set("to_date", toDate);
+
+    return params.toString();
+  }
+
+  function loadLogs(){
+    setLoading();
+    fetch(`${dataUrl}?${buildQuery()}`)
+      .then(response => {
+        if(!response.ok){
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        renderStats(data.stats || {});
+        renderOptions("appFilter", data.filters?.app_options || [], "All Apps");
+        renderOptions("modelFilter", data.filters?.model_options || [], "All Models");
+        renderRows(data.results || []);
+        lastMeta = data.pagination || null;
+        renderPagination(lastMeta);
+        setDownloadLink("selectedDocxBtn", data.downloads?.selected_docx_url || "");
+      })
+      .catch((error) => {
+        console.error("Failed to load audit logs:", error);
+        document.getElementById("auditTbody").innerHTML =
+          `<tr><td colspan="9" class="empty-row text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i>Failed to load logs. ${escapeHtml(error.message || "Please refresh.")}</td></tr>`;
+      });
+  }
+
+  document.getElementById("globalSearch").addEventListener("keyup", function(){
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      currentPage = 1;
+      loadLogs();
+    }, 250);
+  });
+
+  ["eventTypeFilter", "appFilter", "modelFilter", "pageSize", "logDateFilter", "fromDateFilter", "toDateFilter"]
+    .forEach(id => {
+      document.getElementById(id).addEventListener("change", function(){
+        if(id === "logDateFilter" && this.value){
+          document.getElementById("fromDateFilter").value = "";
+          document.getElementById("toDateFilter").value = "";
+        }
+        if((id === "fromDateFilter" || id === "toDateFilter") && this.value){
+          document.getElementById("logDateFilter").value = "";
+        }
+        currentPage = 1;
+        loadLogs();
+      });
+    });
+
+  document.getElementById("clearFiltersBtn").addEventListener("click", function(){
+    document.getElementById("globalSearch").value = "";
+    document.getElementById("eventTypeFilter").value = "";
+    document.getElementById("appFilter").value = "";
+    document.getElementById("modelFilter").value = "";
+    document.getElementById("pageSize").value = "25";
+    document.getElementById("logDateFilter").value = "";
+    document.getElementById("fromDateFilter").value = "";
+    document.getElementById("toDateFilter").value = "";
+    currentPage = 1;
+    loadLogs();
+  });
+
+  document.getElementById("refreshBtn").addEventListener("click", function(){
+    loadLogs();
+  });
+
+  document.getElementById("paginationUl").addEventListener("click", function(event){
+    const link = event.target.closest("a[data-page]");
+    if(!link){
+      return;
+    }
+    event.preventDefault();
+    const targetPage = parseInt(link.dataset.page, 10);
+    if(!targetPage || targetPage < 1){
+      return;
+    }
+    if(lastMeta && targetPage > (lastMeta.total_pages || 1)){
+      return;
+    }
+    currentPage = targetPage;
+    loadLogs();
+  });
+
+  document.getElementById("auditTbody").addEventListener("click", function(event){
+    const button = event.target.closest(".detail-btn");
+    if(!button){
+      return;
+    }
+
+    const detail = detailMap[button.dataset.logId] || {};
+    document.getElementById("detailPre").textContent = JSON.stringify(detail, null, 2);
+    detailModal.show();
+  });
+
+  loadLogs();
+})();
+</script>
+
+{% endblock %}

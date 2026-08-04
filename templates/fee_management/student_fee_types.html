@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    
+{% load static %}
+
+    <style>
+        .card-hover:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .bg-blue-50 {
+            background-color: #eff6ff;
+        }
+        .bg-yellow-50 {
+            background-color: #fefce8;
+        }
+        .border-blue-200 {
+            border-color: #bfdbfe;
+        }
+        .border-yellow-200 {
+            border-color: #fef08a;
+        }
+    </style>
+
+<div class="bg-light">
+    <div class="container-fluid py-4 px-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h1 class="h2 mb-4">Fee Payment</h1>
+                
+                <!-- Student Info Card -->
+                <div class="bg-blue-50 rounded p-4 mb-4 border border-blue-200">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center">
+                        <div>
+                            <h2 class="h4 text-secondary">{{ student.first_name }} {{ student.surname }}</h2>
+                            <p class="text-muted mb-0">
+                                <span class="fw-medium">Program:</span> {{ student.program_name }} | 
+                                <span class="fw-semibold">Batch:</span> {{ batch }} |
+                                <span class="fw-semibold">Current Year:</span> {{ current_year }}
+                            </p>
+                        </div>
+                        <div class="mt-2 mt-sm-0">
+                            <span class="badge bg-blue-100 text-dark px-3 py-1 rounded-pill">
+                                {{ student.reg_number }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fee Categories Grid -->
+                <div class="row g-4">
+                    {% for fee in fee_types %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 {% if fee.is_locked %}opacity-60{% endif %}">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h3 class="h6 mb-0 fw-bold">{{ fee.name }}</h3>
+                                {% if fee.is_locked %}
+                                <span class="badge bg-secondary text-white">
+                                    <i class="fas fa-lock me-1"></i> Locked
+                                </span>
+                                {% else %}
+                                <span class="badge bg-success text-white">
+                                    <i class="fas fa-unlock me-1"></i> Unlocked
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Fee:</span>
+                                    <span class="fw-medium">{{ fee.fee|floatformat:2 }} ZMW</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Paid:</span>
+                                    <span class="fw-medium text-success">{{ fee.paid|floatformat:2 }} ZMW</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span class="text-muted">Balance:</span>
+                                    <span class="fw-medium {% if fee.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ fee.balance|floatformat:2 }} ZMW
+                                    </span>
+                                </div>
+                                
+                                {% if not fee.is_locked and fee.balance > 0 %}
+                                <button onclick="openPaymentModal('{{ fee.fee_category }}', '{{ fee.period }}', '{{ fee.name }}', {{ fee.balance|floatformat:2 }})"
+                                        class="w-100 btn btn-primary">
+                                    Pay Now
+                                </button>
+                                {% elif fee.balance <= 0 and fee.paid > 0 %}
+                                <div class="text-center text-success py-2">
+                                    <i class="fas fa-check-circle me-1"></i> Paid in full
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Total Balance -->
+                <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-medium">Total Outstanding Balance:</span>
+                        <span class="h5 fw-bold {% if total_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ total_balance|floatformat:2 }} ZMW
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Total Fees by Category -->
+                <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
+                    <h3 class="h5 mb-3">Total Fees by Category</h3>
+                    <div class="row">
+                        {% for category, total in total_fees_by_category.items %}
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">{{ category }}:</span>
+                                <span class="fw-medium">{{ total|floatformat:2 }} ZMW</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal fade" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Pay Fee</h5>
+                    <button type="button" class="btn-close" onclick="closeModal()" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="paymentForm" method="post" action="{% url 'process_fee_type_payment' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="fee_category" id="modalFeeCategory">
+                        <input type="hidden" name="period" id="modalPeriod">
+                        <input type="hidden" name="nrc_number" value="{{ student.nrc_number }}">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Fee Category</label>
+                            <input type="text" id="displayFeeType" class="form-control bg-light" readonly>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Amount to Pay (ZMW)</label>
+                            <input type="number" name="amount" id="paymentAmount" step="0.01" min="0.01" 
+                                   class="form-control" required>
+                            <input type="hidden" id="maxBalance" value="">
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" onclick="closeModal()"
+                                    class="btn btn-outline-secondary">
+                                Cancel
+                            </button>
+                            <button type="submit" 
+                                    class="btn btn-primary">
+                                Proceed to Payment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let paymentModal = null;
+        let maxBalance = 0;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            
+            const amountInput = document.getElementById('paymentAmount');
+            amountInput.addEventListener('input', function() {
+                const max = parseFloat(document.getElementById('maxBalance').value);
+                const value = parseFloat(this.value);
+                
+                if (value > max) {
+                    alert("You cannot pay more than the remaining balance of " + max.toFixed(2) + " ZMW");
+                    this.value = max;
+                }
+            });
+        });
+
+        function openPaymentModal(feeCategory, period, feeTypeName, balance) {
+            document.getElementById('modalFeeCategory').value = feeCategory;
+            document.getElementById('modalPeriod').value = period;
+            document.getElementById('displayFeeType').value = feeTypeName;
+            document.getElementById('paymentAmount').value = balance;
+            document.getElementById('maxBalance').value = balance;
+            maxBalance = balance;
+            
+            paymentModal.show();
+        }
+        
+        function closeModal() {
+            paymentModal.hide();
+        }
+    </script>
+</div>
+
+{% endblock content %}

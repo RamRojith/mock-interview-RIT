@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load sm_tags %}
+
+<div class="upload-container">
+    <div class="card">
+        <h3 class="card-title">Upload Student Data</h3>
+        
+        <div class="card-content">
+            <form method="post" enctype="multipart/form-data" class="upload-form">
+                {% csrf_token %}
+                
+                {% if not preview %}
+                <div class="form-group">
+                    <label for="excel_file" class="file-label">
+                        <span>Choose Excel File</span>
+                        <input type="file" name="excel_file" id="excel_file" accept=".xlsx,.xls" required>
+                    </label>
+                    <p class="file-hint">Supports .xlsx and .xls formats</p>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    Upload & Preview
+                </button>
+                {% else %}
+                <input type="hidden" name="confirm_save" value="1">
+                <div class="preview-actions">
+                    <button type="submit" class="btn btn-success">
+                        Confirm & Save Data
+                    </button>
+                    <a href="?" class="btn btn-outline">Cancel</a>
+                </div>
+                {% endif %}
+            </form>
+            
+            {% if error %}
+            <div class="alert alert-error">
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            {% if success %}
+            <div class="alert alert-success">
+                {{ success }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if table_data %}
+    <div class="card mt-4">
+        <div class="card-header">
+            <h4>Preview Data</h4>
+            <div class="header-actions">
+                <div class="search-box">
+                    <input type="text" id="search" placeholder="Search in preview..." class="search-input">
+                </div>
+                <div class="count-info">
+                    <span id="count">{{ table_data|length }}</span> records found
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        {% for h in headers %}
+                        <th>{{ h }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in table_data %}
+                    <tr>
+                        {% for h in headers %}
+                        <td>{{ row|get_item:h }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.upload-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.card-title {
+    margin: 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #eaeaea;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.card-content {
+    padding: 20px;
+}
+
+.upload-form {
+    max-width: 500px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.file-label {
+    display: block;
+    padding: 40px 20px;
+    border: 2px dashed #ddd;
+    border-radius: 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #fafafa;
+}
+
+.file-label:hover {
+    border-color: #4a90e2;
+    background: #f0f7ff;
+}
+
+.file-label input[type="file"] {
+    display: none;
+}
+
+.file-label span {
+    display: block;
+    color: #666;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.file-hint {
+    margin-top: 8px;
+    color: #888;
+    font-size: 14px;
+    text-align: center;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: #4a90e2;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #3a7bc8;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+.btn-outline:hover {
+    background: #f8f9fa;
+    border-color: #ccc;
+}
+
+.preview-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.alert-error {
+    background: #fee;
+    color: #c33;
+    border: 1px solid #fcc;
+}
+
+.alert-success {
+    background: #efffef;
+    color: #2a7;
+    border: 1px solid #cfc;
+}
+
+.mt-4 {
+    margin-top: 24px;
+}
+
+.card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #eaeaea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.card-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-input {
+    padding: 8px 12px;
+    padding-left: 36px;
+    width: 250px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background: white url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23999" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>') no-repeat 12px center;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+}
+
+.count-info {
+    font-size: 14px;
+    color: #666;
+    white-space: nowrap;
+}
+
+.count-info span {
+    font-weight: 600;
+    color: #4a90e2;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+thead {
+    background: #f8f9fa;
+}
+
+th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #444;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+}
+
+td {
+    padding: 10px 16px;
+    border-bottom: 1px solid #eaeaea;
+    color: #555;
+}
+
+tbody tr:hover {
+    background: #f8fafd;
+}
+
+tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+tbody tr:nth-child(even):hover {
+    background: #f5f7fa;
+}
+
+@media (max-width: 768px) {
+    .upload-container {
+        padding: 10px;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .header-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .search-input {
+        width: 100%;
+    }
+    
+    .preview-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+
+<script>
+(function() {
+    const searchInput = document.getElementById("search");
+    const table = document.getElementById("dataTable");
+    
+    if (!table || !searchInput) return;
+    
+    const rows = Array.from(table.querySelectorAll("tbody tr"));
+    const countEl = document.getElementById("count");
+    
+    function filterTable() {
+        const query = searchInput.value.trim().toLowerCase();
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const isVisible = text.includes(query);
+            row.style.display = isVisible ? "" : "none";
+            if (isVisible) visibleCount++;
+        });
+        
+        countEl.textContent = visibleCount;
+    }
+    
+    searchInput.addEventListener("input", filterTable);
+    
+    // Highlight search term
+    searchInput.addEventListener("input", function() {
+        const query = this.value.trim();
+        const cells = table.querySelectorAll("tbody td");
+        
+        cells.forEach(cell => {
+            const text = cell.textContent;
+            if (query && text.toLowerCase().includes(query.toLowerCase())) {
+                const regex = new RegExp(`(${query})`, 'gi');
+                cell.innerHTML = text.replace(regex, '<mark>$1</mark>');
+            } else {
+                cell.innerHTML = text;
+            }
+        });
+    });
+})();
+</script>
+
+{% endblock %}

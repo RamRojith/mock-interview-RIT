@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        {% if student_detail.profile_img %}
+                        <div class="position-relative me-4">
+                            <img src="{{ student_detail.profile_img.url }}" 
+                                 alt="Profile"
+                                 class="rounded-circle border shadow-sm"
+                                 width="100" height="100">
+                            <span class="position-absolute bottom-0 end-0 bg-success rounded-circle p-1 border border-3 border-white"></span>
+                        </div>
+                        {% else %}
+                        <div class="position-relative me-4">
+    <img 
+        src="{% if student_detail.profile_img %}{{ student_detail.profile_img.url }}{% else %}{% static 'images/profile.jpg' %}{% endif %}"
+        onerror="this.onerror=null; this.src='{% static 'images/profile.jpg' %}';"
+        alt="Profile"
+        class="rounded-circle border shadow-sm"
+        width="100" height="100">
+        
+    <span class="position-absolute bottom-0 end-0 bg-success rounded-circle p-1 border border-3 border-white"></span>
+</div>
+
+                        {% endif %}
+                        
+                        <div class="flex-grow-1">
+                            <h2 class="mb-1 fw-bold text-dark">{{ student_detail.name }}</h2>
+                            <div class="d-flex flex-wrap text-muted mb-2">
+                                <div class="me-3 mb-1">
+                                    <i class="bi bi-person-badge me-1"></i>
+                                    <strong>{{ student_detail.reg_no }}</strong>
+                                </div>
+                                <div class="me-3 mb-1">
+                                    <i class="bi bi-building me-1"></i>
+                                    <strong>{{ student_detail.department.degree.degree_code }} - {{ student_detail.department.Department }}</strong>
+                                </div>
+                                <div class="me-3 mb-1">
+                                    <i class="bi bi-calendar-event me-1"></i>
+                                    Batch: <strong>{{ student_detail.batch }}</strong>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap">
+                                <div class="badge bg-primary bg-opacity-10 text-primary me-2 mb-1 px-3 py-2">
+                                    <i class="bi bi-calendar-week me-1"></i>
+                                    Year: {{ current_year }}
+                                </div>
+                                <div class="badge bg-info bg-opacity-10 text-info me-2 mb-1 px-3 py-2">
+                                    <i class="bi bi-journal-text me-1"></i>
+                                    Semester: {{ current_semester }}
+                                </div>
+                                <div class="badge bg-secondary bg-opacity-10 text-secondary me-2 mb-1 px-3 py-2">
+                                    <i class="bi bi-people me-1"></i>
+                                    Section: {{ student_detail.section }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Title -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fw-bold text-dark mb-1">Hour-wise Attendance Report</h3>
+                    <p class="text-muted mb-0">Detailed period-by-period attendance analysis for current semester</p>
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-outline-primary" onclick="window.# print()">
+                        <i class="bi bi-printer me-1"></i> Print Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-5">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title text-muted mb-2">Total Hours</h6>
+                            <h2 class="fw-bold text-dark mb-0">{{ total_hours }}</h2>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-clock-history text-primary fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title text-muted mb-2">Present Hours</h6>
+                            <h2 class="fw-bold text-success mb-0">{{ present_hours }}</h2>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-check-circle text-success fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title text-muted mb-2">Absent Hours</h6>
+                            <h2 class="fw-bold text-danger mb-0">{{ absent_hours }}</h2>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="bg-danger bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-x-circle text-danger fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title text-muted mb-2">Attendance %</h6>
+                            <h2 class="fw-bold 
+                                {% if percentage >= 90 %}
+                                    text-success
+                                {% elif percentage >= 75 %}
+                                    text-warning
+                                {% else %}
+                                    text-danger
+                                {% endif %} mb-0">
+                                {{ percentage }}%
+                            </h2>
+                            <div class="progress mt-2" style="height: 6px;">
+                                <div class="progress-bar 
+                                    {% if percentage >= 90 %}
+                                        bg-success
+                                    {% elif percentage >= 75 %}
+                                        bg-warning
+                                    {% else %}
+                                        bg-danger
+                                    {% endif %}" 
+                                    role="progressbar" 
+                                    style="width: {{ percentage }}%" 
+                                    aria-valuenow="{{ percentage }}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="
+                                {% if percentage >= 90 %}
+                                    bg-success
+                                {% elif percentage >= 75 %}
+                                    bg-warning
+                                {% else %}
+                                    bg-danger
+                                {% endif %} 
+                                bg-opacity-10 rounded-circle p-3">
+                                <i class="
+                                    {% if percentage >= 90 %}
+                                        text-success
+                                    {% elif percentage >= 75 %}
+                                        text-warning
+                                    {% else %}
+                                        text-danger
+                                    {% endif %}
+                                    bi bi-graph-up fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0 text-dark fw-semibold">
+                        <i class="bi bi-pie-chart me-2 text-primary"></i>
+                        Hour Distribution
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="attendancePieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0 text-dark fw-semibold">
+                        <i class="bi bi-calendar-week me-2 text-primary"></i>
+                        Weekly Performance
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-center align-items-center h-100">
+                        <div class="text-center">
+                            <div class="mb-3">
+                                <i class="bi bi-bar-chart text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="text-muted">Weekly Analysis</h5>
+                            <p class="text-muted">Weekly breakdown available with advanced reporting</p>
+                            <button class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-graph-up me-1"></i> View Detailed Analytics
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h6 class="text-muted mb-3">Quick Statistics</h6>
+            <div class="row g-3 text-center">
+                <div class="col-md-4">
+                    <div class="border-end-md">
+                        <h4 class="fw-bold text-success mb-1">{{ present_percentage }}%</h4>
+                        <p class="text-muted mb-0">Present Rate</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border-end-md">
+                        <h4 class="fw-bold text-danger mb-1">{{ absent_percentage }}%</h4>
+                        <p class="text-muted mb-0">Absent Rate</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-info mb-1">{{ average_daily_hours }}</h4>
+                    <p class="text-muted mb-0">Avg. Hours/Day</p>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+
+    <!-- Detailed Hour-wise Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-dark fw-semibold">
+                    <i class="bi bi-clock-history me-2 text-primary"></i>
+                    Hour-wise Attendance Records
+                </h5>
+                
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if hour_attendances %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Date</th>
+                                <th>Day</th>
+                                <th>Period</th>
+                                <th>Course</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for att in hour_attendances %}
+                            <tr>
+                                <td class="ps-4 fw-medium">{{ att.date|date:"d M Y" }}</td>
+                                <td class="text-muted">{{ att.date|date:"D" }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        Period {{ att.period }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div>
+                                        <div class="fw-medium text-dark">{{ att.course.course_code }}</div>
+                                        <div class="small text-muted">{{ att.course.title }}</div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    {% if att.status == "Present" %}
+                                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 border border-success border-opacity-25">
+                                            <i class="bi bi-check-circle me-1"></i>{{ att.status }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 border border-danger border-opacity-25">
+                                            <i class="bi bi-x-circle me-1"></i>{{ att.status }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-5 text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-clipboard-x text-muted" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="text-muted">No attendance data available</h5>
+                    <p class="text-muted">There are no hour-wise attendance records for this semester.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center mt-4 small text-muted">
+        <em>Report generated on {{ now|date:"d M Y, h:i A" }}</em>
+    </div>
+</div>
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctxPie = document.getElementById('attendancePieChart');
+
+    // Pie Chart
+    new Chart(ctxPie, {
+        type: 'doughnut',
+        data: {
+            labels: ['Present Hours', 'Absent Hours'],
+            datasets: [{
+                data: [{{ present_hours }}, {{ absent_hours }}],
+                backgroundColor: ['#28a745', '#dc3545'],
+                borderWidth: 0,
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { 
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = {{ total_hours }};
+                            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                            return `${label}: ${value} hours (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            cutout: '65%'
+        }
+    });
+});
+</script>
+
+<style>
+body {
+    background-color: #f8f9fa;
+}
+.card {
+    border-radius: 12px;
+}
+.table th {
+    border-top: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+}
+.badge {
+    border-radius: 6px;
+    font-weight: 500;
+}
+.progress {
+    border-radius: 10px;
+}
+.progress-bar {
+    border-radius: 10px;
+}
+.border-end-md {
+    border-right: 1px solid #dee2e6;
+}
+@media (max-width: 768px) {
+    .border-end-md {
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+}
+</style>
+{% endblock %}

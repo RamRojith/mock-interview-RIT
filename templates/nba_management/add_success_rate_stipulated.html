@@ -1,0 +1,767 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4 admin-dashboard">
+  <!-- Header Section -->
+  <div class="dashboard-header mb-5">
+    <div class="header-content text-center">
+      <i class=""></i>
+      <h1 class="display-6 fw-bold text-white mb-2">Success Rate (Stipulated Period)</h1>
+      <p class="lead text-white-50"></p>
+    </div>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-xl-12">
+      <!-- Main Card -->
+      <div class="card border-0 shadow-lg">
+        <div class="card-header bg-gradient-primary text-white py-4">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+              <div class="header-icon me-3">
+                <i class="fas fa-chart-bar fa-lg"></i>
+              </div>
+              <div>
+                <h4 class="mb-1 fw-bold">Success Rate in the Stipulated Period</h4>
+                <p class="mb-0 opacity-75">Computation and archival of SR across LYG, LYGm1, LYGm2</p>
+              </div>
+            </div>
+            {% if selected_dept_id and latest_entry %}
+            <div class="status-badge">
+              <span class="badge {% if latest_entry.is_verified %}bg-success{% else %}bg-warning{% endif %} fs-6 px-3 py-2">
+                <i class="fas {% if latest_entry.is_verified %}fa-check-circle{% else %}fa-clock{% endif %} me-2"></i>
+                {% if latest_entry.is_verified %}Verified{% else %}Pending Review{% endif %}
+              </span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          <!-- Status Alert -->
+          {% if selected_dept_id and latest_entry and latest_entry.admin_remarks %}
+          <div class="alert-container mb-4">
+            <div class="alert alert-info border-0 shadow-sm">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-comment-alt me-3 fs-5 text-primary"></i>
+                <div class="flex-grow-1">
+                  <strong>Admin Remarks:</strong> {{ latest_entry.admin_remarks }}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          <form method="post" id="srForm" class="needs-validation" novalidate action="{% url 'add_success_rate_stipulated' %}">
+            {% csrf_token %}
+
+            <!-- Selection Section -->
+            <div class="row mb-5">
+              <div class="col-12">
+                <h5 class="section-title mb-4">
+                  <i class="fas fa-filter me-2 text-primary"></i>
+                  Selection Criteria
+                </h5>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group mb-4">
+                  <label for="department" class="form-label small fw-semibold text-muted mb-2">
+                    <i class="fas fa-building me-1"></i>
+                    DEPARTMENT
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                      <i class="fas fa-university text-primary"></i>
+                    </span>
+                    <select name="department" id="department" class="form-select border-start-0" required>
+                      <option value="">Select Department</option>
+                      {% for dept in departments %}
+                      <option value="{{ dept.id }}"
+                        {% if dept.id|stringformat:"s" == selected_dept_id|stringformat:"s" %}selected{% endif %}>
+                        {{ dept.Department }}
+                      </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group mb-4">
+                  <label for="batch_start_year" class="form-label small fw-semibold text-muted mb-2">
+                    <i class="fas fa-calendar-alt me-1"></i>
+                    BATCH (Start Year for LYG)
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                      <i class="fas fa-calendar text-primary"></i>
+                    </span>
+                    <select id="batch_start_year" class="form-select border-start-0" required>
+                      <option value="">Select Batch</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Year Display Cards -->
+              <div class="col-12">
+                <div class="year-cards-container">
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <div class="year-card primary">
+                        <div class="year-badge">
+                          <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="year-content">
+                          <div class="year-label">LYG</div>
+                          <div class="year-value" id="lbl_lyg">—</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="year-card success">
+                        <div class="year-badge">
+                          <i class="fas fa-calendar-minus"></i>
+                        </div>
+                        <div class="year-content">
+                          <div class="year-label">LYGm1</div>
+                          <div class="year-value" id="lbl_lygm1">—</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="year-card warning">
+                        <div class="year-badge">
+                          <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="year-content">
+                          <div class="year-label">LYGm2</div>
+                          <div class="year-value" id="lbl_lygm2">—</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Academic Year Range -->
+              <div class="col-12 mt-4">
+                <div class="form-group">
+                  <label class="form-label small fw-semibold text-muted mb-2">
+                    <i class="fas fa-clock me-1"></i>
+                    ACADEMIC YEAR RANGE
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                      <i class="fas fa-history text-primary"></i>
+                    </span>
+                    <input type="text" name="academic_year_range" id="academic_year_range"
+                           class="form-control border-start-0"
+                           placeholder="LYG 2023-24 / LYGm1 2022-23 / LYGm2 2021-22" readonly>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <div class="year-card primary">
+                  <div class="year-badge"><i class="fas fa-percentage"></i></div>
+                  <div class="year-content">
+                    <div class="year-label">Average Success Rate</div>
+                    <div class="year-value" id="kpi_avg">0.00%</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="year-card success">
+                  <div class="year-badge"><i class="fas fa-star"></i></div>
+                  <div class="year-content">
+                    <div class="year-label">SR Points</div>
+                    <div class="year-value" id="kpi_pts">0.00</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="year-card warning">
+                  <div class="year-badge"><i class="fas fa-bolt"></i></div>
+                  <div class="year-content">
+                    <div class="year-label">Latest LYG SR</div>
+                    <div class="year-value" id="kpi_lyg">0.00%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Main Table -->
+            <div class="table-section mb-5">
+              <div class="section-header mb-4">
+                <h5 class="section-title">
+                  <i class="fas fa-table me-2 text-primary"></i>
+                  Success Rate Calculation
+                </h5>
+                <p class="section-subtitle">SRᵢ = (Bᵢ / Aᵢ) × 100 | Average = mean(SR₁, SR₂, SR₃) | Points = 1.5 × Average / 10</p>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                  <thead class="table-dark">
+                    <tr>
+                      <th style="width:45%;" class="ps-4 text-start">Metric</th>
+                      <th class="text-center">
+                        LYG<br>
+                        <small id="th_lyg" class="fw-normal">—</small>
+                      </th>
+                      <th class="text-center">
+                        LYGm1<br>
+                        <small id="th_lygm1" class="fw-normal">—</small>
+                      </th>
+                      <th class="text-center">
+                        LYGm2<br>
+                        <small id="th_lygm2" class="fw-normal">—</small>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="ps-4 text-start">
+                        <strong>A* — Admitted in 1st year + lateral entry (± multiple entry adjustments)</strong>
+                      </td>
+                      <td><input type="number" name="a_lyg"   min="0" step="1" class="form-control text-center" oninput="recalc()"></td>
+                      <td><input type="number" name="a_lygm1" min="0" step="1" class="form-control text-center" oninput="recalc()"></td>
+                      <td><input type="number" name="a_lygm2" min="0" step="1" class="form-control text-center" oninput="recalc()"></td>
+                    </tr>
+                    <tr>
+                      <td class="ps-4 text-start">
+                        <strong>B — Graduated in the stipulated duration</strong>
+                      </td>
+                      <td><input type="number" name="b_lyg"   min="0" step="1" class="form-control text-center" oninput="recalc()"></td>
+                      <td><input type="number" name="b_lygm1" min="0" step="1" class="form-control text-center" oninput="recalc()"></td>
+                      <td><input type="number" name="b_lygm2" min="0" step="1" class="form-control text-center" oninput="recalc()"></td>
+                    </tr>
+                    <tr class="table-active">
+                      <td class="ps-4 text-start">
+                        <strong>Success Rate (SR) = (B / A) × 100</strong>
+                      </td>
+                      <td><input class="form-control text-center readonly bg-light" type="text" id="sr1_view" readonly></td>
+                      <td><input class="form-control text-center readonly bg-light" type="text" id="sr2_view" readonly></td>
+                      <td><input class="form-control text-center readonly bg-light" type="text" id="sr3_view" readonly></td>
+                    </tr>
+                    <tr class="table-success">
+                      <td class="ps-4 text-start">
+                        <strong>Average SR = (SR₁ + SR₂ + SR₃) / 3</strong>
+                      </td>
+                      <td colspan="3"><input class="form-control text-center readonly bg-success text-white" type="text" id="avg_view" readonly></td>
+                    </tr>
+                    <tr class="table-primary">
+                      <td class="ps-4 text-start">
+                        <strong>SR Points = 1.5 × (Average SR / 10)</strong>
+                      </td>
+                      <td colspan="3"><input class="form-control text-center readonly bg-primary text-white" type="text" id="pts_view" readonly></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Hidden computed fields -->
+            <input type="hidden" name="sr_1" id="sr1">
+            <input type="hidden" name="sr_2" id="sr2">
+            <input type="hidden" name="sr_3" id="sr3">
+            <input type="hidden" name="average_sr" id="avg">
+            <input type="hidden" name="sr_points" id="pts">
+
+            <!-- Hidden label fields (kept in sync with UI) -->
+            <input type="hidden" name="lyg_label"   id="lyg_label">
+            <input type="hidden" name="lygm1_label" id="lygm1_label">
+            <input type="hidden" name="lygm2_label" id="lygm2_label">
+
+            <!-- Action Buttons -->
+            <div class="action-section">
+              <div class="d-flex gap-3 justify-content-between align-items-center border-top pt-4">
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn btn-primary px-4 py-2">
+                    <i class="fas fa-save me-2"></i>Save Success Rate Data
+                  </button>
+                  <button type="button" id="btn_show_past" class="btn btn-outline-primary px-4 py-2">
+                    <i class="fas fa-history me-2"></i>Show Past Submissions
+                  </button>
+                </div>
+                <div class="text-muted small">
+                  <i class="fas fa-info-circle me-1"></i>
+                  Calculations update automatically as you type
+                </div>
+              </div>
+            </div>
+
+            <!-- Past Submissions Panel -->
+            <div id="past_panel" class="mt-4" style="display:none;">
+              <div class="card border-0 bg-light">
+                <div class="card-body">
+                  <h6 class="card-title mb-4">
+                    <i class="fas fa-archive me-2 text-primary"></i>
+                    Previous Success Rate Submissions
+                  </h6>
+                  <div id="past_cards" class="row g-3"></div>
+                  <div id="past_empty" class="text-center py-4" style="display:none;">
+                    <i class="fas fa-inbox fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">No previous submissions found for this department.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Professional Blue & White Theme — same as Enrolment Ratio page */
+:root {
+  --primary-blue: #1a56db;
+  --dark-blue: #1e3a8a;
+  --medium-blue: #3b82f6;
+  --light-blue: #dbeafe;
+  --white: #ffffff;
+  --light-gray: #f8fafc;
+  --border-color: #e2e8f0;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+}
+
+.admin-dashboard {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background-color: #f1f5f9;
+  color: var(--text-primary);
+}
+
+/* Header Styles */
+.dashboard-header {
+  background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+  color: white;
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Card Header */
+.card-header.bg-gradient-primary {
+  background: linear-gradient(135deg, var(--primary-blue), var(--medium-blue)) !important;
+  border-bottom: none;
+}
+
+.header-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Section Titles */
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.section-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.section-header {
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Form Styles */
+.form-group { margin-bottom: 1rem; }
+
+.input-group-text {
+  background-color: var(--light-gray);
+  border-color: var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--medium-blue);
+  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.1);
+}
+
+/* Year Cards */
+.year-cards-container { margin: 1.5rem 0; }
+
+.year-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-left: 4px solid;
+  transition: all 0.3s ease;
+}
+
+.year-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.year-card.primary { border-left-color: var(--primary-blue); }
+.year-card.success { border-left-color: #10b981; }
+.year-card.warning { border-left-color: #f59e0b; }
+
+.year-badge {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: white;
+}
+
+.year-card.primary .year-badge { background: var(--primary-blue); }
+.year-card.success .year-badge { background: #10b981; }
+.year-card.warning .year-badge { background: #f59e0b; }
+
+.year-content { flex: 1; }
+.year-label { font-size: .875rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: .25rem; }
+.year-value { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+
+/* Table Styles */
+.table-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.table { border-radius: 8px; overflow: hidden; }
+.table th {
+  background: linear-gradient(135deg, #374151, #4b5563) !important;
+  color: white; border: none; font-weight: 600; padding: 1rem;
+}
+.table td { padding: 1rem; vertical-align: middle; border-color: var(--border-color); }
+.table input.form-control {
+  border: 2px solid var(--border-color);
+  border-radius: 6px; padding: .5rem; text-align: center; transition: all .2s ease;
+}
+.table input.form-control:focus {
+  border-color: var(--medium-blue);
+  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.1);
+}
+.table input.readonly { background-color: var(--light-gray); color: var(--text-secondary); border-color: var(--border-color); cursor: not-allowed; }
+
+/* Alerts */
+.alert-container .alert {
+  border: none; border-radius: 8px; border-left: 4px solid;
+}
+.alert-info {
+  background: linear-gradient(135deg, #dbeafe, #eff6ff);
+  color: #1e40af; border-left-color: var(--primary-blue);
+}
+
+/* Action Section */
+.action-section { margin-top: 2rem; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dashboard-header { padding: 2rem 1rem; }
+  .card-body { padding: 1.5rem !important; }
+  .year-card { flex-direction: column; text-align: center; padding: 1rem; }
+  .action-section .d-flex { flex-direction: column; gap: 1rem !important; }
+  .action-section .d-flex .btn { width: 100%; }
+  .table-responsive { font-size: .875rem; }
+}
+
+/* Animation */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+#past_panel { animation: slideDown .3s ease-out; }
+</style>
+
+<!-- Libraries -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+/* =========================
+   Config: API Endpoints
+   ========================= */
+const BATCH_API_URL = "{% url 'get_batches_by_department' %}";
+const PAST_API_URL  = "{% url 'get_past_success_rate_entries' %}";
+
+/* =========================
+   Label helpers (YYYY-YY)
+   ========================= */
+function endShort(y){ return String((y + 1) % 100).padStart(2,'0'); }
+function mkLabel(start){ return `${start}-${endShort(start)}`; }
+
+function setYearLabels(startYear){
+  if(!startYear){
+    renderLabels('—','—','—');
+    syncHidden('', '', '');
+    syncHeader();
+    syncAYRange();
+    return;
+  }
+  const y  = parseInt(startYear, 10);
+  const l0 = mkLabel(y);
+  const l1 = mkLabel(y-1);
+  const l2 = mkLabel(y-2);
+  renderLabels(l0, l1, l2);
+  syncHidden(l0, l1, l2);
+  syncHeader();
+  syncAYRange();
+}
+
+function renderLabels(lyg, m1, m2){
+  document.getElementById('lbl_lyg').textContent   = lyg;
+  document.getElementById('lbl_lygm1').textContent = m1;
+  document.getElementById('lbl_lygm2').textContent = m2;
+}
+
+function syncHeader(){
+  document.getElementById('th_lyg').textContent   = document.getElementById('lbl_lyg').textContent;
+  document.getElementById('th_lygm1').textContent = document.getElementById('lbl_lygm1').textContent;
+  document.getElementById('th_lygm2').textContent = document.getElementById('lbl_lygm2').textContent;
+}
+
+function syncHidden(lyg, m1, m2){
+  document.getElementById('lyg_label').value   = lyg;
+  document.getElementById('lygm1_label').value = m1;
+  document.getElementById('lygm2_label').value = m2;
+}
+
+function syncAYRange(){
+  const a = document.getElementById('lyg_label').value;
+  const b = document.getElementById('lygm1_label').value;
+  const c = document.getElementById('lygm2_label').value;
+  if(a && b && c){
+    document.getElementById('academic_year_range').value = `LYG ${a} / LYGm1 ${b} / LYGm2 ${c}`;
+  } else {
+    document.getElementById('academic_year_range').value = '';
+  }
+}
+
+/* =========================
+   SR math + KPIs
+   ========================= */
+function toNum(v){ return Number(v || 0); }
+function pct(n){ return isFinite(n) ? (Math.round(n * 100) / 100).toFixed(2) : "0.00"; }
+
+function recalc(){
+  const a1 = toNum(document.querySelector('[name="a_lyg"]').value);
+  const a2 = toNum(document.querySelector('[name="a_lygm1"]').value);
+  const a3 = toNum(document.querySelector('[name="a_lygm2"]').value);
+  const b1 = toNum(document.querySelector('[name="b_lyg"]').value);
+  const b2 = toNum(document.querySelector('[name="b_lygm1"]').value);
+  const b3 = toNum(document.querySelector('[name="b_lygm2"]').value);
+
+  const sr1 = a1 ? (b1/a1)*100 : 0;
+  const sr2 = a2 ? (b2/a2)*100 : 0;
+  const sr3 = a3 ? (b3/a3)*100 : 0;
+
+  const avg = (sr1 + sr2 + sr3) / 3;
+  const pts = 1.5 * (avg / 10);
+
+  document.getElementById('sr1_view').value = pct(sr1) + '%';
+  document.getElementById('sr2_view').value = pct(sr2) + '%';
+  document.getElementById('sr3_view').value = pct(sr3) + '%';
+  document.getElementById('avg_view').value = pct(avg) + '%';
+  document.getElementById('pts_view').value = pct(pts);
+
+  document.getElementById('sr1').value = pct(sr1);
+  document.getElementById('sr2').value = pct(sr2);
+  document.getElementById('sr3').value = pct(sr3);
+  document.getElementById('avg').value = pct(avg);
+  document.getElementById('pts').value = pct(pts);
+
+  document.getElementById('kpi_avg').textContent = pct(avg) + '%';
+  document.getElementById('kpi_pts').textContent = pct(pts);
+  document.getElementById('kpi_lyg').textContent = pct(sr1) + '%';
+}
+
+/* =========================
+   API: Batches (populate like ER page)
+   ========================= */
+async function fetchBatchesForDept(deptId){
+  const sel = document.getElementById('batch_start_year');
+  sel.innerHTML = '<option value="">Select Batch</option>';
+  setYearLabels(null);
+
+  if(!deptId){ return; }
+
+  try{
+    const res = await fetch(`${BATCH_API_URL}?department_id=${encodeURIComponent(deptId)}`, { credentials: 'same-origin' });
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    const batches = Array.isArray(data.batches) ? data.batches : [];
+    if(batches.length === 0){ return; }
+
+    for(const y of batches){
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      sel.appendChild(opt);
+    }
+
+    if(!sel.value){
+      sel.value = batches[0];
+    }
+    const chosen = parseInt(sel.value, 10);
+    if(chosen){
+      setYearLabels(chosen);
+    }
+  } catch(err){
+    console.error('Failed to load batches:', err);
+  }
+}
+
+/* =========================
+   API: Past entries (cards)
+   ========================= */
+function escapeHtml(s){ return String(s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+function cardHTML(e){
+  const badgeCls = e.is_verified ? 'bg-success' : 'bg-warning';
+  const badgeTxt = e.is_verified ? 'Verified' : 'Pending';
+  const f = (x)=> Number(x || 0).toFixed(2);
+  const title = e.academic_year_range || [e.lyg_label, e.lygm1_label, e.lygm2_label].filter(Boolean).join(' / ');
+  return `
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h6 class="mb-0">${escapeHtml(title || '—')}</h6>
+            <span class="badge ${badgeCls}">${badgeTxt}</span>
+          </div>
+          <div class="small text-muted mb-2">
+            SR (avg): ${f(e.average_sr)} | Points: ${f(e.sr_points)}
+          </div>
+          <div class="row g-2 small">
+            <div class="col">
+              <div class="border rounded p-2">
+                <div class="text-muted">LYG</div>
+                <div><strong>${f(e.sr_1)}%</strong></div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="border rounded p-2">
+                <div class="text-muted">LYGm1</div>
+                <div><strong>${f(e.sr_2)}%</strong></div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="border rounded p-2">
+                <div class="text-muted">LYGm2</div>
+                <div><strong>${f(e.sr_3)}%</strong></div>
+              </div>
+            </div>
+          </div>
+          ${e.admin_remarks ? `<div class="mt-2 small"><i class="fas fa-comment-dots me-1 text-primary"></i>${escapeHtml(e.admin_remarks)}</div>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+async function fetchPastEntries(deptId){
+  const cards = document.getElementById('past_cards');
+  const empty = document.getElementById('past_empty');
+  cards.innerHTML = '';
+  empty.style.display = 'none';
+
+  if(!deptId){ empty.style.display = 'block'; return; }
+
+  try{
+    const res = await fetch(`${PAST_API_URL}?department_id=${encodeURIComponent(deptId)}`, { credentials: 'same-origin' });
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if(!data.ok){ throw new Error(data.error || 'Invalid response'); }
+
+    const entries = Array.isArray(data.entries) ? data.entries : [];
+    if(entries.length === 0){
+      empty.style.display = 'block';
+      return;
+    }
+    cards.innerHTML = entries.map(cardHTML).join('');
+  } catch(err){
+    console.error('Failed to load SR past entries:', err);
+    empty.style.display = 'block';
+  }
+}
+
+/* =========================
+   Init & Wiring (match ER page UX)
+   ========================= */
+document.addEventListener('DOMContentLoaded', function() {
+  recalc(); // initial
+
+  const deptSelect  = document.getElementById('department');
+  const batchSelect = document.getElementById('batch_start_year');
+
+  // Department change → load batches, refresh past if open
+  deptSelect.addEventListener('change', function(e) {
+    const deptId = e.target.value;
+    fetchBatchesForDept(deptId);
+
+    if (document.getElementById('past_panel').style.display === 'block') {
+      fetchPastEntries(deptId);
+    }
+  });
+
+  // Batch change → set labels
+  batchSelect.addEventListener('change', function(e) {
+    const y = e.target.value;
+    setYearLabels(y ? parseInt(y, 10) : null);
+  });
+
+  // Past submissions toggle
+  document.getElementById('btn_show_past').addEventListener('click', function() {
+    const panel = document.getElementById('past_panel');
+    const deptId = deptSelect.value;
+    const isOpen = panel.style.display === 'block';
+
+    if (!isOpen) {
+      panel.style.display = 'block';
+      fetchPastEntries(deptId);
+      this.innerHTML = '<i class="fas fa-times me-2"></i>Hide Past Submissions';
+    } else {
+      panel.style.display = 'none';
+      this.innerHTML = '<i class="fas fa-history me-2"></i>Show Past Submissions';
+    }
+  });
+
+  // Form input recalculations
+  document.getElementById('srForm').addEventListener('input', recalc);
+  document.getElementById('srForm').addEventListener('submit', recalc);
+
+  // Initial auto-load if department preselected
+  const initialDept = "{{ selected_dept_id|default:'' }}";
+  if (initialDept) {
+    fetchBatchesForDept(initialDept);
+  }
+});
+</script>
+{% endblock %}

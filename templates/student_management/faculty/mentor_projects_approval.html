@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<style>
+/* ===========================
+   PAGE WRAPPER (COEX STYLE)
+=========================== */
+.projects-approval{
+  font-family:'Inter','Segoe UI',system-ui,sans-serif;
+  background:linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%);
+  min-height:100vh;
+  padding:2rem 1rem;
+}
+.projects-approval .page-container{ max-width:1400px; margin:0 auto; }
+
+/* ===========================
+   HEADER (same as COEX)
+=========================== */
+.projects-approval .page-header{
+  text-align:center;
+  margin-bottom:1.5rem;
+  padding:3rem 2rem;
+  background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);
+  border-radius:20px;
+  color:#fff;
+  box-shadow:0 8px 32px rgba(0,0,0,.1);
+}
+.projects-approval .page-header h1{
+  font-size:2.5rem;
+  font-weight:900;
+  margin:0 0 .5rem;
+  letter-spacing:-.5px;
+}
+.projects-approval .page-header .subtitle{
+  font-size:1.1rem;
+  opacity:.92;
+  font-weight:700;
+  margin:0;
+}
+
+/* ===========================
+   FILTER BAR (Batch)
+=========================== */
+.projects-approval .filter-bar{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:18px;
+  padding:1rem 1.25rem;
+  box-shadow:0 10px 28px rgba(2,6,23,.06);
+  margin:-1.1rem auto 1.5rem;
+}
+.projects-approval .filter-title{
+  font-weight:900;
+  color:#1a4b8c;
+  margin:0 0 .75rem;
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+}
+.projects-approval .filter-row{
+  display:flex;
+  gap:1rem;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.projects-approval .filter-row label{
+  font-weight:800;
+  color:#334155;
+  margin:0;
+}
+.projects-approval .filter-row select{
+  min-width:240px;
+  padding:.75rem 1rem;
+  border-radius:12px;
+  border:2px solid #e2e8f0;
+  background:#fff;
+  font-weight:800;
+  color:#0f172a;
+  outline:none;
+  transition:.2s ease;
+}
+.projects-approval .filter-row select:focus{
+  border-color:#1a4b8c;
+  box-shadow:0 0 0 4px rgba(26,75,140,.12);
+}
+.projects-approval .btn-clear{
+  padding:.75rem 1rem;
+  border-radius:12px;
+  border:2px solid #e2e8f0;
+  background:#fff;
+  font-weight:900;
+  cursor:pointer;
+  transition:.2s ease;
+}
+.projects-approval .btn-clear:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 22px rgba(0,0,0,.10);
+}
+
+/* ===========================
+   GROUP CARD
+=========================== */
+.projects-approval .card-section{
+  background:#fff;
+  border-radius:20px;
+  box-shadow:0 8px 32px rgba(0,0,0,.08);
+  border:1px solid #e2e8f0;
+  margin-bottom:1.5rem;
+  overflow:hidden;
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+.projects-approval .card-section:hover{
+  transform:translateY(-3px);
+  box-shadow:0 12px 40px rgba(0,0,0,.12);
+}
+.projects-approval .card-header-section{
+  background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);
+  color:#fff;
+  padding:1.25rem 1.5rem;
+  font-weight:900;
+  font-size:1.15rem;
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+}
+.projects-approval .card-body{ padding:1.25rem; }
+
+/* ===========================
+   TABLE SHELL + RESPONSIVE
+=========================== */
+.projects-approval .table-shell{
+  border-radius:16px;
+  border:1px solid #eef2f7;
+  overflow:hidden;
+  box-shadow:0 10px 22px rgba(2,6,23,.06);
+  background:#fff;
+}
+.projects-approval .table-responsive{ overflow:auto; }
+
+/* ===========================
+   DATATABLE CONTROLS
+=========================== */
+.projects-approval .dataTables_wrapper{ padding:1rem; }
+.projects-approval .dataTables_length label,
+.projects-approval .dataTables_filter label{
+  font-weight:900;
+  color:#0f172a;
+}
+.projects-approval .dataTables_length select{
+  border:2px solid #e2e8f0;
+  border-radius:10px;
+  padding:.35rem .6rem;
+  font-weight:800;
+  outline:none;
+}
+.projects-approval .dataTables_filter input{
+  border:2px solid #e2e8f0;
+  border-radius:12px;
+  padding:.55rem .8rem;
+  font-weight:800;
+  outline:none;
+  width:260px;
+  max-width:100%;
+}
+.projects-approval .dataTables_filter input:focus,
+.projects-approval .dataTables_length select:focus{
+  border-color:#1a4b8c;
+  box-shadow:0 0 0 4px rgba(26,75,140,.12);
+}
+.projects-approval .dataTables_info{
+  font-weight:800;
+  color:#475569;
+  padding-top:.75rem !important;
+}
+.projects-approval .dataTables_paginate{
+  padding-top:.75rem !important;
+}
+.projects-approval .paginate_button{
+  border-radius:12px !important;
+  border:2px solid #e2e8f0 !important;
+  padding:.35rem .8rem !important;
+  margin:0 .15rem !important;
+  font-weight:900 !important;
+}
+.projects-approval .paginate_button.current{
+  background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%) !important;
+  color:#fff !important;
+  border-color:transparent !important;
+}
+.projects-approval .paginate_button:hover{
+  background:#f1f5f9 !important;
+  border-color:#cbd5e1 !important;
+}
+
+/* ===========================
+   TABLE
+=========================== */
+.projects-approval table.dataTable{
+  width:100% !important;
+  border-collapse:separate !important;
+  border-spacing:0 !important;
+}
+.projects-approval .table{
+  width:100%;
+  margin:0 !important;
+  font-size:.92rem;
+  background:#fff;
+  color:#0f172a !important;
+}
+.projects-approval .table thead th{
+  background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);
+  color:#fff !important;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  font-size:.80rem;
+  padding:1rem .9rem;
+  white-space:nowrap;
+  border:none !important;
+}
+.projects-approval .table tbody td{
+  padding:.95rem .9rem;
+  border-top:1px solid #f1f5f9;
+  vertical-align:middle;
+  font-weight:700;
+  background:#fff;
+}
+.projects-approval .table tbody tr:nth-child(even) td{ background:#fbfdff; }
+.projects-approval .table tbody tr:hover td{
+  background:linear-gradient(90deg,#f0f9ff 0%,#e0f2fe 100%);
+}
+
+/* project / student polish */
+.projects-approval .project-title{ font-weight:950; color:#0f172a; }
+.projects-approval .student-name{ font-weight:950; color:#0f172a; }
+.projects-approval .student-reg{ font-weight:900; color:#475569; font-size:.82rem; margin-top:.15rem; }
+
+/* badges */
+.projects-approval .badge-status{
+  padding:.55rem .9rem;
+  border-radius:999px;
+  font-weight:900;
+  font-size:.78rem;
+  color:#fff !important;
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  justify-content:center;
+}
+.projects-approval .badge-approved{ background:linear-gradient(135deg,#10b981 0%,#059669 100%); }
+.projects-approval .badge-pending{ background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%); }
+
+/* buttons */
+.projects-approval .btn{
+  border-radius:12px;
+  font-weight:900;
+  transition:.2s ease;
+  border:none;
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  cursor:pointer;
+}
+.projects-approval .btn-action{ padding:.55rem .95rem; font-size:.82rem; }
+.projects-approval .btn:hover{ transform:translateY(-2px); box-shadow:0 10px 18px rgba(0,0,0,.10); }
+.projects-approval .btn-success{ background:linear-gradient(135deg,#10b981 0%,#059669 100%); color:#fff; }
+.projects-approval .btn-danger{ background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%); color:#fff; }
+.projects-approval .action-buttons{ display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center; }
+.projects-approval .form-inline{ display:inline-block; margin:0; }
+
+/* empty state */
+.projects-approval .no-data{
+  text-align:center;
+  padding:4rem 2rem;
+  background:white;
+  border-radius:20px;
+  box-shadow:0 8px 32px rgba(0,0,0,.08);
+  color:#64748b;
+}
+.projects-approval .no-data i{ font-size:4rem; opacity:.3; margin-bottom:1.5rem; }
+.projects-approval .no-data h5{ font-size:1.25rem; font-weight:900; margin-bottom:.5rem; color:#475569; }
+.projects-approval .no-data p{ font-size:1rem; margin:0; font-weight:700; }
+
+@media (max-width:768px){
+  .projects-approval{padding:1rem .5rem;}
+  .projects-approval .page-header{padding:2rem 1rem;}
+  .projects-approval .page-header h1{font-size:2rem;}
+  .projects-approval .card-body{padding:1rem;}
+  .projects-approval .filter-row select{ min-width:100%; }
+  .projects-approval .dataTables_filter input{ width:100%; }
+  .projects-approval .btn-action{width:100%;justify-content:center;}
+}
+</style>
+
+<div class="projects-approval">
+  <div class="page-container">
+
+    <div class="page-header">
+      <h1><i class="fas fa-project-diagram"></i> Projects Approval</h1>
+      <p class="subtitle">Approve or reject your assigned students' projects</p>
+    </div>
+
+    <!-- ✅ Batch Filter -->
+    <div class="filter-bar">
+      <div class="filter-title"><i class="fas fa-filter"></i> Filters</div>
+      <div class="filter-row">
+        <label for="batchFilter">Batch</label>
+        <select id="batchFilter">
+          <option value="__all__">All Batches</option>
+        </select>
+
+        <button type="button" class="btn-clear" id="clearBatch">
+          <i class="fas fa-undo"></i> Reset
+        </button>
+      </div>
+    </div>
+
+    {% if grouped_activities %}
+      {% for key, activities in grouped_activities.items %}
+      <div class="card-section" data-group-key="{{ key|escape }}">
+        <div class="card-header-section">
+          <i class="fas fa-users"></i>{{ key }}
+        </div>
+
+        <div class="card-body">
+          <div class="table-shell">
+            <div class="table-responsive">
+              <table class="table table-hover datatable align-middle">
+                <thead>
+                  <tr>
+                    <th>Project Title</th>
+                    <th>Domain</th>
+                    <th>Activity</th>
+                    <th>Organisation</th>
+                    <th>Place</th>
+                    <th>Date</th>
+                    <th>Students</th>
+                    <th>Academic Year</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {% for act in activities %}
+                  <tr>
+                    <td>
+                      <div class="project-title">{{ act.title|default:"-" }}</div>
+                    </td>
+
+                    <td>{{ act.domain|default:"-" }}</td>
+                    <td>{{ act.activity_name|default:"-" }}</td>
+                    <td>{{ act.organisation|default:"-" }}</td>
+                    <td>{{ act.place|default:"-" }}</td>
+                    <td>{% if act.date %}{{ act.date }}{% else %}-{% endif %}</td>
+
+                    <td class="text-start">
+                      {% for sn in act.students.all %}
+                        {% if sn.student %}
+                          <div class="mb-1">
+                            <div class="student-name">{{ sn.student.name }}</div>
+                            <div class="student-reg">{{ sn.student.reg_no }}</div>
+                          </div>
+                        {% endif %}
+                      {% empty %}
+                        -
+                      {% endfor %}
+                    </td>
+
+                    <td>{{ act.academic_year|default:"-" }}</td>
+
+                    <td>
+                      {% if act.is_verified %}
+                        <span class="badge-status badge-approved"><i class="fas fa-check-circle"></i> Verified</span>
+                      {% else %}
+                        <span class="badge-status badge-pending"><i class="fas fa-clock"></i> Pending</span>
+                      {% endif %}
+                    </td>
+
+                    <td>
+                      {% if not act.is_verified %}
+                      <div class="action-buttons">
+                        <form method="post" class="form-inline">
+                          {% csrf_token %}
+                          <input type="hidden" name="record_id" value="{{ act.id }}">
+                          <input type="hidden" name="action" value="approve">
+                          <button type="submit" class="btn btn-success btn-action">
+                            <i class="fas fa-check"></i> Approve
+                          </button>
+                        </form>
+
+                        <form method="post" class="form-inline">
+                          {% csrf_token %}
+                          <input type="hidden" name="record_id" value="{{ act.id }}">
+                          <input type="hidden" name="action" value="reject">
+                          <button type="submit" class="btn btn-danger btn-action">
+                            <i class="fas fa-times"></i> Reject
+                          </button>
+                        </form>
+                      </div>
+                      {% else %}
+                        <em class="text-muted">Verified</em>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="no-data">
+        <i class="fas fa-inbox"></i>
+        <h5>No Projects Found</h5>
+        <p>No projects found for your assigned students.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+$(document).ready(function(){
+
+  // ✅ DataTables init (COEX style)
+  $('.datatable').DataTable({
+    pageLength: 10,
+    responsive: true,
+    autoWidth: false,
+    language: {
+      search: "Search:",
+      lengthMenu: "Show _MENU_ entries",
+      info: "Showing _START_ to _END_ of _TOTAL_ entries",
+      paginate: {
+        previous: "<i class='fas fa-chevron-left'></i>",
+        next: "<i class='fas fa-chevron-right'></i>"
+      }
+    }
+  });
+
+  // ✅ Disable only clicked submit button (safe)
+  $('.projects-approval').on('submit', 'form', function() {
+    const btn = $(this).find('button[type="submit"]');
+    btn.prop('disabled', true);
+    btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Processing...');
+  });
+
+  // ✅ Batch filter: extract from header "Batch: X"
+  const $batchSelect = $('#batchFilter');
+  const batches = new Set();
+
+  $('.card-section').each(function(){
+    const headerText = $(this).find('.card-header-section').text();
+    const match = headerText.match(/Batch:\s*([^|]+)/i);
+    const batch = match ? match[1].trim() : '-';
+    $(this).attr('data-batch', batch);
+    batches.add(batch);
+  });
+
+  Array.from(batches).sort().forEach(b => {
+    $batchSelect.append(`<option value="${$('<div/>').text(b).html()}">${b}</option>`);
+  });
+
+  function applyBatchFilter(val){
+    if(val === '__all__'){
+      $('.card-section').show();
+    } else {
+      $('.card-section').each(function(){
+        $(this).toggle($(this).attr('data-batch') === val);
+      });
+    }
+    $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust().responsive.recalc();
+  }
+
+  $batchSelect.on('change', function(){ applyBatchFilter(this.value); });
+
+  $('#clearBatch').on('click', function(){
+    $batchSelect.val('__all__');
+    applyBatchFilter('__all__');
+  });
+
+});
+</script>
+
+{% endblock content %}

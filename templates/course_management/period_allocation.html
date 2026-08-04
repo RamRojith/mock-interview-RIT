@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<!-- Optional CDN (keep if base.html doesn't already include Bootstrap + FontAwesome) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="container-fluid py-4">
+  <div class="card border shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-semibold">
+          <i class="fas fa-calendar-alt me-2"></i>Weekly Timetable Allocation
+        </h5>
+        <span class="badge bg-light text-primary">Academic Planner</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form method="post" action="{% url 'add_period_allocation' %}" id="timetableForm">
+        {% csrf_token %}
+
+        <!-- Programme Filters -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-building me-2"></i>Department
+            </label>
+            <select id="department" name="department" class="form-select" required>
+              <option value="" disabled selected>Select Department</option>
+              {% for dept in departments %}
+                <option value="{{ dept.id }}">{{ dept.Department }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-users me-2"></i>Section
+            </label>
+            <select id="section" name="section" class="form-select" required>
+              <option value="" disabled selected>Select Section</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-gavel me-2"></i>Regulation
+            </label>
+            <select id="regulation" name="regulation" class="form-select" required>
+              <option value="" disabled selected>Select Regulation</option>
+              {% for regulation in regulations %}
+                <option value="{{ regulation.year }}">{{ regulation.year }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-graduation-cap me-2"></i>Degree
+            </label>
+            <select id="degree" class="form-select" required>
+              <option value="" disabled selected>Select Degree</option>
+              {% for deg in degrees %}
+                <option value="{{ deg.effective_duration }}">{{ deg.degree }} ({{ deg.duration }} yrs)</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- Year & Semester -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-calendar me-2"></i>Year
+            </label>
+            <select id="year" name="year" class="form-select" required></select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-book me-2"></i>Semester
+            </label>
+            <select id="semester" name="semester" class="form-select" required></select>
+          </div>
+
+          <div class="col-md-6 d-flex align-items-end">
+            <div class="alert alert-info w-100 mb-0 py-2">
+              <small><i class="fas fa-info-circle me-2"></i>Select all filters to load the timetable structure</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timetable Table -->
+        <div class="card border">
+          <div class="card-header bg-light">
+            <h6 class="mb-0 fw-semibold"><i class="fas fa-table me-2"></i>Weekly Timetable Structure</h6>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive" style="max-height:500px;">
+              <table class="table table-bordered table-hover mb-0" id="courseTable">
+                <thead class="table-light">
+                  <tr>
+                    <th class="text-center">#</th>
+                    <th class="text-center">Day</th>
+                    <th class="text-center">Period 1</th>
+                    <th class="text-center">Period 2</th>
+                    <th class="text-center">Period 3</th>
+                    <th class="text-center">Period 4</th>
+                    <th class="text-center">Period 5</th>
+                    <th class="text-center">Period 6</th>
+                    <th class="text-center">Period 7</th>
+                    <th class="text-center">Period 8</th>
+                  </tr>
+                </thead>
+                <tbody id="courseTableBody">
+                  <!-- Table content will be loaded here dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="d-flex justify-content-end align-items-center mt-3 pt-3 border-top">
+          <button type="button" class="btn btn-outline-secondary me-2" id="resetBtn">
+            <i class="fas fa-redo me-2"></i>Reset
+          </button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            <i class="fas fa-save me-2"></i>Save Timetable
+          </button>
+          <div class="spinner-border text-primary ms-3 d-none" id="loadingSpinner" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Minimal style (simple + clean) -->
+<style>
+  .course-select { min-width: 180px; }
+  .table-responsive { border-radius: .25rem; }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Needed for dismissible alerts (if base.html already has bootstrap.bundle, you can remove this) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+$(document).ready(function() {
+
+    // Load sections
+    function loadSections() {
+        $.get("{% url 'get_sections' %}", function(data){
+            let sectionSelect = $("#section");
+            sectionSelect.empty();
+            sectionSelect.append('<option value="" disabled selected>Select Section</option>');
+            data.forEach(sec => sectionSelect.append(`<option value="${sec.name}">${sec.name}</option>`));
+        });
+    }
+    loadSections();
+
+    // Dynamic Years/Semesters based on Degree
+    $("#degree").on("change", function(){
+        let duration = parseInt($(this).val());
+        let yearSelect = $("#year");
+        let semSelect = $("#semester");
+
+        yearSelect.empty();
+        yearSelect.append('<option value="" disabled selected>Select Year</option>');
+        for(let y=1;y<=duration;y++){
+            yearSelect.append(`<option value="${y}">Year ${y}</option>`);
+        }
+
+        semSelect.empty();
+        semSelect.append('<option value="" disabled selected>Select Semester</option>');
+        for(let s=1;s<=duration*2;s++){
+            semSelect.append(`<option value="${s}">Semester ${s}</option>`);
+        }
+    });
+
+    // Fetch courses & existing allocations
+    function fetchCourses(){
+        let departmentId = $("#department").val();
+        let section = $("#section").val();
+        let year = $("#year").val();
+        let semester = $("#semester").val();
+        let regulationYear = $("#regulation").val();
+
+        let tbody = $("#courseTableBody");
+        tbody.empty();
+
+        if(departmentId && section && year && semester && regulationYear){
+            $.get("{% url 'get_courses_only' %}", {
+                department_id:departmentId,
+                section:section,
+                year:year,
+                semester:semester,
+                regulation_year:regulationYear
+            }, function(response){
+
+                const days = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
+                const periods = ["first_period","second_period","third_period","fourth_period","fifth_period","sixth_period","seventh_period","eighth_period"];
+                const existingAlloc = response.existing_allocations || {};
+
+                if(response.courses && response.courses.length>0){
+                    days.forEach((day,index)=>{
+                        let dayNumber = index + 1;
+                        let row = `<tr>
+                            <td class="text-center fw-semibold">${dayNumber}</td>
+                            <td class="fw-semibold">${day}</td>`;
+
+                        periods.forEach(period=>{
+                            let dropdown = `<select name="${period}[]" class="form-select course-select">
+                                <option value="">Select Course</option>`;
+
+                            response.courses.forEach(course=>{
+                                let isSelected = false;
+                                if(existingAlloc[day] && existingAlloc[day][period]){
+                                    isSelected = existingAlloc[day][period] === course.course_code;
+                                }
+                                dropdown += `<option value="${course.course_code}" ${isSelected ? 'selected' : ''}>
+                                    ${course.course_code} - ${course.title}
+                                </option>`;
+                            });
+
+                            dropdown += `</select>`;
+                            row += `<td>${dropdown}</td>`;
+                        });
+
+                        row += `</tr>`;
+                        tbody.append(row);
+                    });
+                } else {
+                    tbody.append(`<tr>
+                        <td colspan="10" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox me-2"></i>No courses found for the selected criteria.
+                        </td>
+                    </tr>`);
+                }
+            }).fail(function(){
+                tbody.empty();
+                tbody.append(`<tr>
+                    <td colspan="10" class="text-center text-danger py-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Error loading courses. Please try again.
+                    </td>
+                </tr>`);
+            });
+
+        } else {
+            tbody.append(`<tr>
+                <td colspan="10" class="text-center text-muted py-4">
+                    <i class="fas fa-filter me-2"></i>Please select all filters to load timetable.
+                </td>
+            </tr>`);
+        }
+    }
+
+    // Attach event listeners for filter changes
+    $("#department, #section, #year, #semester, #regulation").on("change", fetchCourses);
+
+    // Form submit
+    $("#timetableForm").on("submit", function(e){
+        e.preventDefault();
+        let form = $(this);
+
+        $("#submitBtn").prop("disabled", true);
+        $("#loadingSpinner").removeClass("d-none");
+
+        // Validate that at least one course is selected
+        let hasSelection = false;
+        $('select[name*="period"]').each(function() {
+            if($(this).val() !== "") {
+                hasSelection = true;
+                return false;
+            }
+        });
+
+        if(!hasSelection) {
+            showAlert("Please select at least one course for the timetable.", "warning");
+            $("#submitBtn").prop("disabled", false);
+            $("#loadingSpinner").addClass("d-none");
+            return;
+        }
+
+        $.post(form.attr("action"), form.serialize(), function(){
+            showAlert("Timetable updated successfully!", "success");
+            setTimeout(fetchCourses, 300);
+        }).fail(function(){
+            showAlert("Error updating timetable. Please try again.", "danger");
+        }).always(function(){
+            $("#submitBtn").prop("disabled", false);
+            $("#loadingSpinner").addClass("d-none");
+        });
+    });
+
+    // Reset form
+    $("#resetBtn").on("click", function(){
+        $("#timetableForm")[0].reset();
+        $("#courseTableBody").empty();
+        $("#year").empty();
+        $("#semester").empty();
+        loadSections();
+
+        $("#courseTableBody").append(`<tr>
+            <td colspan="10" class="text-center text-muted py-4">
+                <i class="fas fa-filter me-2"></i>Please select all filters to load timetable.
+            </td>
+        </tr>`);
+    });
+
+    // Alert function
+    function showAlert(message, type) {
+        // Remove any existing alerts first
+        $('.alert-dismissible').each(function(){
+            try { bootstrap.Alert.getOrCreateInstance(this).close(); } catch(e) { $(this).remove(); }
+        });
+
+        const alertClass = type === "success" ? "alert-success" :
+                           type === "warning" ? "alert-warning" : "alert-danger";
+        const icon = type === "success" ? "fa-check-circle" :
+                     type === "warning" ? "fa-exclamation-triangle" : "fa-exclamation-circle";
+
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show position-fixed top-0 end-0 m-3" role="alert" style="z-index: 1050; min-width: 320px;">
+                <i class="fas ${icon} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+
+        $("body").append(alertHtml);
+
+        setTimeout(() => {
+            $('.alert-dismissible').each(function(){
+                try { bootstrap.Alert.getOrCreateInstance(this).close(); } catch(e) { $(this).remove(); }
+            });
+        }, 4000);
+    }
+
+    // Initialize
+    fetchCourses();
+});
+</script>
+
+{% endblock %}

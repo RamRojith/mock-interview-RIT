@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+.page-wrap {
+  max-width: 98%;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+.header-box {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  margin-bottom: 20px;
+}
+
+.header-box h2 {
+  margin: 0 0 10px 0;
+  color: #1a4b8c;
+  font-weight: 800;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  font-size: 14px;
+}
+
+.meta-item {
+  background: #f8fafc;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.table-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  overflow: auto;
+  padding: 16px;
+}
+
+.att-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1100px;
+}
+
+.att-table th,
+.att-table td {
+  border: 1px solid #e2e8f0;
+  padding: 10px 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.att-table thead th {
+  background: #1a4b8c;
+  color: #fff;
+  font-weight: 700;
+}
+
+.att-table thead tr:nth-child(2) th {
+  background: #2a5ba8;
+}
+
+.att-table td.name-col,
+.att-table th.name-col {
+  text-align: left;
+}
+
+.absent-cell {
+  background: #fde2e1 !important;
+  color: #991b1b;
+  font-weight: 700;
+}
+
+.action-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.btn-linkish {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  background: #10b981;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.empty-box {
+  background: #fff;
+  padding: 24px;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+</style>
+
+<div class="page-wrap">
+  <div class="action-row">
+    <a class="btn-linkish" href="?from={{ date_from }}&to={{ date_to|default:'' }}">
+      Refresh
+    </a>
+  </div>
+
+  <div class="header-box">
+    <h2>Attendance Detail View</h2>
+    <div class="meta-grid">
+      <div class="meta-item"><strong>Course:</strong> {{ course.course_code }} - {{ course.title }}</div>
+      <div class="meta-item"><strong>Faculty:</strong> {{ faculty.name }}</div>
+      <div class="meta-item"><strong>Regulation:</strong> {{ regulation }}</div>
+      <div class="meta-item"><strong>Year / Semester:</strong> {{ year }} / {{ semester }}</div>
+      <div class="meta-item"><strong>Batch / Section:</strong> {{ batch }} / {{ section }}</div>
+      <div class="meta-item"><strong>Date Range:</strong> {{ date_from|default:"-" }} to {{ date_to|default:"-" }}</div>
+    </div>
+  </div>
+
+  {% if date_columns and student_rows %}
+  <div class="table-card">
+    <table class="att-table">
+      <thead>
+        <tr>
+          <th rowspan="2">S.No</th>
+          <th rowspan="2">Reg No</th>
+          <th rowspan="2" class="name-col">Student Name</th>
+          {% for d in date_columns %}
+            <th colspan="{{ d.period_count }}">{{ d.date_str }}</th>
+          {% endfor %}
+        </tr>
+        <tr>
+          {% for d in date_columns %}
+            {% for p in d.periods %}
+              <th>Hour {{ p }}</th>
+            {% endfor %}
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in student_rows %}
+        <tr>
+          <td>{{ row.sno }}</td>
+          <td>{{ row.reg_no }}</td>
+          <td class="name-col">{{ row.name }}</td>
+          {% for item in row.values %}
+            <td class="{% if item.is_absent %}absent-cell{% endif %}">
+              {{ item.value }}
+            </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-box">
+    No attendance records found for the selected criteria.
+  </div>
+  {% endif %}
+</div>
+{% endblock content %}

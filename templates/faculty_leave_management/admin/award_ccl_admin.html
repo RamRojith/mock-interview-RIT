@@ -1,0 +1,493 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+/* ─── Layout ─── */
+.aw-page { background:#f0f4f8; min-height:100vh; padding:24px; }
+
+/* ─── Header ─── */
+.aw-header {
+    background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 60%,#3b6fd4 100%);
+    border-radius:16px; padding:22px 28px;
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:20px;
+    box-shadow:0 6px 24px rgba(26,75,140,.28);
+}
+.aw-header h2 {
+    margin:0; color:#fff; font-size:20px; font-weight:800; letter-spacing:.2px;
+}
+.aw-header p { margin:4px 0 0; color:rgba(255,255,255,.75); font-size:12px; }
+.aw-back-btn {
+    background:rgba(255,255,255,.18); color:#fff;
+    border:1.5px solid rgba(255,255,255,.35);
+    border-radius:9px; padding:8px 18px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    display:flex; align-items:center; gap:7px; transition:all .2s;
+}
+.aw-back-btn:hover { background:rgba(255,255,255,.28); color:#fff; text-decoration:none; }
+
+/* ─── Alert messages ─── */
+.aw-msg {
+    border-radius:11px; padding:11px 18px;
+    font-size:13px; margin-bottom:16px;
+    display:flex; align-items:center; gap:9px;
+}
+.aw-msg.ok  { background:#f0fdf4; border:1.5px solid #86efac; color:#15803d; }
+.aw-msg.err { background:#fff5f5; border:1.5px solid #fca5a5; color:#991b1b; }
+
+/* ─── Cards ─── */
+.card-box {
+    background:#fff; border-radius:16px; padding:22px 24px;
+    box-shadow:0 2px 14px rgba(0,0,0,.08); margin-bottom:18px;
+}
+.card-box-title {
+    font-size:14px; font-weight:800; color:#1a4b8c;
+    display:flex; align-items:center; gap:8px;
+    margin-bottom:18px; padding-bottom:13px;
+    border-bottom:2px solid #eef2f8;
+}
+
+/* ─── Form elements ─── */
+.form-label { font-size:11.5px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:.4px; margin-bottom:5px; }
+.form-control, .form-select {
+    border:1.5px solid #dbe3ef; border-radius:9px;
+    font-size:13px; padding:9px 13px;
+    background:#fafbff; transition:border .2s, box-shadow .2s;
+}
+.form-control:focus, .form-select:focus {
+    border-color:#1a4b8c; box-shadow:0 0 0 3px rgba(26,75,140,.1); outline:none;
+}
+textarea.form-control { resize:vertical; min-height:90px; }
+
+/* ─── Session option cards ─── */
+.calc-strip {
+    background:linear-gradient(135deg,#f8fafc,#eff6ff);
+    border:1.5px solid #dbeafe; border-radius:12px;
+    padding:12px 14px; display:flex; gap:12px; flex-wrap:wrap;
+    align-items:center; margin-top:12px;
+}
+.calc-pill {
+    background:#fff; border:1px solid #dbe3ef; border-radius:10px;
+    padding:8px 12px; min-width:110px;
+}
+.calc-pill .cp-label { font-size:10px; color:#94a3b8; text-transform:uppercase; font-weight:800; letter-spacing:.4px; }
+.calc-pill .cp-val { font-size:16px; color:#1a4b8c; font-weight:900; line-height:1.2; }
+.calc-rule { font-size:11.5px; color:#64748b; }
+.balance-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:14px; }
+.balance-card {
+    background:#fff; border:1.5px solid #dbe3ef; border-radius:12px;
+    padding:12px; text-align:center;
+}
+.balance-card .bc-val { font-size:24px; font-weight:900; color:#1a4b8c; line-height:1; }
+.balance-card .bc-label { font-size:10.5px; color:#94a3b8; text-transform:uppercase; font-weight:800; margin-top:6px; }
+
+/* ─── Submit button ─── */
+.btn-award {
+    background:linear-gradient(135deg,#1a4b8c,#2c5aa0);
+    color:#fff; border:none; border-radius:11px;
+    padding:12px 36px; font-weight:800; font-size:14px;
+    cursor:pointer; transition:all .2s; letter-spacing:.3px;
+}
+.btn-award:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(26,75,140,.38); }
+
+/* ─── Employee info strip ─── */
+.emp-strip {
+    background:linear-gradient(135deg,#eef5ff,#e2edff);
+    border:1.5px solid #bdd4f8; border-radius:12px;
+    padding:14px 18px; margin-top:14px; margin-bottom:4px;
+    display:flex; align-items:center; gap:14px;
+}
+.emp-av {
+    width:46px; height:46px; border-radius:50%;
+    background:linear-gradient(135deg,#1a4b8c,#2c5aa0);
+    color:#fff; font-size:19px; font-weight:900;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; box-shadow:0 3px 10px rgba(26,75,140,.3);
+}
+.emp-name { font-size:14px; font-weight:800; color:#1a4b8c; }
+.emp-sub  { font-size:12px; color:#5a7296; margin-top:3px; }
+
+/* ─── CCL History table ─── */
+.hist-wrap { background:#fff; border-radius:16px; box-shadow:0 2px 14px rgba(0,0,0,.08); overflow:hidden; }
+.hist-head {
+    padding:16px 22px; border-bottom:1px solid #eef2f8;
+    display:flex; align-items:center; gap:8px;
+}
+.hist-head .ht { font-size:14px; font-weight:800; color:#1a4b8c; }
+.hist-head .hc { margin-left:auto; font-size:11.5px; color:#94a3b8; }
+
+table.htbl { width:100%; border-collapse:collapse; font-size:12.5px; }
+table.htbl thead tr { background:#0b1220; }
+table.htbl thead th {
+    padding:10px 14px; color:#8da2b8;
+    font-size:10.5px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.6px;
+    text-align:center; white-space:nowrap;
+}
+table.htbl thead th:first-child  { text-align:left; padding-left:20px; }
+table.htbl thead th:nth-child(4) { text-align:left; }
+table.htbl tbody td {
+    padding:10px 14px; border-bottom:1px solid #f1f5fb;
+    text-align:center; vertical-align:middle;
+}
+table.htbl tbody td:first-child  { text-align:left; padding-left:20px; }
+table.htbl tbody td:nth-child(4) { text-align:left; max-width:180px; }
+table.htbl tbody tr:hover { background:#f5f8ff; }
+table.htbl tbody tr:nth-child(even) { background:#fafbfd; }
+table.htbl tbody tr:nth-child(even):hover { background:#f5f8ff; }
+table.htbl tbody tr:last-child td { border-bottom:none; }
+
+/* ─── Status badges ─── */
+.sb { display:inline-flex; align-items:center; gap:4px; padding:3px 11px; border-radius:20px; font-size:11px; font-weight:700; }
+.sb-apv { background:#d1fae5; color:#065f46; }
+.sb-pnd { background:#fef3c7; color:#92400e; }
+.sb-rej { background:#fee2e2; color:#b91c1c; }
+.sb-cls { background:#f1f5f9; color:#64748b; }
+
+/* ─── Empty state ─── */
+.aw-empty { text-align:center; padding:60px 20px; }
+.aw-empty i { font-size:44px; color:#e2e8f0; display:block; margin-bottom:12px; }
+.aw-empty h6 { font-size:14px; font-weight:700; color:#64748b; margin:0 0 5px; }
+.aw-empty p  { font-size:12.5px; color:#94a3b8; margin:0; }
+
+@media(max-width:992px){
+    .balance-grid { grid-template-columns:1fr; }
+}
+@media(max-width:768px){
+    .aw-header { flex-direction:column; gap:12px; align-items:flex-start; }
+}
+</style>
+
+<div class="aw-page">
+
+    <!-- Header -->
+    <div class="aw-header">
+        <div>
+            <h2><i class="fas fa-award me-2"></i>Award CCL</h2>
+            <p>Grant Compensatory Casual Leave to employees for working on holidays or weekends</p>
+        </div>
+        <a href="/faculty_leave_management/faculty/leave/emp_attandance_report/"
+           class="aw-back-btn">
+            <i class="fas fa-arrow-left"></i> Attendance Report
+        </a>
+    </div>
+
+    <!-- Alert messages -->
+    {% if messages %}
+    {% for msg in messages %}
+    <div class="aw-msg {% if msg.tags == 'success' %}ok{% else %}err{% endif %}">
+        <i class="fas fa-{% if msg.tags == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+        {{ msg }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="row g-4">
+
+        <!-- ── LEFT COLUMN: Employee selector + Award form ── -->
+        <div class="col-xl-5 col-lg-5">
+
+            <!-- Select employee -->
+            <div class="card-box">
+                <div class="card-box-title">
+                    <i class="fas fa-user-tie"></i> Select Employee
+                </div>
+                <form method="get" id="empForm">
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label class="form-label">Employee</label>
+                            <select name="faculty_id" class="form-select"
+                                    onchange="document.getElementById('empForm').submit()">
+                        <option value="">— Choose employee —</option>
+                        {% for emp in employees %}
+                        <option value="{{ emp.faculty_id }}"
+                            {% if emp.faculty_id|stringformat:"s" == selected_faculty_id %}selected{% endif %}>
+                            {{ emp.faculty_id }} &ndash; {{ emp.name }}
+                            {% if emp.designation %} / {{ emp.designation.designation_name }}{% endif %}
+                        </option>
+                        {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Academic Year</label>
+                            <select name="academic_year" class="form-select"
+                                    onchange="document.getElementById('empForm').submit()">
+                                {% for year in academic_year_options %}
+                                <option value="{{ year }}" {% if year == selected_academic_year %}selected{% endif %}>
+                                    {{ year }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </form>
+
+                {% if selected_employee %}
+                <div class="emp-strip">
+                    <div class="emp-av">{{ selected_employee.name|first|upper }}</div>
+                    <div>
+                        <div class="emp-name">{{ selected_employee.name }}</div>
+                        <div class="emp-sub">
+                            ID: <strong>{{ selected_employee.faculty_id }}</strong>
+                            {% if selected_employee.designation %}
+                            &nbsp;&bull;&nbsp;{{ selected_employee.designation.designation_name }}
+                            {% endif %}
+                            {% if selected_employee.department %}
+                            <br>{{ selected_employee.department.Department }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="balance-grid">
+                    <div class="balance-card">
+                        <div class="bc-val">{{ ccl_balance.claimed|default:"0.0" }}</div>
+                        <div class="bc-label">Awarded {{ selected_academic_year }}</div>
+                    </div>
+                    <div class="balance-card">
+                        <div class="bc-val">{{ ccl_balance.used|default:"0.0" }}</div>
+                        <div class="bc-label">Used {{ selected_academic_year }}</div>
+                    </div>
+                    <div class="balance-card">
+                        <div class="bc-val">{% if ccl_balance %}{{ ccl_balance.remaining }}{% else %}0.0{% endif %}</div>
+                        <div class="bc-label">Remaining {{ selected_academic_year }}</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Award CCL form (only when employee selected) -->
+            {% if selected_employee %}
+            <div class="card-box">
+                <div class="card-box-title">
+                    <i class="fas fa-plus-circle"></i> Award Compensatory Leave
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="faculty_id" value="{{ selected_faculty_id }}">
+
+                    <!-- Date -->
+                    <div class="mb-3">
+                        <label class="form-label">Date Worked <span style="color:#dc2626;">*</span></label>
+                        <input type="date" name="award_date" class="form-control" required>
+                        <div style="font-size:11px;color:#94a3b8;margin-top:4px;">
+                            The holiday / Sunday on which the employee worked.
+                        </div>
+                    </div>
+
+                    <!-- Time entry -->
+                    <div class="mb-3">
+                        <label class="form-label">Worked Time <span style="color:#dc2626;">*</span></label>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <input type="time" name="from_time" id="from_time" class="form-control" required>
+                                <div style="font-size:11px;color:#94a3b8;margin-top:4px;">From time</div>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="time" name="to_time" id="to_time" class="form-control" required>
+                                <div style="font-size:11px;color:#94a3b8;margin-top:4px;">To time</div>
+                            </div>
+                        </div>
+                        <div class="calc-strip">
+                            <div class="calc-pill">
+                                <div class="cp-label">Hours</div>
+                                <div class="cp-val" id="calc_hours">--</div>
+                            </div>
+                            <div class="calc-pill">
+                                <div class="cp-label">Session</div>
+                                <div class="cp-val" id="calc_session">--</div>
+                            </div>
+                            <div class="calc-pill">
+                                <div class="cp-label">CCL</div>
+                                <div class="cp-val" id="calc_days">--</div>
+                            </div>
+                            <div class="calc-rule">
+                                {% if ccl_timing_rules %}
+                                    {% for rule in ccl_timing_rules %}
+                                        {{ rule.session_name }}: &gt; {{ rule.min_hours }}{% if rule.max_hours %} to {{ rule.max_hours }}{% else %}+{% endif %} hrs = {{ rule.ccl_days }} day{% if not forloop.last %}; {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    Configure CCL Timing Master before awarding CCL.
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reason -->
+                    <div class="mb-4">
+                        <label class="form-label">Reason / Remarks</label>
+                        <textarea name="reason" class="form-control"
+                                  placeholder="e.g. Worked on Republic Day for exam invigilation duty..."></textarea>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <button type="submit" class="btn-award">
+                            <i class="fas fa-award me-2"></i>Award CCL
+                        </button>
+                        <span style="font-size:11.5px;color:#94a3b8;">
+                            CCL is marked <strong style="color:#15803d;">Approved</strong> instantly.
+                        </span>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- ── RIGHT COLUMN: CCL History ── -->
+        <div class="col-xl-7 col-lg-7">
+            <div class="hist-wrap">
+                <div class="hist-head">
+                    <i class="fas fa-history" style="color:#1a4b8c;"></i>
+                    <span class="ht">
+                        CCL History{% if selected_employee %} &mdash; {{ selected_employee.name }}{% endif %}
+                        {% if selected_academic_year %}<span style="color:#64748b;font-weight:700;">({{ selected_academic_year }})</span>{% endif %}
+                    </span>
+                    {% if ccl_history %}
+                    <span class="hc">{{ ccl_history|length }} record{{ ccl_history|length|pluralize }}</span>
+                    {% endif %}
+                </div>
+
+                {% if not selected_employee %}
+                <div class="aw-empty">
+                    <i class="fas fa-user-tie"></i>
+                    <h6>No Employee Selected</h6>
+                    <p>Select an employee on the left to view their CCL award history.</p>
+                </div>
+
+                {% elif ccl_history %}
+                <div style="overflow-x:auto;">
+                <table class="htbl">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Hours</th>
+                            <th>Session</th>
+                            <th>Days</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Claimed</th>
+                            <th>Awarded On</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for ccl in ccl_history %}
+                    <tr>
+                        <td style="color:#94a3b8;font-size:11px;font-weight:600;">{{ forloop.counter }}</td>
+                        <td>
+                            <strong style="color:#1e293b;font-size:13px;">{{ ccl.date|date:"d M Y" }}</strong>
+                        </td>
+                        <td style="font-size:12px;color:#475569;">
+                            {% if ccl.from_time and ccl.to_time %}
+                                {{ ccl.from_time|time:"H:i" }} - {{ ccl.to_time|time:"H:i" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span style="font-size:14px;font-weight:800;color:#0f766e;">{{ ccl.worked_hours|default:"0.00" }}</span>
+                        </td>
+                        <td>
+                            <span class="sb {% if ccl.session == 'Full Day' %}sb-apv{% else %}sb-pnd{% endif %}">
+                                {{ ccl.session|default:"-" }}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="font-size:18px;font-weight:900;color:#1a4b8c;line-height:1;">{{ ccl.days|floatformat:1 }}</span>
+                            <span style="font-size:10px;color:#94a3b8;display:block;">day{% if ccl.days != 1 %}s{% endif %}</span>
+                        </td>
+                        <td>
+                            <span style="font-size:12px;color:#475569;white-space:normal;line-height:1.4;display:block;">
+                                {{ ccl.reason|default:"—"|truncatechars:55 }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if ccl.status == "Approved" %}
+                                <span class="sb sb-apv"><i class="fas fa-check"></i>Approved</span>
+                            {% elif ccl.status == "Pending" %}
+                                <span class="sb sb-pnd"><i class="fas fa-hourglass-half"></i>Pending</span>
+                            {% else %}
+                                <span class="sb sb-rej"><i class="fas fa-times"></i>{{ ccl.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if ccl.is_claimed %}
+                                <span class="sb sb-cls"><i class="fas fa-check"></i>Claimed</span>
+                            {% else %}
+                                <span style="font-size:11.5px;color:#94a3b8;">Not claimed</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size:12px;color:#64748b;">{{ ccl.requested_date|date:"d M Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+
+                {% else %}
+                <div class="aw-empty">
+                    <i class="fas fa-award"></i>
+                    <h6>No CCL Records</h6>
+                    <p>No compensatory leave has been awarded to this employee yet.<br>Use the form to award the first CCL.</p>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const cclTimingRules = [
+    {% for rule in ccl_timing_rules %}
+    {
+        min: Number("{{ rule.min_hours }}"),
+        max: {% if rule.max_hours %}Number("{{ rule.max_hours }}"){% else %}null{% endif %},
+        days: "{{ rule.ccl_days }}",
+        session: "{{ rule.session_name|escapejs }}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+function updateCclPreview() {
+    const fromInput = document.getElementById('from_time');
+    const toInput = document.getElementById('to_time');
+    const hoursEl = document.getElementById('calc_hours');
+    const sessionEl = document.getElementById('calc_session');
+    const daysEl = document.getElementById('calc_days');
+    if (!fromInput || !toInput || !hoursEl || !sessionEl || !daysEl) return;
+
+    if (!fromInput.value || !toInput.value) {
+        hoursEl.textContent = '--';
+        sessionEl.textContent = '--';
+        daysEl.textContent = '--';
+        return;
+    }
+
+    const [fh, fm] = fromInput.value.split(':').map(Number);
+    const [th, tm] = toInput.value.split(':').map(Number);
+    const start = fh * 60 + fm;
+    const end = th * 60 + tm;
+    if (end <= start) {
+        hoursEl.textContent = 'Invalid';
+        sessionEl.textContent = '--';
+        daysEl.textContent = '--';
+        return;
+    }
+
+    const hours = (end - start) / 60;
+    const rule = cclTimingRules
+        .slice()
+        .sort((a, b) => b.min - a.min)
+        .find(item => hours > item.min && (item.max === null || hours <= item.max));
+    hoursEl.textContent = hours.toFixed(2);
+    sessionEl.textContent = rule ? rule.session : 'No rule';
+    daysEl.textContent = rule ? `${rule.days} day` : '--';
+}
+
+document.getElementById('from_time')?.addEventListener('input', updateCclPreview);
+document.getElementById('to_time')?.addEventListener('input', updateCclPreview);
+</script>
+{% endblock %}

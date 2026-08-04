@@ -1,0 +1,842 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    .summary-card {
+        border-radius: 12px;
+        padding: 14px 16px;
+        color: #fff;
+        font-weight: 600;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        height: 100%;
+    }
+
+    .summary-card .label {
+        font-size: 13px;
+        opacity: 0.95;
+        margin-bottom: 6px;
+    }
+
+    .summary-card .value {
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.2;
+        word-break: break-word;
+    }
+
+    .summary-blue {
+        background: linear-gradient(135deg, #0d6efd, #3d8bfd);
+    }
+
+    .summary-green {
+        background: linear-gradient(135deg, #198754, #43c17a);
+    }
+
+    .summary-purple {
+        background: linear-gradient(135deg, #6f42c1, #9b6bff);
+    }
+
+    .summary-orange {
+        background: linear-gradient(135deg, #fd7e14, #ff9f43);
+    }
+
+    .summary-red {
+        background: linear-gradient(135deg, #dc3545, #ff6b81);
+    }
+
+    .summary-dark {
+        background: linear-gradient(135deg, #343a40, #5c636a);
+    }
+
+    .summary-maroon {
+        background: linear-gradient(135deg, #8b1e3f, #c44569);
+    }
+
+    .summary-indigo {
+        background: linear-gradient(135deg, #3f51b5, #6574cd);
+    }
+
+    .summary-wrap .row > div {
+        margin-bottom: 12px;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">IAT Result Analysis</h4>
+        </div>
+
+        <div class="card-body">
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Degree</label>
+                    <select id="degree" class="form-control">
+                        <option value="">All Degree</option>
+                        {% for d in degrees %}
+                            <option value="{{ d.id }}">{{ d.degree }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Department</label>
+                    <select id="department" class="form-control">
+                        <option value="">All Department</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Batch</label>
+                    <select id="batch" class="form-control">
+                        <option value="">All Batch</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Section</label>
+                    <select id="section" class="form-control">
+                        <option value="">All Section</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Semester</label>
+                    <select id="semester" class="form-control">
+                        <option value="">Select Semester</option>
+                        <option value="CURRENT">Current Semester</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Exam Name</label>
+                    <select id="exam_name" class="form-control">
+                        <option value="">Select Exam</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-12 text-center">
+                    <button id="submit_btn" class="btn btn-primary btn-lg me-2">
+                        <i class="fa fa-search"></i> Submit
+                    </button>
+
+                    <button id="download_pdf" class="btn btn-success btn-lg">
+                        <i class="fa fa-download"></i> Download Pass Percentage PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="result_card" class="card shadow mt-4" style="display:none;">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">Pass Percentage Analysis</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-3" id="result_filters"></div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped text-center align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Degree</th>
+                            <th>Department</th>
+                            <th>Batch</th>
+                            <th>Section</th>
+                            <th>Semester</th>
+                            <th>Total Students</th>
+                            <th>No of Failed</th>
+                            <th>No of Passed</th>
+                            <th>Pass Percentage</th>
+                            <th>Course Wise</th>
+                            <th>Student Wise Pass</th>
+                        </tr>
+                    </thead>
+                    <tbody id="result_table_body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Course-wise Modal -->
+<div class="modal fade" id="courseWiseModal" tabindex="-1" aria-labelledby="courseWiseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="courseWiseModalLabel">Course-wise Pass Details</h5>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="download_course_pdf" class="btn btn-success btn-sm">
+                        <i class="fa fa-download"></i> Download PDF
+                    </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div id="course_wise_filters" class="mb-3"></div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped text-center align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Course Code</th>
+                                <th>Course Title</th>
+                                <th>Faculty</th>
+                                <th>No of Students</th>
+                                <th>No of Passed</th>
+                                <th>No of Failed</th>
+                                <th>Pass Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="course_wise_table_body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Student-wise Modal -->
+<div class="modal fade" id="studentWiseModal" tabindex="-1" aria-labelledby="studentWiseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="studentWiseModalLabel">Student Wise Pass Details</h5>
+                <button type="button" id="download_student_wise_excel" class="btn btn-info btn-sm text-white">
+    <i class="fa fa-file-excel"></i> Download Excel
+</button>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="download_student_wise_pdf" class="btn btn-warning btn-sm text-dark">
+                        <i class="fa fa-download"></i> Download PDF
+                    </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div id="student_wise_filters" class="mb-3"></div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped text-center align-middle" id="student_wise_table">
+                        <thead class="table-dark" id="student_wise_table_head"></thead>
+                        <tbody id="student_wise_table_body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function(){
+
+    let currentCoursePdfFilters = {
+        degree: "",
+        department: "",
+        batch: "",
+        section: "",
+        semester: "",
+        exam_name: ""
+    };
+
+    let currentStudentWisePdfFilters = {
+        degree: "",
+        department: "",
+        batch: "",
+        section: "",
+        semester: "",
+        exam_name: ""
+    };
+
+    let studentWiseDataMap = {};
+
+    function semesterDefaultOptions() {
+        return '' +
+            '<option value="">Select Semester</option>' +
+            '<option value="CURRENT">Current Semester</option>';
+    }
+
+    function resetDepartment() {
+        $("#department").html('<option value="">All Department</option>');
+    }
+
+    function resetFilters() {
+        $("#batch").html('<option value="">All Batch</option>');
+        $("#section").html('<option value="">All Section</option>');
+        $("#semester").html(semesterDefaultOptions());
+        $("#exam_name").html('<option value="">Select Exam</option>');
+    }
+
+    function hideResult() {
+        $("#result_card").hide();
+        $("#result_table_body").html("");
+        $("#result_filters").html("");
+        studentWiseDataMap = {};
+    }
+
+    function loadDepartments() {
+        var degree_id = $("#degree").val();
+
+        resetDepartment();
+
+        $.ajax({
+            url: "{% url 'load_admin_iat_result_departments' %}",
+            data: {
+                degree_id: degree_id
+            },
+            success: function(response) {
+                let html = '<option value="">All Department</option>';
+
+                response.departments.forEach(function(dept){
+                    html += `<option value="${dept.id}">${dept.Department}</option>`;
+                });
+
+                $("#department").html(html);
+            },
+            error: function() {
+                $("#department").html('<option value="">All Department</option>');
+            }
+        });
+    }
+
+    function loadFilterValues(selectedBatch = "") {
+        var degree_id = $("#degree").val();
+        var department_id = $("#department").val();
+
+        $.ajax({
+            url: "{% url 'load_filter_values' %}",
+            data: {
+                degree_id: degree_id,
+                department_id: department_id,
+                batch: selectedBatch
+            },
+            success: function(response) {
+                let currentBatch = $("#batch").val();
+                let currentSection = $("#section").val();
+                let currentSemester = $("#semester").val();
+                let currentExam = $("#exam_name").val();
+
+                let batch_html = '<option value="">All Batch</option>';
+                response.batch.forEach(function(b){
+                    let selected = (b === currentBatch) ? 'selected' : '';
+                    batch_html += `<option value="${b}" ${selected}>${b}</option>`;
+                });
+                $("#batch").html(batch_html);
+
+                let section_html = '<option value="">All Section</option>';
+                response.section.forEach(function(s){
+                    let selected = (s === currentSection) ? 'selected' : '';
+                    section_html += `<option value="${s}" ${selected}>${s}</option>`;
+                });
+                $("#section").html(section_html);
+
+                let semester_html = semesterDefaultOptions();
+                response.semester.forEach(function(s){
+                    let selected = (s === currentSemester) ? 'selected' : '';
+                    semester_html += `<option value="${s}" ${selected}>${s}</option>`;
+                });
+                $("#semester").html(semester_html);
+
+                if (currentSemester === "CURRENT") {
+                    $("#semester").val("CURRENT");
+                }
+
+                let exam_html = '<option value="">Select Exam</option>';
+                response.exam_name.forEach(function(e){
+                    let selected = (e === currentExam) ? 'selected' : '';
+                    exam_html += `<option value="${e}" ${selected}>${e}</option>`;
+                });
+                $("#exam_name").html(exam_html);
+            },
+            error: function() {
+                resetFilters();
+            }
+        });
+    }
+
+    function renderStudentWiseTable(rowKey) {
+        const row = studentWiseDataMap[rowKey];
+        if (!row) {
+            alert("No student-wise data found.");
+            return;
+        }
+
+        currentStudentWisePdfFilters = {
+            degree: row.degree_id || "",
+            department: row.department_id || "",
+            batch: row.batch_value || "",
+            section: row.section_value || "",
+            semester: row.semester_value || "",
+            exam_name: row.exam_name || ""
+        };
+
+        let info_html = `
+            <div class="row g-2">
+                <div class="col-md-4"><strong>Degree :</strong> ${row.degree}</div>
+                <div class="col-md-4"><strong>Department :</strong> ${row.department}</div>
+                <div class="col-md-4"><strong>Batch :</strong> ${row.batch}</div>
+                <div class="col-md-4"><strong>Section :</strong> ${row.section}</div>
+                <div class="col-md-4"><strong>Semester :</strong> ${row.semester}</div>
+                <div class="col-md-4"><strong>Exam :</strong> ${row.exam_name}</div>
+            </div>
+        `;
+        $("#student_wise_filters").html(info_html);
+
+        const studentRows = row.student_wise_result || [];
+
+        let allCourseCodes = [];
+        studentRows.forEach(function(student){
+            (student.courses || []).forEach(function(course){
+                if (!allCourseCodes.includes(course.course_code)) {
+                    allCourseCodes.push(course.course_code);
+                }
+            });
+        });
+
+        allCourseCodes.sort();
+
+        let theadHtml = `
+            <tr>
+                <th>S.No</th>
+                <th>Reg No</th>
+                <th>Name</th>
+        `;
+        allCourseCodes.forEach(function(code){
+            theadHtml += `<th>${code}</th>`;
+        });
+        theadHtml += `<th>Overall Status</th></tr>`;
+
+        $("#student_wise_table_head").html(theadHtml);
+
+        let tbodyHtml = "";
+
+        if (studentRows.length > 0) {
+            studentRows.forEach(function(student, index){
+                let courseMarksMap = {};
+                (student.courses || []).forEach(function(course){
+                    courseMarksMap[course.course_code] = course.mark_obtained;
+                });
+
+                tbodyHtml += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${student.reg_no}</td>
+                        <td>${student.student_name}</td>
+                `;
+
+                allCourseCodes.forEach(function(code){
+                    let mark = courseMarksMap.hasOwnProperty(code) ? courseMarksMap[code] : "-";
+                    tbodyHtml += `<td>${mark}</td>`;
+                });
+
+                tbodyHtml += `
+                        <td>${student.overall_status}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            tbodyHtml = `
+                <tr>
+                    <td colspan="${4 + allCourseCodes.length}">No student wise data found.</td>
+                </tr>
+            `;
+        }
+
+        $("#student_wise_table_body").html(tbodyHtml);
+
+        var modal = new bootstrap.Modal(document.getElementById('studentWiseModal'));
+        modal.show();
+    }
+
+    loadDepartments();
+    loadFilterValues();
+
+    $("#degree").change(function(){
+        resetFilters();
+        hideResult();
+        loadDepartments();
+        loadFilterValues();
+    });
+
+    $("#department").change(function(){
+        resetFilters();
+        hideResult();
+        loadFilterValues();
+    });
+
+    $("#batch").change(function(){
+        hideResult();
+
+        var batch = $("#batch").val();
+
+        $("#section").html('<option value="">All Section</option>');
+        $("#semester").html(semesterDefaultOptions());
+        $("#exam_name").html('<option value="">Select Exam</option>');
+
+        loadFilterValues(batch);
+    });
+
+    $("#submit_btn").click(function(){
+        var degree = $("#degree").val();
+        var department = $("#department").val();
+        var batch = $("#batch").val();
+        var section = $("#section").val();
+        var semester = $("#semester").val();
+        var exam_name = $("#exam_name").val();
+
+        if (!semester || !exam_name) {
+            alert("Please select Semester and Exam Name");
+            return;
+        }
+
+        $("#submit_btn").prop("disabled", true).html('<i class="fa fa-spinner fa-spin"></i> Loading...');
+
+        $.ajax({
+            url: "{% url 'get_pass_percentage_table' %}",
+            data: {
+                degree: degree,
+                department: department,
+                batch: batch,
+                section: section,
+                semester: semester,
+                exam_name: exam_name
+            },
+            success: function(response) {
+                let summary = response.summary || {
+                    theory_course_count: 0,
+                    integrated_course_count: 0,
+                    failed_subject_summary: {}
+                };
+
+                let failedSummary = summary.failed_subject_summary || {};
+
+                let failedSummaryCards = "";
+                let colorClasses = [
+                    "summary-red",
+                    "summary-dark",
+                    "summary-maroon",
+                    "summary-indigo",
+                    "summary-orange",
+                    "summary-purple"
+                ];
+
+                let failedKeys = Object.keys(failedSummary);
+
+                if (failedKeys.length > 0) {
+                    failedKeys.forEach(function(key, index){
+                        let colorClass = colorClasses[index % colorClasses.length];
+
+                        failedSummaryCards += `
+                            <div class="col-md-3">
+                                <div class="summary-card ${colorClass}">
+                                    <div class="label">Failed in ${key} Subject${parseInt(key) > 1 ? 's' : ''}</div>
+                                    <div class="value">${failedSummary[key]}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    failedSummaryCards = `
+                        <div class="col-md-3">
+                            <div class="summary-card summary-green">
+                                <div class="label">Failed Subject Summary</div>
+                                <div class="value">0</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                let filter_html = `
+                    <div class="summary-wrap">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="summary-card summary-blue">
+                                    <div class="label">Degree</div>
+                                    <div class="value">${response.filters.degree}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-card summary-purple">
+                                    <div class="label">Department</div>
+                                    <div class="value">${response.filters.department}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-card summary-dark">
+                                    <div class="label">Semester</div>
+                                    <div class="value">${response.filters.semester}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-card summary-green">
+                                    <div class="label">Exam</div>
+                                    <div class="value">${response.filters.exam_name}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="summary-card summary-orange">
+                                    <div class="label">Batch</div>
+                                    <div class="value">${response.filters.batch}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-card summary-indigo">
+                                    <div class="label">Section</div>
+                                    <div class="value">${response.filters.section}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-card summary-blue">
+                                    <div class="label">Theory Course Count</div>
+                                    <div class="value">${summary.theory_course_count}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-card summary-purple">
+                                    <div class="label">Integrated Course Count</div>
+                                    <div class="value">${summary.integrated_course_count}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            ${failedSummaryCards}
+                        </div>
+                    </div>
+                `;
+
+                $("#result_filters").html(filter_html);
+
+                let rows_html = "";
+                studentWiseDataMap = {};
+
+                response.rows.forEach(function(row, index){
+                    const rowKey = "row_" + index;
+                    studentWiseDataMap[rowKey] = row;
+
+                    rows_html += `
+                        <tr>
+                            <td>${row.degree}</td>
+                            <td>${row.department}</td>
+                            <td>${row.batch}</td>
+                            <td>${row.section}</td>
+                            <td>${row.semester}</td>
+                            <td>${row.total_students}</td>
+                            <td>${row.failed_students}</td>
+                            <td>${row.passed_students}</td>
+                            <td>${row.pass_percentage}</td>
+                            <td>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-primary view-course-btn"
+                                    data-degree="${row.degree_id}"
+                                    data-department="${row.department_id}"
+                                    data-batch="${row.batch_value}"
+                                    data-section="${row.section_value}"
+                                    data-semester="${row.semester_value}"
+                                    data-exam_name="${row.exam_name}">
+                                    View
+                                </button>
+                            </td>
+                            <td>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-success view-student-wise-btn"
+                                    data-row-key="${rowKey}">
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                $("#result_table_body").html(rows_html);
+                $("#result_card").show();
+            },
+            error: function(xhr) {
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    alert(xhr.responseJSON.message);
+                } else {
+                    alert("Unable to fetch result table.");
+                }
+            },
+            complete: function() {
+                $("#submit_btn").prop("disabled", false).html('<i class="fa fa-search"></i> Submit');
+            }
+        });
+    });
+
+    $(document).on("click", ".view-course-btn", function(){
+        var degree = $(this).data("degree");
+        var department = $(this).data("department");
+        var batch = $(this).data("batch");
+        var section = $(this).data("section");
+        var semester = $(this).data("semester");
+        var exam_name = $(this).data("exam_name");
+
+        currentCoursePdfFilters = {
+            degree: degree,
+            department: department,
+            batch: batch,
+            section: section,
+            semester: semester,
+            exam_name: exam_name
+        };
+
+        $.ajax({
+            url: "{% url 'get_course_wise_details' %}",
+            data: {
+                degree: degree,
+                department: department,
+                batch: batch,
+                section: section,
+                semester: semester,
+                exam_name: exam_name
+            },
+            success: function(response) {
+                let info_html = `
+                    <div class="row g-2">
+                        <div class="col-md-4"><strong>Degree :</strong> ${response.filters.degree}</div>
+                        <div class="col-md-4"><strong>Department :</strong> ${response.filters.department}</div>
+                        <div class="col-md-4"><strong>Batch :</strong> ${response.filters.batch}</div>
+                        <div class="col-md-4"><strong>Section :</strong> ${response.filters.section}</div>
+                        <div class="col-md-4"><strong>Semester :</strong> ${response.filters.semester}</div>
+                        <div class="col-md-4"><strong>Exam :</strong> ${response.filters.exam_name}</div>
+                    </div>
+                `;
+                $("#course_wise_filters").html(info_html);
+
+                let body_html = "";
+
+                if (response.rows.length > 0) {
+                    response.rows.forEach(function(row){
+                        body_html += `
+                            <tr>
+                                <td>${row.course_code}</td>
+                                <td>${row.course_title}</td>
+                                <td>${row.faculty_name}</td>
+                                <td>${row.total_students}</td>
+                                <td>${row.passed_students}</td>
+                                <td>${row.failed_students}</td>
+                                <td>${row.pass_percentage}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    body_html = `
+                        <tr>
+                            <td colspan="7">No course data found.</td>
+                        </tr>
+                    `;
+                }
+
+                $("#course_wise_table_body").html(body_html);
+
+                var modal = new bootstrap.Modal(document.getElementById('courseWiseModal'));
+                modal.show();
+            },
+            error: function(xhr) {
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    alert(xhr.responseJSON.message);
+                } else {
+                    alert("Unable to fetch course details.");
+                }
+            }
+        });
+    });
+
+    $(document).on("click", ".view-student-wise-btn", function(){
+        const rowKey = $(this).data("row-key");
+        renderStudentWiseTable(rowKey);
+    });
+
+    $("#download_pdf").click(function(){
+        var degree = $("#degree").val();
+        var department = $("#department").val();
+        var batch = $("#batch").val();
+        var section = $("#section").val();
+        var semester = $("#semester").val();
+        var exam_name = $("#exam_name").val();
+
+        if (!semester || !exam_name) {
+            alert("Please select Semester and Exam Name");
+            return;
+        }
+
+        var url = "{% url 'download_pass_percentage_pdf' %}" +
+            "?degree=" + encodeURIComponent(degree) +
+            "&department=" + encodeURIComponent(department) +
+            "&batch=" + encodeURIComponent(batch) +
+            "&section=" + encodeURIComponent(section) +
+            "&semester=" + encodeURIComponent(semester) +
+            "&exam_name=" + encodeURIComponent(exam_name);
+
+        window.open(url, "_blank");
+    });
+
+    $("#download_course_pdf").click(function(){
+        if (!currentCoursePdfFilters.semester || !currentCoursePdfFilters.exam_name) {
+            alert("Please open course-wise details first.");
+            return;
+        }
+
+        var url = "{% url 'download_course_wise_pdf' %}" +
+            "?degree=" + encodeURIComponent(currentCoursePdfFilters.degree) +
+            "&department=" + encodeURIComponent(currentCoursePdfFilters.department) +
+            "&batch=" + encodeURIComponent(currentCoursePdfFilters.batch) +
+            "&section=" + encodeURIComponent(currentCoursePdfFilters.section) +
+            "&semester=" + encodeURIComponent(currentCoursePdfFilters.semester) +
+            "&exam_name=" + encodeURIComponent(currentCoursePdfFilters.exam_name);
+
+        window.open(url, "_blank");
+    });
+
+    $("#download_student_wise_pdf").click(function(){
+        if (!currentStudentWisePdfFilters.semester || !currentStudentWisePdfFilters.exam_name) {
+            alert("Please open student wise details first.");
+            return;
+        }
+
+        var url = "{% url 'download_student_wise_pdf' %}" +
+            "?degree=" + encodeURIComponent(currentStudentWisePdfFilters.degree) +
+            "&department=" + encodeURIComponent(currentStudentWisePdfFilters.department) +
+            "&batch=" + encodeURIComponent(currentStudentWisePdfFilters.batch) +
+            "&section=" + encodeURIComponent(currentStudentWisePdfFilters.section) +
+            "&semester=" + encodeURIComponent(currentStudentWisePdfFilters.semester) +
+            "&exam_name=" + encodeURIComponent(currentStudentWisePdfFilters.exam_name);
+
+        window.open(url, "_blank");
+    });
+    $("#download_student_wise_excel").click(function(){
+    if (!currentStudentWisePdfFilters.semester || !currentStudentWisePdfFilters.exam_name) {
+        alert("Please open student wise details first.");
+        return;
+    }
+
+    var url = "{% url 'download_student_wise_excel' %}" +
+        "?degree=" + encodeURIComponent(currentStudentWisePdfFilters.degree) +
+        "&department=" + encodeURIComponent(currentStudentWisePdfFilters.department) +
+        "&batch=" + encodeURIComponent(currentStudentWisePdfFilters.batch) +
+        "&section=" + encodeURIComponent(currentStudentWisePdfFilters.section) +
+        "&semester=" + encodeURIComponent(currentStudentWisePdfFilters.semester) +
+        "&exam_name=" + encodeURIComponent(currentStudentWisePdfFilters.exam_name);
+
+    window.open(url, "_blank");
+});
+
+});
+
+
+
+</script>
+
+{% endblock %}

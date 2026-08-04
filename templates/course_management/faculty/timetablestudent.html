@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+  <!-- ================= DEGREE & SEMESTER BAR ================= -->
+  {% if degree %}
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+
+      <h5 class="mb-3">
+        <i class="fas fa-graduation-cap me-2"></i>
+        {{ degree.degree }}
+      </h5>
+
+      <div class="d-flex flex-wrap gap-2">
+
+        {% with total_semesters=degree.effective_duration|add:degree.effective_duration %}
+        {% for _ in "12345678"|slice:":total_semesters" %}
+          {% with sem_no=forloop.counter %}
+          
+          <a href="?semester={{ sem_no }}" class="text-decoration-none">
+            <div
+              class="px-3 py-2 rounded text-center fw-semibold
+              {% if sem_no|stringformat:'s' == semester|stringformat:'s' %}
+                bg-primary text-white
+              {% else %}
+                bg-light border text-dark
+              {% endif %}"
+              style="min-width:70px; cursor:pointer;"
+            >
+              <i class="fas fa-book me-1"></i>
+              Sem {{ sem_no }}
+            </div>
+          </a>
+
+          {% endwith %}
+        {% endfor %}
+        {% endwith %}
+
+      </div>
+
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ================= TIMETABLE ================= -->
+  <h4 class="mb-3">
+    Internal Exam Time Table – Semester {{ semester }}
+  </h4>
+
+  {% if timetable %}
+
+    {% regroup timetable by internal_assessment as iat_groups %}
+
+    {% for group in iat_groups %}
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header bg-secondary text-white fw-semibold">
+        <i class="fas fa-clipboard-list me-2"></i>
+        {% if group.grouper %}
+          {{ group.grouper }}
+        {% else %}
+          No Assessment
+        {% endif %}
+      </div>
+
+      <div class="card-body p-0">
+        <table class="table table-bordered table-striped mb-0">
+          <thead class="table-dark">
+            <tr>
+              
+              
+              <th>Course Code</th>
+              <th>Course Name</th>
+              <th>Date</th>
+              <th>Session</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in group.list %}
+            <tr>
+              
+              
+              <td>{{ t.course.course_code }}</td>
+              <td>{{ t.course.title }}</td>
+              <td>{{ t.exam_date|date:"d-m-Y" }}</td>
+              <td>
+                <span class="badge {% if t.session == 'FN' %}bg-info{% else %}bg-warning text-dark{% endif %}">
+                  {{ t.session }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endfor %}
+
+  {% else %}
+    <p class="text-muted">No timetable available for this semester.</p>
+  {% endif %}
+
+</div>
+
+{% endblock %}

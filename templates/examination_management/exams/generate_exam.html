@@ -1,0 +1,457 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+    .exam-generator-container {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+    
+    .modal-header {
+        background-color: #4e73df;
+        color: white;
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #5a5c69;
+    }
+    
+    .form-select, .form-control {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d3e2;
+        transition: all 0.3s;
+    }
+    
+    .form-select:focus, .form-control:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    
+    .btn-primary {
+        background-color: #4e73df;
+        border-color: #4e73df;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2e59d9;
+        border-color: #2e59d9;
+        transform: translateY(-1px);
+    }
+    
+    .btn-success {
+        background-color: #1cc88a;
+        border-color: #1cc88a;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .btn-success:hover {
+        background-color: #17a673;
+        border-color: #17a673;
+        transform: translateY(-1px);
+    }
+    
+    .btn-danger {
+        background-color: #e74a3b;
+        border-color: #e74a3b;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .btn-danger:hover {
+        background-color: #be2617;
+        border-color: #be2617;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background-color: #858796;
+        border-color: #858796;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #6b6d7d;
+        border-color: #6b6d7d;
+        transform: translateY(-1px);
+    }
+    
+    .exam-schedule-item {
+        background-color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        border-left: 4px solid #4e73df;
+    }
+    
+    .table {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .table thead th {
+        background-color: #4e73df;
+        color: white;
+        border-color: #4e73df;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+    
+    .output-section {
+        background-color: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    @media (max-width: 768px) {
+        .btn-group-responsive {
+            flex-direction: column;
+        }
+        
+        .btn-group-responsive .btn {
+            margin-bottom: 0.5rem;
+            width: 100%;
+        }
+        
+        .exam-generator-container,
+        .output-section {
+            padding: 1rem;
+        }
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="exam-generator-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-calendar-alt me-2"></i>Generate Exam Schedule
+            </h1>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generateExamModal">
+                <i class="fas fa-plus me-2"></i>Generate Exam
+            </button>
+        </div>
+    </div>
+
+    <!-- Generate Exam Modal -->
+    <div class="modal fade" id="generateExamModal" tabindex="-1" aria-labelledby="generateExamModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="generateExamModalLabel">
+                        <i class="fas fa-calendar-plus me-2"></i>Generate Exam Schedule
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <form id="generateExamForm" method="post">
+                        {% csrf_token %}
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="programStudyId" class="form-label">
+                                    <i class="fas fa-graduation-cap me-2"></i>Programme of Study
+                                </label>
+                                <select class="form-select" id="programStudyId" name="programStudyId" required>
+                                    <option value="">Loading programmes...</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="deptId" class="form-label">
+                                    <i class="fas fa-building me-2"></i>Department
+                                </label>
+                                <select class="form-select" id="deptId" name="deptId" required>
+                                    <option value="">Select Programme of Study first</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="programId" class="form-label">
+                                    <i class="fas fa-book me-2"></i>Program
+                                </label>
+                                <select class="form-select" id="programId" name="programId" required>
+                                    <option value="">Select Department first</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="intakeGenerate" class="form-label">
+                                    <i class="fas fa-users me-2"></i>Intake - Batch
+                                </label>
+                                <select class="form-select" id="intakeGenerate" name="intake" required>
+                                    <option value="">Select Program first</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="semesterGenerate" class="form-label">
+                                    <i class="fas fa-calendar me-2"></i>Semester
+                                </label>
+                                <select class="form-select" id="semesterGenerate" name="semester" required>
+                                    <option value="">Select Intake first</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-calendar-check me-2"></i>Generate
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Output Display Section -->
+    <div id="examOutputSection" class="output-section d-none">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">
+                <i class="fas fa-list-alt me-2"></i>Generated Exam Schedules
+            </h4>
+            <div class="btn-group-responsive">
+                <button id="clearAllBtn" class="btn btn-secondary me-2">
+                    <i class="fas fa-trash-alt me-2"></i>Clear All
+                </button>
+                <button id="downloadPdfBtn" class="btn btn-danger" style="display: none;">
+                    <i class="fas fa-file-pdf me-2"></i>Download as PDF
+                </button>
+            </div>
+        </div>
+        <div id="generatedScheduleContainer" class="mt-3"></div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(function () {
+    let selectedExams = JSON.parse(localStorage.getItem('selectedExams')) || [];
+
+    const showExamSection = () => $('#examOutputSection').removeClass('d-none');
+
+    const renderSchedulesFromStorage = () => {
+        const saved = localStorage.getItem('generatedHtml');
+        if (saved) {
+            $('#generatedScheduleContainer').html(saved);
+            if (selectedExams.length) {
+                $('#downloadPdfBtn').show();
+                showExamSection();
+            }
+        }
+    };
+
+    renderSchedulesFromStorage();
+
+    $.getJSON("{% url 'get_programmes_for_genearate_exam' %}", function (data) {
+        $('#programStudyId').html('<option value="">Select Programme of Study...</option>');
+        data.programmes.forEach(p => {
+            $('#programStudyId').append(`<option value="${p}">${p}</option>`);
+        });
+    });
+
+    $('#programStudyId').change(function () {
+        const pos = $(this).val();
+        $('#deptId').html('<option value="">Loading departments...</option>');
+        $('#programId').html('<option value="">Select Department first</option>');
+        $('#intakeGenerate').html('<option value="">Select Program first</option>');
+        $('#semesterGenerate').html('<option value="">Select Intake first</option>');
+
+        if (pos) {
+            $.getJSON("{% url 'get_departments__for_genearate_exam' %}", { programme_of_study: pos }, function (data) {
+                $('#deptId').html('<option value="">Select Department...</option>');
+                data.departments.forEach(d => {
+                    $('#deptId').append(`<option value="${d.id}">${d.name}</option>`);
+                });
+            });
+        }
+    });
+
+    $('#deptId').change(function () {
+        const deptId = $(this).val();
+        const pos = $('#programStudyId').val();
+        if (deptId && pos) {
+            $.getJSON("{% url 'get_programs__for_genearate_exam' %}", {
+                department_id: deptId,
+                programme_of_study: pos
+            }, function (data) {
+                $('#programId').html('<option value="">Select Program...</option>');
+                data.programs.forEach(p => {
+                    $('#programId').append(`<option value="${p.code}">${p.name}</option>`);
+                });
+            });
+        }
+    });
+
+    $('#programId').change(function () {
+        const programCode = $(this).val();
+        $('#semesterGenerate').html('<option value="">Select Intake first</option>');
+        $.getJSON("{% url 'get_intakes_for_genearate_exam' %}", { program_code: programCode }, function (data) {
+            $('#intakeGenerate').html('<option value="">Select Intake...</option>');
+            data.intakes.forEach(i => {
+                $('#intakeGenerate').append(`<option value="${i.intake}|${i.batch}">${i.intake} - ${i.batch}</option>`);
+            });
+        });
+    });
+
+    $('#intakeGenerate').change(function () {
+        const programCode = $('#programId').val();
+        const intakeStr = $(this).val();
+        if (intakeStr && intakeStr.includes('|')) {
+            $.getJSON("{% url 'get_semesters__for_genearate_exam' %}", {
+                program_code: programCode,
+                intake: intakeStr
+            }, function (data) {
+                if (data.semester_range) {
+                    $('#semesterGenerate').html(`<option value="${data.semester_range}">${data.semester_range}</option>`);
+                } else {
+                    $('#semesterGenerate').html('<option value="">No Semesters Found</option>');
+                }
+            });
+        } else {
+            $('#semesterGenerate').html('<option value="">Invalid Intake Format</option>');
+        }
+    });
+
+    $('#generateExamForm').submit(function (e) {
+        e.preventDefault();
+
+        const programmeOfStudy = $('#programStudyId').val();
+        const departmentId = $('#deptId').val();
+        const programCode = $('#programId').val();
+        const intakeRange = $('#intakeGenerate').val();
+        const semesterRange = $('#semesterGenerate').val();
+
+        if (!programmeOfStudy || !departmentId || !programCode || !intakeRange || !semesterRange) {
+            alert("Please fill in all fields.");
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'get_exam_schedule' %}",
+            method: "GET",
+            data: {
+                programme_of_study: programmeOfStudy,
+                department_id: departmentId,
+                program_code: programCode,
+                intake_range: intakeRange,
+                semester_range: semesterRange
+            },
+            success: function (response) {
+                if (response.exam_schedules.length) {
+                    const scheduleHtml = `
+                        <div class="exam-schedule-item">
+                            <p><strong><i class="fas fa-graduation-cap me-2"></i>Programme of Study:</strong> ${programmeOfStudy}</p>
+                            <p><strong><i class="fas fa-building me-2"></i>Department:</strong> ${$('#deptId option:selected').text()}</p>
+                            <p><strong><i class="fas fa-book me-2"></i>Program:</strong> ${$('#programId option:selected').text()}</p>
+                            <p><strong><i class="fas fa-users me-2"></i>Intake:</strong> ${$('#intakeGenerate option:selected').text()}</p>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover mt-3">
+                                    <thead>
+                                        <tr>
+                                            <th>S.No</th>
+                                            <th>Semester</th>
+                                            <th>Course Code</th>
+                                            <th>Course</th>
+                                            <th>Date</th>
+                                            <th>Session</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${response.exam_schedules.map((e, i) => `
+                                            <tr>
+                                                <td>${i + 1}</td>
+                                                <td>${e.semester}</td>
+                                                <td>${e.course_code}</td>
+                                                <td>${e.course}</td>
+                                                <td>${e.date}</td>
+                                                <td>${e.session}</td>
+                                            </tr>`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>`;
+
+                    $('#generatedScheduleContainer').append(scheduleHtml);
+                    selectedExams.push({ department_id: departmentId, program_code: programCode, intake_range: intakeRange, semester_range: semesterRange });
+                    localStorage.setItem('selectedExams', JSON.stringify(selectedExams));
+                    localStorage.setItem('generatedHtml', $('#generatedScheduleContainer').html());
+
+                    $('#generateExamModal').modal('hide');
+
+                    // ✅ Refresh page after modal closes (after 500ms)
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                } else {
+                    alert("No exam schedules found.");
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("[✘ Exam Data Fetch Error]:", error);
+                alert("Failed to generate exam schedule.");
+            }
+        });
+    });
+
+    $('#downloadPdfBtn').click(() => {
+        if (!selectedExams.length) return;
+        const programmeOfStudy = $('#programStudyId').val();
+        const params = selectedExams.map((e, i) =>
+            `department_id_${i}=${e.department_id}&program_code_${i}=${e.program_code}&semester_range_${i}=${e.semester_range}&intake_range_${i}=${e.intake_range}&programme_of_study_${i}=${programmeOfStudy}`
+        ).join('&');
+        window.open("{% url 'download_exam_schedule' %}?" + params, '_blank');
+    });
+
+    $('#clearAllBtn').click(() => {
+        localStorage.removeItem('selectedExams');
+        localStorage.removeItem('generatedHtml');
+        selectedExams = [];
+        $('#generatedScheduleContainer').empty();
+        $('#downloadPdfBtn').hide();
+        $('#examOutputSection').addClass('d-none');
+    });
+});
+</script>
+
+
+
+{% endblock %}

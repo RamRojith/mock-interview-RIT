@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+.ap{
+  --card:#fff;--border:#e5e7eb;--shadow:0 10px 30px rgba(2,6,23,.08);
+}
+.ap .wrap{background:linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%);min-height:calc(100vh - 40px);padding:22px 12px;}
+.ap .container-max{max-width:900px;margin:0 auto;}
+.ap .header{background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);border-radius:20px;padding:20px;color:#fff;box-shadow:0 12px 30px rgba(2,6,23,.18);}
+.ap .header h3{margin:0;font-weight:900;}
+.ap .header .sub{color:rgba(255,255,255,.85);margin-top:6px;}
+.ap .cardx{background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);}
+</style>
+
+<div class="ap">
+  <div class="wrap">
+    <div class="container-max">
+
+      <div class="header mb-4">
+        <h3><i class="fa-solid fa-id-badge me-2"></i>Assign Role to Employee</h3>
+        <div class="sub">Give an existing staff member an additional role in a department</div>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 mb-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="cardx p-4">
+        <div class="alert alert-info rounded-3 d-flex align-items-start gap-2 mb-4">
+          <i class="fa-solid fa-circle-info mt-1 flex-shrink-0"></i>
+          <div>The employee must already be registered in the approval system. This creates an additional entry with the new role and department.</div>
+        </div>
+
+        <form method="post" action="{% url 'assign_approval_role' %}">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label>
+              <input type="text" name="employeeID" class="form-control" placeholder="Enter existing employee ID" required autofocus>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Department <span class="text-danger">*</span></label>
+              <select name="department" class="form-select" required>
+                <option value="">Select Department</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}">{{ dept.Department }} ({{ dept.Department_code }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Role <span class="text-danger">*</span></label>
+              <select name="role" class="form-select" required>
+                <option value="">Select Role</option>
+                {% for role in roles %}
+                <option value="{{ role.id }}">{{ role.role }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 pt-2">
+              <button type="submit" class="btn btn-primary px-5 fw-bold">
+                <i class="fa-solid fa-link me-2"></i>Assign Role
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

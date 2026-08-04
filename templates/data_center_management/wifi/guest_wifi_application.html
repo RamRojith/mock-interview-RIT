@@ -1,0 +1,504 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .wifi-application {
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        min-height: 80vh;
+    }
+
+    .application-content {
+        padding: 1rem 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .application-form {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid #1a4b8c;
+        width: 100%;
+    }
+
+    .form-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1a4b8c;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        padding: 0.5rem;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #1a4b8c;
+        box-shadow: 0 0 0 0.2rem rgba(26, 75, 140, 0.25);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        border: none;
+        padding: 0.875rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+        width: 100%;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+        color: white;
+    }
+
+    .info-card {
+        background: #f0f9ff;
+        border: 1px solid #0ea5e9;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card h6 {
+        color: #0369a1;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .info-card ul {
+        margin-bottom: 0;
+        color: #374151;
+        font-size: 0.85rem;
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin: 1.5rem 0 1rem 0;
+    }
+
+    .section-header h4 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .text-uppercase {
+        text-transform: uppercase !important;
+    }
+
+    .declaration-section {
+        background: #f8f9fa;
+        border: 2px solid #1a4b8c;
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    .declaration-section .form-check-label {
+        font-weight: 600;
+        color: #1a4b8c;
+        line-height: 1.4;
+        font-size: 0.9rem;
+    }
+
+    .error-text {
+        color: #dc2626;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    .readonly-box {
+        background-color: #f8fafc;
+    }
+
+    .table-box {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .table-box table {
+        margin-bottom: 0;
+    }
+
+    .table-box thead th {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        border: none;
+        text-align: center;
+        vertical-align: middle;
+        padding: 0.9rem 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .table-box tbody td {
+        vertical-align: middle;
+        text-align: center;
+        padding: 0.75rem 0.5rem;
+        border-color: #e2e8f0;
+    }
+
+    .alert {
+        border-radius: 10px;
+    }
+
+    .flow-item {
+        text-align: left;
+        font-size: 0.82rem;
+        margin-bottom: 0.35rem;
+        padding: 0.35rem 0.5rem;
+        border-radius: 8px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+    }
+
+    @media (max-width: 768px) {
+        .application-content {
+            padding: 1rem;
+        }
+
+        .application-form {
+            padding: 1rem;
+        }
+
+        .form-title {
+            font-size: 1.4rem;
+        }
+    }
+</style>
+
+<div class="wifi-application">
+    <main class="application-content">
+
+        {% comment %} {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %} {% endcomment %}
+
+        <div class="info-card">
+            <h6><i class="fas fa-info-circle me-2"></i> Guest WiFi Application Guidelines</h6>
+            <ul>
+                <li>This application is for guest and visitor internet access.</li>
+                <li>Access will be provided only after approval through the configured approval flow.</li>
+                <li>The requestor is responsible for the correctness of guest details.</li>
+                <li><strong>Internet access will be limited to the approved time period.</strong></li>
+                <li>Usage is subject to the institution internet policy.</li>
+            </ul>
+        </div>
+
+        <div class="application-form">
+            <h2 class="form-title">
+                <i class="fas fa-wifi me-2"></i>Guest WiFi Application Form
+            </h2>
+
+            {% if errors.role %}
+                <div class="alert alert-danger">{{ errors.role }}</div>
+            {% endif %}
+
+            <form method="post" id="guestWifiApplicationForm">
+                {% csrf_token %}
+
+                <div class="section-header">
+                    <h4>I - Requestor Information</h4>
+                </div>
+
+                {% if faculty %}
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Faculty ID</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.faculty_id|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control readonly-box text-uppercase" value="{{ faculty.name|default:''|upper }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.department|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Designation</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.designation|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Mail Id</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.college_email|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="section-header">
+                    <h4>II - Guest Information</h4>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Guest Name</label>
+                            <input type="text" name="guest_name" class="form-control" value="{{ form_data.guest_name|default:'' }}">
+                            {% if errors.guest_name %}
+                                <div class="error-text">{{ errors.guest_name }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Guest Mobile Number</label>
+                            <input type="text" name="guest_mobile_no" class="form-control" value="{{ form_data.guest_mobile_no|default:'' }}">
+                            {% if errors.guest_mobile_no %}
+                                <div class="error-text">{{ errors.guest_mobile_no }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Guest Email</label>
+                            <input type="email" name="guest_email" class="form-control" value="{{ form_data.guest_email|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Organization / Institution</label>
+                    <input type="text" name="guest_organization" class="form-control" value="{{ form_data.guest_organization|default:'' }}">
+                </div>
+
+                <div class="section-header">
+                    <h4>III - Visit & Access Details</h4>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Purpose of Visit</label>
+                            <select name="purpose_of_visit" class="form-select">
+                                <option value="">-- Select --</option>
+                                <option value="OFFICIAL" {% if form_data.purpose_of_visit == "OFFICIAL" %}selected{% endif %}>Official</option>
+                                <option value="MEETING" {% if form_data.purpose_of_visit == "MEETING" %}selected{% endif %}>Meeting</option>
+                                <option value="EVENT" {% if form_data.purpose_of_visit == "EVENT" %}selected{% endif %}>Event</option>
+                                <option value="OTHER" {% if form_data.purpose_of_visit == "OTHER" %}selected{% endif %}>Other</option>
+                            </select>
+                            {% if errors.purpose_of_visit %}
+                                <div class="error-text">{{ errors.purpose_of_visit }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Visit Date</label>
+                            <input type="date" name="visit_date" class="form-control" value="{{ form_data.visit_date|default:'' }}">
+                            {% if errors.visit_date %}
+                                <div class="error-text">{{ errors.visit_date }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Device Type</label>
+                            <input type="text" name="device_type" class="form-control" value="{{ form_data.device_type|default:'' }}" placeholder="Laptop / Mobile / Tablet">
+                            {% if errors.device_type %}
+                                <div class="error-text">{{ errors.device_type }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Reason</label>
+                    <textarea name="reason" class="form-control" rows="3">{{ form_data.reason|default:'' }}</textarea>
+                    {% if errors.reason %}
+                        <div class="error-text">{{ errors.reason }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Access From</label>
+                            <input type="datetime-local" name="access_from" class="form-control" value="{{ form_data.access_from|default:'' }}">
+                            {% if errors.access_from %}
+                                <div class="error-text">{{ errors.access_from }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Access To</label>
+                            <input type="datetime-local" name="access_to" class="form-control" value="{{ form_data.access_to|default:'' }}">
+                            {% if errors.access_to %}
+                                <div class="error-text">{{ errors.access_to }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-header">
+                    <h4>IV - Device Information</h4>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Device MAC Address</label>
+                            <input type="text" name="device_mac_address" class="form-control" value="{{ form_data.device_mac_address|default:'' }}" placeholder="XX:XX:XX:XX:XX:XX">
+                            {% if errors.device_mac_address %}
+                                <div class="error-text">{{ errors.device_mac_address }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Mobile Static MAC Address (Optional)</label>
+                            <input type="text" name="mobile_static_mac_address" class="form-control" value="{{ form_data.mobile_static_mac_address|default:'' }}" placeholder="XX:XX:XX:XX:XX:XX">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="declaration-section">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="agreement" id="id_agreement"
+                               {% if form_data.agreement %}checked{% endif %}>
+                        <label class="form-check-label" for="id_agreement">
+                            I hereby declare that the above information given by me is true and correct and this guest WiFi access will be used only for approved institutional purposes.
+                        </label>
+                    </div>
+                    {% if errors.agreement %}
+                        <div class="error-text">{{ errors.agreement }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-paper-plane me-2"></i>Submit Guest WiFi Request
+                </button>
+            </form>
+        </div>
+
+        <div class="application-form mt-4">
+            <h2 class="form-title">
+                <i class="fas fa-history me-2"></i>My Guest WiFi Requests
+            </h2>
+
+            {% if user_requests %}
+            <div class="table-responsive table-box">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Guest Name</th>
+                            <th>Purpose</th>
+                            <th>Visit Date</th>
+                            <th>Device</th>
+                            <th>Status</th>
+                            <th>Applied On</th>
+                            <th>Approval Flow</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in user_requests %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ req.guest_name }}</td>
+                            <td>{{ req.get_purpose_of_visit_display }}</td>
+                            <td>{{ req.visit_date }}</td>
+                            <td>{{ req.device_type }}</td>
+                            <td>
+                                {% if req.status == "APPROVED" %}
+                                    <span class="badge bg-success">APPROVED</span>
+                                {% elif req.status == "REJECTED" %}
+                                    <span class="badge bg-danger">REJECTED</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">PENDING</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ req.created_at|date:"d M Y, h:i A" }}</td>
+                            <td>
+                                {% for flow in req.approval_entries.all %}
+                                    <div class="flow-item">
+                                        <strong>L{{ flow.approver_level }}</strong> -
+                                        {{ flow.approver.name|default:"-" }}
+                                        ({{ flow.approver_role_name|default:"-" }}) -
+                                        <strong>{{ flow.status }}</strong>
+                                        {% if flow.reason %}
+                                            <br><small>{{ flow.reason }}</small>
+                                        {% endif %}
+                                    </div>
+                                {% empty %}
+                                    <span class="text-muted">No approval flow</span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    No guest WiFi requests submitted yet.
+                </div>
+            {% endif %}
+        </div>
+
+    </main>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('input[name="device_mac_address"], input[name="mobile_static_mac_address"]').forEach(function(input) {
+        input.addEventListener("input", function() {
+            let value = this.value.replace(/[^a-fA-F0-9]/g, "");
+            value = value.match(/.{1,2}/g)?.join(":") || value;
+            if (value.length > 17) value = value.substring(0, 17);
+            this.value = value.toUpperCase();
+        });
+    });
+});
+</script>
+{% endblock %}

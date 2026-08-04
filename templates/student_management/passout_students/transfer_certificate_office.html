@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+body { background-color: #f8f9fc; }
+.card { border-radius: 1rem; overflow: hidden; }
+.card-header { background: linear-gradient(90deg, #16a085, #1abc9c); color: white; font-weight: 600; }
+.form-label { font-weight: 600; color: #333; }
+.btn-success, .btn-primary { border: none; border-radius: 0.5rem; }
+.btn-primary { background-color: #1abc9c; }
+.btn-primary:hover { background-color: #16a085; }
+</style>
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="bi bi-award me-2"></i> Transfer Certificate Generator</h4>
+            <div class="d-flex align-items-center gap-2">
+                <span class="me-2"><strong>{{ students.count }}</strong> Students</span>
+
+                <!-- Bulk PDF -->
+                <a href="{% url 'generate_bulk_transfer_certificate_office' %}?department={{ selected_department }}&batch={{ selected_batch }}&date_entry={{ date_entry }}"
+                   class="btn btn-primary btn-sm shadow-sm" target="_blank">
+                   <i class="bi bi-filetype-pdf me-1"></i> Bulk PDF
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- Filters -->
+            <form method="get" class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label">Department</label>
+                    <select name="department" class="form-select">
+                        <option value="">All</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if dept.id|stringformat:"s" == selected_department %}selected{% endif %}>
+                                {{ dept.Department }} - {{ dept.Department_code }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Batch</label>
+                    <select name="batch" class="form-select">
+                        <option value="">All</option>
+                        {% for b in batches %}
+                            <option value="{{ b }}" {% if b|stringformat:"s" == selected_batch %}selected{% endif %}>{{ b }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="date_entry" class="form-control" value="{{ date_entry|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel-fill me-1"></i> Filter</button>
+                </div>
+            </form>
+
+            <!-- Students Table -->
+            <div class="table-responsive">
+                <table id="studentsTable" class="table table-striped table-hover align-middle border">
+                    <thead class="table-success">
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Reg. No</th>
+                            <th>Department</th>
+                            <th>Batch</th>
+                            <th>Certificate No.</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>{{ student.sl_no }}</td>
+                            <td>{{ student.student.name }}</td>
+                            <td>{{ student.student.reg_no }}</td>
+                            <td>{{ student.dept_name }}</td>
+                            <td>{{ student.student.batch }}</td>
+                            <td>{{ student.certificate_number }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'generate_transfer_certificate_office_pdf' student.id %}?date_entry={{ date_entry }}" class="btn btn-success btn-sm" target="_blank">
+                                    <i class="bi bi-person-vcard me-1"></i> PDF
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted py-3">No students found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('#studentsTable').DataTable({
+        language: {
+            emptyTable: "No students available",
+            zeroRecords: "No matching records found",
+            paginate: { next: "Next →", previous: "← Previous" }
+        },
+        ordering: true,
+        pageLength: 25,
+        responsive: true,
+        pagingType: "simple_numbers"
+    });
+});
+</script>
+{% endblock %}

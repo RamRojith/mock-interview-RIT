@@ -1,0 +1,480 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+
+<style>
+/* ===========================
+   PAGE WRAPPER
+=========================== */
+.professional-approval {
+  font-family: 'Inter','Segoe UI',system-ui,sans-serif;
+  background: linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+.professional-approval .page-container{ max-width:1400px; margin:0 auto; }
+
+/* ===========================
+   HEADER (keep same)
+=========================== */
+.professional-approval .page-header{
+  text-align:center;
+  margin-bottom: 1.5rem;
+  padding: 3rem 2rem;
+  background: linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);
+  border-radius: 20px;
+  color: #fff;
+  box-shadow: 0 8px 32px rgba(0,0,0,.1);
+}
+.professional-approval .page-header h1{
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin: 0 0 .5rem;
+  letter-spacing: -.5px;
+}
+.professional-approval .page-header .subtitle{
+  font-size: 1.1rem;
+  opacity: .92;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* ===========================
+   FILTER BAR (Batch)
+=========================== */
+.professional-approval .filter-bar{
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 10px 28px rgba(2, 6, 23, 0.06);
+  margin: -1.1rem auto 1.5rem;
+}
+.professional-approval .filter-title{
+  font-weight: 900;
+  color: #1a4b8c;
+  margin: 0 0 .75rem;
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+}
+.professional-approval .filter-row{
+  display:flex;
+  gap: 1rem;
+  align-items:center;
+  flex-wrap: wrap;
+}
+.professional-approval .filter-row label{
+  font-weight: 800;
+  color: #334155;
+  margin: 0;
+}
+.professional-approval .filter-row select{
+  min-width: 240px;
+  padding: .75rem 1rem;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  background: #fff;
+  font-weight: 800;
+  color: #0f172a;
+  outline: none;
+  transition: .2s ease;
+}
+.professional-approval .filter-row select:focus{
+  border-color:#1a4b8c;
+  box-shadow: 0 0 0 4px rgba(26,75,140,.12);
+}
+.professional-approval .btn-clear{
+  padding: .75rem 1rem;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  background: #fff;
+  font-weight: 900;
+  cursor: pointer;
+  transition: .2s ease;
+}
+.professional-approval .btn-clear:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(0,0,0,.10);
+}
+
+/* ===========================
+   GROUP CARD (outer colors unchanged)
+=========================== */
+.professional-approval .card-section{
+  background:white;
+  border-radius:20px;
+  box-shadow:0 8px 32px rgba(0,0,0,.08);
+  border:1px solid #e2e8f0;
+  margin-bottom:1.5rem;
+  overflow:hidden;
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+.professional-approval .card-section:hover{
+  transform:translateY(-3px);
+  box-shadow:0 12px 40px rgba(0,0,0,.12);
+}
+.professional-approval .card-header-section{
+  background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);
+  color:#fff;
+  padding:1.25rem 1.5rem;
+  font-weight:900;
+  font-size:1.15rem;
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+}
+.professional-approval .card-body{ padding:1.25rem; }
+
+/* ===========================
+   TABLE SHELL (inner polish)
+=========================== */
+.professional-approval .table-shell{
+  border-radius:16px;
+  border:1px solid #eef2f7;
+  overflow:hidden;
+  box-shadow:0 10px 22px rgba(2,6,23,.06);
+  background:#fff;
+}
+.professional-approval .table-responsive{ overflow:auto; }
+
+/* ===========================
+   DATATABLE CONTROLS
+=========================== */
+.professional-approval .dataTables_wrapper{ padding: 1rem; }
+.professional-approval .dataTables_length label,
+.professional-approval .dataTables_filter label{
+  font-weight: 900;
+  color:#0f172a;
+}
+.professional-approval .dataTables_length select{
+  border:2px solid #e2e8f0;
+  border-radius:10px;
+  padding:.35rem .6rem;
+  font-weight:800;
+  outline:none;
+}
+.professional-approval .dataTables_filter input{
+  border:2px solid #e2e8f0;
+  border-radius:12px;
+  padding:.55rem .8rem;
+  font-weight:800;
+  outline:none;
+  width:260px;
+  max-width:100%;
+}
+.professional-approval .dataTables_filter input:focus,
+.professional-approval .dataTables_length select:focus{
+  border-color:#1a4b8c;
+  box-shadow:0 0 0 4px rgba(26,75,140,.12);
+}
+.professional-approval .dataTables_info{
+  font-weight:800;
+  color:#475569;
+  padding-top:.75rem !important;
+}
+.professional-approval .dataTables_paginate{
+  padding-top:.75rem !important;
+}
+.professional-approval .paginate_button{
+  border-radius:12px !important;
+  border:2px solid #e2e8f0 !important;
+  padding:.35rem .8rem !important;
+  margin:0 .15rem !important;
+  font-weight:900 !important;
+}
+.professional-approval .paginate_button.current{
+  background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%) !important;
+  color:#fff !important;
+  border-color:transparent !important;
+}
+.professional-approval .paginate_button:hover{
+  background:#f1f5f9 !important;
+  border-color:#cbd5e1 !important;
+}
+
+/* ===========================
+   TABLE
+=========================== */
+.professional-approval table.dataTable{
+  width:100% !important;
+  border-collapse:separate !important;
+  border-spacing:0 !important;
+}
+.professional-approval .table{
+  width:100%;
+  margin:0 !important;
+  font-size:.92rem;
+  background:#fff;
+  color:#0f172a !important;
+}
+
+/* column head color same as card header */
+.professional-approval .table thead th{
+  background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);
+  color:#fff !important;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  font-size:.80rem;
+  padding:1rem .9rem;
+  white-space:nowrap;
+  border:none !important;
+}
+
+/* body cells */
+.professional-approval .table tbody td{
+  padding:.95rem .9rem;
+  border-top:1px solid #f1f5f9;
+  vertical-align:middle;
+  font-weight:700;
+  background:#fff;
+}
+
+/* zebra + hover */
+.professional-approval .table tbody tr:nth-child(even) td{ background:#fbfdff; }
+.professional-approval .table tbody tr:hover td{
+  background:linear-gradient(90deg,#f0f9ff 0%,#e0f2fe 100%);
+}
+
+/* column widths */
+.professional-approval .col-body{ min-width: 260px; text-align:left; }        /* bodyName */
+.professional-approval .col-validity{ min-width: 170px; white-space:nowrap; }/* validity */
+.professional-approval .col-student{ min-width: 280px; text-align:left; }    /* student */
+.professional-approval .col-year{ min-width: 160px; white-space:nowrap; }    /* academic_year */
+.professional-approval .col-status{ min-width: 160px; }                      /* is_verified */
+.professional-approval .col-actions{ min-width: 210px; }                     /* actions */
+
+/* student block */
+.professional-approval .student-name{ font-weight:950; color:#0f172a; }
+.professional-approval .student-reg{ font-weight:900; color:#475569; font-size:.82rem; margin-top:.15rem; }
+.professional-approval .student-dept{ margin-top:.15rem; font-size:.82rem; font-weight:800; color:#334155; }
+
+/* badge */
+.professional-approval .badge-status{
+  padding:.55rem .9rem;
+  border-radius:999px;
+  font-weight:900;
+  font-size:.78rem;
+  color:#fff !important;
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  justify-content:center;
+}
+.professional-approval .badge-approved{ background:linear-gradient(135deg,#10b981 0%,#059669 100%); }
+.professional-approval .badge-pending{ background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%); }
+
+/* buttons */
+.professional-approval .btn{
+  border-radius:12px;
+  font-weight:900;
+  transition:.2s ease;
+  border:none;
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  cursor:pointer;
+}
+.professional-approval .btn-action{ padding:.55rem .95rem; font-size:.82rem; }
+.professional-approval .btn:hover{ transform:translateY(-2px); box-shadow:0 10px 18px rgba(0,0,0,.10); }
+.professional-approval .btn-success{ background:linear-gradient(135deg,#10b981 0%,#059669 100%); color:#fff; }
+.professional-approval .btn-danger{ background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%); color:#fff; }
+.professional-approval .action-buttons{ display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center; }
+.professional-approval .form-inline{ display:inline-block; margin:0; }
+
+/* empty state */
+.professional-approval .no-data{
+  text-align:center;
+  padding:4rem 2rem;
+  background:white;
+  border-radius:20px;
+  box-shadow:0 8px 32px rgba(0,0,0,.08);
+  color:#64748b;
+}
+.professional-approval .no-data i{ font-size:4rem; opacity:.3; margin-bottom:1.5rem; }
+.professional-approval .no-data h5{ font-size:1.25rem; font-weight:900; margin-bottom:.5rem; color:#475569; }
+.professional-approval .no-data p{ font-size:1rem; margin:0; font-weight:700; }
+
+@media (max-width:768px){
+  .professional-approval{padding:1rem .5rem;}
+  .professional-approval .page-header{padding:2rem 1rem;}
+  .professional-approval .page-header h1{font-size:2rem;}
+  .professional-approval .card-body{padding:1rem;}
+  .professional-approval .filter-row select{ min-width: 100%; }
+  .professional-approval .dataTables_filter input{ width: 100%; }
+  .professional-approval .btn-action{width:100%;justify-content:center;}
+}
+</style>
+
+<div class="professional-approval">
+  <div class="page-container">
+
+    <div class="page-header">
+      <h1><i class="fas fa-id-badge"></i> Professional Body Approval</h1>
+      <p class="subtitle">Approve or reject your assigned students' professional memberships</p>
+    </div>
+
+    {% if grouped_activities %}
+      {% for key, activities in grouped_activities.items %}
+      <div class="card-section">
+        <div class="card-header-section">
+          <i class="fas fa-users"></i> {{ key }}
+        </div>
+
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover datatable align-middle">
+              <thead>
+                <tr>
+                  <th>Professional Body</th>
+                  <th>Validity</th>
+                  <th>Student Name</th>
+                  <th>Register No</th>
+                  <th>Department</th>
+                  <th>Academic Year</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for act in activities %}
+                <tr>
+                  <td>{{ act.bodyName }}</td>
+                  <td>{{ act.get_validity_display }}</td>
+
+                  <td>
+                    {% if act.student %}
+                      {{ act.student.name }}
+                    {% else %}-{% endif %}
+                  </td>
+
+                  <td>
+                    {% if act.student %}
+                      {{ act.student.reg_no }}
+                    {% else %}-{% endif %}
+                  </td>
+
+                  <td>
+                    {% if act.student and act.student.department %}
+                      {{ act.student.department.Department }}
+                    {% else %}-{% endif %}
+                  </td>
+
+                  <td>{{ act.academic_year|default:"-" }}</td>
+
+                  <td>
+                    {% if act.is_verified %}
+                      <span class="badge bg-success">Verified</span>
+                    {% else %}
+                      <span class="badge bg-warning text-dark">Pending</span>
+                    {% endif %}
+                  </td>
+
+                  <td>
+                    {% if not act.is_verified %}
+                    <form method="post" style="display:inline;">
+                      {% csrf_token %}
+                      <input type="hidden" name="record_id" value="{{ act.id }}">
+                      <input type="hidden" name="action" value="approve">
+                      <button class="btn btn-success btn-sm">Approve</button>
+                    </form>
+
+                    <form method="post" style="display:inline;">
+                      {% csrf_token %}
+                      <input type="hidden" name="record_id" value="{{ act.id }}">
+                      <input type="hidden" name="action" value="reject">
+                      <button class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                    {% else %}
+                      <em class="text-muted">Verified</em>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-center text-muted">No professional records found.</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+$(function(){
+  $('.datatable').DataTable({
+    pageLength: 10,
+    responsive: true
+  });
+});
+
+$(document).ready(function(){
+
+  // DataTables init
+  $('.datatable').DataTable({
+    pageLength: 10,
+    responsive: true,
+    autoWidth: false,
+    language: {
+      search: "Search:",
+      lengthMenu: "Show _MENU_ entries",
+      info: "Showing _START_ to _END_ of _TOTAL_ entries",
+      paginate: {
+        previous: "<i class='fas fa-chevron-left'></i>",
+        next: "<i class='fas fa-chevron-right'></i>"
+      }
+    }
+  });
+
+  // Disable only clicked submit button (safe)
+  $('.professional-approval').on('submit', 'form', function() {
+    const btn = $(this).find('button[type="submit"]');
+    btn.prop('disabled', true);
+    btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Processing...');
+  });
+
+  // Batch filter: extract from header "Batch: X"
+  const $batchSelect = $('#batchFilter');
+  const batches = new Set();
+
+  $('.card-section').each(function(){
+    const headerText = $(this).find('.card-header-section').text();
+    const match = headerText.match(/Batch:\s*([^|]+)/i);
+    const batch = match ? match[1].trim() : '-';
+    $(this).attr('data-batch', batch);
+    batches.add(batch);
+  });
+
+  Array.from(batches).sort().forEach(b => {
+    $batchSelect.append(`<option value="${$('<div/>').text(b).html()}">${b}</option>`);
+  });
+
+  function applyBatchFilter(val){
+    if(val === '__all__'){
+      $('.card-section').show();
+    } else {
+      $('.card-section').each(function(){
+        $(this).toggle($(this).attr('data-batch') === val);
+      });
+    }
+    $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust().responsive.recalc();
+  }
+
+  $batchSelect.on('change', function(){ applyBatchFilter(this.value); });
+
+  $('#clearBatch').on('click', function(){
+    $batchSelect.val('__all__');
+    applyBatchFilter('__all__');
+  });
+
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid py-4" style="max-width:1300px;">
+  <h2 class="fw-bold text-primary mb-3"><i class="fa-solid fa-flask me-2"></i>Lab Management</h2>
+
+  {% if messages %}{% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}{% endif %}
+
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white fw-semibold">Add Lab</div>
+        <div class="card-body">
+          <form method="post" action="{% url 'lab_create' %}">{% csrf_token %}
+            <div class="mb-3"><label class="form-label fw-semibold">Lab Name <span class="text-danger">*</span></label>
+              <input type="text" name="name" class="form-control" required></div>
+            <div class="mb-3"><label class="form-label fw-semibold">Lab Code <span class="text-danger">*</span></label>
+              <input type="text" name="lab_code" class="form-control text-uppercase" required></div>
+            <div class="mb-3"><label class="form-label fw-semibold">Department <span class="text-danger">*</span></label>
+              <select name="department" class="form-select" required>
+                <option value="">-- Select --</option>
+                {% for d in departments %}<option value="{{ d.id }}" data-name="{{ d.Department|lower }}">{{ d.Department }}</option>{% endfor %}
+              </select></div>
+            <div class="mb-3 position-relative">
+              <label class="form-label fw-semibold">Lab Incharge</label>
+              <input type="text" id="incharge_search" class="form-control" placeholder="Type name to search…" autocomplete="off">
+              <input type="hidden" name="incharge" id="incharge_id">
+              <div id="incharge_dropdown" class="list-group position-absolute w-100 shadow-sm"
+                   style="z-index:1055;max-height:230px;overflow:auto;display:none;">
+                {% for f in incharges %}
+                  <button type="button" class="list-group-item list-group-item-action py-1 incharge-opt"
+                          data-id="{{ f.id }}" data-name="{{ f.name }}"
+                          data-deptname="{{ f.department.Department|lower }}"
+                          data-teaching="{% if f.designation.is_teaching %}1{% else %}0{% endif %}">
+                    {{ f.name }}
+                    {% if f.designation %}
+                      <small class="{% if f.designation.is_teaching %}text-muted{% else %}text-success fw-semibold{% endif %}">— {{ f.designation.designation_name }}</small>
+                    {% endif %}
+                  </button>
+                {% endfor %}
+              </div>
+              <small class="text-muted">Type to filter, then click a name to select.</small>
+            </div>
+            <div class="mb-3"><label class="form-label fw-semibold">Location</label>
+              <input type="text" name="location" class="form-control"></div>
+            <button class="btn btn-primary"><i class="fas fa-save me-1"></i>Save Lab</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+          <table class="table table-bordered mb-0 align-middle">
+            <thead class="table-light text-center"><tr><th>Code</th><th>Name</th><th>Department</th><th>Incharge</th><th>Location</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody>
+              {% for l in labs %}
+              <tr>
+                <td>{{ l.lab_code }}</td><td>{{ l.name }}</td>
+                <td>{{ l.department.Department }}</td>
+                <td>{{ l.incharge.name|default:"-" }}</td>
+                <td>{{ l.location|default:"-" }}</td>
+                <td class="text-center">{% if l.is_active %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
+                <td class="text-center" style="white-space:nowrap;">
+                  <a href="{% url 'lab_edit' l.id %}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-pen"></i></a>
+                  <form method="post" action="{% url 'lab_delete' l.id %}" class="d-inline"
+                        onsubmit="return confirm('Delete lab {{ l.lab_code }} — {{ l.name }}? This cannot be undone.');">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="7" class="text-center text-muted py-3">No labs added yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const search = document.getElementById("incharge_search");
+  const hidden = document.getElementById("incharge_id");
+  const dd = document.getElementById("incharge_dropdown");
+  const deptSelect = document.querySelector('select[name="department"]');
+  if (!search || !hidden || !dd) return;
+  const opts = Array.prototype.slice.call(dd.querySelectorAll(".incharge-opt"));
+
+  function closeDD() { dd.style.display = "none"; }
+
+  // Match by department NAME (not id) so BOTH teaching and non-teaching staff of
+  // the department appear, even when Add_Department has duplicate rows (same name,
+  // different id) that would otherwise split faculty and technicians apart.
+  function selectedDeptName() {
+    if (!deptSelect) return "";
+    const opt = deptSelect.options[deptSelect.selectedIndex];
+    return opt ? (opt.getAttribute("data-name") || "") : "";
+  }
+
+  // Filter incharge options by BOTH the selected department and the typed text.
+  function filterOptions(forceOpen) {
+    const q = search.value.toLowerCase().trim();
+    const deptName = selectedDeptName();
+    let any = false;
+    opts.forEach(function (o) {
+      const matchText = o.dataset.name.toLowerCase().indexOf(q) !== -1;
+      const matchDept = !deptName || (o.dataset.deptname || "") === deptName;   // no dept -> show all
+      const show = matchText && matchDept;
+      o.style.display = show ? "block" : "none";
+      if (show) any = true;
+    });
+    dd.style.display = (any && (forceOpen || document.activeElement === search)) ? "block" : "none";
+    return any;
+  }
+
+  search.addEventListener("focus", function () { filterOptions(true); });
+  search.addEventListener("input", function () { hidden.value = ""; filterOptions(true); });
+
+  if (deptSelect) {
+    deptSelect.addEventListener("change", function () {
+      // New department -> clear the current incharge pick and re-filter.
+      hidden.value = "";
+      search.value = "";
+      const has = filterOptions(true);
+      search.placeholder = has ? "Type name to search…" : "No employees found for this department";
+    });
+  }
+
+  opts.forEach(function (o) {
+    o.addEventListener("click", function () {
+      hidden.value = this.dataset.id;
+      search.value = this.dataset.name;
+      closeDD();
+    });
+  });
+  document.addEventListener("click", function (e) {
+    if (!dd.contains(e.target) && e.target !== search) closeDD();
+  });
+});
+</script>
+{% endblock content %}

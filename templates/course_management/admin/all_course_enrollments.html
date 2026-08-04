@@ -1,0 +1,490 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>All Course Enrollments</h3>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" id="openBulkEnrollModal" class="btn btn-primary">
+                Enroll Year/Semester Courses
+            </button>
+            <a href="{% url 'export_course_enrollments_excel' %}" id="exportBtn" class="btn btn-success">
+                Export Excel
+            </a>
+            <a href="{% url 'sync_course_enrollments' %}" class="btn btn-warning">
+                Sync Year/Semester
+            </a>
+        </div>
+    </div>
+
+    <div id="pageMessage"></div>
+
+    <div class="row mb-3">
+        <div class="col-md-3 mb-2">
+            <label><strong>Search</strong></label>
+            <input type="text" id="searchInput" class="form-control" placeholder="Search any field">
+        </div>
+
+        <div class="col-md-3 mb-2">
+            <label><strong>Department</strong></label>
+            <select id="departmentFilter" class="form-control">
+                <option value="">All Departments</option>
+                {% for department in departments %}
+                    <option value="{{ department.id }}">
+                        {{ department.Department }} - {{ department.Department_code }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <label><strong>Section</strong></label>
+            <select id="sectionFilter" class="form-control">
+                <option value="">All Sections</option>
+                {% for section in sections %}
+                    <option value="{{ section }}">{{ section }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <label><strong>Batch</strong></label>
+            <select id="batchFilter" class="form-control">
+                <option value="">All Batches</option>
+                {% for batch in batches %}
+                    <option value="{{ batch }}">{{ batch }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <label><strong>Academic Year</strong></label>
+            <select id="academicYearFilter" class="form-control">
+                <option value="">All Academic Years</option>
+                {% for year in academic_years %}
+                    <option value="{{ year }}">{{ year }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4 mb-2">
+            <label><strong>Course</strong></label>
+            <select id="courseFilter" class="form-control">
+                <option value="">All Courses</option>
+                {% for course in courses %}
+                    <option value="{{ course.course_id }}">
+                        {{ course.course__title }} - {{ course.course__course_code }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3 mb-2">
+            <label><strong>Regulation</strong></label>
+            <select id="regulationFilter" class="form-control">
+                <option value="">All Regulations</option>
+                {% for regulation in regulations %}
+                    <option value="{{ regulation.regulation_id }}">
+                        {{ regulation.regulation__year }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <label><strong>Per Page</strong></label>
+            <select id="perPage" class="form-control">
+                
+                
+                <option value="50">50</option>
+                <option value="200">200</option>
+                <option value="500">500</option>
+                <option value="1000">1000</option>
+                <option value="1500">1500</option>
+            </select>
+        </div>
+
+        <div class="col-md-3 mb-2 d-flex align-items-end">
+            <button type="button" class="btn btn-secondary mr-2" id="resetFilters">Reset Filters</button>
+        </div>
+    </div>
+
+    <div class="mb-2">
+        <strong>Total Records:</strong> <span id="totalCount">0</span>
+        &nbsp; | &nbsp;
+        <strong>Filtered Records:</strong> <span id="filteredCount">0</span>
+        &nbsp; | &nbsp;
+        <strong>Showing:</strong> <span id="showingCount">0</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped" id="enrollmentTable">
+            <thead>
+                <tr>
+                    <th>Sl No</th>
+                    <th>Department Code</th>
+                    <th>Reg No</th>
+                    <th>Section</th>
+                    <th>Batch</th>
+                    <th>Course Code</th>
+                    <th>Regulation</th>
+                    <th>Academic Year</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="7" class="text-center">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div id="pageInfo"></div>
+        <div id="paginationControls"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="bulkEnrollModal" tabindex="-1" role="dialog" aria-labelledby="bulkEnrollModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkEnrollModalLabel">Enroll Year/Semester Courses</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="bulkEnrollMessage"></div>
+
+                <div class="form-group">
+                    <label><strong>Department</strong></label>
+                    <input type="text" id="bulkDepartmentDisplay" class="form-control" readonly>
+                    <small class="form-text text-muted">
+                        This uses the department currently selected in the page filter.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label><strong>Batch</strong></label>
+                    <select id="bulkBatch" class="form-control">
+                        <option value="">Select Batch</option>
+                        {% for batch in bulk_batches %}
+                            <option value="{{ batch }}">{{ batch }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><strong>Course Year</strong></label>
+                    <select id="bulkCourseYear" class="form-control">
+                        <option value="">Select Year</option>
+                        {% for year in course_years %}
+                            <option value="{{ year }}">{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><strong>Semester</strong></label>
+                    <select id="bulkSemester" class="form-control">
+                        <option value="">Select Semester</option>
+                        {% for semester in course_semesters %}
+                            <option value="{{ semester }}">{{ semester }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="alert alert-info mb-0">
+                    Enrollments will be created for active students in the selected batch using active faculty assignments for the selected year and semester. Academic year will be set to {{ current_academic_year }}.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" id="submitBulkEnrollBtn" class="btn btn-primary">
+                    Enroll Courses
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPage = 1;
+    let searchTimer = null;
+
+    function getFilterParams(page = 1) {
+        return {
+            department_id: $("#departmentFilter").val(),
+            section: $("#sectionFilter").val(),
+            batch: $("#batchFilter").val(),
+            course_id: $("#courseFilter").val(),
+            regulation_id: $("#regulationFilter").val(),
+            academic_year: $("#academicYearFilter").val(),
+            search: $("#searchInput").val(),
+            per_page: $("#perPage").val(),
+            page: page
+        };
+    }
+
+    function updateExportUrl() {
+        const filters = getFilterParams(currentPage);
+        let exportUrl = "{% url 'export_course_enrollments_excel' %}";
+        const params = new URLSearchParams();
+
+        if (filters.department_id) params.append("department_id", filters.department_id);
+        if (filters.section) params.append("section", filters.section);
+        if (filters.batch) params.append("batch", filters.batch);
+        if (filters.course_id) params.append("course_id", filters.course_id);
+        if (filters.regulation_id) params.append("regulation_id", filters.regulation_id);
+        if (filters.academic_year) params.append("academic_year", filters.academic_year);
+        if (filters.search) params.append("search", filters.search);
+
+        if (params.toString()) {
+            exportUrl += "?" + params.toString();
+        }
+
+        $("#exportBtn").attr("href", exportUrl);
+    }
+
+    function getCsrfToken() {
+        const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : "";
+    }
+
+    function showPageMessage(type, text) {
+        const alertClass = type === "success" ? "alert-success" : "alert-danger";
+        $("#pageMessage").html(`<div class="alert ${alertClass}" role="alert">${text}</div>`);
+    }
+
+    function showBulkEnrollMessage(type, text) {
+        const alertClass = type === "success"
+            ? "alert-success"
+            : type === "warning"
+                ? "alert-warning"
+                : type === "info"
+                    ? "alert-info"
+                    : "alert-danger";
+
+        $("#bulkEnrollMessage").html(`<div class="alert ${alertClass}" role="alert">${text}</div>`);
+    }
+
+    function clearBulkEnrollMessage() {
+        $("#bulkEnrollMessage").html("");
+    }
+
+    function getSelectedDepartmentName() {
+        const option = $("#departmentFilter option:selected");
+        return option.length ? option.text().trim() : "";
+    }
+
+    function resetBulkEnrollForm() {
+        $("#bulkBatch").val("");
+        $("#bulkCourseYear").val("");
+        $("#bulkSemester").val("");
+        $("#bulkDepartmentDisplay").val(getSelectedDepartmentName());
+        clearBulkEnrollMessage();
+        $("#submitBulkEnrollBtn").prop("disabled", false).text("Enroll Courses");
+    }
+
+    function openBulkEnrollModal() {
+        const departmentId = $("#departmentFilter").val();
+        if (!departmentId) {
+            showPageMessage("error", "Select a department first, then open bulk enrollment.");
+            return;
+        }
+
+        $("#bulkDepartmentDisplay").val(getSelectedDepartmentName());
+        clearBulkEnrollMessage();
+        $("#bulkEnrollModal").modal("show");
+    }
+
+    function submitBulkEnroll() {
+        const departmentId = $("#departmentFilter").val();
+        const batch = $("#bulkBatch").val();
+        const courseYear = $("#bulkCourseYear").val();
+        const semester = $("#bulkSemester").val();
+
+        if (!departmentId || !batch || !courseYear || !semester) {
+            showBulkEnrollMessage("warning", "Select department, batch, year, and semester.");
+            return;
+        }
+
+        const $submitBtn = $("#submitBulkEnrollBtn");
+        $submitBtn.prop("disabled", true).text("Enrolling...");
+        showBulkEnrollMessage("info", "Creating enrollments...");
+
+        $.ajax({
+            url: "{% url 'bulk_enroll_course_enrollments' %}",
+            type: "POST",
+            headers: {
+                "X-CSRFToken": getCsrfToken()
+            },
+            data: {
+                department_id: departmentId,
+                batch: batch,
+                course_year: courseYear,
+                semester: semester
+            },
+            success: function(response) {
+                showPageMessage("success", response.message || "Bulk enrollment completed successfully.");
+                $("#bulkEnrollModal").modal("hide");
+                loadEnrollments(1);
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON || {};
+                const message = response.message || "Bulk enrollment failed.";
+                showBulkEnrollMessage("error", message);
+            },
+            complete: function() {
+                $submitBtn.prop("disabled", false).text("Enroll Courses");
+            }
+        });
+    }
+
+    function renderPagination(response) {
+        let html = "";
+
+        if (response.num_pages > 1) {
+            if (response.has_previous) {
+                html += `<button class="btn btn-sm btn-outline-primary mr-1 page-btn" data-page="${response.previous_page_number}">Previous</button>`;
+            }
+
+            html += `<span class="mx-2">Page ${response.page} of ${response.num_pages}</span>`;
+
+            if (response.has_next) {
+                html += `<button class="btn btn-sm btn-outline-primary ml-1 page-btn" data-page="${response.next_page_number}">Next</button>`;
+            }
+        }
+
+        $("#paginationControls").html(html);
+        $("#pageInfo").html(`Showing ${response.start_index} to ${response.end_index} of ${response.filtered_count} entries`);
+    }
+
+    function loadCoursesByDepartment() {
+        const departmentId = $("#departmentFilter").val();
+
+        $.ajax({
+            url: "{% url 'get_courses_by_department_ajax' %}",
+            type: "GET",
+            data: {
+                department_id: departmentId
+            },
+            success: function(response) {
+                let options = `<option value="">All Courses</option>`;
+
+                response.courses.forEach(function(course) {
+                    options += `<option value="${course.id}">${course.title} - ${course.course_code}</option>`;
+                });
+
+                $("#courseFilter").html(options);
+            }
+        });
+    }
+
+    function loadEnrollments(page = 1) {
+        currentPage = page;
+        const filters = getFilterParams(page);
+
+        $.ajax({
+            url: "{% url 'all_course_enrollments_ajax' %}",
+            type: "GET",
+            data: filters,
+            success: function(response) {
+                let rows = "";
+                const data = response.data;
+
+                if (data.length > 0) {
+                    data.forEach(function(item, index) {
+                        let slNo = response.start_index + index;
+
+                        rows += `
+                            <tr>
+                                <td>${slNo}</td>
+                                <td>${item.department_code || ""}</td>
+                                <td>${item.reg_no || ""}</td>
+                                <td>${item.section || ""}</td>
+                                <td>${item.batch || ""}</td>
+                                <td>${item.course_code || ""}</td>
+                                <td>${item.regulation || ""}</td>
+                                <td>${item.academic_year || ""}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    rows = `<tr><td colspan="8" class="text-center">No enrollments found</td></tr>`;
+                }
+
+                $("#enrollmentTable tbody").html(rows);
+                $("#totalCount").text(response.total_count);
+                $("#filteredCount").text(response.filtered_count);
+                $("#showingCount").text(response.data.length);
+
+                renderPagination(response);
+                updateExportUrl();
+            },
+            error: function() {
+                $("#enrollmentTable tbody").html(
+                    `<tr><td colspan="7" class="text-danger text-center">Failed to load data</td></tr>`
+                );
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        loadEnrollments();
+
+        $("#departmentFilter").change(function() {
+            $("#courseFilter").val("");
+            loadCoursesByDepartment();
+            loadEnrollments(1);
+        });
+
+        $("#sectionFilter, #batchFilter, #courseFilter, #regulationFilter, #academicYearFilter, #perPage").change(function() {
+            loadEnrollments(1);
+        });
+
+        $("#searchInput").on("keyup", function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function() {
+                loadEnrollments(1);
+            }, 400);
+        });
+
+        $(document).on("click", ".page-btn", function() {
+            const page = $(this).data("page");
+            loadEnrollments(page);
+        });
+
+        $("#openBulkEnrollModal").click(function() {
+            openBulkEnrollModal();
+        });
+
+        $("#submitBulkEnrollBtn").click(function() {
+            submitBulkEnroll();
+        });
+
+        $("#bulkEnrollModal").on("hidden.bs.modal", function() {
+            resetBulkEnrollForm();
+        });
+
+        $("#resetFilters").click(function() {
+            $("#departmentFilter").val("");
+            $("#sectionFilter").val("");
+            $("#batchFilter").val("");
+            $("#courseFilter").val("");
+            $("#regulationFilter").val("");
+            $("#academicYearFilter").val("");
+            $("#searchInput").val("");
+            $("#perPage").val("10");
+
+            loadCoursesByDepartment();
+            loadEnrollments(1);
+        });
+
+        resetBulkEnrollForm();
+    });
+</script>
+{% endblock content %}

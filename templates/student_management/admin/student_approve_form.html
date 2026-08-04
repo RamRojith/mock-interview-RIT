@@ -1,0 +1,869 @@
+{% extends "base.html" %}
+{% load authorizer_tags %}
+{% load sm_tags %}
+{% comment %} {% regulations as regulations %} {% endcomment %}
+
+<!DOCTYPE html>
+{% load static %}
+<html>
+    {% block content %}
+<head>
+
+    <title>Student Approval</title>
+
+
+
+
+    <style>
+        /* Modern Dashboard Styling */
+        #main-content {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            padding: 2rem;
+            background-color: #f8f9fa;
+        }
+        
+        /* Header Styling */
+        header {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        /* Card Styling */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-header {
+            font-weight: 600;
+            border-radius: 10px 10px 0 0 !important;
+            padding: 1rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .count-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .bg-warning {
+            background-color: #ffc107 !important;
+        }
+        
+        .bg-info {
+            background-color: #17a2b8 !important;
+        }
+        
+        .bg-success {
+            background-color: #28a745 !important;
+        }
+        
+        /* Form Styling */
+        .fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .availability-input-field {
+            margin-bottom: 1rem;
+        }
+        
+        .availability-input-field label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .form-control, .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        
+        /* Custom Columns Section */
+        #customised_Column {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin: 2rem 0;
+        }
+        
+        #customised_Column h3 {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        #customised_Column table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        #customised_Column th, #customised_Column td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        #customised_Column th {
+            font-weight: 600;
+            background-color: #f8f9fa;
+        }
+        
+        /* Filter Button */
+        #filterButton {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        #filterButton:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Table Styling */
+        .table-responsive {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .table__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .input-group {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+        }
+        
+        .input-group img {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 18px;
+            opacity: 0.7;
+        }
+        
+        .export__file {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .export__file a {
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        /* Main Table Styling */
+        #example {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        #example thead th {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+        }
+        
+        #example tbody td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle;
+        }
+        
+        #example tbody tr:hover {
+            background-color: rgba(44, 62, 80, 0.03);
+        }
+        
+        /* Editable Elements */
+        .editable-select, .editable-input {
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .editable-select:hover, .editable-input:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .update-select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        
+        /* Button Styling */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
+        .btn-sm {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.85rem;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0069d9;
+            transform: translateY(-2px);
+        }
+        
+        /* Approval Status */
+        .approval-status {
+            font-weight: 500;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .fields {
+                grid-template-columns: 1fr;
+            }
+            
+            .table__header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .input-group {
+                width: 100%;
+            }
+        }
+        </style>
+    </head>
+      <body>
+
+<div class="container mt-5" id="main-content">
+
+    <div class="row">
+
+            <header>Student Approval</header>
+            <form method="POST" autocomplete="off" enctype="multipart/form-data" id="filter">
+                {% csrf_token %}
+                <div class="form first">
+                    <div class="details personal">
+
+                        <div class="row">
+                            <div class="col-md-3 my-2">
+                                <div class="card text-center">
+                                    <div class="card-header bg-warning text-dark">
+                                        Total Enquiries
+                                    </div>
+                                    <div class="card-body">
+                                        <span class="count-value">{{ total_student }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                    
+                            <!-- Program of Study Cards -->
+                            {% for item in program_of_study_counts %}
+                            <div class="col-md-3 my-2">
+                                <div class="card text-center">
+                                    <div class="card-header bg-info text-white">
+                                        {{ item.programme_of_study }}
+                                    </div>
+                                    <div class="card-body">
+                                        <span class="count-value">{{ item.count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                    
+                            <!-- Mode Cards -->
+                            {% for item in mode_counts %}
+                            <div class="col-md-3 my-2">
+                                <div class="card text-center">
+                                    <div class="card-header bg-success text-white">
+                                        {{ item.mode_of_study }}
+                                    </div>
+                                    <div class="card-body">
+                                        <span class="count-value">{{ item.count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="fields">
+                            <div class="availability-input-field">
+                                <label for="first_choice">Program</label>
+                                <select name="second_choice" class="form-control"  required>
+                                    <option  value="" disabled hidden selected>Select Program</option>
+                                {% Program_data as program %}
+                                  {% for dept in program %}
+                                  <option value="{{ dept.program_code }}">{{ dept.program_name }}</option>
+                                  {% endfor %}   
+                                  
+                                </select>
+                            </div>
+                            <div class="availability-input-field">
+                                <label for="programme_of_study">Programme of Study</label>
+                                <select name="programme_of_study" id="programme_of_study" class="form-select" >
+                                    <option value="" disabled selected>Select Programme</option>
+                                    <option value="Certificate">Certificate</option>
+                                    <option value="Diploma">Diploma</option>
+                                    <option value="Advanced Diploma">Advanced Diploma</option>
+                                    <option value="Bachelor Degree">Bachelor Degree</option>
+                                    <option value="Postgraduate Diploma">Postgraduate Diploma</option>
+                                    <option value="Master Degree">Master Degree</option>
+                                </select>
+                            </div>
+                            <div class="availability-input-field">
+                                <label for="mode_of_study">Mode of Study</label>
+                                <select name="mode_of_study" id="mode_of_study" class="form-select" >
+                                    <option value="" disabled selected>Select Mode of Study</option>
+                                    <option value="Regular">Regular</option>
+                                    <option value="Evening">Evening</option>
+                                    <option value="Weekend">Weekend</option>
+                                    <option value="Term">Term</option>
+                                    <option value="Blended/E-Learning">Blended/E-Learning</option>
+                                    <option value="ODeL">ODeL</option>
+                                </select>
+                            </div>
+                            <div class="availability-input-field">
+                                <label for="approve">Approve Status</label>
+                                <select name="approve" id="approve" class="form-select" >
+                                    <option value="" disabled selected>Select Programme</option>
+                                    <option value="OK">Approved</option>
+                                    <option value="no">Not Approved</option>
+                                </select>
+                            </div>
+                        
+
+                            <div class="availability-input-field">
+                                <label>Column</label>
+                                <select name="Column_type" id="columnType" class="form-control">
+                                    <option value="" hidden>Select Column Type</option>
+                                    <option value="all">All Columns</option>
+                                    <option value="customised_Column">Customised Columns</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                            <!-- Customised Columns Selection -->
+                            <div id="customised_Column" style="display:none; margin-top: 20px;">
+                                <div id="Column_container">
+                                    <h3>
+                                        Select Columns:
+                                        <input type="checkbox" id="select-all"> Select All
+                                    </h3>
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Column Name</th>
+                                                <th>Select</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for col in columns %}
+                                            <tr>
+                                                <td>{{ col }}</td>
+                                                <td>
+                                                    <input type="checkbox" class="custom-column-checkbox" name="custom_columns" value="{{ col }}"
+                                                    {% if col in selected_columns %}checked{% endif %}>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Display the Data Table -->
+                            
+                            
+                            <script>
+                            document.getElementById("columnType").addEventListener("change", function () {
+                                let selection = this.value;
+                                let customColumnsDiv = document.getElementById("customised_Column");
+                            
+                                if (selection === "customised_Column") {
+                                    customColumnsDiv.style.display = "block";
+                                } else {
+                                    customColumnsDiv.style.display = "none";
+                                }
+                            });
+                            
+                            document.getElementById("select-all").addEventListener("click", function () {
+                                let checkboxes = document.querySelectorAll(".custom-column-checkbox");
+                                checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+                            });
+                            </script>
+                            
+                            <button type="submit" class="btn btn-sm btn-success" id="filterButton">
+                                <span class="btn btn-sm btn-success">Filter</span>
+                                <i class="uil uil-navigator"></i>
+                            </button> 
+                        
+                    </div>
+                </div>
+            </form>
+            
+                        <div class="table-responsive scrollable-table">
+                            <table class="table table-bordered">
+                                <section class="table__body">
+                                    <table id="example" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                {% if data and data|length > 0 %}
+                                                    {% for key in data.0.keys %}
+                                                        {% if key != "admission_sourse" and key != "admission_reference" %} 
+                                                            <th>{{ key }}</th> 
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    <th>Name</th>
+                                                    <th>Programme of Study</th>
+                                                    <th>Regulation</th>
+                                                    <th>Admission Source</th>  <!-- New Column -->
+                                                    
+                                                    <th>Admission Reference</th> <!-- New Column -->
+                                                    
+                                                    <th>PDF</th>
+                                                    <th>Approval</th>
+                                                    <th>Admission Letter</th>
+                                                {% endif %}
+                                            </tr>
+                                        </thead>
+                                   <tbody>
+    {% for row in data %}
+        <tr data-id="{{ row.id }}">
+            {% for key, value in row.items %}
+                {% if key != "admission_sourse" and key != "admission_reference" %}
+                    <td>{{ value }}</td>  
+                {% endif %}
+            {% endfor %}
+            
+            <td>{{ row.first_name }}<br>{{ row.surname }}</td>
+            <td>{{ row.programme_of_study }}</td>
+            <td>
+                {% if row.regulation %}
+                    <span class="editable-select" data-field="regulation" data-id="{{ row.id }}">{{ row.regulation }}</span>
+                {% else %}
+                <select class="update-select admission-sourse-select" data-field="regulation" data-id="{{ row.id }}">
+                    <option value="">Select Regulation</option>
+                    {% for regulation in regulations %}
+                        <option value="{{ regulation }}" {% if row.regulation == regulation %}selected{% endif %}>
+                            {{ regulation }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+            </td>
+            <td>
+                {% if row.admission_sourse %}
+                    <span class="editable-select" data-field="admission_sourse" data-id="{{ row.id }}">{{ row.admission_sourse }}</span>
+                {% else %}
+                <select class="update-select admission-sourse-select" data-field="admission_sourse" data-id="{{ row.id }}">
+                    <option value="">Select Admission Source</option>
+                    {% for source in admission_sources %}
+                        <option value="{{ source.admission_sourse }}" {% if row.admission_sourse == source.admission_sourse %}selected{% endif %}>
+                            {{ source.admission_sourse }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+            </td>
+            
+            <td>
+                {% if row.admission_reference %}
+                    <span class="editable-input" data-field="admission_reference" data-id="{{ row.id }}">{{ row.admission_reference }}</span>
+                {% else %}
+                    <select class="update-select admission-reference-select" data-field="admission_reference" data-id="{{ row.id }}">
+                        <option value="">Select Admission Reference</option>
+                        {% for source in admissionreferences %}
+                            <option value="{{ source.admission_reference }}" {% if row.admission_reference == source.admission_reference %}selected{% endif %}>
+                                {{ source.admission_reference }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </td>
+            
+            <td>
+                <a href="{% url 'generate_student_pdf' row.id %}" target="_blank" class="btn btn-primary">PDF</a>
+            </td>
+            <td>
+                <span class="approval-status">
+                    {% if row.approve == "OK" %}
+                        <span class="text-success">Approved</span>
+                    {% elif row.approve == "no" %}
+                        <span class="text-danger">Not Approved</span>
+                    {% else %}
+                        <span class="text-warning">Pending</span>
+                    {% endif %}
+                </span>
+                <div class="btn-group mt-1">
+                    {% if row.approve != "OK" %}
+                        <button class="btn btn-sm btn-success approve-btn" data-value="OK">APPROVE</button>
+                    {% endif %}
+                    {% if row.approve != "no" %}
+                        <button class="btn btn-sm btn-danger approve-btn" data-value="no">NOT APPROVE</button>
+                    {% endif %}
+                </div>
+            </td>
+            <td>
+                {% if row.approve == "OK" %}
+                    {% if not row.is_email_sent %}
+                        <a href="{% url 'send_student_approval_email' row.nrc_number|urlencode %}" class="btn btn-sm btn-primary">Send Email</a>
+                    {% else %}
+                        <span class="badge bg-success">Email Sent</span>
+                    {% endif %}
+                {% else %}
+                    <span class="text-muted">N/A</span>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+</tbody>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".approve-btn").forEach(button => {
+        button.addEventListener("click", function () {
+            let row = this.closest("tr");
+            let studentId = row.getAttribute("data-id");
+            let approvalStatus = this.getAttribute("data-value");
+            
+            fetch(window.location.pathname, {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                },
+                body: new URLSearchParams({
+                    "student_id": studentId,
+                    "approval_status": approvalStatus
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    // Reload the page to reflect the changes
+                    window.location.reload();
+                }
+            });
+        });
+    });
+});
+</script>
+                                    </table>
+                                </section>
+                            </table>
+                        </div>
+                    </main>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Place at the end of the <body> for better page load performance -->
+<!-- jQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<!-- jQuery UI -->
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+<!-- XLSX for Excel export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+
+<!-- jsPDF for PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
+
+
+<!-- Your Custom JS -->
+<script src="{% static '53_js/multiselect-dropdown.js' %}"></script>
+
+ <script>
+ document.querySelectorAll('input, select').forEach(input => {
+    input.addEventListener('change', () => {
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        const program = document.getElementById('program').value;
+
+        if (startDate && endDate && program) {
+            document.getElementById('filterButton').disabled = false;
+        } else {
+            document.getElementById('filterButton').disabled = true;
+        }
+    });
+});
+
+document.querySelector('.input-group input').addEventListener('keyup', function () {
+    const filter = this.value.toUpperCase();
+    const rows = document.querySelectorAll('#customers_table table tbody tr');
+
+    rows.forEach(row => {
+        const text = row.innerText.toUpperCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+    });
+});
+
+
+document.getElementById('exportExcel').addEventListener('click', function () {
+    const table = document.getElementById('example');
+    const workbook = XLSX.utils.table_to_book(table);
+    XLSX.writeFile(workbook, 'data.xlsx');
+});
+
+
+document.getElementById('exportPdf').addEventListener('click', function () {
+    const doc = new jsPDF();
+    doc.autoTable({ html: '#example' });
+    doc.save('data.pdf');
+});
+</script>
+
+<script>
+    // Parse the field_counts data passed from Django
+    const fieldCounts = JSON.parse('{{ field_counts|safe }}');
+
+    // Function to update the displayed value dynamically
+    function updateFieldCount(selectedField) {
+        const counts = fieldCounts[selectedField]; // Get counts for the selected field
+        const totalCount = counts.reduce((sum, item) => sum + item.count, 0); // Calculate total count
+
+        // Update the displayed value in the frontend
+        const countDisplayElement = document.getElementById('countDisplay');
+        countDisplayElement.innerText = `Total Count for ${selectedField}: ${totalCount}`;
+    }
+
+    // Initial display of total count for 'program'
+    updateFieldCount('program');
+
+    // Update display when the dropdown changes
+    document.getElementById('chartField').addEventListener('change', function () {
+        const selectedField = this.value;
+        updateFieldCount(selectedField);
+    });
+</script>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    // Handle select box change
+    document.querySelectorAll(".update-select").forEach(function (selectBox) {
+        selectBox.addEventListener("change", function () {
+            updateStudentData(this);
+        });
+    });
+
+    // Make text fields editable on click
+    document.querySelectorAll(".editable-input, .editable-select").forEach(function (span) {
+        span.addEventListener("click", function () {
+            let field = this.getAttribute("data-field");
+            let studentId = this.getAttribute("data-id");
+            let oldValue = this.innerText.trim();
+
+            if (field === "admission_sourse") {
+                this.outerHTML = `
+                    <select class="update-select" data-field="${field}" data-id="${studentId}">
+                        <option value="Online" ${oldValue === "Online" ? "selected" : ""}>Online</option>
+                        <option value="Offline" ${oldValue === "Offline" ? "selected" : ""}>Offline</option>
+                        <option value="Referral" ${oldValue === "Referral" ? "selected" : ""}>Referral</option>
+                    </select>
+                `;
+            } else if (field === "regulation") {
+                this.outerHTML = `
+                    <select class="update-select regulation-select" data-field="${field}" data-id="${studentId}">
+                        <option value="">Select Regulation</option>
+                        {% for regulation in regulations %}
+                            <option value="{{ regulation }}" ${oldValue === "{{ regulation }}" ? "selected" : ""}>
+                                {{ regulation }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                `;
+            } else {
+                this.outerHTML = `<input type="text" class="update-input" data-field="${field}" data-id="${studentId}" value="${oldValue}">`;
+            }
+
+            // Attach event listeners again
+            document.querySelector(`.update-select[data-id="${studentId}"]`)?.addEventListener("change", function () {
+                updateStudentData(this);
+            });
+        });
+    });
+
+    function updateStudentData(element) {
+        let studentId = element.getAttribute("data-id");
+        let fieldName = element.getAttribute("data-field");
+        let newValue = element.value.trim();
+
+        fetch("{% url 'update_student_admission' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                student_id: studentId,
+                field: fieldName,
+                value: newValue
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Replace with updated value
+                if (fieldName === "admission_sourse" || fieldName === "regulation") {
+                    element.outerHTML = `<span class="editable-select" data-field="${fieldName}" data-id="${studentId}">${newValue}</span>`;
+                } else {
+                    element.outerHTML = `<span class="editable-input" data-field="${fieldName}" data-id="${studentId}">${newValue}</span>`;
+                }
+                
+                // Reattach click event to the new span
+                document.querySelector(`span[data-id="${studentId}"][data-field="${fieldName}"]`)
+                    .addEventListener("click", function() {
+                        // The same click handler as above
+                    });
+            } else {
+                alert("Failed to update!");
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    }
+});
+</script>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    document.getElementById("admission_sourse_select").addEventListener("change", function() {
+        let selectedSource = this.value;
+        let referenceSelect = document.getElementById("admission_reference_select");
+    
+        if (!selectedSource) {
+            referenceSelect.innerHTML = "<option value=''>Select Admission Reference</option>";
+            return;
+        }
+    
+        fetch(`/get-admission-references/?admission_sourse=${encodeURIComponent(selectedSource)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                referenceSelect.innerHTML = "<option value=''>Select Admission Reference</option>";
+                if (data.error) {
+                    console.error("Error:", data.error);
+                    return;
+                }
+                data.forEach(item => {
+                    referenceSelect.innerHTML += `<option value="${item.admission_reference}">${item.admission_reference}</option>`;
+                });
+            })
+            .catch(error => console.error("Fetch error:", error));
+    });
+    
+</script>
+
+
+
+ 
+
+{% endblock content %}
+</body>
+</html>

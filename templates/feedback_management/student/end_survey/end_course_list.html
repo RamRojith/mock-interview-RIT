@@ -1,0 +1,727 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+  :root{
+    --card:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --soft:#f8fafc;
+    --pri:#2563eb;
+    --pri2:#1e40af;
+
+    --success:#16a34a;
+    --success-bg:#ecfdf5;
+    --success-border:#bbf7d0;
+
+    --completed:#047857;
+    --completed-bg:#ecfdf5;
+    --completed-border:#6ee7b7;
+
+    --warn:#d97706;
+    --warn-bg:#fffbeb;
+    --warn-border:#fde68a;
+
+    --bad:#dc2626;
+    --bad-bg:#fef2f2;
+    --bad-border:#fecaca;
+
+    --dark:#475569;
+    --dark-bg:#f1f5f9;
+    --dark-border:#cbd5e1;
+
+    --shadow:0 10px 30px rgba(15, 23, 42, 0.06);
+    --r:18px;
+  }
+
+  *,
+  *::before,
+  *::after{
+    box-sizing:border-box;
+  }
+
+  html,
+  body{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+  }
+
+  body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    color:var(--ink);
+    background:#f8fafc;
+  }
+
+  .wrap{
+    width:100%;
+    max-width:1500px;
+    margin:20px auto;
+    padding:0 14px;
+  }
+
+  .hero{
+    background:linear-gradient(
+      135deg,
+      rgba(37,99,235,.14),
+      rgba(99,102,241,.08)
+    );
+    border:1px solid var(--border);
+    border-radius:var(--r);
+    padding:18px 20px;
+    box-shadow:var(--shadow);
+  }
+
+  .hero-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:14px;
+  }
+
+  .hero-title{
+    margin:0;
+    font-size:24px;
+    font-weight:700;
+    color:var(--ink);
+  }
+
+  .hero-sub{
+    margin-top:7px;
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.5;
+  }
+
+  .hero-sub .sep{
+    margin:0 8px;
+    color:#94a3b8;
+  }
+
+  .pillbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+
+  .pill{
+    background:rgba(255,255,255,.78);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:7px 12px;
+    font-size:13px;
+    color:var(--ink);
+    font-weight:600;
+  }
+
+  .legend{
+    margin-top:14px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+
+  .legend-item{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:6px 12px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+
+  .legend-dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    flex:0 0 10px;
+  }
+
+  .dot-completed{
+    background:var(--completed);
+  }
+
+  .dot-open{
+    background:var(--success);
+  }
+
+  .dot-upcoming{
+    background:var(--warn);
+  }
+
+  .dot-closed{
+    background:var(--bad);
+  }
+
+  .dot-na{
+    background:var(--dark);
+  }
+
+  .grid{
+    margin-top:16px;
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:16px;
+  }
+
+  @media (max-width:1100px){
+    .grid{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width:700px){
+    .wrap{
+      margin:14px auto;
+      padding:0 10px;
+    }
+
+    .hero{
+      padding:16px;
+    }
+
+    .hero-title{
+      font-size:21px;
+    }
+
+    .hero-sub .sep{
+      display:none;
+    }
+
+    .hero-sub span{
+      display:inline-block;
+      margin-right:6px;
+    }
+
+    .grid{
+      grid-template-columns:1fr;
+    }
+
+    .headrow{
+      flex-direction:column;
+    }
+
+    .badge{
+      align-self:flex-start;
+    }
+  }
+
+  .cardx{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--r);
+    box-shadow:var(--shadow);
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    min-height:100%;
+    transition:
+      transform .18s ease,
+      box-shadow .18s ease,
+      border-color .18s ease;
+  }
+
+  .cardx:hover{
+    transform:translateY(-2px);
+    box-shadow:0 14px 34px rgba(15, 23, 42, 0.08);
+  }
+
+  .cardx.completed-card{
+    border-color:var(--completed-border);
+    background:linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #f0fdf4 100%
+    );
+  }
+
+  .headrow{
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    justify-content:space-between;
+  }
+
+  .course-area{
+    min-width:0;
+  }
+
+  .course{
+    font-weight:700;
+    font-size:16px;
+    color:var(--ink);
+    line-height:1.35;
+    word-break:break-word;
+  }
+
+  .code{
+    color:var(--muted);
+    font-size:12.5px;
+    margin-top:4px;
+  }
+
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:5px 11px;
+    font-size:12px;
+    font-weight:700;
+    white-space:nowrap;
+    line-height:1.2;
+  }
+
+  .badge.completed{
+    color:var(--completed);
+    background:var(--completed-bg);
+    border-color:var(--completed-border);
+  }
+
+  .badge.open{
+    color:var(--success);
+    background:var(--success-bg);
+    border-color:var(--success-border);
+  }
+
+  .badge.upcoming{
+    color:var(--warn);
+    background:var(--warn-bg);
+    border-color:var(--warn-border);
+  }
+
+  .badge.closed{
+    color:var(--bad);
+    background:var(--bad-bg);
+    border-color:var(--bad-border);
+  }
+
+  .badge.na{
+    color:var(--dark);
+    background:var(--dark-bg);
+    border-color:var(--dark-border);
+  }
+
+  .meta{
+    margin-top:12px;
+    background:var(--soft);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:11px 12px;
+    font-size:13px;
+  }
+
+  .meta .rowx{
+    display:flex;
+    gap:10px;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding:5px 0;
+    border-bottom:1px dashed #e5e7eb;
+  }
+
+  .meta .rowx:last-child{
+    border-bottom:none;
+  }
+
+  .meta .k{
+    color:var(--muted);
+    min-width:92px;
+  }
+
+  .meta .v{
+    color:var(--ink);
+    text-align:right;
+    font-weight:600;
+    word-break:break-word;
+  }
+
+  .completed-box{
+    margin-top:12px;
+    border:1px solid var(--completed-border);
+    border-radius:14px;
+    background:var(--completed-bg);
+    padding:12px;
+  }
+
+  .completed-title{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:var(--completed);
+    font-size:13px;
+    font-weight:700;
+  }
+
+  .completed-text{
+    margin-top:6px;
+    color:#065f46;
+    font-size:12.5px;
+    line-height:1.5;
+  }
+
+  .completed-date{
+    margin-top:7px;
+    color:#047857;
+    font-size:12px;
+    font-weight:600;
+  }
+
+  .window-box{
+    margin-top:12px;
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:#fff;
+    padding:11px 12px;
+  }
+
+  .window-title{
+    font-size:12px;
+    font-weight:700;
+    color:var(--muted);
+    letter-spacing:.3px;
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+
+  .window-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    font-size:13px;
+    padding:4px 0;
+  }
+
+  .window-row .k{
+    color:var(--muted);
+    flex:0 0 auto;
+  }
+
+  .window-row .v{
+    color:var(--ink);
+    text-align:right;
+    font-weight:600;
+    word-break:break-word;
+  }
+
+  .hint{
+    margin-top:10px;
+    font-size:12.5px;
+    color:var(--muted);
+    line-height:1.5;
+  }
+
+  .hint.completed-hint{
+    color:#047857;
+  }
+
+  .actions{
+    margin-top:auto;
+    display:flex;
+    gap:10px;
+    padding-top:14px;
+  }
+
+  .btnx{
+    width:100%;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:11px 14px;
+    border-radius:12px;
+    border:1px solid transparent;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    text-decoration:none;
+    transition:all .18s ease;
+  }
+
+  .btn-pri{
+    background:var(--pri);
+    color:#fff;
+  }
+
+  .btn-pri:hover{
+    background:var(--pri2);
+    color:#fff;
+    text-decoration:none;
+  }
+
+  .btn-dis{
+    background:#e5e7eb;
+    color:#374151;
+    border-color:#d1d5db;
+    cursor:not-allowed;
+  }
+
+  .btn-completed{
+    background:var(--completed-bg);
+    color:var(--completed);
+    border-color:var(--completed-border);
+    cursor:not-allowed;
+  }
+
+  .empty-card{
+    margin-top:16px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:var(--r);
+    box-shadow:var(--shadow);
+    padding:22px;
+    text-align:center;
+  }
+
+  .empty-title{
+    font-size:18px;
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:6px;
+  }
+
+  .empty-sub{
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.6;
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <h4 class="hero-title">Course End Survey</h4>
+
+        <div class="hero-sub">
+          Student:
+          <span style="color:var(--ink); font-weight:600;">
+            {{ student.name|default:student }}
+          </span>
+
+          <span class="sep">|</span>
+
+          Current Year:
+          <span style="color:var(--ink); font-weight:600;">
+            {{ current_year|default:"-" }}
+          </span>
+
+          <span class="sep">|</span>
+
+          Current Semester:
+          <span style="color:var(--ink); font-weight:600;">
+            {{ current_sem|default:"-" }}
+          </span>
+        </div>
+      </div>
+
+      <div class="pillbar">
+        <span class="pill">
+          Total Courses: {{ enrollments|length }}
+        </span>
+      </div>
+    </div>
+
+
+  {% if enrollments %}
+
+    <div class="grid">
+
+      {% for item in enrollments %}
+
+        {% with e=item.obj %}
+
+          <div class="cardx {% if item.submitted %}completed-card{% endif %}">
+
+            <div class="headrow">
+
+              <div class="course-area">
+                <div class="course">
+                  {{ e.course.title|default:e.course }}
+                </div>
+
+                <div class="code">
+                  {{ e.course.course_code|default:"No Course Code" }}
+                </div>
+              </div>
+
+              {% if item.submitted %}
+                <span class="badge completed">
+                  ✓ Completed
+                </span>
+
+              {% elif item.is_open %}
+                <span class="badge open">
+                  Open
+                </span>
+
+              {% elif item.is_upcoming %}
+                <span class="badge upcoming">
+                  Upcoming
+                </span>
+
+              {% elif item.is_closed %}
+                <span class="badge closed">
+                  Closed
+                </span>
+
+              {% elif item.is_available %}
+                <span class="badge na">
+                  Available
+                </span>
+
+              {% else %}
+                <span class="badge na">
+                  Not Available
+                </span>
+              {% endif %}
+
+            </div>
+
+            {% if item.submitted %}
+
+     
+            {% endif %}
+
+            <div class="window-box">
+              <div class="window-title">
+                Survey Window
+              </div>
+
+              <div class="window-row">
+                <div class="k">
+                  Start
+                </div>
+
+                <div class="v">
+                  {% if item.win_start %}
+                    {{ item.win_start|date:"d M Y, h:i A" }}
+                  {% else %}
+                    Not set
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="window-row">
+                <div class="k">
+                  End
+                </div>
+
+                <div class="v">
+                  {% if item.win_end %}
+                    {{ item.win_end|date:"d M Y, h:i A" }}
+                  {% else %}
+                    Not set
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="hint {% if item.submitted %}completed-hint{% endif %}">
+
+              {% if item.submitted %}
+
+                This course survey has been completed. You cannot
+                reopen or resubmit the survey for this course.
+
+              {% elif item.is_open %}
+
+                The survey window is currently active. You can open
+                and submit the course outcome survey now.
+
+              {% elif item.is_upcoming %}
+
+                The survey has been created, but it is not open yet.
+                It will become available once the start date is reached.
+
+              {% elif item.is_closed %}
+
+                The survey window has already ended. Submission is
+                no longer allowed for this course.
+
+              {% elif item.is_available %}
+
+                Course outcome details are available, but the survey
+                window is not currently active.
+
+              {% else %}
+
+                No active course outcome survey is available for this
+                course at the moment.
+
+              {% endif %}
+
+            </div>
+
+            <div class="actions">
+
+              {% if item.submitted %}
+
+                <button
+                  type="button"
+                  class="btnx btn-completed"
+                  disabled
+                >
+                  ✓ Survey Completed
+                </button>
+
+              {% elif item.is_open %}
+
+                <a
+                  class="btnx btn-pri"
+                  href="{% url 'course_end_survey_form' %}?enrollment_id={{ e.id }}"
+                >
+                  Open Course Outcomes
+                </a>
+
+              {% else %}
+
+                <button
+                  type="button"
+                  class="btnx btn-dis"
+                  disabled
+                >
+                  🔒 Survey Not Open
+                </button>
+
+              {% endif %}
+
+            </div>
+
+          </div>
+
+        {% endwith %}
+
+      {% endfor %}
+
+    </div>
+
+  {% else %}
+
+    <div class="empty-card">
+      <div class="empty-title">
+        No Subjects Found
+      </div>
+
+      <div class="empty-sub">
+        No enrolled subjects were found for your current department,
+        batch, section, year, or semester.
+      </div>
+    </div>
+
+  {% endif %}
+
+</div>
+
+{% endblock %}

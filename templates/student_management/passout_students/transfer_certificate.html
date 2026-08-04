@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+<style>
+body { background-color: #f8f9fc; }
+.card { border-radius: 1rem; overflow: hidden; }
+.card-header { background: linear-gradient(90deg, #16a085, #1abc9c); color: white; font-weight: 600; }
+.form-label { font-weight: 600; color: #333; }
+.btn-success, .btn-primary { border: none; border-radius: 0.5rem; }
+.btn-primary { background-color: #1abc9c; }
+.btn-primary:hover { background-color: #16a085; }
+</style>
+
+<div class="container mt-5">
+  <div class="card shadow-lg border-0">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h4 class="mb-0"><i class="bi bi-award me-2"></i>Transfer Certificate Generator</h4>
+      <div class="d-flex align-items-center gap-2">
+        <span class="me-2"><strong>{{ students.count }}</strong> Students</span>
+        <a href="{% url 'transfer_certificate_upload_excel' %}"
+           class="btn btn-outline-light btn-sm shadow-sm">
+           <i class="bi bi-file-earmark-excel me-1"></i> Upload Excel
+        </a>
+        <a href="{% url 'generate_bulk_transfer_certificate' %}?department={{ selected_department }}&batch={{ selected_batch }}&date_entry={{ date_entry }}"
+           class="btn btn-primary btn-sm shadow-sm" target="_blank">
+           <i class="bi bi-filetype-pdf me-1"></i> Bulk PDF
+        </a>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <!-- Filters -->
+      <form method="get" class="row g-3 mb-4">
+        <div class="col-md-4">
+          <label class="form-label">Department</label>
+          <select name="department" class="form-select">
+            <option value="">All</option>
+            {% for dept in departments %}
+              <option value="{{ dept.id }}" {% if dept.id|stringformat:"s" == selected_department %}selected{% endif %}>
+                {{ dept.Department }} - {{ dept.Department_code }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Batch</label>
+          <select name="batch" class="form-select">
+            <option value="">All</option>
+            {% for b in batches %}
+              <option value="{{ b }}" {% if b|stringformat:"s" == selected_batch %}selected{% endif %}>{{ b }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Date</label>
+          <input type="date" name="date_entry" class="form-control" value="{{ date_entry|date:'Y-m-d' }}">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel-fill me-1"></i>Filter</button>
+        </div>
+      </form>
+
+      <!-- Students Table -->
+      <div class="table-responsive">
+        <table id="studentsTable" class="table table-striped table-hover align-middle border">
+          <thead class="table-success">
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Reg. No</th>
+              <th>Department</th>
+              <th>Batch</th>
+              <th>Certificate No.</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in students %}
+              <tr id="row-{{ student.id }}">
+                <td>{{ forloop.counter }}</td>
+                <td>{{ student.student.name }}</td>
+                <td>{{ student.student.reg_no }}</td>
+                <td>{{ student.department.degree_department }}</td>
+                <td>{{ student.student.batch }}</td>
+                <td>{{ student.certificate_number }}</td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-success btn-sm me-1"
+                          data-bs-toggle="modal"
+                          data-bs-target="#tcModal"
+                          data-id="{{ student.id }}"
+                          data-name="{{ student.student.name }}"
+                          data-reg="{{ student.student.reg_no }}"
+                          data-qualified="{{ student.qualified_higher_class|default:'' }}"
+                          data-requested-date="{{ student.tc_requested_date|date:'Y-m-d'|default:'' }}"
+                          data-last-date="{{ student.last_date_of_attendance|date:'Y-m-d'|default:'' }}"
+                          data-reason="{{ student.reason_for_tc|default:'' }}"
+                          data-conduct="{{ student.conduct|default:'' }}">
+                    <i class="bi bi-pencil-square me-1"></i>
+                    {% if student.qualified_higher_class and student.tc_requested_date and student.last_date_of_attendance and student.reason_for_tc and student.conduct %}
+                      Edit
+                    {% else %}
+                      Enter
+                    {% endif %}
+                  </button>
+                  {% if student.qualified_higher_class and student.tc_requested_date and student.last_date_of_attendance and student.reason_for_tc and student.conduct %}
+                    <a href="{% url 'generate_transfer_certificate_pdf' student.id %}?date_entry={{ date_entry }}" 
+                       class="btn btn-primary btn-sm" target="_blank">
+                      <i class="bi bi-filetype-pdf me-1"></i>PDF
+                    </a>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6" class="text-center text-muted py-3">No students found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="tcModal" tabindex="-1" aria-labelledby="tcModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="bi bi-award me-2"></i>Transfer Certificate Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="tcForm">
+          <input type="hidden" id="student_id" name="student_id">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Student Name</label>
+              <input type="text" id="student_name" class="form-control" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Register No</label>
+              <input type="text" id="student_reg" class="form-control" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Whether Qualified to Higher Class</label>
+              <select id="qualified_higher_class" name="qualified_higher_class" class="form-select" required>
+                <option value="">Select</option>
+                <option>Yes</option>
+                <option>No</option>
+              </select>
+              <small id="qualified_higher_class_hint" class="text-muted d-none">Already available from uploaded data</small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Date in Which Student Requested for TC</label>
+              <input type="date" id="tc_requested_date" name="tc_requested_date" class="form-control" required>
+              <small id="tc_requested_date_hint" class="text-muted d-none">Already available from uploaded data</small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Last Date of Attendance in the Institution</label>
+              <input type="date" id="last_date_of_attendance" name="last_date_of_attendance" class="form-control" required>
+              <small id="last_date_of_attendance_hint" class="text-muted d-none">Will be saved for the same department and batch</small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Reason for Which TC was Issued</label>
+              <input type="text" id="reason_for_tc" name="reason_for_tc" class="form-control" required>
+              <small id="reason_for_tc_hint" class="text-muted d-none">Already available from uploaded data</small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Character and Conduct</label>
+              <select id="conduct" name="conduct" class="form-select" required>
+                <option value="">Select</option>
+                <option>Good</option>
+                <option>Average</option>
+                <option>Bad</option>
+              </select>
+              <small id="conduct_hint" class="text-muted d-none">Already available from uploaded data</small>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer d-flex justify-content-between">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" id="saveTcBtn"><i class="bi bi-save me-1"></i>Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+$(document).ready(function() {
+  // Initialize DataTable
+  $('#studentsTable').DataTable({
+    language: { emptyTable: "No students available", zeroRecords: "No matching records found" },
+    ordering: true,
+    pageLength: 25,
+    responsive: true,
+    pagingType: "simple_numbers"
+  });
+
+  let selectedId = null;
+  const editableBg = "";
+  const lockedBg = "#eef2f7";
+  const todayStr = new Date().toISOString().split('T')[0];
+  const groupLastDate = "{{ group_last_date_of_attendance|date:'Y-m-d'|default:'' }}";
+
+  function setFieldState(fieldId, value) {
+    const field = $(`#${fieldId}`);
+    const hint = $(`#${fieldId}_hint`);
+    const hasValue = !!String(value || "").trim();
+    field.val(value || "");
+
+    if (hasValue) {
+      field.prop('required', true).css('background-color', editableBg);
+      hint.removeClass('d-none');
+    } else {
+      field.prop('required', true).css('background-color', editableBg);
+      hint.addClass('d-none');
+    }
+  }
+
+  // Handle modal open
+  $('#tcModal').on('show.bs.modal', function(event) {
+    const button = $(event.relatedTarget);
+    selectedId = button.data('id');
+    $('#student_id').val(selectedId);
+    $('#student_name').val(button.data('name'));
+    $('#student_reg').val(button.data('reg'));
+    setFieldState('qualified_higher_class', button.data('qualified'));
+    setFieldState('tc_requested_date', button.data('requested-date'));
+    if (!$('#tc_requested_date').val()) {
+      $('#tc_requested_date').val(todayStr);
+    }
+    setFieldState('last_date_of_attendance', button.data('last-date') || groupLastDate);
+    setFieldState('reason_for_tc', button.data('reason'));
+    setFieldState('conduct', button.data('conduct'));
+  });
+
+  // Handle save button click
+  $('#saveTcBtn').click(function() {
+    const studentId = $('#student_id').val();
+    const saveUrlTemplate = "{% url 'save_tc_details' 0 %}";
+    const ajaxUrl = saveUrlTemplate.replace('0', studentId);
+    // Disabled select fields are not serialized, enable before submit.
+    $('#qualified_higher_class').prop('disabled', false);
+    $('#conduct').prop('disabled', false);
+    $('#last_date_of_attendance').prop('disabled', false);
+    const formData = $('#tcForm').serialize();
+
+    console.log('Saving TC for student ID:', studentId, 'URL:', ajaxUrl); // Debugging
+    console.log('Form Data:', formData); // Debugging
+
+    $.ajax({
+      url: ajaxUrl,
+      method: 'POST',
+      data: formData,
+      headers: {'X-CSRFToken': '{{ csrf_token }}'},
+      success: function(res) {
+        console.log('AJAX Success:', res); // Debugging
+        if (res.status === 'success') {
+          alert('✅ Details saved successfully!');
+          $('#tcModal').modal('hide');
+          // Update table: replace View button with PDF button
+          const pdfUrlTemplate = "{% url 'generate_transfer_certificate_pdf' 0 %}";
+          const pdfUrl = pdfUrlTemplate.replace('0', studentId);
+          const pdfBtnHtml = `
+            <a href="${pdfUrl}?date_entry={{ date_entry }}" class="btn btn-primary btn-sm" target="_blank">
+              <i class="bi bi-filetype-pdf me-1"></i>PDF
+            </a>`;
+          $(`#row-${studentId} td:last`).html(pdfBtnHtml);
+        } else {
+          alert('❌ Failed to save details: ' + (res.message || 'Unknown error'));
+        }
+      },
+      error: function(xhr, status, error) {
+        console.log('AJAX Error:', status, error, xhr.responseText); // Debugging
+        alert('⚠️ Server error while saving details: ' + (xhr.responseText || 'Unknown error'));
+      },
+      complete: function() {
+        console.log('AJAX Complete'); // Debugging
+        $('#tcModal').modal('hide');
+        $('.modal-backdrop').remove(); // Remove backdrop to prevent black screen
+        $('body').removeClass('modal-open'); // Reset body class
+      }
+    });
+  });
+});
+</script>
+
+{% endblock %}

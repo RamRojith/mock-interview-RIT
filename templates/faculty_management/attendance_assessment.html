@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block content %}
+{% load cm_tags %}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="display-5 fw-bold text-secondary">Attendance Assessment</h2>
+            <hr class="my-3">
+            
+            <!-- Flash messages -->
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="alert alert-dismissible alert-{{ message.tags|default:'info' }}">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Filter Students</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filter-form" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="department" class="form-label">Department</label>
+                            <select id="department" name="department_id" class="form-select">
+                                <option value="">Select Department</option>
+                                {% for dept in departments %}
+                                    <option value="{{ dept.id }}" {% if selected_department_id == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.Department }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="program" class="form-label">Program</label>
+                            <select id="program" name="program" class="form-select" {% if not selected_program %}disabled{% endif %} required>
+                                <option value="">Select Program</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="course" class="form-label">Course</label>
+                            <select id="course" name="course" class="form-select" {% if not selected_course %}disabled{% endif %} required>
+                                <option value="">Select Course</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label for="semester" class="form-label">Semester</label>
+                            <select name="semester" class="form-select" required>
+                                <option value="">All</option>
+                                {% for val in semesters %}
+                                    <option value="{{ val }}" {% if selected_semester == val %}selected{% endif %}>{{ val }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label for="intake" class="form-label">Intake</label>
+                            <select name="intake" class="form-select" required>
+                                <option value="">All</option>
+                                {% for val in intakes %}
+                                    <option value="{{ val }}" {% if selected_intake == val %}selected{% endif %}>{{ val }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label for="batch" class="form-label">Batch</label>
+                            <select name="batch" class="form-select">
+                                <option value="">All</option>
+                                {% for val in batches %}
+                                    <option value="{{ val }}" {% if selected_batch == val %}selected{% endif %}>{{ val }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 d-flex gap-2">
+                            <button type="submit" name="filter" class="btn btn-primary w-50">
+                                <i class="fas fa-filter me-2"></i>Filter Students
+                            </button>
+                            <a href="{% url 'attendance_assessment' %}" class="btn btn-secondary w-50 text-center">
+                                <i class="fas fa-times me-2"></i>Clear Filters
+                            </a>
+                        </div>
+
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="row">
+        <div class="col-12">
+            {% if students %}
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Student Attendance Records</h5>
+                        <span class="badge bg-light text-dark">{{ students|length }} students found</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{% url 'submit_bulk_attendance' %}">
+                        {% csrf_token %}
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Reg No.</th>
+                                        <th>Student Name</th>
+                                        <th>Department</th>
+                                        <th>Program</th>
+                                        <th>Year</th>
+                                        <th>Semester</th>
+                                        <th>Intake</th>
+                                        <th>Batch</th>
+                                        <th>Attendance (%)</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                        <tr>
+                                            <td class="fw-bold">
+                                                {{ student.reg_number }}
+                                                <input type="hidden" name="reg_no" value="{{ student.reg_number }}">
+                                            </td>
+                                            <td>{{ student.first_name }} {{ student.surname }}</td>
+                                            <td>{{ student.department_name }}</td>
+                                            <td>{{ student.program_name }}</td>
+                                            <td>{{ student.year }}</td>
+                                            <td>{{ student.semester }}</td>
+                                            <td>{{ student.Intake }}</td>
+                                            <td>{{ student.batch }}</td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <input type="number" name="attendance_percentage"
+                                                        class="form-control"
+                                                        min="0" max="100" required
+                                                        value="{{ attendance_map|get_item:student.reg_number|attr:'attendance_percentage'|default_if_none:'' }}">
+                                                    <span class="input-group-text">%</span>
+                                                </div>
+                                                <input type="hidden" name="semester" value="{{ selected_semester }}">
+                                                <input type="hidden" name="course_code" value="{{ selected_course }}">
+                                            </td>
+                                            <td class="text-center">
+                                                {% with attendance=attendance_map|get_item:student.reg_number %}
+                                                    {% if attendance %}
+                                                        {% if attendance.status == 'pass' %}
+                                                            <span class="badge bg-success rounded-pill">{{ attendance.status|title }}</span>
+                                                        {% elif attendance.status == 'fail' %}
+                                                            <span class="badge bg-danger rounded-pill">{{ attendance.status|title }}</span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary rounded-pill">{{ attendance.status|title }}</span>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <span class="badge bg-light text-dark rounded-pill">-</span>
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="fas fa-save me-2"></i>Save Attendance
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+                <div class="alert alert-info text-center py-4">
+                    <i class="fas fa-info-circle fa-2x mb-3"></i>
+                    <h4>No students found matching your criteria</h4>
+                    <p class="mb-0">Please adjust your filters and try again</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- jQuery CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Populate programs based on department
+    $('#department').change(function () {
+        let deptId = $(this).val();
+        $('#program').html('<option value="">Select Program</option>').prop('disabled', true);
+        $('#course').html('<option value="">Select Course</option>').prop('disabled', true);
+
+        if (deptId) {
+            $.getJSON("{% url 'course_get_programs' %}", { department_id: deptId }, function (data) {
+                $('#program').prop('disabled', false);
+                $.each(data, function (i, item) {
+                    $('#program').append('<option value="' + item.id + '">' + item.program_name + '</option>');
+                });
+            });
+        }
+    });
+
+    // Populate courses based on program
+    $('#program').change(function () {
+        let progId = $(this).val();
+        $('#course').html('<option value="">Select Course</option>').prop('disabled', true);
+
+        if (progId) {
+            $.getJSON("{% url 'course_get_courses' %}", { program_id: progId }, function (data) {
+                $('#course').prop('disabled', false);
+                $.each(data, function (i, item) {
+                    $('#course').append('<option value="' + item.id + '">' + item.course_code + ' - ' + item.title + '</option>');
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

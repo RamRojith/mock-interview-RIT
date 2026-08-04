@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+    <div>
+      <h3 class="mb-0">HOD Library Requests</h3>
+      <small class="text-muted">Department: {{ hod.department|default:"-" }}</small>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for m in messages %}
+      <div class="alert alert-{{ m.tags }} alert-dismissible fade show">
+        {{ m }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row g-3 mb-3">
+    <div class="col-lg-5">
+      <div class="card p-3 shadow-sm h-100">
+        <h6 class="mb-2">Latest Notifications</h6>
+        <div style="max-height:260px; overflow:auto;">
+          {% if notifications %}
+            <ul class="mb-0">
+              {% for n in notifications %}
+                <li class="mb-2">
+                  <div class="fw-bold">{{ n.title }}</div>
+                  <div class="small text-muted">{{ n.message }}</div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="text-muted">No notifications.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card p-3 shadow-sm h-100">
+        <form method="get" class="row g-2 align-items-end" id="hodFilterForm">
+          <div class="col-md-4">
+            <label class="form-label small mb-1">Status</label>
+            <select class="form-select auto-filter" name="status" id="statusFilter">
+              <option value="">All Status</option>
+              <option value="PENDING" {% if selected_status == "PENDING" %}selected{% endif %}>PENDING</option>
+              <option value="APPROVED" {% if selected_status == "APPROVED" %}selected{% endif %}>APPROVED</option>
+              <option value="REJECTED" {% if selected_status == "REJECTED" %}selected{% endif %}>REJECTED</option>
+              <option value="RETURN_REQUESTED" {% if selected_status == "RETURN_REQUESTED" %}selected{% endif %}>RETURN_REQUESTED</option>
+              <option value="RETURNED" {% if selected_status == "RETURNED" %}selected{% endif %}>RETURNED</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small mb-1">Year</label>
+            <select class="form-select auto-filter" name="year" id="yearFilter">
+              <option value="">All</option>
+              {% for y in year_choices %}
+                <option value="{{ y }}" {% if year_val == y %}selected{% endif %}>{{ y }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small mb-1">Section</label>
+            <select class="form-select auto-filter" name="section" id="sectionFilter">
+              <option value="">All</option>
+              {% for s in sections %}
+                <option value="{{ s.section }}" {% if section_val == s.section %}selected{% endif %}>{{ s.section }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-8">
+            <label class="form-label small mb-1">Search</label>
+            <input class="form-control"
+                   type="text"
+                   name="q"
+                   id="searchFilter"
+                   value="{{ search_q }}"
+                   placeholder="student / roll / book / acc / publisher"
+                   autocomplete="off">
+          </div>
+
+          <div class="col-md-4 d-flex">
+            <a class="btn btn-outline-secondary w-100" href="{% url 'hod_library_requests' %}">Clear</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Student</th>
+              <th>Roll</th>
+              <th>Dept</th>
+              <th>Book</th>
+              <th>Acc</th>
+              <th>Status</th>
+              <th>Req</th>
+              <th>Issued</th>
+              <th>Return</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if requests and requests.object_list %}
+              {% for r in requests %}
+                <tr>
+                  <td class="fw-bold">{{ r.student_name }}</td>
+                  <td>{{ r.student_rollno|default:"-" }}</td>
+                  <td>{{ r.department.Department|default:r.department }}</td>
+                  <td>
+                    <div class="fw-bold">{{ r.book.title }}</div>
+                    <div class="small text-muted">Publisher: {{ r.book.publisher|default:"-" }}</div>
+                  </td>
+                  <td>{{ r.book.accession_book|default:"-" }}</td>
+                  <td>
+                    <span class="badge
+                      {% if r.status == 'PENDING' %} bg-secondary
+                      {% elif r.status == 'APPROVED' %} bg-success
+                      {% elif r.status == 'REJECTED' %} bg-danger
+                      {% elif r.status == 'RETURN_REQUESTED' %} bg-primary
+                      {% elif r.status == 'RETURNED' %} bg-dark
+                      {% else %} bg-info {% endif %}
+                    ">{{ r.status }}</span>
+                  </td>
+                  <td>{{ r.requested_on|date:"M. d, Y"|default:"-" }}</td>
+                  <td>{{ r.issued_on|date:"M. d, Y"|default:"-" }}</td>
+                  <td>{{ r.returned_on|date:"M. d, Y"|default:"-" }}</td>
+                  <td>{{ r.remarks|default:"-" }}</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr><td colspan="10" class="text-center text-muted py-4">No requests found.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<style>
+  .filter-loading {
+    opacity: .65;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  (function () {
+    const form = document.getElementById("hodFilterForm");
+    const autoFilters = document.querySelectorAll(".auto-filter");
+    const searchInput = document.getElementById("searchFilter");
+    let searchTimer = null;
+
+    function submitFilters() {
+      if (!form) return;
+      form.classList.add("filter-loading");
+      form.submit();
+    }
+
+    autoFilters.forEach(el => {
+      el.addEventListener("change", function () {
+        submitFilters();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener("input", function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () {
+          submitFilters();
+        }, 500);
+      });
+
+      searchInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          clearTimeout(searchTimer);
+          submitFilters();
+        }
+      });
+    }
+  })();
+</script>
+{% endblock %}

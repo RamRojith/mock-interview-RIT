@@ -1,0 +1,432 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .email-application {
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        min-height: 80vh;
+    }
+
+    .application-content {
+        padding: 1rem 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .application-form {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid #1a4b8c;
+        width: 100%;
+    }
+
+    .form-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1a4b8c;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-control:focus {
+        border-color: #1a4b8c;
+        box-shadow: 0 0 0 0.2rem rgba(26, 75, 140, 0.25);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        border: none;
+        padding: 0.875rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        width: 100%;
+    }
+
+    .btn-submit:hover {
+        color: white;
+    }
+
+    .info-card {
+        background: #f0f9ff;
+        border: 1px solid #0ea5e9;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card h6 {
+        color: #0369a1;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .info-card ul {
+        margin-bottom: 0;
+        color: #374151;
+        font-size: 0.85rem;
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin: 1.5rem 0 1rem 0;
+    }
+
+    .section-header h4 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .text-uppercase {
+        text-transform: uppercase !important;
+    }
+
+    .declaration-section {
+        background: #f8f9fa;
+        border: 2px solid #1a4b8c;
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    .declaration-section .form-check-label {
+        font-weight: 600;
+        color: #1a4b8c;
+        line-height: 1.4;
+        font-size: 0.9rem;
+    }
+
+    .error-text {
+        color: #dc2626;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    .success-text {
+        color: #15803d;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+        font-weight: 600;
+    }
+
+    .readonly-box {
+        background-color: #f8fafc;
+    }
+
+    .table-box {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .table-box table {
+        margin-bottom: 0;
+    }
+
+    .table-box thead th {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        border: none;
+        text-align: center;
+        vertical-align: middle;
+        padding: 0.9rem 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .table-box tbody td {
+        vertical-align: middle;
+        text-align: center;
+        padding: 0.75rem 0.5rem;
+        border-color: #e2e8f0;
+    }
+
+    .alert {
+        border-radius: 10px;
+    }
+</style>
+
+<div class="email-application">
+    <main class="application-content">
+
+        {% comment %} {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %} {% endcomment %}
+
+        <div class="info-card">
+            <h6><i class="fas fa-info-circle me-2"></i>Email Relogin Application Guidelines</h6>
+            <ul>
+                <li>This application is for requesting student email relogin access.</li>
+                <li>Enter the student register number. Student name and email will be fetched automatically.</li>
+                <li>The requestor is responsible for the correctness of the submitted details.</li>
+                <li>The request will be reviewed by the concerned authority.</li>
+            </ul>
+        </div>
+
+        <div class="application-form">
+            <h2 class="form-title">
+                <i class="fas fa-envelope me-2"></i>Email Relogin Application Form
+            </h2>
+
+            <form method="post" id="emailReloginApplicationForm">
+                {% csrf_token %}
+
+                <div class="section-header">
+                    <h4>I - Requestor Information</h4>
+                </div>
+
+                {% if faculty %}
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Faculty ID</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.faculty_id|default:'-' }}" readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control readonly-box text-uppercase" value="{{ faculty.name|default:''|upper }}" readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.department|default:'-' }}" readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Designation</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.designation|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Mail Id</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.college_email|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        Requestor information not found.
+                    </div>
+                {% endif %}
+
+                <div class="section-header">
+                    <h4>II - Student Email Relogin Details</h4>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Register Number</label>
+                            <input type="text" name="reg_no" id="id_reg_no"
+                                   class="form-control text-uppercase"
+                                   value="{{ form_data.reg_no|default:'' }}"
+                                   autocomplete="off">
+
+                            {% if errors.reg_no %}
+                                <div class="error-text">{{ errors.reg_no }}</div>
+                            {% endif %}
+
+                            <div id="student_error" class="error-text"></div>
+                            <div id="student_success" class="success-text"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Student Name</label>
+                            <input type="text" id="id_student_name"
+                                   class="form-control readonly-box text-uppercase"
+                                   readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Email ID</label>
+                            <input type="email" id="id_email_id"
+                                   class="form-control readonly-box"
+                                   readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Reason</label>
+                    <textarea name="reason" class="form-control" rows="3">{{ form_data.reason|default:'' }}</textarea>
+                    {% if errors.reason %}
+                        <div class="error-text">{{ errors.reason }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="section-header">
+                    <h4>III - Declaration</h4>
+                </div>
+
+                <div class="declaration-section">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="agreement" id="id_agreement"
+                               {% if form_data.agreement %}checked{% endif %}>
+                        <label class="form-check-label" for="id_agreement">
+                            I hereby declare that the above information given by me is true and correct and this guest WiFi access will be used only for approved institutional purposes.
+                        </label>
+                    </div>
+
+                    {% if errors.agreement %}
+                        <div class="error-text">{{ errors.agreement }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-paper-plane me-2"></i>Submit Email Relogin Application
+                </button>
+            </form>
+        </div>
+
+        <div class="application-form mt-4">
+            <h2 class="form-title">
+                <i class="fas fa-history me-2"></i>My Email Relogin Applications
+            </h2>
+
+            {% if user_requests %}
+            <div class="table-responsive table-box">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Student Name</th>
+                            <th>Register No</th>
+                            <th>Email ID</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Applied On</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for req in user_requests %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ req.student.name|default:"-" }}</td>
+                            <td>{{ req.student.reg_no|default:"-" }}</td>
+                            <td>{{ req.student.email|default:"-" }}</td>
+                            <td>{{ req.reason }}</td>
+                            <td>
+                                {% if req.status == "APPROVED" %}
+                                    <span class="badge bg-success">APPROVED</span>
+                                {% elif req.status == "REJECTED" %}
+                                    <span class="badge bg-danger">REJECTED</span>
+                                {% elif req.status == "DEACTIVATED" %}
+                                    <span class="badge bg-secondary">DEACTIVATED</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">PENDING</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ req.created_at|date:"d M Y, h:i A" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    No email relogin applications submitted yet.
+                </div>
+            {% endif %}
+        </div>
+
+    </main>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const regNoInput = document.getElementById("id_reg_no");
+    const studentNameInput = document.getElementById("id_student_name");
+    const emailInput = document.getElementById("id_email_id");
+    const errorBox = document.getElementById("student_error");
+    const successBox = document.getElementById("student_success");
+
+    let timer = null;
+
+    function clearStudentDetails() {
+        studentNameInput.value = "";
+        emailInput.value = "";
+        errorBox.innerText = "";
+        successBox.innerText = "";
+    }
+
+    regNoInput.addEventListener("input", function () {
+        clearTimeout(timer);
+
+        const regNo = this.value.trim();
+
+        clearStudentDetails();
+
+        if (!regNo) {
+            return;
+        }
+
+        timer = setTimeout(function () {
+            fetch("{% url 'get_student_by_reg_no' %}?reg_no=" + encodeURIComponent(regNo))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        studentNameInput.value = data.student_name;
+                        emailInput.value = data.email;
+                        successBox.innerText = "Student details fetched successfully.";
+                    } else {
+                        errorBox.innerText = data.message;
+                    }
+                })
+                .catch(() => {
+                    errorBox.innerText = "Unable to fetch student details.";
+                });
+        }, 500);
+    });
+
+    if (regNoInput.value.trim()) {
+        regNoInput.dispatchEvent(new Event("input"));
+    }
+});
+</script>
+
+{% endblock %}

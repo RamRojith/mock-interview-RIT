@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <h3 class="fw-bold text-primary mb-1">Allotted Students</h3>
+
+          <!-- ✅ Hall + Seats + Dept Count (INLINE) -->
+          <p class="text-muted mb-0">
+            Hall: <span class="fw-semibold">{{ hall.hall_name }}</span>
+            &nbsp;|&nbsp;
+            Seats: <span class="fw-semibold">{{ total_seats }}</span>
+
+            {% if allotments %}
+              {% with sorted_allotments=allotments|dictsort:"student.department_id" %}
+                {% regroup sorted_allotments by student.department_id as dept_groups %}
+                &nbsp;|&nbsp;
+                <span class="text-muted">Dept Count:</span>
+
+                {% for g in dept_groups %}
+                  <span class="ms-1">
+                    <span class="fw-semibold">
+                      {% if g.list.0.student.department %}
+                        {{ g.list.0.student.department.Department|default:"-" }}
+                      {% else %}
+                        Unknown
+                      {% endif %}
+                    </span>
+                    <span class="badge text-bg-primary ms-1">{{ g.list|length }}</span>
+                  </span>
+                  {% if not forloop.last %}<span class="mx-1">,</span>{% endif %}
+                {% endfor %}
+              {% endwith %}
+            {% endif %}
+          </p>
+        </div>
+
+        <div class="d-flex gap-2">
+          <a class="btn btn-outline-danger" href="{% url 'hall_students_pdf' hall.id %}" target="_blank">
+            Download PDF
+          </a>
+          <a href="{% url 'hall_allotment' %}" class="btn btn-outline-secondary">← Back</a>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <!-- Seating Grid -->
+      <h5 class="fw-bold mb-3">Exam Hall Seating</h5>
+
+      <div class="table-responsive seating-wrap">
+        <table class="table table-bordered text-center align-middle seating-table">
+          <tbody>
+            {% for row in grid %}
+              <tr>
+                {% for cell in row %}
+                  {% if cell %}
+                    {% if cell.allot %}
+                      <td class="seat-cell">
+                        <div class="seat-title">Seat {{ cell.seat_no }}</div>
+
+                        <div class="seat-reg">
+                          {{ cell.allot.student.reg_no|default:"-" }}
+                        </div>
+
+                        <div class="seat-name">
+                          {% firstof cell.allot.student.name cell.allot.student.student_name "-" %}
+                        </div>
+
+                        <div class="seat-dept">
+                          {% if cell.allot.student.department %}
+                            {{ cell.allot.student.department.Department|default:"-" }}
+                          {% else %}
+                            -
+                          {% endif %}
+                        </div>
+                      </td>
+                    {% else %}
+                      <td class="seat-cell seat-empty">
+                        <div class="seat-title text-dark">Seat {{ cell.seat_no }}</div>
+                        <div class="text-muted small">Empty</div>
+                      </td>
+                    {% endif %}
+                  {% else %}
+                    <td class="seat-blank"></td>
+                  {% endif %}
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <hr class="my-4">
+
+      <!-- Students List -->
+      <h5 class="fw-bold mb-3">Allotted Students (List)</h5>
+
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>S.no</th>
+              <th>Seat No</th>
+              <th>Reg No</th>
+              <th>Name</th>
+              <th>Section</th>
+              <th>Department</th>
+              <th>Degree</th>
+              <th>Batch</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in allotments %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td class="fw-bold">{{ a.seat_no|default:"-" }}</td>
+                <td>{{ a.student.reg_no|default:"-" }}</td>
+                <td>{% firstof a.student.name a.student.student_name "-" %}</td>
+                <td>{{ a.student.section|default:"-" }}</td>
+                <td>
+                  {% if a.student.department %}
+                    {{ a.student.department.Department|default:"-" }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  {% if a.student.department and a.student.department.degree %}
+                    {{ a.student.department.degree.degree_code|default:"-" }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>{{ a.student.batch|default:"-" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="8" class="text-center text-muted py-4">
+                  No students allotted in this hall.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+  .seating-wrap { overflow-x: auto; }
+
+  /* grid compact + uniform */
+  .seating-table{
+    table-layout: fixed;
+    width: max-content;
+    border-collapse: collapse;
+  }
+
+  .seating-table td{
+    padding: 0 !important;
+    vertical-align: middle;
+  }
+
+  /* seat cards */
+  .seat-cell{
+    width: 150px;
+    min-width: 150px;
+    height: 86px;
+    padding: 8px 6px !important;
+    background: #fff;
+    transition: 0.12s ease-in-out;
+  }
+
+  .seat-cell:hover{ background: #f6f9ff; }
+
+  .seat-title{
+    font-weight: 800;
+    color: #0d6efd;
+    margin-bottom: 2px;
+    font-size: 14px;
+    line-height: 1.1;
+  }
+
+  .seat-reg{
+    font-size: 12px;
+    color: #111;
+    margin-bottom: 2px;
+    line-height: 1.1;
+  }
+
+  .seat-name{
+    font-size: 12px;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 1px;
+    line-height: 1.1;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .seat-dept{
+    font-size: 11px;
+    color: #6c757d;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .seat-empty{ background: #f8f9fa; }
+
+  .seat-blank{
+    border: none !important;
+    background: transparent !important;
+  }
+
+  /* Print: hide buttons */
+  @media # print {
+    .btn, a { display: none !important; }
+    .card { border: none !important; box-shadow: none !important; }
+    .seating-wrap { overflow: visible !important; }
+  }
+</style>
+{% endblock %}

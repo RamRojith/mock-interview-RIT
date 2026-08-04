@@ -1,0 +1,2210 @@
+{% load static %}
+{% load user_tags %}
+{% load fm_tags %}
+{% get_user_announcements 10 as announcements %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Student Academic Portal - Ramco Institute of Technology</title>
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="website icon" type="png" href="{% static 'images/ritlogo.png' %}">
+    <link rel="stylesheet" href="{% static 'DataTables/datatables.min.css' %}">
+    <script src="{% static 'DataTables/datatables.min.js' %}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="{% static 'js/timer.js' %}"></script>
+    <script src="{% static 'js/scripts.js' %}"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {% include "chatbot/styles.html" %}
+
+    <style>
+        :root{
+            --rit-primary:#1a4b8c;
+            --rit-accent:#2c5aa0;
+            --rit-secondary:#f8b739;
+            --rit-success:#10b981;
+            --rit-danger:#ef4444;
+            --rit-warning:#f59e0b;
+            --rit-info:#3b82f6;
+            --rit-dark:#1e293b;
+            --rit-muted:#64748b;
+            --rit-border:#e2e8f0;
+            --rit-bg:#f8fafc;
+        }
+
+        .student-dashboard {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            min-height: 100vh;
+        }
+
+        /* Header Styles */
+        .dashboard-header {
+            background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .institute-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .institute-logo {
+            height: 50px;
+            width: auto;
+        }
+
+        .institute-text h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .institute-text p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
+
+        .profile-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .profile-img:hover {
+            transform: scale(1.05);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .profile-info {
+            text-align: right;
+        }
+
+        .profile-name {
+            font-weight: 600;
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .profile-role {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        /* Notification Button */
+        .notification-btn {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border: none !important;
+            border-radius: 50%;
+            width: 46px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff !important;
+            position: relative;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+        }
+
+        .notification-btn:hover {
+            background: rgba(255, 255, 255, 0.25) !important;
+            transform: translateY(-2px);
+        }
+
+        .badge-notification {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff5f6d, #ffc371);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.68rem;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(255,95,109,0.28);
+            animation: pulseBadge 1.8s infinite;
+        }
+
+        @keyframes pulseBadge {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.12); }
+            100% { transform: scale(1); }
+        }
+
+        .dropdown-menu.notifications-dropdown {
+            width: 380px;
+            border-radius: 18px;
+            overflow: hidden;
+            border: none;
+            box-shadow: 0 18px 50px rgba(15,23,42,0.18);
+            padding: 0;
+        }
+
+        .notifications-dropdown .dropdown-header {
+            background: linear-gradient(135deg, var(--rit-primary), var(--rit-accent));
+            color: #fff;
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notifications-dropdown .dropdown-footer {
+            background: #f8fafc;
+            padding: 0.9rem 1rem;
+            text-align: center;
+        }
+
+        .notification-item {
+            position: relative;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .notification-item:hover {
+            background: linear-gradient(135deg, rgba(26,75,140,0.05), rgba(26,75,140,0.02));
+            transform: translateX(4px);
+        }
+
+        .notification-item.unread {
+            background: linear-gradient(90deg, rgba(248,183,57,0.12) 0%, transparent 100%);
+            border-left: 4px solid var(--rit-secondary);
+        }
+
+        .notification-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #fff;
+            color: var(--rit-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(26,75,140,0.15);
+            flex-shrink: 0;
+        }
+
+        .notification-title {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            font-weight: 700;
+            color: #0f172a;
+            max-width: 220px;
+        }
+
+        .badge-new {
+            animation: pulseBadge 1.8s infinite;
+        }
+
+        .view-file-btn {
+            min-width: 38px;
+            height: 34px;
+            padding: 0.25rem 0.55rem;
+            border-radius: 10px;
+        }
+
+        .meta {
+            color: var(--rit-muted);
+            font-size: 0.8rem;
+        }
+
+        .no-wrap {
+            white-space: normal;
+        }
+
+        @keyframes itemEnter {
+            0% {
+                transform: translateY(8px) scale(0.995);
+                opacity: 0;
+            }
+            60% {
+                transform: translateY(-2px) scale(1.002);
+                opacity: 0.9;
+            }
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .animate-item {
+            animation: itemEnter 0.38s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1a4b8c;
+            margin-bottom: 0.5rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(135deg, #1a4b8c, #2c5aa0);
+            border-radius: 2px;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+            font-weight: 400;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .welcome-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome-text h2 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .welcome-text p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .welcome-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0 1rem;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.2rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Birthday Message */
+        .birthday-page-message {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ef4444;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fef3f2, #fee2e2);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #f1f5f9;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+        }
+
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(135deg, #1a4b8c, #2c5aa0);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-icon {
+            font-size: 2.4rem;
+            margin-bottom: 0.9rem;
+            background: linear-gradient(135deg, #1a4b8c, #2c5aa0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+            height: 72px;
+            width: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(26, 75, 140, 0.1);
+            margin: 0 auto 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-card:hover .card-icon {
+            transform: scale(1.1);
+            background-color: rgba(26, 75, 140, 0.15);
+        }
+
+        .card-title {
+            font-size: 1.08rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #1a4b8c;
+        }
+
+        .card-description {
+            color: #64748b;
+            margin-bottom: 1.25rem;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+
+        .btn-card {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-card:hover::before {
+            left: 100%;
+        }
+
+        .btn-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+        }
+
+        /* Profile Popup */
+        .profile-popup {
+            position: absolute;
+            top: 70px;
+            right: 0;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 1.5rem;
+            width: 280px;
+            z-index: 1050;
+            display: none;
+            animation: slideDown 0.3s ease;
+            border: 1px solid #f1f5f9;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .profile-popup.show {
+            display: block;
+        }
+
+        .popup-header {
+            text-align: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .popup-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 0.75rem;
+            border: 3px solid #1a4b8c;
+        }
+
+        .popup-name {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            font-size: 1.1rem;
+            color: #1a4b8c;
+        }
+
+        .popup-role {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .popup-department {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .popup-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .btn-popup {
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-password {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+        }
+
+        .btn-password:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        /* Alerts */
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+        }
+
+        .custom-alert {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            animation: slideInRight 0.5s, fadeOut 0.5s 4.5s forwards;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .alert-error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        /* Birthday Celebration Overlay */
+        .birthday-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            flex-direction: column;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .birthday-message {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            animation: pulse 1.5s infinite;
+            text-align: center;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e53, #ffd700);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            z-index: 10;
+        }
+
+        .birthday-submessage {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-top: 1rem;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            z-index: 10;
+            opacity: 0.9;
+        }
+
+        /* Page-wide Sparkles Canvas */
+        #page-sparkles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Vision/Mission Modal */
+        #visionMissionModal .modal-content {
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        #visionMissionModal .modal-header {
+            background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-bottom: none;
+        }
+
+        #visionMissionModal .modal-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        #visionMissionModal .modal-body {
+            padding: 2rem;
+            color: #374151;
+        }
+
+        #visionMissionModal .section-block {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #1a4b8c;
+        }
+
+        #visionMissionModal .section-block h6 {
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #1a4b8c;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #visionMissionModal .section-block p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #374151;
+            margin-bottom: 0;
+        }
+
+        #visionMissionModal .modal-footer {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 1.25rem 2rem;
+        }
+
+        /* Announcement Modal */
+        .announcement-modal-title {
+            font-size: clamp(1rem, 2.2vw, 1.25rem);
+            line-height: 1.1;
+        }
+
+        .announcement-item {
+            border-radius: 16px;
+        }
+
+        .announcement-item .card-body {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .announcement-item .card-body > div:first-child {
+            flex: 1 1 60%;
+            min-width: 180px;
+        }
+
+        .announcement-item .card-body > .file-actions {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .announcement-item .card-title {
+            font-size: clamp(0.95rem, 1.6vw, 1.05rem);
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .announcement-item .card-text {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        /* Approval Section Styles */
+        .approval-section {
+            margin-bottom: 3rem;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1a4b8c;
+            margin-bottom: 0.5rem;
+        }
+        
+        .section-subtitle {
+            color: #6b7280;
+            font-size: 1rem;
+            margin: 0;
+        }
+        
+        .approval-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e5e7eb;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .approval-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .approval-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #1a4b8c, #2c5aa0);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .approval-info {
+            flex: 1;
+        }
+        
+        .approval-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 0.25rem 0;
+        }
+        
+        .approval-subtitle {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        
+        .approval-badge .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #dcfce7;
+            color: #16a34a;
+            border: 1px solid #22c55e;
+        }
+        
+        .badge-secondary {
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+        }
+        
+        .approval-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .approval-message {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .approval-message p {
+            margin: 0;
+            color: #0369a1;
+            font-size: 0.9rem;
+        }
+        
+        .approval-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .recent-applications {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .applications-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        
+        .applications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .application-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .app-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .app-id {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #6b7280;
+            background: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+        }
+        
+        .app-details {
+            font-size: 0.9rem;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .status-in_progress {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1280px) {
+            .cards-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-content {
+                padding: 1.5rem;
+            }
+            
+            .cards-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .dashboard-content {
+                padding: 1rem;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .welcome-content {
+                flex-direction: column;
+                gap: 1.5rem;
+                text-align: center;
+            }
+            
+            .welcome-stats {
+                justify-content: center;
+            }
+            
+            .profile-info {
+                display: none;
+            }
+            
+            .alert-container {
+                left: 1rem;
+                right: 1rem;
+                max-width: none;
+            }
+
+            .birthday-message {
+                font-size: 2.5rem;
+            }
+
+            .birthday-submessage {
+                font-size: 1.2rem;
+            }
+            
+            .approval-stats { 
+                grid-template-columns: 1fr; 
+            }
+            .approval-actions { 
+                flex-direction: column; 
+            }
+            .approval-header { 
+                flex-direction: column; 
+                text-align: center; 
+            }
+
+            .dropdown-menu.notifications-dropdown {
+                width: min(92vw, 360px);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .announcement-item .card-body > div:first-child {
+                flex-basis: 100%;
+            }
+            .announcement-item .card-body > .file-actions {
+                width: 100%;
+                justify-content: flex-start;
+                margin-top: 0.5rem;
+            }
+            .notification-title {
+                -webkit-line-clamp: 3;
+            line-clamp: 3;
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 1.75rem;
+            }
+            
+            .welcome-section {
+                padding: 1.5rem;
+            }
+            
+            .dashboard-card {
+                padding: 1.5rem;
+            }
+            
+            .card-icon {
+                font-size: 2.5rem;
+                height: 70px;
+                width: 70px;
+            }
+        }
+
+        /* Animation for cards */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dashboard-card:nth-child(1) { animation-delay: 0.1s; }
+        .dashboard-card:nth-child(2) { animation-delay: 0.2s; }
+        .dashboard-card:nth-child(3) { animation-delay: 0.3s; }
+        .dashboard-card:nth-child(4) { animation-delay: 0.4s; }
+        .dashboard-card:nth-child(5) { animation-delay: 0.5s; }
+        .dashboard-card:nth-child(6) { animation-delay: 0.6s; }
+    </style>
+</head>
+<body class="student-dashboard">
+    {% if is_birthday %}
+    <canvas id="page-sparkles-canvas"></canvas>
+    {% endif %}
+
+    <!-- Header Section -->
+    <header class="dashboard-header">
+        <div class="institute-info">
+            <img src="{% static 'images/ritlogo.png' %}" alt="RIT Logo" class="institute-logo">
+            <div class="institute-text">
+                <h1>Ramco Institute of Technology</h1>
+                <p>Student Dashboard</p>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <!-- Notification Dropdown -->
+            <div class="dropdown">
+                <button
+                    class="notification-btn btn position-relative dropdown-toggle"
+                    id="notificationDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    title="Notifications"
+                >
+                    <i class="fas fa-bell fa-lg"></i>
+                    {% get_user_announcements as user_announcements %}
+                    {% if user_announcements %}
+                    <span class="badge-notification">{{ user_announcements|length }}</span>
+                    {% endif %}
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end notifications-dropdown" aria-labelledby="notificationDropdown">
+                    <li class="dropdown-header">
+                        <h6 class="mb-0 fw-bold">
+                            <i class="fas fa-bullhorn me-2"></i>Notifications
+                        </h6>
+                        {% if user_announcements %}
+                        <span class="badge bg-light text-primary fs-6">{{ user_announcements|length }} new</span>
+                        {% endif %}
+                    </li>
+
+                    {% get_user_announcements 6 as dropdown_announcements %}
+                    {% if dropdown_announcements %}
+                        {% for ann in dropdown_announcements %}
+                        <li style="position: relative;">
+                            <a
+                                class="dropdown-item notification-item {% if not ann.is_read %}unread{% endif %} animate-item"
+                                href="#"
+                                data-bs-toggle="modal"
+                                data-bs-target="#announcementModal"
+                                
+                            >
+                                <div class="d-flex">
+                                    <div class="me-3">
+                                        <div class="notification-icon">
+                                            <i class="fas fa-bullhorn fs-5"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="me-2">
+                                                <strong class="d-block notification-title">
+                                                    {{ ann.title|default:"Announcement" }}
+                                                </strong>
+                                                <small class="d-block meta">{{ ann.created_at|timesince }} ago</small>
+
+                                                {% if ann.created_by %}
+                                                <small class="d-block text-muted mt-1">
+                                                    <i class="fas fa-user me-1"></i>
+                                                    {{ ann.created_by.name|default:"N/A" }}
+                                                    {% if ann.created_by.designation %}
+                                                        • {{ ann.created_by.designation }}
+                                                    {% endif %}
+                                                </small>
+                                                {% endif %}
+                                            </div>
+
+                                            {% if not ann.is_read %}
+                                            <span class="badge badge-new bg-danger rounded-pill mt-1">NEW</span>
+                                            {% endif %}
+                                        </div>
+
+                                        {% if ann.message %}
+                                        <p class="mb-0 text-muted small mt-1 no-wrap" style="max-width:260px;">
+                                            {{ ann.message|truncatewords:15 }}
+                                        </p>
+                                        {% endif %}
+
+                                        <div class="d-flex gap-2 align-items-center mt-2">
+                                            {% if ann.attachment %}
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-outline-primary view-file-btn"
+                                                title="Preview attachment"
+                                                data-title="{{ ann.title|escape }}"
+                                                data-message="{{ ann.message|escape }}"
+                                                data-url="{{ ann.attachment.url }}"
+                                                data-date="{{ ann.created_at|date:'M d, Y H:i' }}"
+                                            >
+                                                <i class="fas fa-paperclip"></i>
+                                            </button>
+                                            {% endif %}
+                                            <small class="text-muted">Tap to open</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="dropdown-item text-center py-5">
+                            <i class="fas fa-bell-slash text-muted fa-2x mb-3"></i>
+                            <p class="text-muted mb-0">No new notifications</p>
+                        </li>
+                    {% endif %}
+
+                    <li class="dropdown-footer">
+                        <button class="btn btn-sm btn-outline-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#announcementModal">
+                            <i class="fas fa-list me-1"></i>View All Announcements
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="profile-section">
+                <div class="profile-info">
+                    <p class="profile-name">{{ request.user.username }}</p>
+                    <p class="profile-role">{{ request.user.role.role }}</p>
+                </div>
+                <img 
+                    src="{% if request.user.profile_img %}{{ request.user.profile_img.url }}{% else %}{% static 'images/profile.jpg' %}{% endif %}"
+                    data-default-src="{% static 'images/profile.jpg' %}" onerror="this.onerror=null; this.src=this.getAttribute('data-default-src');"
+                    alt="Profile Image"
+                    class="profile-img"
+                    id="profileImage">
+            </div>
+        </div>
+    </header>
+
+    <!-- Profile Popup -->
+    <div class="profile-popup" id="profilePopup">
+        <div class="popup-header">
+            <img 
+                src="{% if request.user.profile_img %}{{ request.user.profile_img.url }}{% else %}{% static 'images/profile.jpg' %}{% endif %}"
+                data-default-src="{% static 'images/profile.jpg' %}" onerror="this.onerror=null; this.src=this.getAttribute('data-default-src');"
+                alt="Profile Image"
+                class="popup-img">
+            <h4 class="popup-name">{{ request.user.username }}</h4>
+            <p class="text-muted small mb-3">{{ request.user.Employee_id }}</p>
+            <p class="popup-role">{{ request.user.role.role }}</p>
+            <p class="popup-department">{{ request.user.Department.Department }}</p>
+        </div>
+        <div class="popup-actions">
+            <button class="btn btn-popup btn-password" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                <i class="fas fa-key me-2"></i> Change Password
+            </button>
+            <a href="{% url 'logout' %}" class="btn btn-popup btn-logout" style="text-decoration: none;">
+                <i class="fas fa-sign-out-alt me-2"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'change_logged_in_password' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <div class="form-group">
+                            <label for="student_current_password" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="student_current_password" name="current_password" required autocomplete="current-password">
+                        </div>
+                        <div class="form-group mt-3">
+                            <label for="student_new_password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="student_new_password" name="new_password" required minlength="4" autocomplete="new-password">
+                            <div class="form-text">Minimum 4 characters. Do not use 123.</div>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label for="student_confirm_password" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="student_confirm_password" name="confirm_password" required minlength="4" autocomplete="new-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">
+                            <i class="fas fa-save"></i> Update Password
+                        </button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages/Alerts -->
+    {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+                <div class="custom-alert alert-{{ message.tags }}">
+                    <i class="fas 
+                        {% if message.tags == 'success' %}fa-check-circle 
+                        {% elif message.tags == 'error' %}fa-exclamation-circle 
+                        {% elif message.tags == 'warning' %}fa-exclamation-triangle 
+                        {% else %}fa-info-circle{% endif %}">
+                    </i>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Birthday Celebration Overlay -->
+    {% if is_birthday %}
+    <div class="birthday-overlay" id="birthdayOverlay">
+        <canvas id="sparkles-canvas"></canvas>
+        <h1 class="birthday-message">Happy Birthday, {{ request.user.username }}!</h1>
+        <p class="birthday-submessage">Wishing you a fantastic year ahead filled with joy and success!</p>
+    </div>
+    {% endif %}
+
+    <!-- Announcements Modal -->
+    <div class="modal fade" id="announcementModal" tabindex="-1" aria-labelledby="announcementModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title announcement-modal-title" id="announcementModalLabel">
+                        <i class="fas fa-bullhorn me-2"></i>Announcements
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-3" style="max-height: 70vh; overflow-y: auto;">
+                    {% get_user_announcements as announcements %}
+                    {% if announcements %}
+                        {% for ann in announcements %}
+                        <div class="card mb-3 shadow-sm border-0 announcement-item">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start w-100 flex-wrap">
+                                    <div>
+                                        <h6 class="card-title fw-bold text-primary mb-1">
+                                            {{ ann.title|default:"(Untitled)" }}
+                                        </h6>
+
+                                        <p class="card-text small text-muted mb-1">
+                                            {{ ann.created_at|date:"M d, Y H:i" }}
+                                        </p>
+
+                                        {% if ann.created_by %}
+                                        <p class="small text-muted mb-2">
+                                            <i class="fas fa-user me-1"></i>
+                                            <span class="fw-semibold text-dark">Created By:</span>
+                                            {{ ann.created_by.name|default:"N/A" }}
+                                            {% if ann.created_by.designation %}
+                                                <span class="text-muted">• {{ ann.created_by.designation }}</span>
+                                            {% endif %}
+                                        </p>
+                                        {% endif %}
+
+                                        <div class="small text-muted">
+                                            <div class="mb-1">
+                                                <i class="fas fa-calendar-day me-1"></i>
+                                                <span class="fw-semibold text-dark">Date:</span>
+                                                {% if ann.date %}{{ ann.date|date:"d-m-Y" }}{% else %}-{% endif %}
+                                                <span class="ms-2">
+                                                    <i class="fas fa-clock me-1"></i>
+                                                    <span class="fw-semibold text-dark">Time:</span>
+                                                    {% if ann.time %}{{ ann.time|time:"H:i" }}{% else %}-{% endif %}
+                                                </span>
+                                            </div>
+
+                                            <div>
+                                                <i class="fas fa-bell me-1"></i>
+                                                <span class="fw-semibold text-dark">Notify From:</span>
+                                                {% if ann.notify_from %}{{ ann.notify_from|date:"d-m-Y H:i" }}{% else %}-{% endif %}
+                                                <span class="ms-2">
+                                                    <span class="fw-semibold text-dark">Notify To:</span>
+                                                    {% if ann.notify_to %}{{ ann.notify_to|date:"d-m-Y H:i" }}{% else %}-{% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="file-actions text-end">
+                                        {% if ann.attachment %}
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-danger view-file-btn mb-2"
+                                            data-title="{{ ann.title|escape }}"
+                                            data-message="{{ ann.message|escape }}"
+                                            data-url="{{ ann.attachment.url }}"
+                                            data-date="{{ ann.created_at|date:'M d, Y H:i' }}"
+                                        >
+                                            View Circular
+                                        </button>
+                                        {% endif %}
+
+                                        {% if ann.file %}
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-dark view-file-btn"
+                                            data-title="{{ ann.title|escape }}"
+                                            data-message="{{ ann.message|escape }}"
+                                            data-url="{{ ann.file.url }}"
+                                            data-date="{{ ann.created_at|date:'M d, Y H:i' }}"
+                                        >
+                                            View Minutes
+                                        </button>
+                                        {% endif %}
+
+                                        {% if not ann.attachment and not ann.file %}
+                                        <span class="badge bg-light text-muted border">No File</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                {% if ann.message %}
+                                <div class="mt-2">
+                                    <p class="mb-1 text-secondary short-message">
+                                        {{ ann.message|truncatewords:20 }}
+                                    </p>
+
+                                    <p class="mb-0 text-secondary full-message d-none" style="white-space: pre-line;">
+                                        {{ ann.message }}
+                                    </p>
+
+                                    <button type="button" class="btn btn-sm btn-link p-0 view-more-btn">
+                                        View
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p class="mb-0">No new announcements</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="modal-footer justify-content-between">
+                    <small class="text-muted">Showing latest {{ announcements|length }} announcements</small>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Announcement File Preview Modal -->
+    <div class="modal fade" id="announcementFileModal" tabindex="-1" aria-labelledby="announcementFileModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-secondary text-white">
+                    <h5 class="modal-title" id="announcementFileModalLabel">
+                        <i class="fas fa-paperclip me-2"></i><span id="fileModalTitle">Preview</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-3" id="fileModalBody" style="max-height: 75vh; overflow: auto;">
+                    <p class="text-muted small" id="fileModalDate"></p>
+                    <div id="fileModalMessage" class="mb-3 text-secondary"></div>
+                    <div id="fileEmbedContainer"></div>
+                </div>
+                <div class="modal-footer">
+                    <a id="fileModalDownload" class="btn btn-sm btn-primary" href="#" target="_blank">
+                        <i class="fas fa-download me-1"></i>Open / Download
+                    </a>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Content -->
+    <main class="dashboard-content">
+        <div class="page-header">
+            <h1 class="page-title">Student Academic Portal</h1>
+            {% if is_birthday %}
+            <h2 class="birthday-page-message">Happy Birthday, {{ request.user.username }}! 🎉</h2>
+            {% endif %}
+            <p class="page-subtitle">Access courses, examinations, fees, feedback, library resources, and campus services from one place.</p>
+        </div>
+
+        <!-- Welcome Section -->
+        <section class="welcome-section">
+            <div class="welcome-content">
+                <div class="welcome-text">
+                    <h2>Welcome back, {{ request.user.username }}!</h2>
+                    <p>Your gateway to learning, records, services, and campus support</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cards Grid -->
+        <div class="cards-grid">
+            {% if module_access.courses %}
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <h3 class="card-title">Courses & Examinations</h3>
+                <p class="card-description">Access course details, examination information, assessment records, and academic resources.</p>
+                <a href="{% url 'cm_home' %}" class="btn btn-card" style="text-decoration: none;">
+                    Access Courses & Exams <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+            {% endif %}
+
+            {% if module_access.academic %}
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-id-card"></i>
+                </div>
+                <h3 class="card-title">Academic & Activities</h3>
+                <p class="card-description">View student profile details, academic records, activity information, and related services.</p>
+                <a href="{% url 'sm_home' %}" class="btn btn-card" style="text-decoration: none;">
+                    View Academic & Activity Dashboard <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+            {% endif %}
+
+            {% if module_access.fee %}
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-money-check-alt"></i>
+                </div>
+                <h3 class="card-title">Fee Management</h3>
+                <p class="card-description">View fee details, payment history, pending dues, and finance-related student records.</p>
+                <a href="{% url 'fee_home' %}" class="btn btn-card" style="text-decoration: none;">
+                    Manage Fees <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+            {% endif %}
+
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-user-edit"></i>
+                </div>
+                <h3 class="card-title">Address & Contact</h3>
+                <p class="card-description">Update your address, contact information, and essential personal details.</p>
+                <a href="{% url 'edit_address' %}" class="btn btn-card" style="text-decoration: none;">
+                    Edit Information <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3 class="card-title">Academic Calendar</h3>
+                <p class="card-description">View academic schedules, holidays, important dates, and campus events.</p>
+                <a href="{% url 'student_academic_calendar' %}" class="btn btn-card" style="text-decoration: none;">
+                    View Calendar <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <h3 class="card-title">RIT Canvas</h3>
+                <p class="card-description">
+                    Access lecture notes, course resources, study materials, and learning content.
+                </p>
+                <button class="btn btn-card" onclick="window.location.href='https://www.ritcanvas.in/login'">
+                    Open RIT Canvas <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <h3 class="card-title">Code2Day</h3>
+                <p class="card-description">
+    Learn by coding with hands-on programming exercises, coding contests, and real-time practice to strengthen your technical skills.
+</p>
+                <button class="btn btn-card" onclick="window.location.href='https://code2day.ramcoad.com/'">
+                    Open Code2Day <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <h3 class="card-title">CGPA Calculator</h3>
+                <p class="card-description">
+                    Calculate your semester GPA and overall CGPA based on your grades and credits.
+                </p>
+                <button class="btn btn-card" onclick="window.location.href='https://cgpa.ritrjpm.ac.in/'">
+                    Open CGPA Calculator <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+
+            {% if module_access.feedback %}
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h3 class="card-title">Feedback Portal</h3>
+                <p class="card-description">
+                    Submit course feedback, surveys, and suggestions to improve academic quality.
+                </p>
+                <a href="{% url 'feedback_home' %}" class="btn btn-card" style="text-decoration: none;">
+                    Give Feedback <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+            {% endif %}
+
+            {% if module_access.library %}
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h3 class="card-title">Library Portal</h3>
+                <p class="card-description">
+                    Access library services, references, books, and academic resource support.
+                </p>
+                <a href="{% url 'library_home' %}" class="btn btn-card" style="text-decoration: none;">
+                    Open Library <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+            {% endif %}
+
+            {% if module_access.data_center %}
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-server"></i>
+                </div>
+                <h3 class="card-title">Data Center</h3>
+                <p class="card-description">
+                    Access student data services, shared resources, reports, and institutional support tools.
+                </p>
+                <a href="{% url 'dc_home' %}" class="btn btn-card" style="text-decoration: none;">
+                    Access Data Center <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+            {% endif %}
+
+            {% if module_access.support %}
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-server"></i>
+                </div>
+                <h3 class="card-title">Support Tickets</h3>
+                <p class="card-description">
+                    Raise service requests for technical issues, support needs, and campus assistance.
+                </p>
+                <a href="{% url 'fm_home' %}" class="btn btn-card" style="text-decoration: none;">
+                    Raise Ticket <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+            {% endif %}
+
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h3 class="card-title">AI Mock Interview</h3>
+                <p class="card-description">
+                    Practice with AI-powered mock interviews, get instant feedback, and improve your communication skills.
+                </p>
+                <a href="{% url 'mock_interview:dashboard' %}" class="btn btn-card" style="text-decoration: none;">
+                    Start Interview <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Vision / Mission / PEO / PSO Modal -->
+    {% if vision or mission or peos or psos %}
+    <style>
+        #visionMissionModal .modal-dialog {
+            max-width: 1200px;
+            width: 95%;
+        }
+
+        #visionMissionModal .modal-content {
+            border-radius: 1rem;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.25);
+            border: none;
+        }
+
+        #visionMissionModal .modal-body {
+            background-color: #f8f9fc;
+            padding: 2rem;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        #visionMissionModal .section-block {
+            background-color: #fff;
+            border-radius: 0.75rem;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #visionMissionModal .section-block:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+        }
+
+        #visionMissionModal h6 {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.75rem;
+        }
+
+        #visionMissionModal p {
+            font-size: 0.95rem;
+            color: #444;
+            margin-bottom: 0;
+            line-height: 1.6;
+        }
+
+        #visionMissionModal .list-group-item {
+            background: #fff;
+            border: none;
+            border-bottom: 1px solid #e9ecef;
+            padding: 0.75rem 1rem;
+        }
+
+        #visionMissionModal .list-group-item:last-child {
+            border-bottom: none;
+        }
+
+        #visionMissionModal .modal-footer {
+            background-color: #f1f3f6;
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
+
+    <div class="modal fade" id="visionMissionModal" tabindex="-1" aria-labelledby="visionMissionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id="visionMissionModalLabel">
+                        <i class="fas fa-bullseye me-2"></i> Department Vision, Mission, PEO & PSO
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    {% if vision %}
+                    <div class="section-block">
+                        <h6><i class="fas fa-lightbulb text-warning me-2"></i> Vision ({{ vision.year }})</h6>
+                        <p>{{ vision.vision_statement|linebreaksbr }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if mission %}
+                    <div class="section-block">
+                        <h6><i class="fas fa-flag-checkered text-success me-2"></i> Mission ({{ mission.year }})</h6>
+                        <p>{{ mission.mission_statement|linebreaksbr }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if peos %}
+                    <div class="section-block">
+                        <h6><i class="fas fa-graduation-cap text-info me-2"></i> Program Educational Objectives (PEOs)</h6>
+                        <ul class="list-group list-group-flush mt-2">
+                            {% for peo in peos %}
+                            <li class="list-group-item">
+                                <strong>PEO {{ forloop.counter }}{% if peo.year %} ({{ peo.year }}){% endif %}:</strong>
+                                <p class="mb-0">{{ peo.peo_statement|linebreaksbr }}</p>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item text-muted fst-italic">No active PEOs found.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if psos %}
+                    <div class="section-block">
+                        <h6><i class="fas fa-cogs text-secondary me-2"></i> Program Specific Outcomes (PSOs)</h6>
+                        <ul class="list-group list-group-flush mt-2">
+                            {% for pso in psos %}
+                            <li class="list-group-item">
+                                <strong>PSO {{ forloop.counter }}{% if pso.year %} ({{ pso.year }}){% endif %}:</strong>
+                                <p class="mb-0">{{ pso.pso_statement|linebreaksbr }}</p>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item text-muted fst-italic">No active PSOs found.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="modal-footer d-flex justify-content-between align-items-center">
+                    <small class="text-muted fst-italic">
+                        Empowering Excellence • {{ vision.department.Department|default:"Department" }}
+                    </small>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        Close <i class="fas fa-times ms-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if request.user.is_authenticated and request.user.is_student %}
+        {% include "chatbot/widget.html" %}
+    {% endif %}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Profile Popup
+            const profileImage = document.getElementById('profileImage');
+            const popup = document.getElementById('profilePopup');
+
+            if (profileImage && popup) {
+                profileImage.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    popup.classList.toggle('show');
+                });
+
+                document.addEventListener('click', function(event) {
+                    if (!popup.contains(event.target) && event.target !== profileImage) {
+                        popup.classList.remove('show');
+                    }
+                });
+            }
+
+            // Show Vision/Mission Modal
+            // // {% if vision or mission %}
+            const showPopup = "{{ show_popup|yesno:'true,false' }}" === "true";
+            if (showPopup) {
+                setTimeout(() => {
+                    const modalEl = document.getElementById("visionMissionModal");
+                    if (modalEl) {
+                        const modal = new bootstrap.Modal(modalEl);
+                        modal.show();
+                    }
+                }, 1500);
+            }
+            // {% endif %}
+
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function () {
+                const alerts = document.querySelectorAll('.custom-alert');
+                alerts.forEach(alert => {
+                    alert.style.animation = 'fadeOut 0.5s forwards';
+                    setTimeout(() => alert.remove(), 500);
+                });
+            }, 5000);
+
+            // File Preview Modal
+            document.addEventListener("click", function (evt) {
+                const btn = evt.target.closest && evt.target.closest(".view-file-btn");
+                if (!btn) return;
+
+                evt.preventDefault();
+                evt.stopPropagation();
+
+                const title = btn.getAttribute("data-title") || "Attachment";
+                const message = btn.getAttribute("data-message") || "";
+                const url = btn.getAttribute("data-url") || "";
+                const date = btn.getAttribute("data-date") || "";
+
+                const titleEl = document.getElementById("fileModalTitle");
+                const dateEl = document.getElementById("fileModalDate");
+                const messageEl = document.getElementById("fileModalMessage");
+                const container = document.getElementById("fileEmbedContainer");
+                const download = document.getElementById("fileModalDownload");
+
+                if (!titleEl || !dateEl || !messageEl || !container || !download) return;
+
+                titleEl.textContent = title;
+                dateEl.textContent = date;
+                messageEl.textContent = message;
+                container.innerHTML = "";
+
+                if (url) {
+                    download.href = url;
+                    const lower = url.toLowerCase();
+
+                    if (lower.endsWith(".pdf")) {
+                        const iframe = document.createElement("iframe");
+                        iframe.src = url;
+                        iframe.style.width = "100%";
+                        iframe.style.height = "60vh";
+                        iframe.frameBorder = "0";
+                        container.appendChild(iframe);
+                    } else if (lower.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/)) {
+                        const img = document.createElement("img");
+                        img.src = url;
+                        img.className = "img-fluid rounded";
+                        container.appendChild(img);
+                    } else {
+                        const link = document.createElement("a");
+                        link.href = url;
+                        link.target = "_blank";
+                        link.className = "btn btn-outline-primary";
+                        link.textContent = "Open attachment";
+                        container.appendChild(link);
+                    }
+                } else {
+                    download.href = "#";
+                }
+
+                try {
+                    const ddToggle = document.getElementById("notificationDropdown");
+                    const ddInstance = bootstrap.Dropdown.getInstance(ddToggle) || new bootstrap.Dropdown(ddToggle);
+                    if (ddInstance) ddInstance.hide();
+                } catch (e) {}
+
+                const modalEl = document.getElementById("announcementFileModal");
+                if (modalEl) {
+                    const modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+                }
+            });
+
+            // Re-animate notification items when dropdown opens
+            try {
+                const ddToggle = document.getElementById("notificationDropdown");
+                if (ddToggle) {
+                    ddToggle.addEventListener("shown.bs.dropdown", function () {
+                        const menu = ddToggle.nextElementSibling;
+                        if (!menu) return;
+
+                        const items = menu.querySelectorAll(".animate-item");
+                        items.forEach((el, idx) => {
+                            el.style.animationDelay = (idx * 45) + "ms";
+                            el.classList.remove("animate-item");
+                            void el.offsetWidth;
+                            el.classList.add("animate-item");
+                        });
+                    });
+                }
+            } catch (e) {}
+        });
+
+        // View more / hide announcement message
+        document.addEventListener("click", function(e){
+            if(e.target.classList.contains("view-more-btn")){
+                const container = e.target.closest("div");
+                const shortMsg = container.querySelector(".short-message");
+                const fullMsg = container.querySelector(".full-message");
+
+                if(fullMsg.classList.contains("d-none")){
+                    fullMsg.classList.remove("d-none");
+                    shortMsg.classList.add("d-none");
+                    e.target.textContent = "Hide";
+                } else {
+                    fullMsg.classList.add("d-none");
+                    shortMsg.classList.remove("d-none");
+                    e.target.textContent = "View";
+                }
+            }
+        });
+
+        // Page-wide Sparkles Animation
+        // {% if is_birthday %}
+        (function() {
+            const canvas = document.getElementById('page-sparkles-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particles = [];
+            const colors = ['#FFD700', '#FFFFFF', '#FF69B4', '#00B7EB'];
+
+            function createParticle() {
+                return {
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 8 + 3,
+                    speedX: (Math.random() * 2 - 1) * 0.8,
+                    speedY: (Math.random() * 2 - 1) * 0.8,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    opacity: Math.random() * 0.7 + 0.3,
+                    life: Math.random() * 100 + 50,
+                    maxLife: Math.random() * 100 + 50
+                };
+            }
+
+            function drawParticle(particle) {
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fillStyle = particle.color;
+                ctx.globalAlpha = particle.opacity;
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+
+            function updateParticle(particle) {
+                particle.x += particle.speedX;
+                particle.y += particle.speedY;
+                particle.life--;
+                if (particle.x < 0 || particle.x > canvas.width) particle.speedX *= -1;
+                if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -1;
+                particle.opacity = (particle.life / particle.maxLife) * (Math.random() * 0.4 + 0.6);
+                if (particle.opacity < 0) particle.opacity = 0;
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (particles.length < 200) {
+                    particles.push(createParticle());
+                }
+                particles = particles.filter(p => p.life > 0);
+                particles.forEach(p => {
+                    updateParticle(p);
+                    drawParticle(p);
+                });
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        })();
+        // {% endif %}
+
+        // Overlay Sparkles Animation
+        // {% if is_birthday %}
+        (function() {
+            const canvas = document.getElementById('sparkles-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particles = [];
+            let poppers = [];
+            const colors = ['#FFD700', '#FFFFFF', '#FF69B4', '#00B7EB'];
+
+            function createParticle() {
+                return {
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 6 + 2,
+                    speedX: (Math.random() * 3 - 1.5) * 1.5,
+                    speedY: (Math.random() * 3 - 1.5) * 1.5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    opacity: Math.random() * 0.8 + 0.2,
+                    life: Math.random() * 100 + 50,
+                    maxLife: Math.random() * 100 + 50
+                };
+            }
+
+            function drawParticle(particle) {
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fillStyle = particle.color;
+                ctx.globalAlpha = particle.opacity;
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+
+            function updateParticle(particle) {
+                particle.x += particle.speedX;
+                particle.y += particle.speedY;
+                particle.life--;
+                if (particle.x < 0 || particle.x > canvas.width) particle.speedX *= -1;
+                if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -1;
+                particle.opacity = (particle.life / particle.maxLife) * (Math.random() * 0.4 + 0.6);
+                if (particle.opacity < 0) particle.opacity = 0;
+            }
+
+            function createPopper() {
+                const centerX = canvas.width * (Math.random() * 0.4 + 0.3);
+                const centerY = canvas.height * (Math.random() * 0.4 + 0.3);
+                const particles = [];
+                const numParticles = 20;
+                for (let i = 0; i < numParticles; i++) {
+                    const angle = (Math.PI * 2 * i) / numParticles;
+                    const speed = Math.random() * 5 + 2;
+                    particles.push({
+                        x: centerX,
+                        y: centerY,
+                        size: Math.random() * 4 + 2,
+                        speedX: Math.cos(angle) * speed,
+                        speedY: Math.sin(angle) * speed,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        opacity: 1,
+                        life: 30,
+                        maxLife: 30
+                    });
+                }
+                return particles;
+            }
+
+            function drawPopper(particle) {
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fillStyle = particle.color;
+                ctx.globalAlpha = particle.opacity;
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+
+            function updatePopper(particle) {
+                particle.x += particle.speedX;
+                particle.y += particle.speedY;
+                particle.life--;
+                particle.opacity = particle.life / particle.maxLife;
+                if (particle.opacity < 0) particle.opacity = 0;
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (particles.length < 200) {
+                    particles.push(createParticle());
+                }
+                particles = particles.filter(p => p.life > 0);
+                particles.forEach(p => {
+                    updateParticle(p);
+                    drawParticle(p);
+                });
+                if (Math.random() < 0.1) {
+                    poppers.push(...createPopper());
+                }
+                poppers = poppers.filter(p => p.life > 0);
+                poppers.forEach(p => {
+                    updatePopper(p);
+                    drawPopper(p);
+                });
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+
+            setTimeout(function() {
+                const overlay = document.getElementById('birthdayOverlay');
+                overlay.style.animation = 'fadeOut 0.5s forwards';
+                setTimeout(() => overlay.remove(), 500);
+            }, 5000);
+        })();
+        // {% endif %}
+
+        function toggleApplicationsList() {
+            const list = document.getElementById('recentApplicationsList');
+            if (list && list.style.display === 'none') {
+                list.style.display = 'block';
+            } else if (list) {
+                list.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

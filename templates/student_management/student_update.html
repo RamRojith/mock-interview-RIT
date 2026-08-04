@@ -1,0 +1,854 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Edit Student Profile</title>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+            <link rel="website icon" type="png" href="{% static 'image/Edenberg.png' %}">
+
+      <style>
+         :root {
+         --primary-color: #3498db;
+         --secondary-color: #2980b9;
+         --accent-color: #f0ad4e;
+         --danger-color: #d9534f;
+         --light-gray: #f5f5f5;
+         --medium-gray: #ddd;
+         --dark-gray: #95a5a6;
+         --text-color: #333;
+         --white: #fff;
+         --border-radius: 6px;
+         --box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+         --transition: all 0.3s ease;
+         }
+         * {
+         box-sizing: border-box;
+         margin: 0;
+         padding: 0;
+         }
+         body {
+         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+         line-height: 1.6;
+         color: var(--text-color);
+         background-color: #f9f9f9;
+         padding: 20px;
+         }
+         .profile-container {
+         max-width: 1200px;
+         margin: 0 auto;
+         padding: 30px;
+         background: var(--white);
+         border-radius: var(--border-radius);
+         box-shadow: var(--box-shadow);
+         }
+         .profile-header {
+         color: var(--text-color);
+         text-align: center;
+         margin-bottom: 30px;
+         font-size: clamp(1.5rem, 2.5vw, 2rem);
+         font-weight: 600;
+         border-bottom: 2px solid var(--primary-color);
+         padding-bottom: 10px;
+         }
+         .messages {
+         margin-bottom: 25px;
+         }
+         .alert {
+         padding: 12px 15px;
+         border-radius: var(--border-radius);
+         margin-bottom: 15px;
+         }
+         .alert-success {
+         background-color: #d4edda;
+         color: #155724;
+         border: 1px solid #c3e6cb;
+         }
+         .alert-error {
+         background-color: #f8d7da;
+         color: #721c24;
+         border: 1px solid #f5c6cb;
+         }
+         .profile-form {
+         display: flex;
+         flex-direction: column;
+         gap: 30px;
+         }
+         .form-section {
+         margin-bottom: 30px;
+         padding: 20px;
+         background: var(--light-gray);
+         border-radius: var(--border-radius);
+         border-left: 4px solid var(--primary-color);
+         }
+         .section-header {
+         color: var(--primary-color);
+         margin-bottom: 20px;
+         font-size: clamp(1.1rem, 1.5vw, 1.3rem);
+         display: flex;
+         align-items: center;
+         gap: 10px;
+         }
+         .section-header i {
+         font-size: 1.2rem;
+         }
+         .form-row {
+         display: flex;
+         flex-wrap: wrap;
+         gap: 20px;
+         margin-bottom: 15px;
+         }
+         .form-group {
+         flex: 1 1 250px;
+         margin-bottom: 15px;
+         }
+         .form-group.full-width {
+         flex: 1 1 100%;
+         }
+         .form-group label {
+         display: block;
+         margin-bottom: 8px;
+         font-weight: 500;
+         color: var(--text-color);
+         }
+         .form-group input,
+         .form-group select,
+         .form-group textarea {
+         width: 100%;
+         padding: 10px 12px;
+         border: 1px solid var(--medium-gray);
+         border-radius: var(--border-radius);
+         font-size: 14px;
+         transition: var(--transition);
+         }
+         .form-group input:focus,
+         .form-group select:focus,
+         .form-group textarea:focus {
+         border-color: var(--primary-color);
+         box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+         outline: none;
+         }
+         .form-group textarea {
+         min-height: 100px;
+         resize: vertical;
+         }
+         .checkbox-container {
+         display: flex;
+         flex-direction: column;
+         gap: 10px;
+         margin-top: 8px;
+         }
+         .checkbox-label {
+         display: flex;
+         align-items: center;
+         gap: 8px;
+         cursor: pointer;
+         font-weight: normal;
+         }
+         .checkbox-label input[type="checkbox"] {
+         width: auto;
+         }
+         .documents-grid {
+         display: grid;
+         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+         gap: 15px;
+         }
+         .document-item {
+         padding: 15px;
+         background: var(--white);
+         border-radius: var(--border-radius);
+         border: 1px solid var(--medium-gray);
+         }
+         .document-checkbox {
+         display: flex;
+         align-items: center;
+         gap: 10px;
+         margin-bottom: 10px;
+         font-weight: 500;
+         cursor: pointer;
+         }
+         .document-upload {
+         width: 100%;
+         margin-top: 8px;
+         padding: 8px;
+         border: 1px dashed var(--medium-gray);
+         border-radius: var(--border-radius);
+         }
+         .current-file {
+         margin-top: 8px;
+         font-size: 13px;
+         }
+         .current-file a {
+         color: var(--primary-color);
+         text-decoration: none;
+         }
+         .current-file a:hover {
+         text-decoration: underline;
+         }
+         .file-preview img {
+         max-width: 80px;
+         max-height: 80px;
+         margin-top: 10px;
+         border: 1px solid var(--medium-gray);
+         border-radius: var(--border-radius);
+         }
+         .form-actions {
+         display: flex;
+         justify-content: flex-end;
+         gap: 15px;
+         margin-top: 30px;
+         }
+         .btn {
+         padding: 10px 25px;
+         border-radius: var(--border-radius);
+         font-size: 15px;
+         font-weight: 500;
+         cursor: pointer;
+         transition: var(--transition);
+         border: none;
+         text-align: center;
+         }
+         .btn-save {
+         background-color: var(--primary-color);
+         color: var(--white);
+         }
+         .btn-save:hover {
+         background-color: var(--secondary-color);
+         }
+         .btn-cancel {
+         background-color: var(--dark-gray);
+         color: var(--white);
+         }
+         .btn-cancel:hover {
+         background-color: #7f8c8d;
+         }
+         .btn-sm {
+         padding: 5px 10px;
+         font-size: 12px;
+         }
+         .btn-warning {
+         background-color: var(--accent-color);
+         color: var(--white);
+         }
+         .btn-warning:hover {
+         background-color: #ec971f;
+         }
+         .btn-danger {
+         background-color: var(--danger-color);
+         color: var(--white);
+         }
+         .btn-danger:hover {
+         background-color: #c9302c;
+         }
+         /* Table Styles */
+         .table {
+         width: 100%;
+         margin-bottom: 20px;
+         border-collapse: collapse;
+         overflow-x: auto;
+         display: block;
+         }
+         .table th, .table td {
+         padding: 12px;
+         border: 1px solid var(--medium-gray);
+         text-align: left;
+         min-width: 120px;
+         }
+         .table th {
+         background-color: var(--light-gray);
+         font-weight: 600;
+         }
+         .table input[type="text"],
+         .table input[type="number"],
+         .table select {
+         width: 100%;
+         padding: 8px;
+         border: 1px solid var(--medium-gray);
+         border-radius: var(--border-radius);
+         }
+         /* Responsive adjustments */
+         @media (max-width: 768px) {
+         .profile-container {
+         padding: 20px;
+         }
+         .form-section {
+         padding: 15px;
+         }
+         .form-row {
+         gap: 15px;
+         }
+         .form-group {
+         flex: 1 1 100%;
+         }
+         .documents-grid {
+         grid-template-columns: 1fr;
+         }
+         .form-actions {
+         flex-direction: column;
+         gap: 10px;
+         }
+         .btn {
+         width: 100%;
+         }
+         }
+         @media (max-width: 480px) {
+         body {
+         padding: 10px;
+         }
+         .profile-container {
+         padding: 15px;
+         }
+         .section-header {
+         flex-direction: column;
+         align-items: flex-start;
+         gap: 5px;
+         }
+         .table th, .table td {
+         padding: 8px;
+         font-size: 14px;
+         }
+         }
+      </style>
+   </head>
+   <body>
+      <div class="profile-container">
+         <h2 class="profile-header">Edit Profile: {{ student.first_name }} {{ student.surname }}</h2>
+         {% if messages %}
+         <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+         </div>
+         {% endif %}
+         <form method="post" enctype="multipart/form-data" class="profile-form">
+            {% csrf_token %}
+            <!-- Personal Information -->
+            <div class="form-section">
+               <h3 class="section-header"><i class="fas fa-user"></i> Personal Information</h3>
+               <div class="form-row">
+                  <div class="form-group">
+                     <label>First Name*</label>
+                     <input type="text" name="first_name" value="{{ student.first_name }}" required>
+                  </div>
+                  <div class="form-group">
+                     <label>Surname</label>
+                     <input type="text" name="surname" value="{{ student.surname }}">
+                  </div>
+                  <div class="form-group">
+                     <label>Gender</label>
+                     <select name="gender">
+                        <option value="">Select Gender</option>
+                        <option value="Male" {% if student.gender == "Male" %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if student.gender == "Female" %}selected{% endif %}>Female</option>
+                        <option value="Other" {% if student.gender == "Other" %}selected{% endif %}>Other</option>
+                     </select>
+                  </div>
+               </div>
+               <div class="form-row">
+                  <div class="form-group">
+                     <label>Date of Birth</label>
+                     <input type="date" name="date_of_birth" value="{{ student.date_of_birth|date:'Y-m-d' }}">
+                  </div>
+                  <div class="form-group">
+                     <label>Age</label>
+                     <input type="number" name="age" value="{{ student.age }}">
+                  </div>
+                  <div class="form-group">
+                     <label>Passport Photo</label>
+                     <input type="file" name="passport_size_photo">
+                     {% if student.passport_size_photo %}
+                     <div class="file-preview">
+                        <img src="{{ student.passport_size_photo.url }}" alt="Current Photo">
+                     </div>
+                     {% endif %}
+                  </div>
+               </div>
+               <div class="form-row">
+                  <div class="form-group">
+                     <label for="title">Title</label>
+                     {% if applicant.title %}
+                     <select name="title" id="title" class="form-select">
+                        <option value="" disabled>Select Title</option>
+                        <option value="Mr." {% if applicant.title == "Mr." %}selected{% endif %}>Mr.</option>
+                        <option value="Ms." {% if applicant.title == "Ms." %}selected{% endif %}>Ms.</option>
+                        <option value="Mrs." {% if applicant.title == "Mrs." %}selected{% endif %}>Mrs.</option>
+                        <option value="Dr." {% if applicant.title == "Dr." %}selected{% endif %}>Dr.</option>
+                     </select>
+                     <input type="hidden" name="title" value="{{ applicant.title }}">
+                     {% else %}
+                     <select name="title" id="title" class="form-select" required>
+                        <option value="" disabled selected>Select Title</option>
+                        <option value="Mr.">Mr.</option>
+                        <option value="Ms.">Ms.</option>
+                        <option value="Mrs.">Mrs.</option>
+                        <option value="Dr.">Dr.</option>
+                     </select>
+                     {% endif %}
+                  </div>
+                  <div class="form-group">
+                     <label>Other Names</label>
+                     <input type="text" name="other_names" value="{{ applicant.other_names|default_if_none:'' }}">
+                  </div>
+                  <div class="form-group">
+                     <label>Marital Status</label>
+                     <select name="marital_status">
+                        <option value="">Select Status</option>
+                        <option value="Single" {% if applicant.marital_status == "Single" %}selected{% endif %}>Single</option>
+                        <option value="Married" {% if applicant.marital_status == "Married" %}selected{% endif %}>Married</option>
+                     </select>
+                  </div>
+               </div>
+            </div>
+            <!-- Contact Information -->
+            <div class="form-section">
+               <h3 class="section-header"><i class="fas fa-address-book"></i> Contact Information</h3>
+               <div class="form-row">
+                  <div class="form-group">
+                     <label>Mobile Number</label>
+                     <input type="text" name="mobile_number" value="{{ student.mobile_number }}" placeholder="+260...">
+                  </div>
+                  <div class="form-group">
+                     <label>Email Address*</label>
+                     <input type="email" name="email_address" value="{{ student.email_address }}" required>
+                  </div>
+                  <div class="form-group">
+                     <label>Alternate Mobile</label>
+                     <input type="text" name="alternate_mobile_number" value="{{ applicant.alternate_mobile_number|default_if_none:'' }}">
+                  </div>
+               </div>
+               <div class="form-row">
+                  <div class="form-group">
+                     <label>Postal Address</label>
+                     <input type="text" name="postal_address" value="{{ applicant.postal_address|default_if_none:'' }}">
+                  </div>
+                  <div class="form-group">
+                     <label>Nationality</label>
+                     <input type="text" name="nationality" value="{{ applicant.nationality|default_if_none:'' }}">
+                  </div>
+                  <div class="form-group">
+                     <label>NRC Number</label>
+                     <input type="text" name="nrc_number" value="{{ student.nrc_number }}">
+                  </div>
+               </div>
+            </div>
+            <!-- Passport Information -->
+            <div class="form-section">
+               <h3 class="section-header"><i class="fas fa-passport"></i> Passport Information</h3>
+               <div class="form-row">
+                  <div class="form-group">
+                     <label>Passport Number</label>
+                     <input type="text" name="passport_number" value="{{ applicant.passport_number|default_if_none:'' }}">
+                  </div>
+                  <div class="form-group">
+                     <label>Passport Issue Date</label>
+                     <input type="date" name="passport_issue_date" value="{{ applicant.passport_issue_date|date:'Y-m-d' }}">
+                  </div>
+                  <div class="form-group">
+                     <label>Passport Expiry Date</label>
+                     <input type="date" name="passport_expiry_date" value="{{ applicant.passport_expiry_date|date:'Y-m-d' }}">
+                  </div>
+               </div>
+            </div>
+            <!-- Academic Information -->
+            <div class="form-section">
+    <h3 class="section-header"><i class="fas fa-graduation-cap"></i> Academic Information</h3>
+    <div class="form-row">
+        <!-- Programme of Study -->
+        <div class="form-group">
+            <label for="programme_of_study">Programme of Study</label>
+            {% if student.programme_of_study %}
+                <input type="text" class="form-control" value="{{ student.programme_of_study }}" readonly>
+                <input type="hidden" name="programme_of_study" value="{{ student.programme_of_study }}">
+            {% else %}
+                <input type="text" class="form-control" value="" readonly>
+                <input type="hidden" name="programme_of_study" value="">
+            {% endif %}
+        </div>
+
+        <!-- Department -->
+        <div class="form-group">
+            <label>Department Name</label>
+            {% if student.department %}
+                <input type="text" class="form-control" value="{{ student.department.Department }}" readonly>
+                <input type="hidden" name="department" value="{{ student.department.id }}">
+            {% else %}
+                <input type="text" class="form-control" value="" readonly>
+                <input type="hidden" name="department" value="">
+            {% endif %}
+        </div>
+
+        <!-- Program Name -->
+        <div class="form-group">
+            <label>Program Name</label>
+            <input type="text" name="program_name" value="{{ student.program_name }}" readonly>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <!-- Intake -->
+        <div class="form-group">
+            <label for="intake">Intake</label>
+            {% if student.Intake %}
+                <input type="text" class="form-control" value="{{ student.Intake }}" readonly>
+                <input type="hidden" name="Intake" value="{{ student.Intake }}">
+            {% else %}
+                <input type="text" class="form-control" value="" readonly>
+                <input type="hidden" name="Intake" value="">
+            {% endif %}
+        </div>
+
+        <!-- Batch -->
+        <div class="form-group">
+            <label for="batch">Batch</label>
+            {% if student.batch %}
+                <input type="text" class="form-control" value="{{ student.batch }}" readonly>
+                <input type="hidden" name="batch" value="{{ student.batch }}">
+            {% else %}
+                <input type="text" class="form-control" value="" readonly>
+                <input type="hidden" name="batch" value="">
+            {% endif %}
+        </div>
+
+        <!-- Registration Number -->
+        <div class="form-group">
+            <label>Registration Number</label>
+            <input type="text" name="reg_number" value="{{ student.reg_number }}" readonly>
+        </div>
+    </div>
+</div>
+
+            <!-- Examination Information -->
+            <div class="form-section">
+               <h3 class="section-header"><i class="fas fa-file-alt"></i> Examination Information</h3>
+               <div class="form-row">
+                  <div class="form-group">
+                     <label>O-Level Examination Body</label>
+                     <div class="checkbox-container">
+                        <label class="checkbox-label">
+                        <input type="checkbox" name="o_level_examination_body" value="Examination Council of Zambia" 
+                        {% if "Examination Council of Zambia" in applicant.o_level_examination_body %}checked{% endif %}>
+                        Examination Council of Zambia
+                        </label>
+                        <label class="checkbox-label">
+                        <input type="checkbox" name="o_level_examination_body" value="Cambridge and London General Certificate of Education" 
+                        {% if "Cambridge and London General Certificate of Education" in applicant.o_level_examination_body %}checked{% endif %}>
+                        Cambridge and London General Certificate of Education
+                        </label>
+                        <label class="checkbox-label">
+                        <input type="checkbox" name="o_level_examination_body" value="International General Certificate of Secondary Education(IGCSE)" 
+                        {% if "International General Certificate of Secondary Education(IGCSE)" in applicant.o_level_examination_body %}checked{% endif %}>
+                        International General Certificate of Secondary Education(IGCSE)
+                        </label>
+                     </div>
+                  </div>
+                  <div class="form-group">
+                     <label>A-Level Examination Body</label>
+                     <div class="checkbox-container">
+                        <label class="checkbox-label">
+                        <input type="checkbox" name="a_level_examination_body" value="Cambridge International Examination(CIE)" 
+                        {% if "Cambridge International Examination(CIE)" in applicant.a_level_examination_body %}checked{% endif %}>
+                        Cambridge International Examination(CIE)
+                        </label>
+                        <label class="checkbox-label">
+                        <input type="checkbox" name="a_level_examination_body" value="International General Certificate of Secondary Education(IGCSE)" 
+                        {% if "International General Certificate of Secondary Education(IGCSE)" in applicant.a_level_examination_body %}checked{% endif %}>
+                        International General Certificate of Secondary Education(IGCSE)
+                        </label>
+                        <label class="checkbox-label">
+                        <input type="checkbox" name="a_level_examination_body" value="Others" 
+                        {% if "Others" in applicant.a_level_examination_body %}checked{% endif %}>
+                        Others
+                        </label>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <!-- Disability Information -->
+            <div class="form-section">
+               <h3 class="section-header"><i class="fas fa-wheelchair"></i> Disability Information</h3>
+               <div class="form-row">
+                  <div class="form-group checkbox-group">
+                     <label class="checkbox-label">
+                     <input type="checkbox" name="has_disability" {% if applicant.has_disability %}checked{% endif %}>
+                     Has Disability
+                     </label>
+                  </div>
+                  <div class="form-group full-width">
+                     <label>Disability Description</label>
+                     <textarea name="disability_description">{{ applicant.disability_description|default_if_none:'' }}</textarea>
+                  </div>
+               </div>
+            </div>
+            <!-- Next of Kin Information -->
+            <div class="form-section">
+               <h3 class="section-header"><i class="fas fa-users"></i> Next of Kin Information</h3>
+               <div class="form-row">
+                  <div class="form-group">
+                     <label>Name</label>
+                     <input type="text" name="next_of_kin_name" value="{{ applicant.next_of_kin_name|default_if_none:'' }}">
+                  </div>
+                  <div class="form-group">
+                     <label>Phone</label>
+                     <input type="text" name="next_of_kin_phone" value="{{ applicant.next_of_kin_phone|default_if_none:'' }}">
+                  </div>
+                  <div class="form-group">
+                     <label>Email</label>
+                     <input type="email" name="next_of_kin_email" value="{{ applicant.next_of_kin_email|default_if_none:'' }}">
+                  </div>
+               </div>
+            </div>
+            <!-- Documents Checklist -->
+            <div class="form-section">
+               <h3 class="section-header"><i class="fas fa-file-upload"></i> Required Documents (Click to upload files)</h3>
+               <div class="documents-grid">
+                  <div class="document-item">
+                     <label class="document-checkbox">
+                     <input type="checkbox" name="applicant_form" value="Grade 12 Certificate/Equivalent Statement of Results" 
+                     {% if "Grade 12 Certificate/Equivalent Statement of Results" in applicant.applicant_form %}checked{% endif %}>
+                     <span>Grade 12 Certificate/Equivalent Statement of Results</span>
+                     </label>
+                     <input type="file" name="certificate12" class="document-upload">
+                     {% if applicant.certificate12 %}
+                     <div class="current-file">
+                        <a href="{{ applicant.certificate12.url }}" target="_blank">View Current</a>
+                     </div>
+                     {% endif %}
+                  </div>
+                  <div class="document-item">
+                     <label class="document-checkbox">
+                     <input type="checkbox" name="applicant_form" value="National Registration Card / Passport / Driver's License" 
+                     {% if "National Registration Card / Passport / Driver's License" in applicant.applicant_form %}checked{% endif %}>
+                     <span>National Registration Card / Passport / Driver's License</span>
+                     </label>
+                     <input type="file" name="card_or_license" class="document-upload">
+                     {% if applicant.card_or_license %}
+                     <div class="current-file">
+                        <a href="{{ applicant.card_or_license.url }}" target="_blank">View Current</a>
+                     </div>
+                     {% endif %}
+                  </div>
+                  <div class="document-item">
+                     <label class="document-checkbox">
+                     <input type="checkbox" name="applicant_form" value="Attach two (2) Passport Sized Photo" 
+                     {% if "Attach two (2) Passport Sized Photo" in applicant.applicant_form %}checked{% endif %}>
+                     <span>Attach two (2) Passport Sized Photo</span>
+                     </label>
+                  </div>
+                  <div class="document-item">
+                     <label class="document-checkbox">
+                     <input type="checkbox" name="applicant_form" value="Payment for application form attached (Deposit Slip)" 
+                     {% if "Payment for application form attached (Deposit Slip)" in applicant.applicant_form %}checked{% endif %}>
+                     <span>Payment for application form attached (Deposit Slip)</span>
+                     </label>
+                     <input type="file" name="deposit_slip" class="document-upload">
+                     {% if applicant.deposit_slip %}
+                     <div class="current-file">
+                        <a href="{{ applicant.deposit_slip.url }}" target="_blank">View Current</a>
+                     </div>
+                     {% endif %}
+                  </div>
+                  <div class="document-item">
+                     <label class="document-checkbox">
+                     <input type="checkbox" name="applicant_form" value="Undergraduate degree certificate" 
+                     {% if "Undergraduate degree certificate" in applicant.applicant_form %}checked{% endif %}>
+                     <span>Undergraduate degree certificate</span>
+                     </label>
+                     <input type="file" name="ug_certificate" class="document-upload">
+                     {% if applicant.ug_certificate %}
+                     <div class="current-file">
+                        <a href="{{ applicant.ug_certificate.url }}" target="_blank">View Current</a>
+                     </div>
+                     {% endif %}
+                  </div>
+                  <div class="document-item">
+                     <label>Signature</label>
+                     <input type="file" name="signature">
+                     {% if applicant.signature %}
+                     <div class="current-file">
+                        <a href="{{ applicant.signature.url }}" target="_blank">View Current</a>
+                     </div>
+                     {% endif %}
+                  </div>
+               </div>
+            </div>
+            <!-- Educational Background -->
+            <div class="form-section">
+               <h3 class="section-header"><i class="fas fa-graduation-cap"></i> Educational Background</h3>
+               <!-- Undergraduate/College Education -->
+               <h4>List all High/Secondary/College/University Attended:</h4>
+               {{ education_formset.management_form }}
+               <div style="overflow-x: auto;">
+                  <table id="educational-details-table" class="table">
+                     <thead>
+                        <tr>
+                           <th>Institute/University</th>
+                           <th>From Year</th>
+                           <th>To Year</th>
+                           <th>Qualification</th>
+                           <th>Action</th>
+                        </tr>
+                     </thead>
+                     <tbody id="education-formset-body">
+                        {% for form in education_formset %}
+                        <tr class="education-form-row">
+                           <td>{{ form.institute_university }}</td>
+                           <td>{{ form.from_year }}</td>
+                           <td>{{ form.to_year }}</td>
+                           <td>{{ form.qualification_obtained }}</td>
+                           <td>
+                              {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+                              {{ form.id }}
+                              <button type="button" class="remove-education-form btn btn-sm btn-danger">Remove</button>
+                           </td>
+                        </tr>
+                        {% endfor %}
+                     </tbody>
+                  </table>
+               </div>
+               <button type="button" id="add-education-form" class="btn btn-sm btn-warning">+ Add More</button>
+               <!-- Post-Graduate Education -->
+               <h4>Post-Graduate Educational Details (Optional)</h4>
+               {{ post_graduate_formset.management_form }}
+               <div style="overflow-x: auto;">
+                  <table id="post-graduate-educational-details-table" class="table">
+                     <thead>
+                        <tr>
+                           <th>Institute/University</th>
+                           <th>From Year</th>
+                           <th>To Year</th>
+                           <th>Qualification</th>
+                           <th>Action</th>
+                        </tr>
+                     </thead>
+                     <tbody id="post-graduate-formset-body">
+                        {% for form in post_graduate_formset %}
+                        <tr class="post-graduate-form-row">
+                           <td>{{ form.institute_university }}</td>
+                           <td>{{ form.from_year }}</td>
+                           <td>{{ form.to_year }}</td>
+                           <td>{{ form.qualification_obtained }}</td>
+                           <td>
+                              {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+                              {{ form.id }}
+                              <button type="button" class="remove-postgraduate-form btn btn-sm btn-danger">Remove</button>
+                           </td>
+                        </tr>
+                        {% endfor %}
+                     </tbody>
+                  </table>
+               </div>
+               <button type="button" id="add-postgraduate-form" class="btn btn-sm btn-warning">+ Add More</button>
+            </div>
+            <!-- Form Actions -->
+            <div class="form-actions">
+               <button type="submit" class="btn btn-save">Save Changes</button>
+               <a href="{% url 'student_dashboard' %}" class="btn btn-cancel">Cancel</a>
+            </div>
+         </form>
+      </div>
+      <script>
+         document.addEventListener('DOMContentLoaded', function() {
+             // Toggle file inputs when checkboxes are checked
+             const documentItems = document.querySelectorAll('.document-item');
+             
+             documentItems.forEach(item => {
+                 const checkbox = item.querySelector('input[type="checkbox"]');
+                 const fileInput = item.querySelector('.document-upload');
+                 
+                 if (checkbox && fileInput) {
+                     // Set initial state
+                     fileInput.style.display = checkbox.checked ? 'block' : 'none';
+                     
+                     // Add change listener
+                     checkbox.addEventListener('change', function() {
+                         fileInput.style.display = this.checked ? 'block' : 'none';
+                         if (this.checked) {
+                             fileInput.setAttribute('required', 'required');
+                         } else {
+                             fileInput.removeAttribute('required');
+                         }
+                     });
+                 }
+             });
+         
+             // Undergraduate Education Formset
+             const educationFormsetBody = document.getElementById('education-formset-body');
+             const addEducationFormBtn = document.getElementById('add-education-form');
+             const educationTotalForms = document.getElementById('id_education-TOTAL_FORMS');
+             let educationFormNum = education_formset.empty_form ? parseInt(educationTotalForms.value) : 0;
+             
+             // Function to add new undergraduate education row
+             function addEducationRow() {
+                 const newRow = document.createElement('tr');
+                 newRow.className = 'education-form-row';
+                 newRow.innerHTML = `
+                     <td><input type="text" name="education-${educationFormNum}-institute_university" class="form-control"></td>
+                     <td><input type="number" name="education-${educationFormNum}-from_year" class="form-control"></td>
+                     <td><input type="number" name="education-${educationFormNum}-to_year" class="form-control"></td>
+                     <td><input type="text" name="education-${educationFormNum}-qualification_obtained" class="form-control"></td>
+                     <td><button type="button" class="remove-education-form btn btn-sm btn-danger">Remove</button></td>
+                 `;
+                 educationFormsetBody.appendChild(newRow);
+                 educationTotalForms.value = ++educationFormNum;
+                 
+                 // Add event listener to new remove button
+                 newRow.querySelector('.remove-education-form').addEventListener('click', function() {
+                     newRow.remove();
+                 });
+             }
+         
+             // Post-Graduate Education Formset
+             const pgFormsetBody = document.getElementById('post-graduate-formset-body');
+             const addPgFormBtn = document.getElementById('add-postgraduate-form');
+             const pgTotalForms = document.getElementById('id_post_graduate-TOTAL_FORMS');
+             let pgFormNum = post_graduate_formset.empty_form ? parseInt(pgTotalForms.value) : 0;
+             
+             // Function to add new postgraduate education row
+             function addPostgraduateRow() {
+                 const newRow = document.createElement('tr');
+                 newRow.className = 'post-graduate-form-row';
+                 newRow.innerHTML = `
+                     <td><input type="text" name="post_graduate-${pgFormNum}-institute_university" class="form-control"></td>
+                     <td><input type="number" name="post_graduate-${pgFormNum}-from_year" class="form-control"></td>
+                     <td><input type="number" name="post_graduate-${pgFormNum}-to_year" class="form-control"></td>
+                     <td><input type="text" name="post_graduate-${pgFormNum}-qualification_obtained" class="form-control"></td>
+                     <td><button type="button" class="remove-postgraduate-form btn btn-sm btn-danger">Remove</button></td>
+                 `;
+                 pgFormsetBody.appendChild(newRow);
+                 pgTotalForms.value = ++pgFormNum;
+                 
+                 // Add event listener to new remove button
+                 newRow.querySelector('.remove-postgraduate-form').addEventListener('click', function() {
+                     newRow.remove();
+                 });
+             }
+         
+             // Add event listeners to buttons
+             addEducationFormBtn.addEventListener('click', addEducationRow);
+             addPgFormBtn.addEventListener('click', addPostgraduateRow);
+         
+             // Add event listeners to existing remove buttons
+             document.querySelectorAll('.remove-education-form').forEach(btn => {
+                 btn.addEventListener('click', function() {
+                     this.closest('.education-form-row').remove();
+                 });
+             });
+             
+             document.querySelectorAll('.remove-postgraduate-form').forEach(btn => {
+                 btn.addEventListener('click', function() {
+                     this.closest('.post-graduate-form-row').remove();
+                 });
+             });
+         
+             // Initialize with empty rows if none exist
+             if (educationFormNum === 0) {
+                 addEducationRow();
+             }
+             if (pgFormNum === 0) {
+                 addPostgraduateRow();
+             }
+         });
+      </script>
+   </body>
+</html>

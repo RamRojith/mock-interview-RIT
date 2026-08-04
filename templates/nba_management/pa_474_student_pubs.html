@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4 admin-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header mb-5 text-center">
+    <h1 class="display-6 fw-bold text-white mb-2">4.7.4 — Student Publications</h1>
+    <p class="lead text-white-50">Table 4.7.4.1 — CAYm1 / CAYm2 / CAYm3</p>
+  </div>
+
+  <div class="card border-0 shadow-lg">
+    <div class="card-header bg-gradient-primary text-white py-3 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fas fa-book-open fa-lg"></i>
+        <div>
+          <h4 class="mb-0 fw-bold">Student Publications</h4>
+          <small class="opacity-75">Add rows per CAY and save as one submission</small>
+        </div>
+      </div>
+      
+    </div>
+
+    <div class="card-body p-4">
+      <!-- Dept & AY -->
+      <form method="post" action="{% url 'add_studpubs' %}" id="pubForm">
+        {% csrf_token %}
+        <div class="row g-4 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold text-muted mb-2"><i class="fas fa-building me-1"></i>Department</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0"><i class="fas fa-university text-primary"></i></span>
+              <select name="department" id="department" class="form-select border-start-0" required
+                      onchange="location='{{ request.path }}?department='+this.value;">
+                <option value="">Select Department</option>
+                {% for d in departments %}
+                <option value="{{ d.id }}" {% if d.id|stringformat:'s' == selected_dept_id|stringformat:'s' %}selected{% endif %}>{{ d.Department }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold text-muted mb-2"><i class="fas fa-calendar me-1"></i>Academic Year</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0"><i class="fas fa-history text-primary"></i></span>
+              <input name="academic_year_range" class="form-control border-start-0" placeholder="e.g., 2024-25" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- CAY TABLES -->
+        <div class="table-section">
+          <!-- CAYm1 -->
+          <div class="mb-2 fw-bold text-uppercase text-primary">CAYm1</div>
+          <div class="table-responsive mb-2">
+            <table class="table table-bordered table-hover align-middle">
+              <thead class="table-warning">
+                <tr>
+                  <th style="width:5%">S.N.</th>
+                  <th style="width:22%">Name of the Student </th>
+                  <th>Name of the Publisher</th>
+                  <th>Name of the Journal / Conference</th>
+                  <th style="width:15%">Volume No. & Issue No.</th>
+                  <th style="width:18%">Name of the Award (if any)</th>
+                  <th style="width:1%"></th>
+                </tr>
+              </thead>
+              <tbody id="CAYm1_tbody">
+                {% comment %} one starter row {% endcomment %}
+                <tr class="data-row">
+                  <td></td>
+                  <td>
+                    <div class="d-grid gap-1">
+                      <input name="student_CAYm1[]" class="form-control form-control-sm" placeholder="Student Name — Semester">
+                      <div class="input-group input-group-sm">
+                        <input class="form-control" placeholder="Register No. (verify only)" data-regno>
+                        <button class="btn btn-outline-secondary" type="button" onclick="verifyRegNo(this)">Verify</button>
+                      </div>
+                      <small class="text-muted verify-note">Use Verify to fetch name & semester from Student Details.</small>
+                    </div>
+                  </td>
+                  <td><input name="publisher_CAYm1[]" class="form-control form-control-sm"></td>
+                  <td><input name="venue_CAYm1[]" class="form-control form-control-sm"></td>
+                  <td><input name="volume_CAYm1[]" class="form-control form-control-sm" placeholder="Vol — Issue"></td>
+                  <td><input name="award_CAYm1[]" class="form-control form-control-sm" placeholder="—"></td>
+                  <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="rm(this)"><i class="fas fa-trash"></i></button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm mb-4" onclick="addRow('CAYm1')">+ Add CAYm1 Row</button>
+
+          <!-- CAYm2 -->
+          <div class="mb-2 fw-bold text-uppercase text-primary">CAYm2</div>
+          <div class="table-responsive mb-2">
+            <table class="table table-bordered table-hover align-middle">
+              <thead class="table-warning">
+                <tr>
+                  <th style="width:5%">S.N.</th>
+                  <th style="width:22%">Name of the Student </th>
+                  <th>Name of the Publisher</th>
+                  <th>Name of the Journal / Conference</th>
+                  <th style="width:15%">Volume No. & Issue No.</th>
+                  <th style="width:18%">Name of the Award (if any)</th>
+                  <th style="width:1%"></th>
+                </tr>
+              </thead>
+              <tbody id="CAYm2_tbody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm mb-4" onclick="addRow('CAYm2')">+ Add CAYm2 Row</button>
+
+          <!-- CAYm3 -->
+          <div class="mb-2 fw-bold text-uppercase text-primary">CAYm3</div>
+          <div class="table-responsive mb-2">
+            <table class="table table-bordered table-hover align-middle">
+              <thead class="table-warning">
+                <tr>
+                  <th style="width:5%">S.N.</th>
+                  <th style="width:22%">Name of the Student </th>
+                  <th>Name of the Publisher</th>
+                  <th>Name of the Journal / Conference</th>
+                  <th style="width:15%">Volume No. & Issue No.</th>
+                  <th style="width:18%">Name of the Award (if any)</th>
+                  <th style="width:1%"></th>
+                </tr>
+              </thead>
+              <tbody id="CAYm3_tbody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm" onclick="addRow('CAYm3')">+ Add CAYm3 Row</button>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-between align-items-center border-top pt-4">
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Save Publications</button>
+            <button type="button" id="btnPast" class="btn btn-outline-primary"><i class="fas fa-history me-2"></i>Show Past</button>
+          </div>
+          {% if latest_entry %}
+          <span class="badge bg-light text-dark border">Latest AY: {{ latest_entry.academic_year_range }}</span>
+          <span class="badge bg-success">Marks: {{ latest_entry.marks_awarded }}/{{ latest_entry.max_marks }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Past panel -->
+        <div id="pastPanel" class="mt-4" style="display:none;">
+          <div class="card bg-light border-0">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0"><i class="fas fa-archive me-2 text-primary"></i>Past Submissions</h6>
+                <div class="text-muted small" id="pastCount"></div>
+              </div>
+              <div class="row g-3" id="pastCards"></div>
+              <div id="pastEmpty" class="text-center py-4" style="display:none;">
+                <i class="fas fa-inbox fa-2x text-muted mb-3"></i>
+                <p class="text-muted mb-0">No previous submissions found.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<style>
+:root{--primary:#1a56db;--dark:#1e3a8a;--medium:#3b82f6;--border:#e2e8f0;--bg:#f1f5f9;}
+.admin-dashboard{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--bg);}
+.dashboard-header{background:linear-gradient(135deg,var(--primary),var(--dark));color:#fff;border-radius:16px;padding:2.5rem 1.5rem;}
+.card-header.bg-gradient-primary{background:linear-gradient(135deg,var(--primary),var(--medium))!important;}
+.table-section{background:#fff;border-radius:12px;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.table thead th{background:linear-gradient(135deg,#374151,#4b5563)!important;color:#fff;}
+.verify-note{display:block}
+</style>
+
+<script>
+const PAST_URL = "{% url 'past_studpubs' %}";
+const LOOKUP_URL = "{% url 'student_lookup' %}";
+
+function idxify(){
+  ["CAYm1_tbody","CAYm2_tbody","CAYm3_tbody"].forEach(id=>{
+    document.querySelectorAll(`#${id} tr.data-row`).forEach((tr,i)=>{
+      tr.querySelector("td:first-child").textContent = String(i+1);
+    });
+  });
+}
+function rm(btn){ btn.closest('tr').remove(); idxify(); }
+
+function rowHTML(bucket){
+  return `
+    <tr class="data-row">
+      <td></td>
+      <td>
+        <div class="d-grid gap-1">
+          <input name="student_${bucket}[]" class="form-control form-control-sm" placeholder="Student Name — Semester">
+          <div class="input-group input-group-sm">
+            <input class="form-control" placeholder="Register No. (verify only)" data-regno>
+            <button class="btn btn-outline-secondary" type="button" onclick="verifyRegNo(this)">Verify</button>
+          </div>
+        </div>
+      </td>
+      <td><input name="publisher_${bucket}[]" class="form-control form-control-sm"></td>
+      <td><input name="venue_${bucket}[]" class="form-control form-control-sm"></td>
+      <td><input name="volume_${bucket}[]" class="form-control form-control-sm" placeholder="Vol — Issue"></td>
+      <td><input name="award_${bucket}[]" class="form-control form-control-sm" placeholder="—"></td>
+      <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="rm(this)"><i class="fas fa-trash"></i></button></td>
+    </tr>`;
+}
+function addRow(bucket){
+  document.getElementById(`${bucket}_tbody`).insertAdjacentHTML('beforeend', rowHTML(bucket));
+  idxify();
+}
+
+async function verifyRegNo(btn){
+  const dept = document.getElementById('department').value;
+  if(!dept){ alert("Select a department first."); return; }
+  const regInput = btn.closest('.input-group').querySelector('[data-regno]');
+  const reg = (regInput.value || '').trim();
+  if(!reg){ alert("Enter Register Number."); return; }
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  try{
+    const url = new URL(LOOKUP_URL, window.location.origin);
+    url.searchParams.set('department_id', dept);
+    url.searchParams.set('reg_no', reg);
+    const res = await fetch(url, {credentials:'same-origin'});
+    const data = await res.json();
+    if(!data.ok){ throw new Error(data.error || 'Lookup failed'); }
+    // Compose: "Name — Semester"
+    const name = (data.student.name || '').trim();
+    const sem  = (data.student.semester || '').trim();
+    const val = [name, sem ? `Sem ${sem}` : ''].filter(Boolean).join(' — ');
+    btn.closest('td').querySelector('input[name^="student_"]').value = val;
+    regInput.classList.remove('is-invalid');
+    regInput.classList.add('is-valid');
+  }catch(err){
+    regInput.classList.remove('is-valid');
+    regInput.classList.add('is-invalid');
+    alert(err.message);
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = 'Verify';
+  }
+}
+
+/* Past panel */
+function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function card(e){
+  const b = e.is_verified ? 'bg-success' : 'bg-warning text-dark';
+  const t = e.is_verified ? 'Verified' : 'Not Verified';
+  return `<div class="col-md-6"><div class="card h-100 shadow-sm"><div class="card-body">
+    <div class="d-flex justify-content-between align-items-start mb-2">
+      <h6 class="mb-0">AY ${esc(e.academic_year_range||'—')}</h6>
+      <div class="d-flex gap-1 flex-wrap">
+        <span class="badge bg-secondary">Rows: ${e.rows||0}</span>
+        <span class="badge ${b}">${t}</span>
+        <span class="badge bg-light text-dark border">Marks ${esc(e.marks_awarded||'0.00')}/${esc(e.max_marks||5)}</span>
+      </div>
+    </div>
+    <div class="small text-muted">CAYm1: ${e.c1||0} • CAYm2: ${e.c2||0} • CAYm3: ${e.c3||0}</div>
+    ${e.admin_remarks ? `<div class="text-muted small mt-2"><strong>Remarks:</strong> ${esc(e.admin_remarks)}</div>` : ''}
+  </div></div></div>`;
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  idxify();
+  document.getElementById('btnPast').addEventListener('click', async function(){
+    const panel=document.getElementById('pastPanel');
+    const open = panel.style.display === 'block';
+    if(open){ panel.style.display='none'; this.innerHTML='<i class="fas fa-history me-2"></i>Show Past'; return; }
+    panel.style.display='block'; this.innerHTML='<i class="fas fa-times me-2"></i>Hide Past';
+    const dept=document.getElementById('department').value;
+    const url=new URL(PAST_URL, window.location.origin); url.searchParams.set('department_id', dept||'');
+    try{
+      const res=await fetch(url,{credentials:'same-origin'}); const data=await res.json();
+      const wrap=document.getElementById('pastCards'); const empty=document.getElementById('pastEmpty'); const cnt=document.getElementById('pastCount');
+      wrap.innerHTML=''; empty.style.display='none'; cnt.textContent='';
+      const list=(data && data.entries)||[]; if(!list.length){ empty.style.display='block'; return; }
+      cnt.textContent = `(${list.length} submissions)`;
+      wrap.innerHTML=list.map(card).join('');
+    }catch(err){ console.error(err); document.getElementById('pastEmpty').style.display='block'; }
+  });
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Honours Course Master{% endblock %}
+
+{% block content %}
+
+<style>
+.hcm-wrap{
+  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+.hcm-header{
+  background: linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);
+  color:#fff;
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 10px 24px rgba(26,75,140,.18);
+}
+.hcm-header h1{ margin:0; font-size:1.5rem; font-weight:800; display:flex; align-items:center; gap:.6rem; }
+.hcm-header p{ margin:.3rem 0 0; opacity:.85; font-size:.92rem; }
+.hcm-badge{
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.3);
+  padding: .5rem .9rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .85rem;
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  white-space: nowrap;
+  color:#fff;
+}
+
+.hcm-card{
+  background:#fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(15,23,42,.05);
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+}
+.hcm-card-header{
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.hcm-card-header h5{ margin:0; font-weight:800; color:#0f172a; font-size:1.02rem; }
+.hcm-card-body{ padding: 1.1rem 1.25rem; }
+
+.hcm-filter-grid{
+  display:grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: .75rem;
+  align-items: end;
+}
+@media (max-width: 1100px){
+  .hcm-filter-grid{ grid-template-columns: repeat(2, 1fr); }
+}
+.hcm-label{ font-weight: 800; font-size: .8rem; color: #334155; margin-bottom: .3rem; display:block; }
+.hcm-select, .hcm-input{
+  width:100%;
+  padding: .55rem .75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background:#fff;
+  font-weight: 600;
+  color:#0f172a;
+}
+.hcm-select:disabled{ background:#f1f5f9; color:#94a3b8; cursor:not-allowed; }
+
+.hcm-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+  border-radius: 10px;
+  padding: .55rem .9rem;
+  font-weight: 800;
+  font-size: .85rem;
+  border: 1px solid #dbeafe;
+  background:#eff6ff;
+  color:#1d4ed8;
+  text-decoration:none;
+  cursor:pointer;
+}
+.hcm-btn:hover{ background:#dbeafe; }
+.hcm-btn.primary{ background: linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%); border-color: transparent; color:#fff; }
+.hcm-btn.primary:hover{ opacity:.92; }
+
+.hcm-table-wrap{ border:1px solid #e2e8f0; border-radius: 12px; overflow:auto; }
+.hcm-table{ margin:0; width:100%; border-collapse:collapse; }
+.hcm-table th{
+  background:#f8fafc; padding:.8rem .9rem; font-size:.8rem; text-transform: uppercase;
+  letter-spacing:.4px; color:#475569; border-bottom:1px solid #e2e8f0; white-space: nowrap; text-align:left;
+}
+.hcm-table td{ padding:.75rem .9rem; border-bottom:1px solid #e2e8f0; font-size:.9rem; color:#0f172a; vertical-align: middle; }
+.hcm-table tbody tr:hover{ background:#f8fafc; }
+.hcm-course-code{ font-weight:800; color:#1a4b8c; }
+.hcm-checkbox{ width:18px; height:18px; }
+.hcm-toolbar{ display:flex; gap:.5rem; }
+</style>
+
+<div class="hcm-wrap">
+
+  <div class="hcm-header" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+    <div>
+      <h1><i class="fa-solid fa-award"></i> Honours Course Master</h1>
+      <p>Regulation &rarr; Degree &rarr; Department &rarr; Year &rarr; Semester &rarr; Academic Year</p>
+    </div>
+    <div class="hcm-badge">
+      <i class="fa-solid fa-user"></i>
+      {% if is_global %}Global User (All Departments)
+      {% else %}Department &mdash; {{ locked_department.Department }}{% endif %}
+    </div>
+  </div>
+
+  <div class="hcm-card">
+    <div class="hcm-card-header">
+      <h5><i class="fa-solid fa-filter me-2"></i>Filters</h5>
+    </div>
+    <div class="hcm-card-body">
+      <form method="get" id="hcmFilterForm" class="hcm-filter-grid">
+
+        <div>
+          <label class="hcm-label">Regulation</label>
+          <select name="regulation" id="regulationSelect" class="hcm-select" required>
+            <option value="">Select Regulation</option>
+            {% for r in regulations %}
+              <option value="{{ r.id }}" {% if sel_regulation == r.id|stringformat:'s' %}selected{% endif %}>{{ r }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="hcm-label">Degree</label>
+          <select name="degree" id="degreeSelect" class="hcm-select" {% if not is_global %}disabled{% endif %}>
+            {% if not is_global %}
+              <option value="{{ sel_degree }}" selected>{{ locked_department.degree.degree|default:"-" }}</option>
+            {% else %}
+              <option value="">All Degrees</option>
+            {% endif %}
+          </select>
+        </div>
+
+        <div>
+          <label class="hcm-label">Department</label>
+          <select name="department" id="departmentSelect" class="hcm-select" required {% if not is_global %}disabled{% endif %}>
+            {% if not is_global %}
+              <option value="{{ locked_department.id }}" selected>{{ locked_department.Department }}</option>
+            {% else %}
+              <option value="">Select Department</option>
+            {% endif %}
+          </select>
+        </div>
+
+        <div>
+          <label class="hcm-label">Year</label>
+          <select name="year" id="yearSelect" class="hcm-select" required disabled>
+            <option value="">Select Year</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="hcm-label">Semester</label>
+          <select name="semester" id="semesterSelect" class="hcm-select" required disabled>
+            <option value="">Select Semester</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="hcm-label">Academic Year</label>
+          <input type="text" name="academic_year" id="academicYearInput" class="hcm-input"
+                 value="{{ sel_academic_year|default:default_academic_year }}" placeholder="2025-2026">
+        </div>
+
+        <div style="grid-column: 1 / -1;">
+          <button type="submit" class="hcm-btn primary"><i class="fa-solid fa-magnifying-glass"></i> Load Courses</button>
+          <a class="hcm-btn" href="{% url 'honours_course_master' %}"><i class="fa-solid fa-rotate-left"></i> Reset</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if courses %}
+  <div class="hcm-card">
+    <form method="post" id="hcmSaveForm">
+      {% csrf_token %}
+      <input type="hidden" name="regulation" value="{{ sel_regulation }}">
+      <input type="hidden" name="degree" value="{{ sel_degree }}">
+      <input type="hidden" name="department" value="{{ sel_department }}">
+      <input type="hidden" name="year" value="{{ sel_year }}">
+      <input type="hidden" name="semester" value="{{ sel_semester }}">
+      <input type="hidden" name="academic_year" value="{{ sel_academic_year }}">
+
+      <div class="hcm-card-header">
+        <h5><i class="fa-solid fa-list-check me-2"></i>Courses &mdash; {{ sel_academic_year }}</h5>
+        <div class="hcm-toolbar">
+          <button type="button" class="hcm-btn" id="selectAllBtn">All</button>
+          <button type="button" class="hcm-btn" id="selectNoneBtn">None</button>
+          <button type="submit" class="hcm-btn primary"><i class="fa-solid fa-floppy-disk"></i> Save Honours Selection</button>
+        </div>
+      </div>
+      <div class="hcm-card-body">
+        <div class="hcm-table-wrap">
+          <table class="hcm-table">
+            <thead>
+              <tr>
+                <th style="text-align:center;">Honours</th>
+                <th>Course Code</th>
+                <th>Course Name</th>
+                <th>Category</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in courses %}
+              <tr>
+                <td style="text-align:center;">
+                  <input type="checkbox" class="hcm-checkbox honours-row-checkbox" name="honours_course[]" value="{{ c.id }}"
+                         {% if c.id|stringformat:'s' in honours_ids %}checked{% endif %}>
+                </td>
+                <td class="hcm-course-code">{{ c.course_code|default:"-" }}</td>
+                <td>{{ c.title|default:"-" }}</td>
+                <td>{{ c.elective.Course_category_name|default:"-" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </form>
+  </div>
+  {% elif sel_regulation and sel_department and sel_year and sel_semester %}
+  <div class="hcm-card">
+    <div class="hcm-card-body text-center text-muted py-4">
+      <i class="fa-solid fa-circle-info fa-2x mb-2"></i>
+      <div>No courses found for the selected filters.</div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const regulationSelect = document.getElementById("regulationSelect");
+  const degreeSelect = document.getElementById("degreeSelect");
+  const departmentSelect = document.getElementById("departmentSelect");
+  const yearSelect = document.getElementById("yearSelect");
+  const semesterSelect = document.getElementById("semesterSelect");
+
+  const selDegree = "{{ sel_degree|default:'' }}";
+  const selDepartment = "{{ sel_department|default:'' }}";
+  const selYear = "{{ sel_year|default:'' }}";
+  const selSemester = "{{ sel_semester|default:'' }}";
+
+  async function fetchJSON(url) {
+    const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+    return await res.json();
+  }
+
+  function fillSelect(select, options, placeholder, valueKey, labelFn, keepValue) {
+    const current = keepValue !== undefined ? keepValue : select.value;
+    select.innerHTML = `<option value="">${placeholder}</option>`;
+    options.forEach(opt => {
+      const el = document.createElement("option");
+      el.value = opt[valueKey];
+      el.textContent = labelFn(opt);
+      select.appendChild(el);
+    });
+    if ([...select.options].some(o => o.value === String(current))) {
+      select.value = current;
+    }
+  }
+
+  async function loadDegrees(keepValue) {
+    const url = new URL("{% url 'api_honours_degrees' %}", window.location.origin);
+    if (regulationSelect.value) url.searchParams.set("regulation_id", regulationSelect.value);
+    const data = await fetchJSON(url.toString());
+    fillSelect(degreeSelect, data.results, "All Degrees", "id", d => `${d.degree}${d.degree_code ? " (" + d.degree_code + ")" : ""}`, keepValue);
+  }
+
+  async function loadDepartments(keepValue) {
+    const url = new URL("{% url 'api_honours_departments' %}", window.location.origin);
+    if (regulationSelect.value) url.searchParams.set("regulation_id", regulationSelect.value);
+    if (degreeSelect.value) url.searchParams.set("degree_id", degreeSelect.value);
+    const data = await fetchJSON(url.toString());
+    fillSelect(departmentSelect, data.results, "Select Department", "id", d => `${d.Department}${d.Department_code ? " (" + d.Department_code + ")" : ""}`, keepValue);
+  }
+
+  async function loadYears(keepValue) {
+    const url = new URL("{% url 'api_honours_years' %}", window.location.origin);
+    if (regulationSelect.value) url.searchParams.set("regulation_id", regulationSelect.value);
+    if (degreeSelect.value) url.searchParams.set("degree_id", degreeSelect.value);
+    if (departmentSelect.value) url.searchParams.set("department_id", departmentSelect.value);
+    const data = await fetchJSON(url.toString());
+    fillSelect(yearSelect, data.results.map(y => ({ year: y })), "Select Year", "year", y => y.year, keepValue);
+    yearSelect.disabled = data.results.length === 0;
+  }
+
+  async function loadSemesters(keepValue) {
+    const url = new URL("{% url 'api_honours_semesters' %}", window.location.origin);
+    if (regulationSelect.value) url.searchParams.set("regulation_id", regulationSelect.value);
+    if (degreeSelect.value) url.searchParams.set("degree_id", degreeSelect.value);
+    if (departmentSelect.value) url.searchParams.set("department_id", departmentSelect.value);
+    if (yearSelect.value) url.searchParams.set("year", yearSelect.value);
+    const data = await fetchJSON(url.toString());
+    fillSelect(semesterSelect, data.results.map(s => ({ sem: s })), "Select Semester", "sem", s => s.sem, keepValue);
+    semesterSelect.disabled = data.results.length === 0;
+  }
+
+  regulationSelect.addEventListener("change", async () => {
+    await loadDegrees();
+    await loadDepartments();
+    await loadYears();
+    await loadSemesters();
+  });
+  degreeSelect.addEventListener("change", async () => {
+    await loadDepartments();
+    await loadYears();
+    await loadSemesters();
+  });
+  departmentSelect.addEventListener("change", async () => {
+    await loadYears();
+    await loadSemesters();
+  });
+  yearSelect.addEventListener("change", async () => {
+    await loadSemesters();
+  });
+
+  const selectAllBtn = document.getElementById("selectAllBtn");
+  const selectNoneBtn = document.getElementById("selectNoneBtn");
+  if (selectAllBtn) selectAllBtn.addEventListener("click", () => {
+    document.querySelectorAll(".honours-row-checkbox").forEach(cb => cb.checked = true);
+  });
+  if (selectNoneBtn) selectNoneBtn.addEventListener("click", () => {
+    document.querySelectorAll(".honours-row-checkbox").forEach(cb => cb.checked = false);
+  });
+
+  // Restore the cascade on page load if filters were already applied.
+  (async () => {
+    if (regulationSelect.value) {
+      await loadDegrees(selDegree);
+      await loadDepartments(selDepartment);
+      await loadYears(selYear);
+      await loadSemesters(selSemester);
+    }
+  })();
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,1098 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  :root{
+    --blue-dark:#1f3f69;
+    --blue:#5e97cc;
+    --border:#d9e1ec;
+    --muted:#6b7280;
+  }
+
+  .page-wrap{
+    background:#f4f7fb;
+    min-height:100vh;
+    padding:24px 0 40px;
+  }
+  .main-wrap{
+    max-width:1700px;
+    margin:0 auto;
+    padding:0 14px;
+  }
+  .hero{
+    background:linear-gradient(135deg,#0f4cbd,#2563eb);
+    color:#fff;
+    border-radius:22px;
+    padding:26px 30px;
+    box-shadow:0 12px 30px rgba(37,99,235,.18);
+    margin-bottom:22px;
+  }
+  .hero h2{ margin:0; font-size:30px; font-weight:800; }
+  .hero p{ margin:8px 0 0; opacity:.95; }
+
+  .section-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:20px;
+    box-shadow:0 8px 24px rgba(15,23,42,.05);
+    margin-bottom:24px;
+    overflow:hidden;
+  }
+  .section-head{
+    padding:18px 20px;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(135deg, rgba(37,99,235,.05), rgba(14,165,233,.04));
+  }
+  .section-head h3{
+    margin:0;
+    font-size:22px;
+    font-weight:800;
+    color:#0f172a;
+  }
+  .section-head p{
+    margin:6px 0 0;
+    color:var(--muted);
+  }
+  .section-body{ padding:18px; }
+
+  .form-label{ font-weight:700; color:#111827; }
+  .form-select{ min-height:48px; border-radius:14px; }
+  .btn-filter{ min-height:48px; border-radius:14px; font-weight:700; }
+
+  .table-wrap{ overflow-x:auto; }
+
+  .analysis-table,
+  .program-table,
+  .semester-table,
+  .detail-table{
+    width:100%;
+    border-collapse:collapse;
+  }
+
+  .analysis-table{ min-width:950px; }
+  .analysis-table th, .analysis-table td{
+    border:1px solid rgba(0,0,0,.15);
+    padding:10px 12px;
+    text-align:center;
+    vertical-align:middle;
+  }
+  .analysis-table thead tr:first-child th{
+    background:var(--blue-dark);
+    color:#fff;
+    font-size:18px;
+    font-weight:800;
+  }
+  .analysis-table thead tr:nth-child(2) th{
+    background:#235b82;
+    color:#fff;
+    font-size:16px;
+    font-weight:700;
+  }
+  .analysis-table tbody td{
+    background:#e8edf4;
+    font-size:15px;
+  }
+  .analysis-table tbody td:first-child{
+    background:#efc5a5;
+    font-weight:800;
+  }
+  .analysis-table tfoot td{
+    background:#cfdac6;
+    font-weight:800;
+    font-size:16px;
+  }
+
+  .program-table{ min-width:1150px; }
+  .program-table th, .program-table td{
+    border:1px solid rgba(255,255,255,.55);
+    padding:8px 10px;
+    text-align:center;
+    vertical-align:middle;
+  }
+  .program-table .title-row th{
+    background:#5c96ca;
+    color:#fff;
+    font-size:18px;
+    font-weight:700;
+  }
+  .program-table .head-row th{
+    background:#bfcadd;
+    color:#111;
+    font-size:14px;
+    font-weight:700;
+  }
+  .program-table .head-row th.blue,
+  .program-table .sub-head th.blue{
+    background:#5c96ca;
+    color:#fff;
+  }
+  .program-table .sub-head th{
+    background:#d5dceb;
+    color:#111;
+    font-weight:700;
+  }
+  .program-table tbody td{
+    background:#cfd8e4;
+    font-size:14px;
+  }
+  .program-table tbody td.blue-col{
+    background:#5c96ca;
+    color:#fff;
+    font-weight:700;
+  }
+  .program-table .total-row td{
+    background:#5c96ca;
+    color:#fff;
+    font-weight:800;
+    font-size:16px;
+  }
+
+  .semester-table{ min-width:1300px; }
+  .semester-table th, .semester-table td{
+    border:1px solid rgba(255,255,255,.5);
+    padding:6px 8px;
+    vertical-align:middle;
+  }
+  .semester-table .title-row th{
+    background:#5c96ca;
+    color:#fff;
+    text-align:center;
+    font-size:18px;
+    font-weight:800;
+  }
+  .semester-table .head-row th{
+    background:#bfcadd;
+    color:#111;
+    text-align:center;
+    font-size:13px;
+    font-weight:700;
+  }
+  .semester-table .head-row th.blue{
+    background:#5c96ca;
+    color:#fff;
+  }
+  .semester-table .sub-row th{
+    background:#d6dceb;
+    text-align:center;
+    font-weight:700;
+  }
+  .semester-table .group-row td{
+    background:#5c96ca;
+    color:#fff;
+    font-weight:800;
+    text-align:left;
+    font-size:14px;
+  }
+  .semester-table tbody td{
+    background:#cfd8e4;
+    font-size:13px;
+  }
+  .semester-table tbody td.blue-col{
+    background:#5c96ca;
+    color:#fff;
+    font-weight:700;
+    text-align:center;
+  }
+  .semester-table .total-row td{
+    background:#5c96ca;
+    color:#fff;
+    font-weight:800;
+    text-align:center;
+    font-size:15px;
+  }
+
+  .stats-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+    margin-bottom:24px;
+  }
+  .stat-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:18px;
+    box-shadow:0 8px 24px rgba(15,23,42,.05);
+    padding:20px;
+  }
+  .stat-card .top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .stat-card .label{
+    font-size:14px;
+    color:var(--muted);
+    font-weight:700;
+  }
+  .stat-card .value{
+    font-size:28px;
+    font-weight:800;
+    color:#0f172a;
+  }
+  .stat-card .meta{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:4px;
+  }
+  .iconbox{
+    width:46px;
+    height:46px;
+    border-radius:14px;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+  }
+  .bg1{background:linear-gradient(135deg,#2563eb,#1d4ed8);}
+  .bg2{background:linear-gradient(135deg,#16a34a,#15803d);}
+  .bg3{background:linear-gradient(135deg,#f59e0b,#d97706);}
+  .bg4{background:linear-gradient(135deg,#7c3aed,#6d28d9);}
+
+  .chart-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:18px;
+  }
+  .chart-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:18px;
+    box-shadow:0 8px 24px rgba(15,23,42,.05);
+    padding:18px;
+  }
+  .chart-card h5{
+    margin:0 0 10px 0;
+    font-size:17px;
+    font-weight:800;
+    color:#0f172a;
+  }
+  .chart-box{
+    height:330px;
+    position:relative;
+  }
+
+  .dept-stats-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:18px;
+    box-shadow:0 8px 24px rgba(15,23,42,.05);
+    padding:20px;
+    height:100%;
+  }
+  .stats-card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    margin-bottom:18px;
+  }
+  .dept-name{
+    margin:0;
+    font-size:20px;
+    font-weight:800;
+    color:#0f172a;
+  }
+  .dept-credits-badge{
+    background:#eff6ff;
+    border:1px solid #bfdbfe;
+    padding:12px 16px;
+    border-radius:16px;
+    min-width:110px;
+    text-align:center;
+  }
+  .credits-total{
+    display:block;
+    font-size:24px;
+    font-weight:800;
+    color:#1d4ed8;
+    line-height:1;
+  }
+  .credits-label{
+    display:block;
+    margin-top:5px;
+    font-size:12px;
+    color:#475569;
+    font-weight:700;
+  }
+
+  .distribution-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+    margin-bottom:16px;
+  }
+  .distribution-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:12px;
+    background:#fafcff;
+  }
+  .dist-icon{
+    width:42px;
+    height:42px;
+    border-radius:12px;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .integrated{background:linear-gradient(135deg,#7c3aed,#6d28d9);}
+  .theory{background:linear-gradient(135deg,#2563eb,#1d4ed8);}
+  .lab{background:linear-gradient(135deg,#16a34a,#15803d);}
+  .tutorial{background:linear-gradient(135deg,#f59e0b,#d97706);}
+  .dist-value{
+    font-size:18px;
+    font-weight:800;
+    color:#0f172a;
+    line-height:1;
+  }
+  .dist-label{
+    font-size:12px;
+    color:#6b7280;
+    margin-top:4px;
+    font-weight:700;
+  }
+
+  .category-breakdown{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .category-row{
+    display:grid;
+    grid-template-columns:90px 1fr 60px;
+    gap:10px;
+    align-items:center;
+  }
+  .category-name{
+    font-size:13px;
+    font-weight:700;
+    color:#334155;
+  }
+  .category-bar{
+    height:10px;
+    background:#e5eaf2;
+    border-radius:999px;
+    overflow:hidden;
+  }
+  .category-fill{
+    height:100%;
+    background:linear-gradient(90deg,#2563eb,#60a5fa);
+    border-radius:999px;
+  }
+  .category-value{
+    text-align:right;
+    font-size:13px;
+    font-weight:700;
+  }
+
+  .detail-table{ min-width:1400px; }
+  .detail-table th, .detail-table td{
+    border:1px solid #e8edf3;
+    padding:10px 12px;
+    text-align:center;
+    vertical-align:middle;
+  }
+  .detail-table thead th{
+    background:#0f4cbd;
+    color:#fff;
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .detail-table tbody td{
+    background:#fff;
+    font-size:14px;
+  }
+  .detail-table tbody tr:hover td{
+    background:#f8fbff;
+  }
+
+  .badge-soft-success,
+  .badge-soft-danger,
+  .badge-soft-primary{
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+  }
+  .badge-soft-success{
+    background:#dcfce7;
+    color:#15803d;
+  }
+  .badge-soft-danger{
+    background:#fee2e2;
+    color:#b91c1c;
+  }
+  .badge-soft-primary{
+    background:#dbeafe;
+    color:#1d4ed8;
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:52px 16px;
+    color:var(--muted);
+  }
+  .empty-state i{
+    font-size:50px;
+    color:#cbd5e1;
+    margin-bottom:14px;
+  }
+
+  @media (max-width:1200px){
+    .stats-grid{grid-template-columns:repeat(2,1fr);}
+    .chart-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:768px){
+    .stats-grid{grid-template-columns:1fr;}
+    .distribution-grid{grid-template-columns:1fr;}
+  }
+</style>
+
+<div class="page-wrap">
+  <div class="main-wrap">
+
+    <div class="hero">
+      <h2><i class="fas fa-chart-pie me-2"></i>Course Analysis Dashboard</h2>
+      <p>Everything is dynamic from database, and semester detail is shown for all semesters.</p>
+    </div>
+
+    <div class="section-card">
+      <div class="section-head">
+        <h3>Credit Comparisons</h3>
+        <p>All regulation-wise category credit comparison from database</p>
+      </div>
+      <div class="section-body">
+        <div class="table-wrap">
+          <table class="analysis-table">
+            <thead>
+              <tr>
+                <th colspan="{{ regulation_comparison_columns|length|add:1 }}">Credit Comparisons</th>
+              </tr>
+              <tr>
+                <th>Category</th>
+                {% for col in regulation_comparison_columns %}
+                  <th>{{ col.name }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in comparison_table_rows %}
+              <tr>
+                <td>{{ row.category }}</td>
+                {% for value in row.values %}
+                  <td>{{ value }}</td>
+                {% endfor %}
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="{{ regulation_comparison_columns|length|add:1 }}">No comparison data found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>Total</td>
+                {% for total in comparison_total_row %}
+                  <td>{{ total }}</td>
+                {% endfor %}
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-head">
+        <h3>Select Regulation</h3>
+        <p>After selecting regulation, all semester tables and analytics will load</p>
+      </div>
+      <div class="section-body">
+        <form method="get">
+          <div class="row g-3 align-items-end">
+            <div class="col-lg-4 col-md-6">
+              <label class="form-label">Regulation</label>
+              <select name="regulation_id" class="form-select" required onchange="this.form.submit()">
+                <option value="">-- Select Regulation --</option>
+                {% for reg in regulations %}
+                  <option value="{{ reg.id }}" {% if selected_regulation and reg.id == selected_regulation.id %}selected{% endif %}>
+                    {{ reg }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            {% if selected_regulation %}
+              <div class="col-lg-4 col-md-6">
+                <label class="form-label">Department</label>
+                <select name="department_id" class="form-select">
+                  <option value="">All Departments</option>
+                  {% for d in filter_options.departments %}
+                    <option value="{{ d.id }}" {% if selected_filters.department_id == d.id|stringformat:"s" %}selected{% endif %}>{{ d.Department }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-lg-2 col-md-4">
+                <label class="form-label">Year</label>
+                <select name="year" class="form-select">
+                  <option value="">All Years</option>
+                  {% for y in filter_options.years %}
+                    <option value="{{ y }}" {% if selected_filters.year == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-lg-2 col-md-4">
+                <label class="form-label">Semester</label>
+                <select name="semester" class="form-select">
+                  <option value="">All Semesters</option>
+                  {% for s in filter_options.semesters %}
+                    <option value="{{ s }}" {% if selected_filters.semester == s|stringformat:"s" %}selected{% endif %}>{{ s }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-lg-4 col-md-6">
+                <label class="form-label">Category</label>
+                <select name="category_id" class="form-select">
+                  <option value="">All Categories</option>
+                  {% for c in filter_options.categories %}
+                    <option value="{{ c.id }}" {% if selected_filters.category_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.Course_category_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-lg-2 col-md-3">
+                <label class="form-label">Status</label>
+                <select name="is_active" class="form-select">
+                  <option value="">All</option>
+                  <option value="active" {% if selected_filters.is_active == "active" %}selected{% endif %}>Active</option>
+                  <option value="inactive" {% if selected_filters.is_active == "inactive" %}selected{% endif %}>Inactive</option>
+                </select>
+              </div>
+
+              <div class="col-lg-4 col-md-6">
+                <label class="form-label">Search Course</label>
+                <input type="text" name="q" class="form-control" placeholder="Code or title" value="{{ selected_filters.q|default:'' }}">
+              </div>
+
+              <div class="col-lg-2 col-md-4">
+                <button type="submit" class="btn btn-primary btn-filter w-100">
+                  <i class="fas fa-search me-1"></i> View
+                </button>
+              </div>
+            {% else %}
+              <div class="col-lg-4 col-md-6">
+                <div class="alert alert-info mb-0 py-3">
+                  Choose a regulation first to load department-based filters.
+                </div>
+              </div>
+            {% endif %}
+
+            <div class="col-lg-2 col-md-4">
+              <a href="{% url 'course_analysis_dashboard' %}" class="btn btn-outline-secondary btn-filter w-100">
+                <i class="fas fa-rotate-left me-1"></i> Reset
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% if selected_regulation %}
+
+    <div class="section-card">
+      <div class="section-head">
+        <h3>Programme Credit Structure</h3>
+        <p>Selected regulation: {{ selected_regulation }}</p>
+      </div>
+      <div class="section-body">
+        <div class="table-wrap">
+          <table class="program-table">
+            <thead>
+              <tr class="title-row">
+                <th colspan="{{ dynamic_semesters|length|add:3 }}">Name of the Programme: {{ selected_regulation }}</th>
+              </tr>
+              <tr class="head-row">
+                <th rowspan="2" class="blue">S.No</th>
+                <th rowspan="2">Category</th>
+                <th colspan="{{ dynamic_semesters|length }}">Credits per Semester</th>
+                <th rowspan="2" class="blue">Total Credits</th>
+              </tr>
+              <tr class="sub-head">
+                {% for sem in dynamic_semesters %}
+                  <th>{{ sem }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for cat, sem_map in semester_category_matrix.items %}
+              <tr>
+                <td class="blue-col">{{ forloop.counter }}</td>
+                <td>{{ cat }}</td>
+                {% for sem, value in sem_map.items %}
+                  <td>{{ value }}</td>
+                {% endfor %}
+                <td class="blue-col">
+                  {% for item in regulation_category_display.items %}
+                    {% if item.0 == cat %}
+                      {{ item.1.credits }}
+                    {% endif %}
+                  {% endfor %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="{{ dynamic_semesters|length|add:3 }}">No programme structure data found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td colspan="2">Total</td>
+                {% for sem, value in semester_total_row.items %}
+                  <td>{{ value }}</td>
+                {% endfor %}
+                <td>{{ total_credits_all }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    {% for sem, sem_data in all_semester_sections.items %}
+    <div class="section-card">
+      <div class="section-head">
+        <h3>Semester {{ sem }} Detailed Structure</h3>
+        <p>Semester {{ sem }} course details from database</p>
+      </div>
+      <div class="section-body">
+        <div class="table-wrap">
+          <table class="semester-table">
+            <thead>
+              <tr class="title-row">
+                <th colspan="9">SEMESTER {{ sem }}</th>
+              </tr>
+              <tr class="head-row">
+                <th rowspan="2" class="blue">S. NO.</th>
+                <th rowspan="2">COURSE CODE</th>
+                <th rowspan="2">COURSE TITLE</th>
+                <th rowspan="2">CATEGORY</th>
+                <th colspan="3">PERIODS PER WEEK</th>
+                <th rowspan="2">TOTAL CONTACT PERIODS</th>
+                <th rowspan="2" class="blue">CREDITS</th>
+              </tr>
+              <tr class="sub-row">
+                <th>L</th>
+                <th>T</th>
+                <th>P</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for group_name, rows in sem_data.grouped_rows.items %}
+                {% if rows %}
+                  <tr class="group-row">
+                    <td colspan="9">{{ group_name }}</td>
+                  </tr>
+                  {% for row in rows %}
+                  <tr>
+                    <td class="blue-col">{{ row.sno }}</td>
+                    <td>{{ row.course_code }}</td>
+                    <td style="text-align:left;">{{ row.course_title }}</td>
+                    <td>{{ row.category }}</td>
+                    <td>{{ row.l }}</td>
+                    <td>{{ row.t }}</td>
+                    <td>{{ row.p }}</td>
+                    <td>{{ row.tcp }}</td>
+                    <td class="blue-col">{{ row.credits }}</td>
+                  </tr>
+                  {% endfor %}
+                {% endif %}
+              {% empty %}
+              <tr>
+                <td colspan="9">No semester detail rows found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td colspan="7">TOTAL</td>
+                <td>{{ sem_data.total_hours }}</td>
+                <td>{{ sem_data.total_credits }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    <div class="section-card">
+      <div class="section-head">
+        <h3>Dashboard Summary</h3>
+        <p>Quick overview for selected regulation</p>
+      </div>
+      <div class="section-body">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="top">
+              <div class="label">Selected Regulation</div>
+              <div class="iconbox bg1"><i class="fas fa-bookmark"></i></div>
+            </div>
+            <div class="value">{{ selected_regulation.year }}</div>
+            <div class="meta">Regulation number {{ selected_regulation.regulation_number }}</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="top">
+              <div class="label">Total Courses</div>
+              <div class="iconbox bg2"><i class="fas fa-book"></i></div>
+            </div>
+            <div class="value">{{ total_courses }}</div>
+            <div class="meta">Active courses in selected regulation</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="top">
+              <div class="label">Total Credits</div>
+              <div class="iconbox bg3"><i class="fas fa-award"></i></div>
+            </div>
+            <div class="value">{{ total_credits_all }}</div>
+            <div class="meta">Combined regulation credits</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="top">
+              <div class="label">Departments</div>
+              <div class="iconbox bg4"><i class="fas fa-building"></i></div>
+            </div>
+            <div class="value">{{ total_departments }}</div>
+            <div class="meta">Departments offering courses</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-head">
+        <h3>Graphical Analysis</h3>
+        <p>Dynamic charts from database</p>
+      </div>
+      <div class="section-body">
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h5>Department-wise Total Credits</h5>
+            <div class="chart-box"><canvas id="deptCreditsChart"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <h5>Department-wise Course Count</h5>
+            <div class="chart-box"><canvas id="deptCoursesChart"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <h5>Category-wise Credits</h5>
+            <div class="chart-box"><canvas id="categoryCreditsChart"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <h5>Semester-wise Credits</h5>
+            <div class="chart-box"><canvas id="semesterCreditsChart"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <h5>Course Type Credit Split</h5>
+            <div class="chart-box"><canvas id="courseTypeChart"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <h5>Semester-wise Course Count</h5>
+            <div class="chart-box"><canvas id="semesterCoursesChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-head">
+        <h3>Department Credit Analytics</h3>
+        <p>All category bars generated dynamically from database</p>
+      </div>
+      <div class="section-body">
+        <div class="row">
+          {% for dept_id, stats in department_stats.items %}
+          <div class="col-12 col-lg-6 mb-4">
+            <div class="dept-stats-card">
+              <div class="stats-card-header">
+                <h4 class="dept-name">{{ stats.name }}</h4>
+                <div class="dept-credits-badge">
+                  <span class="credits-total">{{ stats.total_credits }}</span>
+                  <span class="credits-label">Total Credits</span>
+                </div>
+              </div>
+
+              <div class="distribution-grid">
+                <div class="distribution-item">
+                  <div class="dist-icon integrated"><i class="fas fa-link"></i></div>
+                  <div>
+                    <div class="dist-value">{{ stats.integrated_credits }}</div>
+                    <div class="dist-label">Integrated</div>
+                  </div>
+                </div>
+                <div class="distribution-item">
+                  <div class="dist-icon theory"><i class="fas fa-book"></i></div>
+                  <div>
+                    <div class="dist-value">{{ stats.theory_credits }}</div>
+                    <div class="dist-label">Theory</div>
+                  </div>
+                </div>
+                <div class="distribution-item">
+                  <div class="dist-icon lab"><i class="fas fa-flask"></i></div>
+                  <div>
+                    <div class="dist-value">{{ stats.laboratory_credits }}</div>
+                    <div class="dist-label">Laboratory</div>
+                  </div>
+                </div>
+                <div class="distribution-item">
+                  <div class="dist-icon tutorial"><i class="fas fa-chalkboard-teacher"></i></div>
+                  <div>
+                    <div class="dist-value">{{ stats.tutorial_credits }}</div>
+                    <div class="dist-label">Tutorial</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="category-breakdown">
+                {% for cat_row in stats.category_rows %}
+                <div class="category-row">
+                  <span class="category-name">{{ cat_row.name }}</span>
+                  <div class="category-bar">
+                    <div class="category-fill" style="width: {{ cat_row.percent }}%;"></div>
+                  </div>
+                  <span class="category-value">{{ cat_row.credits }}</span>
+                </div>
+                {% endfor %}
+              </div>
+
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-head">
+        <h3>Detailed Course Table</h3>
+        <p>All selected regulation course rows from database</p>
+      </div>
+      <div class="section-body">
+        <div class="table-wrap">
+          <table class="detail-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Department</th>
+                <th>Course Code</th>
+                <th>Title</th>
+                <th>Year</th>
+                <th>Semester</th>
+                <th>Category</th>
+                <th>Lecture</th>
+                <th>Tutorial</th>
+                <th>Lab</th>
+                <th>Total Hours</th>
+                <th>Credits</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in table_rows %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td><span class="badge-soft-primary">{{ row.department }}</span></td>
+                <td><strong>{{ row.course_code }}</strong></td>
+                <td style="text-align:left;">{{ row.title }}</td>
+                <td>{{ row.year }}</td>
+                <td>{{ row.semester }}</td>
+                <td>{{ row.category }}</td>
+                <td>{{ row.lecture }}</td>
+                <td>{{ row.tutorial }}</td>
+                <td>{{ row.lab }}</td>
+                <td>{{ row.total_hours }}</td>
+                <td>{{ row.credits }}</td>
+                <td>
+                  {% if row.is_active %}
+                    <span class="badge-soft-success">Active</span>
+                  {% else %}
+                    <span class="badge-soft-danger">Inactive</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="13">No rows found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="section-card">
+      <div class="empty-state">
+        <i class="fas fa-chart-column"></i>
+        <h4>Select a regulation</h4>
+        <p>After selecting regulation, all semester tables will be shown.</p>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+{% if selected_regulation %}
+<script>
+  const deptLabels = {{ dept_labels|safe }};
+  const deptCreditValues = {{ dept_credit_values|safe }};
+  const deptCourseValues = {{ dept_course_values|safe }};
+
+  const categoryLabels = {{ category_labels|safe }};
+  const categoryValues = {{ category_values|safe }};
+
+  const semesterLabels = {{ semester_labels|safe }};
+  const semesterCreditValues = {{ semester_credit_values|safe }};
+  const semesterCourseValues = {{ semester_course_values|safe }};
+
+  const theoryTotal = {{ theory_total|default:0 }};
+  const labTotal = {{ laboratory_total|default:0 }};
+  const tutorialTotal = {{ tutorial_total|default:0 }};
+  const integratedTotal = {{ integrated_total|default:0 }};
+
+  new Chart(document.getElementById('deptCreditsChart'), {
+    type: 'bar',
+    data: {
+      labels: deptLabels,
+      datasets: [{
+        label: 'Credits',
+        data: deptCreditValues,
+        backgroundColor: ['#2563eb','#16a34a','#f59e0b','#7c3aed','#db2777','#0891b2','#dc2626','#65a30d'],
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  new Chart(document.getElementById('deptCoursesChart'), {
+    type: 'line',
+    data: {
+      labels: deptLabels,
+      datasets: [{
+        label: 'Courses',
+        data: deptCourseValues,
+        borderColor: '#16a34a',
+        backgroundColor: 'rgba(22,163,74,.15)',
+        fill: true,
+        tension: 0.35,
+        pointBackgroundColor: '#16a34a'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  new Chart(document.getElementById('categoryCreditsChart'), {
+    type: 'doughnut',
+    data: {
+      labels: categoryLabels,
+      datasets: [{
+        data: categoryValues,
+        backgroundColor: ['#2563eb','#16a34a','#f59e0b','#7c3aed','#db2777','#0891b2','#dc2626','#64748b','#0ea5e9','#a855f7']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+
+  new Chart(document.getElementById('semesterCreditsChart'), {
+    type: 'bar',
+    data: {
+      labels: semesterLabels,
+      datasets: [{
+        label: 'Credits',
+        data: semesterCreditValues,
+        backgroundColor: '#7c3aed',
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  new Chart(document.getElementById('courseTypeChart'), {
+    type: 'pie',
+    data: {
+      labels: ['Theory', 'Laboratory', 'Tutorial', 'Integrated'],
+      datasets: [{
+        data: [theoryTotal, labTotal, tutorialTotal, integratedTotal],
+        backgroundColor: ['#2563eb','#16a34a','#f59e0b','#7c3aed']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+
+  new Chart(document.getElementById('semesterCoursesChart'), {
+    type: 'radar',
+    data: {
+      labels: semesterLabels,
+      datasets: [{
+        label: 'Course Count',
+        data: semesterCourseValues,
+        borderColor: '#db2777',
+        backgroundColor: 'rgba(219,39,119,.15)',
+        pointBackgroundColor: '#db2777'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { r: { beginAtZero: true } }
+    }
+  });
+</script>
+{% endif %}
+
+{% endblock content %}

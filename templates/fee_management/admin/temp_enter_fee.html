@@ -1,0 +1,220 @@
+{% load static %}
+{% load fee_tags %}
+{% fee_types as fee_types %}
+
+<div class="modal fade" id="EnterFeeModal" tabindex="-1" aria-labelledby="EnterFeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="max-width: 800px;">
+        <div class="modal-content border-0 shadow-sm">
+            <!-- Modal Header -->
+            <div class="modal-header bg-primary text-white py-2">
+                <h5 class="modal-title fw-bold" id="EnterFeeModalLabel">Create Fee Type</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body px-4 py-3">
+                <form method="POST" id="feeTypeForm" action="{% url 'add_fee_type_structure' %}" class="mb-3">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="programme_of_study" class="form-label">Programme of Study<span class="text-danger">*</span></label>
+                            <select name="programme_of_study" id="programme_of_study" class="form-select" required onchange="fetchDepartments()">
+                                <option value="" disabled selected>Select Programme</option>
+                                <option value="Certificate">Certificate</option>
+                                <option value="Diploma">Diploma</option>
+                                <option value="Advanced Diploma">Advanced Diploma</option>
+                                <option value="Bachelor Degree">Bachelor Degree</option>
+                                <option value="Postgraduate Diploma">Postgraduate Diploma</option>
+                                <option value="Master Degree">Master Degree</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="department" class="form-label">Department<span class="text-danger">*</span></label>
+                            <select name="department" id="department" class="form-select" required onchange="fetchPrograms()" disabled>
+                                <option value="" selected>Select Department</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="program" class="form-label">Program<span class="text-danger">*</span></label>
+                            <select name="program" id="program" class="form-select" required onchange="fetchProgramDetails()" disabled>
+                                <option value="" selected>Select Program</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="intake" class="form-label">Intake</label>
+                            <input type="text" class="form-control" id="intake" name="intake" placeholder="e.g., January 2025">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="batch" class="form-label">Batch</label>
+                            <input type="text" class="form-control" id="batch" name="batch" placeholder="e.g., 2025">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="regulation" class="form-label">Regulation</label>
+                            <input type="text" class="form-control" id="regulation" name="regulation" placeholder="e.g., R21">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="fee_category" class="form-label">Fee Category<span class="text-danger">*</span></label>
+                            <select name="fee_category" id="fee_category" class="form-select" required>
+                                <option value="" selected disabled>Select Fee Category</option>
+                                {% for category in fee_types %}
+                                    <option value="{{ category.name }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="class_of_fee" class="form-label">Class of Fee<span class="text-danger">*</span></label>
+                            <select name="class_of_fee" id="class_of_fee" class="form-select" required>
+                                <option value="" selected disabled>Select Class</option>
+                                <option value="one_time">One-time</option>
+                                <option value="year_wise">Year-wise</option>
+                                <option value="semester_wise">Semester-wise</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Fee Inputs -->
+                    <div id="semesterFeesContainer" class="row d-none"></div>
+
+                    <button type="submit" class="btn btn-primary w-100 mt-3">Save Fee Type</button>
+                </form>
+            </div>
+
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentDuration = null;
+
+    function fetchDepartments() {
+        const programme = document.getElementById('programme_of_study').value;
+        const departmentSelect = document.getElementById('department');
+
+        if (!programme) {
+            departmentSelect.innerHTML = '<option value="" selected>Select Department</option>';
+            departmentSelect.disabled = true;
+            return;
+        }
+
+        fetch(`/fee/api/departments/?programme=${encodeURIComponent(programme)}`)
+            .then(response => response.json())
+            .then(data => {
+                departmentSelect.innerHTML = '<option value="" selected>Select Department</option>';
+                data.forEach(dept => {
+                    departmentSelect.innerHTML += `<option value="${dept.Department_code}">${dept.Department}</option>`;
+                });
+                departmentSelect.disabled = false;
+
+                document.getElementById('program').innerHTML = '<option value="" selected>Select Program</option>';
+                document.getElementById('program').disabled = true;
+                resetFeeFields();
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function fetchPrograms() {
+        const department = document.getElementById('department').value;
+        const programme = document.getElementById('programme_of_study').value;
+        const programSelect = document.getElementById('program');
+
+        if (!department || !programme) {
+            programSelect.innerHTML = '<option value="" selected>Select Program</option>';
+            programSelect.disabled = true;
+            return;
+        }
+
+        fetch(`/fee/api/programs/?department=${encodeURIComponent(department)}&programme=${encodeURIComponent(programme)}`)
+            .then(response => response.json())
+            .then(data => {
+                programSelect.innerHTML = '<option value="" selected>Select Program</option>';
+                data.forEach(program => {
+                    programSelect.innerHTML += `<option value="${program.id}">${program.program_name}</option>`;
+                });
+                programSelect.disabled = false;
+                resetFeeFields();
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function fetchProgramDetails() {
+        const programId = document.getElementById('program').value;
+
+        if (!programId) {
+            resetFeeFields();
+            return;
+        }
+
+        fetch(`/fee/api/programs/${programId}/`)
+            .then(response => response.json())
+            .then(data => {
+                currentDuration = data.duration || null;
+                setupFeeFields();
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    document.getElementById('class_of_fee').addEventListener('change', setupFeeFields);
+
+    function setupFeeFields() {
+        const container = document.getElementById('semesterFeesContainer');
+        const feeClass = document.getElementById('class_of_fee').value;
+        container.innerHTML = '';
+        container.classList.add('d-none');
+
+        if (!feeClass || !currentDuration) return;
+
+        container.classList.remove('d-none');
+
+        if (feeClass === 'one_time') {
+            container.innerHTML = `
+                <div class="col-md-6 mb-3">
+                    <label for="one_time_fee" class="form-label">One-Time Fee</label>
+                    <input type="number" class="form-control" id="one_time_fee" name="one_time_fee" placeholder="Enter One-Time Fee" step="0.01" min="0">
+                </div>
+            `;
+        } else if (feeClass === 'year_wise') {
+            for (let i = 1; i <= currentDuration; i++) {
+                container.innerHTML += `
+                    <div class="col-md-6 mb-3">
+                        <label for="year_${i}_fee" class="form-label">Year ${i} Fee</label>
+                        <input type="number" class="form-control" id="year_${i}_fee" name="year_${i}_fee" placeholder="Enter Fee for Year ${i}" step="0.01" min="0">
+                    </div>
+                `;
+            }
+        } else if (feeClass === 'semester_wise') {
+            const semesters = currentDuration * 2;
+            for (let i = 1; i <= semesters; i++) {
+                container.innerHTML += `
+                    <div class="col-md-6 mb-3">
+                        <label for="semester_${i}_fee" class="form-label">Semester ${i} Fee</label>
+                        <input type="number" class="form-control" id="semester_${i}_fee" name="semester_${i}_fee" placeholder="Enter Fee for Semester ${i}" step="0.01" min="0">
+                    </div>
+                `;
+            }
+        }
+    }
+
+    function resetFeeFields() {
+        currentDuration = null;
+        const container = document.getElementById('semesterFeesContainer');
+        container.innerHTML = '';
+        container.classList.add('d-none');
+    }
+</script>

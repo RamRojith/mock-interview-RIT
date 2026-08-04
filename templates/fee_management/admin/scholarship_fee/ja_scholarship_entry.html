@@ -1,0 +1,559 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'admin_dashboard_css.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="student-management-dashboard">
+
+  <!-- ================= HEADER ================= -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      
+      <!-- Logo (same style as Student Management) -->
+      <div class="header-icon">
+        <i class="fas fa-hand-holding-heart"></i>
+      </div>
+
+      <div class="header-text">
+        <h1 class="dashboard-title">Scholarship Entry</h1>
+        <p class="dashboard-subtitle">
+          Department: <strong>{{ faculty.department }}</strong>
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="container-fluid py-4">
+
+    <!-- ================= MESSAGES ================= -->
+    {% if messages %}
+      {% for m in messages %}
+        <div class="alert alert-{{ m.tags }} mb-3">
+          {{ m }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- ================= FILTERS ================= -->
+    <div class="filter-card mb-4">
+      <div class="card-header">
+        <div class="section-icon">
+          <i class="fas fa-filter"></i>
+        </div>
+        <div>
+          <h3 class="section-title">Filter Students</h3>
+          <p class="section-subtitle">Filter by batch and section</p>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <form method="GET" class="filter-form">
+          <div class="filter-grid">
+
+            <!-- Batch -->
+            <div class="filter-group">
+              <label class="filter-label">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Academic Batch
+              </label>
+              <select name="batch" class="filter-select" onchange="this.form.submit()">
+                <option value="">All Batches</option>
+                {% for b in batches %}
+                  <option value="{{ b }}" {% if b == selected_batch %}selected{% endif %}>
+                    Batch {{ b }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Section -->
+            <div class="filter-group">
+              <label class="filter-label">
+                <i class="fas fa-layer-group me-2"></i>
+                Section
+              </label>
+              <select name="section" class="filter-select" onchange="this.form.submit()">
+                <option value="">All Sections</option>
+                {% for s in sections %}
+                  <option value="{{ s }}" {% if s == selected_section %}selected{% endif %}>
+                    Section {{ s }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+          </div>
+
+          <div class="filter-actions">
+            <a href="{% url 'ja_scholarship_entry' %}" class="btn btn-outline">
+              <i class="fas fa-times me-2"></i>
+              Clear Filters
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= UNASSIGNED STUDENTS ================= -->
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="students-table-card mb-5">
+        <div class="card-header">
+          <div class="section-icon">
+            <i class="fas fa-user-plus"></i>
+          </div>
+          <div>
+            <h3 class="section-title">Unassigned Students</h3>
+            <p class="section-subtitle">
+              Assign scholarship to students without any scholarship
+            </p>
+          </div>
+        </div>
+
+        <div class="card-body">
+
+          <!-- Assign Panel -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-10">
+              <label class="filter-label">
+                <i class="fas fa-gift me-2"></i>
+                Scholarship Type
+              </label>
+              <select name="scholarship_type_id" class="filter-select" required>
+                <option value="">-- Select Scholarship --</option>
+                {% for sch in scholarships %}
+                  <option value="{{ sch.id }}">{{ sch.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-check me-2"></i>
+                Assign
+              </button>
+            </div>
+          </div>
+
+          {% if unassigned_students %}
+          <div class="table-container">
+            <table class="students-table" id="unassignedTable">
+              <thead>
+                <tr>
+                  <th style="width:60px;">
+                    <input type="checkbox" id="selectAllUnassigned">
+                  </th>
+                  <th>Reg No</th>
+                  <th>Name</th>
+                  <th>Batch</th>
+                  <th>Section</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for student in unassigned_students %}
+                <tr>
+                  <td class="text-center">
+                    <input type="checkbox"
+                           class="student-check-unassigned"
+                           name="student_ids"
+                           value="{{ student.id }}">
+                  </td>
+                  <td class="regno">{{ student.reg_no }}</td>
+                  <td>{{ student.name }}</td>
+                  <td>{{ student.batch }}</td>
+                  <td>{{ student.section }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+            <p class="text-muted text-center">
+              All students are already assigned.
+            </p>
+          {% endif %}
+
+        </div>
+      </div>
+    </form>
+
+    <!-- ================= ASSIGNED STUDENTS ================= -->
+    <div class="students-table-card">
+      <div class="card-header">
+        <div class="section-icon">
+          <i class="fas fa-list"></i>
+        </div>
+        <div>
+          <h3 class="section-title">Assigned Students</h3>
+          <p class="section-subtitle">
+            Students with assigned scholarships
+          </p>
+        </div>
+      </div>
+
+      <div class="card-body">
+        {% if assigned_entries %}
+        <div class="table-container">
+          <table class="students-table" id="assignedTable">
+            <thead>
+              <tr>
+                <th>Reg No</th>
+                <th>Name</th>
+                <th>Batch</th>
+                <th>Section</th>
+                <th>Scholarship</th>
+                <th>Assigned At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for e in assigned_entries %}
+              <tr>
+                <td class="regno">{{ e.student.reg_no }}</td>
+                <td>{{ e.student.name }}</td>
+                <td>{{ e.student.batch }}</td>
+                <td>{{ e.student.section }}</td>
+                <td>
+                  <span class="badge bg-success">
+                    {{ e.scholarship.name }}
+                  </span>
+                </td>
+                <td>{{ e.created_at|date:"d M Y, h:i A" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+          <p class="text-muted text-center">
+            No scholarships assigned yet.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ================= DATATABLES ================= -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+$(document).ready(function () {
+
+  if ($('#unassignedTable').length) {
+    $('#unassignedTable').DataTable({ pageLength: 50 });
+  }
+
+  if ($('#assignedTable').length) {
+    $('#assignedTable').DataTable({ pageLength: 50 });
+  }
+
+  $('#selectAllUnassigned').on('change', function () {
+    $('.student-check-unassigned').prop('checked', this.checked);
+  });
+
+});
+</script>
+
+<style>
+  .student-management-dashboard {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: 100vh;
+}
+
+/* ================= HEADER ================= */
+.student-management-dashboard .dashboard-header {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+    padding: 2.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.student-management-dashboard .header-content {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Logo block (same as Student Management) */
+.student-management-dashboard .header-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.4rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    flex-shrink: 0;
+}
+
+.student-management-dashboard .header-text {
+    flex: 1;
+}
+
+.student-management-dashboard .dashboard-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.student-management-dashboard .dashboard-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-top: 0.5rem;
+}
+
+/* ================= CARDS ================= */
+.student-management-dashboard .filter-card,
+.student-management-dashboard .students-table-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.student-management-dashboard .card-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.student-management-dashboard .section-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.student-management-dashboard .section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.student-management-dashboard .section-subtitle {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+/* ================= CARD BODY ================= */
+.student-management-dashboard .card-body {
+    padding: 2rem;
+}
+
+/* ================= FILTERS ================= */
+.student-management-dashboard .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.student-management-dashboard .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.student-management-dashboard .filter-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+}
+
+.student-management-dashboard .filter-select {
+    padding: 0.875rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.student-management-dashboard .filter-select:focus {
+    outline: none;
+    border-color: #1a4b8c;
+    box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+}
+
+/* Filter actions */
+.student-management-dashboard .filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* ================= BUTTONS ================= */
+.student-management-dashboard .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.student-management-dashboard .btn-outline {
+    background: transparent;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+}
+
+.student-management-dashboard .btn-outline:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.student-management-dashboard .btn-primary {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+}
+
+.student-management-dashboard .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+/* ================= ASSIGN PANEL ================= */
+.student-management-dashboard .students-table-card .row.g-3 {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+/* ================= TABLE ================= */
+.student-management-dashboard .table-container {
+    overflow-x: auto;
+}
+
+.student-management-dashboard .students-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.student-management-dashboard .students-table th {
+    background: #f8fafc;
+    padding: 1.25rem 1rem;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e2e8f0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.student-management-dashboard .students-table td {
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.student-management-dashboard .students-table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.student-management-dashboard .students-table tbody tr:hover {
+    background: #f8fafc;
+    transform: translateY(-1px);
+}
+
+/* Checkbox */
+.student-management-dashboard input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #1a4b8c;
+}
+
+/* Reg number */
+.student-management-dashboard .regno {
+    font-weight: 700;
+    color: #1a4b8c;
+    font-family: 'Monaco', 'Consolas', monospace;
+}
+
+/* Scholarship badge */
+.student-management-dashboard .badge.bg-success {
+    border-radius: 20px;
+    padding: 0.5rem 0.9rem;
+    font-weight: 700;
+}
+
+/* ================= DATATABLES ================= */
+.student-management-dashboard .dataTables_filter input,
+.student-management-dashboard .dataTables_length select {
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 0.5rem 1rem !important;
+}
+
+.student-management-dashboard .dataTables_paginate .paginate_button {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    margin: 0 0.25rem !important;
+}
+
+.student-management-dashboard .dataTables_paginate .paginate_button.current {
+    background: #1a4b8c !important;
+    color: white !important;
+    border-color: #1a4b8c !important;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+    .student-management-dashboard .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+
+    .student-management-dashboard .dashboard-title {
+        font-size: 1.75rem;
+    }
+
+    .student-management-dashboard .card-body {
+        padding: 1.5rem;
+    }
+
+    .student-management-dashboard .filter-actions {
+        justify-content: center;
+    }
+}
+</style>
+
+{% endblock content %}

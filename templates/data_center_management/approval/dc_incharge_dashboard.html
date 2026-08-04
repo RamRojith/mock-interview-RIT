@@ -1,0 +1,607 @@
+{% load static %}
+{% comment %} {% load dc_tags %} {% endcomment %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Center Incharge Dashboard - Ramco Institute of Technology</title>
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="website icon" type="png" href="{% static 'images/ritlogo.png' %}">
+    <link rel="stylesheet" href="{% static 'DataTables/datatables.min.css' %}">
+    <script src="{% static 'DataTables/datatables.min.js' %}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .dashboard-header {
+            background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-icon {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 1.5rem;
+        }
+
+        .header-text h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .header-text p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-header {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-header:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Statistics Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .stat-icon.ready { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .stat-icon.student { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+        .stat-icon.faculty { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+        .stat-icon.total { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        /* Applications Section */
+        .applications-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-subtitle {
+            color: #6b7280;
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        /* Application Cards */
+        .applications-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .application-card {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .application-card:hover {
+            background: #f1f5f9;
+            border-color: #d1d5db;
+            transform: translateY(-1px);
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .app-info {
+            flex: 1;
+        }
+
+        .app-id {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1f2937;
+            background: #e5e7eb;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+
+        .app-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .app-details {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .app-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .app-type.student {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .app-type.faculty {
+            background: #ede9fe;
+            color: #6b21a8;
+        }
+
+        .app-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+
+        .btn-approve {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-approve:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+
+        .btn-view {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-view:hover {
+            background: #e5e7eb;
+            color: #374151;
+            text-decoration: none;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #6b7280;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-message {
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 0 1rem;
+            }
+            
+            .dashboard-header {
+                padding: 1rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .applications-section {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="header-title">
+                <div class="header-icon">
+                    <i class="fas fa-server"></i>
+                </div>
+                <div class="header-text">
+                    <h1>{{ dashboard_title }}</h1>
+                    <p>{{ dashboard_subtitle }}</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'faculty_dashboard' %}" class="btn-header">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+                <a href="{% url 'approval_dashboard' %}" class="btn-header">
+                    <i class="fas fa-tasks me-1"></i>General Approvals
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-number">{{ total_ready }}</div>
+                        <div class="stat-label">Ready for Final Approval</div>
+                    </div>
+                    <div class="stat-icon ready">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-number">{{ student_ready }}</div>
+                        <div class="stat-label">Student Applications</div>
+                    </div>
+                    <div class="stat-icon student">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-number">{{ faculty_ready }}</div>
+                        <div class="stat-label">Faculty Applications</div>
+                    </div>
+                    <div class="stat-icon faculty">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-number">{{ approved_applications }}</div>
+                        <div class="stat-label">Total Approved</div>
+                    </div>
+                    <div class="stat-icon total">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Applications Ready for Final Approval -->
+        <div class="applications-section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">
+                        <i class="fas fa-wifi"></i>
+                        Applications Ready for Final Approval
+                    </h2>
+                    <p class="section-subtitle">
+                        These applications have completed all previous approval steps and are ready for WiFi credential generation
+                    </p>
+                </div>
+            </div>
+
+            {% if ready_applications %}
+                <div class="applications-grid">
+                    {% for app in ready_applications %}
+                    <div class="application-card">
+                        <div class="app-header">
+                            <div class="app-info">
+                                <div class="app-id">{{ app.application_id }}</div>
+                                <div class="app-name">{{ app.full_name }}</div>
+                                <div class="app-details">
+                                    <strong>{{ app.reg_no }}</strong> • {{ app.department }}
+                                    <br>
+                                    <small>
+                                        <i class="fas fa-calendar me-1"></i>Submitted: {{ app.submitted_at|date:"M d, Y" }}
+                                        <i class="fas fa-clock ms-2 me-1"></i>{{ app.submitted_at|date:"h:i A" }}
+                                    </small>
+                                </div>
+                                <span class="app-type {{ app.application_type }}">{{ app.application_type }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Approval History -->
+                        {% if app.approval_history.all %}
+                        <div class="approval-history" style="margin: 1rem 0; padding: 1rem; background: #f9fafb; border-radius: 8px;">
+                            <h6 style="margin-bottom: 0.5rem; color: #374151; font-weight: 600;">
+                                <i class="fas fa-history me-1"></i>Approval History:
+                            </h6>
+                            {% for approval in app.approval_history.all %}
+                            <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">
+                                {% if approval.status == 'approved' %}
+                                    <i class="fas fa-check-circle text-success me-1"></i>
+                                {% elif approval.status == 'rejected' %}
+                                    <i class="fas fa-times-circle text-danger me-1"></i>
+                                {% else %}
+                                    <i class="fas fa-clock text-warning me-1"></i>
+                                {% endif %}
+                                <strong>{{ approval.step.step_name }}</strong>: {{ approval.status|title }}
+                                {% if approval.approved_by %} by {{ approval.approved_by }}{% endif %}
+                                {% if approval.approved_at %} on {{ approval.approved_at|date:"M d, Y" }}{% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="app-actions">
+                            <a href="{% url 'approve_application' app.application_id %}" class="btn-approve">
+                                <i class="fas fa-check"></i>
+                                Approve & Generate Credentials
+                            </a>
+                            <a href="{% url 'view_wifi_application' app.application_id %}" class="btn-view">
+                                <i class="fas fa-eye"></i>
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <div class="empty-title">No Applications Ready</div>
+                    <div class="empty-message">
+                        There are currently no applications ready for final approval.<br>
+                        Applications will appear here after completing all previous approval steps.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Approved Applications -->
+        {% if recent_approved %}
+        <div class="applications-section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">
+                        <i class="fas fa-history"></i>
+                        Recently Approved Applications
+                    </h2>
+                    <p class="section-subtitle">
+                        Applications you have recently approved with WiFi credentials
+                    </p>
+                </div>
+            </div>
+
+            <div class="applications-grid">
+                {% for app in recent_approved %}
+                <div class="application-card">
+                    <div class="app-header">
+                        <div class="app-info">
+                            <div class="app-id">{{ app.application_id }}</div>
+                            <div class="app-name">{{ app.full_name }}</div>
+                            <div class="app-details">
+                                <strong>{{ app.reg_no }}</strong> • {{ app.department }}
+                                <br>
+                                <small>
+                                    <i class="fas fa-check-circle text-success me-1"></i>Approved: {{ app.processed_at|date:"M d, Y h:i A" }}
+                                </small>
+                            </div>
+                            <span class="app-type {{ app.application_type }}">{{ app.application_type }}</span>
+                        </div>
+                    </div>
+                    
+                    {% if app.wifi_username %}
+                    <div style="margin: 1rem 0; padding: 1rem; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px;">
+                        <h6 style="margin-bottom: 0.5rem; color: #0369a1; font-weight: 600;">
+                            <i class="fas fa-wifi me-1"></i>WiFi Credentials Generated:
+                        </h6>
+                        <div style="font-size: 0.9rem; color: #0c4a6e;">
+                            <strong>SSID:</strong> {{ app.wifi_ssid }}<br>
+                            <strong>Username:</strong> {{ app.wifi_username }}<br>
+                            <strong>Password:</strong> {{ app.wifi_password }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="app-actions">
+                        <a href="{% url 'view_wifi_application' app.application_id %}" class="btn-view">
+                            <i class="fas fa-eye"></i>
+                            View Details
+                        </a>
+                        <a href="{% url 'download_wifi_application_pdf' app.application_id %}" class="btn-view">
+                            <i class="fas fa-download"></i>
+                            Download PDF
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Auto-refresh every 30 seconds to check for new applications
+        setTimeout(function() {
+            location.reload();
+        }, 30000);
+        
+        // Add confirmation for approval actions
+        document.querySelectorAll('.btn-approve').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to approve this application and generate WiFi credentials? This action cannot be undone.')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

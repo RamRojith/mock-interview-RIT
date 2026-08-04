@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <h3>Pass Value Entry</h3>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Filter Form -->
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label class="form-label">Degree</label>
+            <select name="degree" class="form-control" required>
+                <option value="">-- Select Degree --</option>
+                {% for d in degrees %}
+                    <option value="{{ d.id }}" {% if selected_degree == d.id|stringformat:"s" %}selected{% endif %}>
+                        {{ d.degree }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Regulation</label>
+            <select name="regulation" class="form-control" required>
+                <option value="">-- Select Regulation --</option>
+                {% for r in regulations %}
+                    <option value="{{ r.id }}" {% if selected_regulation == r.id|stringformat:"s" %}selected{% endif %}>
+                        {{ r.year }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-4 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+
+
+    <!-- Show Input Boxes Only After Filter -->
+    {% if selected_degree and selected_regulation %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <input type="hidden" name="degree" value="{{ selected_degree }}">
+        <input type="hidden" name="regulation" value="{{ selected_regulation }}">
+
+        <div class="row g-3">
+
+            <div class="col-md-6">
+                <label class="form-label">Enter IAT Pass Value</label>
+                <input type="number" name="iat_pass_value" class="form-control"
+                       value="{% if pass_obj %}{{ pass_obj.iat_pass_value }}{% endif %}"
+                       placeholder="Enter IAT Pass Value" required>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Enter University IAT Pass Value</label>
+                <input type="number" name="university_iat_pass_value" class="form-control"
+                       value="{% if pass_obj %}{{ pass_obj.university_iat_pass_value }}{% endif %}"
+                       placeholder="Enter University IAT Pass Value" required>
+            </div>
+
+            <div class="col-md-12">
+                <button type="submit" class="btn btn-success">Save</button>
+            </div>
+
+        </div>
+    </form>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

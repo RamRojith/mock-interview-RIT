@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.itemtype-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.itemtype-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.itemtype-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.itemtype-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.itemtype-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.itemtype-portal .custom-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.itemtype-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a4b8c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.itemtype-portal .card-body-custom {
+  padding: 1.5rem;
+}
+
+.itemtype-portal .entry-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 1rem;
+  align-items: end;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+}
+
+.itemtype-portal label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.itemtype-portal input {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+}
+
+.itemtype-portal input:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26,75,140,0.1);
+  outline: none;
+}
+
+.itemtype-portal .btn-primary-custom {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.itemtype-portal .btn-secondary-custom {
+  background: #64748b;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.itemtype-portal .remove-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 1.3rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.itemtype-portal .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.itemtype-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.itemtype-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.itemtype-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.itemtype-portal .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.itemtype-portal .badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.itemtype-portal .badge-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.itemtype-portal .search-box {
+  width: 260px;
+}
+
+.itemtype-portal .action-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-right: 0.4rem;
+}
+
+.itemtype-portal .action-btn.edit {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.itemtype-portal .action-btn.delete {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.itemtype-portal .inline-form {
+  display: inline;
+}
+
+.itemtype-portal .empty-row {
+  text-align: center;
+  padding: 2rem !important;
+  color: #64748b;
+  font-weight: 700;
+}
+
+/* Modal */
+.itemtype-portal .modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.itemtype-portal .modal-overlay.show {
+  display: flex;
+}
+
+.itemtype-portal .modal-box {
+  background: white;
+  border-radius: 20px;
+  width: 460px;
+  max-width: 95%;
+  padding: 1.5rem;
+  box-shadow: 0 20px 45px rgba(15,23,42,0.25);
+}
+
+.itemtype-portal .modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.itemtype-portal .modal-head h4 {
+  color: #1a4b8c;
+  margin: 0;
+  font-weight: 800;
+}
+
+.itemtype-portal .modal-head button {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: #f1f5f9;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: #334155;
+}
+
+.itemtype-portal .modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.itemtype-portal .check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.itemtype-portal .check-row input {
+  width: auto;
+}
+
+@media(max-width:768px) {
+  .itemtype-portal {
+    padding: 1rem;
+  }
+
+  .itemtype-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .itemtype-portal .entry-row {
+    grid-template-columns: 1fr;
+  }
+
+  .itemtype-portal .card-header-custom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .itemtype-portal .search-box,
+  .itemtype-portal .btn-primary-custom,
+  .itemtype-portal .btn-secondary-custom {
+    width: 100%;
+  }
+}
+</style>
+
+<div class="itemtype-portal">
+
+  <div class="page-header">
+    <h1><i class="fas fa-tags me-2"></i> Inventory Item Type Master</h1>
+    <p class="header-subtitle">Create, edit and manage inventory item types</p>
+  </div>
+
+  <div class="page-container">
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-plus-circle me-2"></i> Add Item Types</span>
+
+        <button type="button"
+                class="btn-secondary-custom"
+                onclick="addEntryRow()">
+          + Add Row
+        </button>
+      </div>
+
+      <div class="card-body-custom">
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="add">
+
+          <div id="entryRows">
+            <div class="entry-row">
+              <div>
+                <label>Item Type Name</label>
+                <input type="text"
+                       name="type_name[]"
+                       placeholder="Electrical Consumables"
+                       required>
+              </div>
+
+              <div>
+                <label>Description</label>
+                <input type="text"
+                       name="description[]"
+                       placeholder="Optional description">
+              </div>
+
+              <div>
+                <button type="button"
+                        class="remove-btn"
+                        onclick="removeEntryRow(this)">
+                  ×
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-primary-custom" type="submit">
+            <i class="fas fa-paper-plane me-2"></i> Submit All
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-list-check me-2"></i> Item Type List</span>
+
+        <input type="text"
+               id="itemTypeSearch"
+               class="search-box"
+               placeholder="Search item type...">
+      </div>
+
+      <div class="card-body-custom">
+        <div class="table-responsive">
+          <table id="itemTypeTable" class="data-table">
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>Item Type</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for type in item_types %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+
+                <td><strong>{{ type.type_name }}</strong></td>
+
+                <td>{{ type.description|default:"-" }}</td>
+
+                <td>
+                  {% if type.active %}
+                    <span class="badge-status badge-success">
+                      <i class="fas fa-circle-check"></i> Active
+                    </span>
+                  {% else %}
+                    <span class="badge-status badge-danger">
+                      <i class="fas fa-circle-xmark"></i> Inactive
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <button type="button"
+                          class="action-btn edit"
+                          onclick="openEditModal(
+                            '{{ type.id }}',
+                            '{{ type.type_name|escapejs }}',
+                            '{{ type.description|default:''|escapejs }}',
+                            '{{ type.active }}'
+                          )">
+                    Edit
+                  </button>
+
+                  <form method="post"
+                        class="inline-form"
+                        onsubmit="return confirm('Delete this item type?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="item_id" value="{{ type.id }}">
+
+                    <button type="submit" class="action-btn delete">
+                      Delete
+                    </button>
+                  </form>
+                </td>
+              </tr>
+
+              {% empty %}
+              <tr>
+                <td colspan="5" class="empty-row">
+                  <i class="fas fa-inbox me-2"></i> No item types found.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- EDIT MODAL INSIDE .itemtype-portal -->
+  <div id="editModal" class="modal-overlay">
+    <div class="modal-box">
+
+      <div class="modal-head">
+        <h4><i class="fas fa-edit me-2"></i> Edit Item Type</h4>
+        <button type="button" onclick="closeEditModal()">×</button>
+      </div>
+
+      <form method="post" class="modal-form">
+        {% csrf_token %}
+
+        <input type="hidden" name="action" value="edit">
+        <input type="hidden" name="item_id" id="editItemId">
+
+        <div>
+          <label>Item Type Name</label>
+          <input type="text"
+                 name="type_name"
+                 id="editTypeName"
+                 required>
+        </div>
+
+        <div>
+          <label>Description</label>
+          <input type="text"
+                 name="description"
+                 id="editDescription">
+        </div>
+
+        <label class="check-row">
+          <input type="checkbox"
+                 name="active"
+                 id="editActive">
+          Active
+        </label>
+
+        <button class="btn-primary-custom" type="submit">
+          Update Item Type
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+function addEntryRow() {
+  const container = document.getElementById("entryRows");
+
+  const row = document.createElement("div");
+  row.className = "entry-row";
+
+  row.innerHTML = `
+    <div>
+      <label>Item Type Name</label>
+      <input type="text"
+             name="type_name[]"
+             placeholder="Electrical Consumables"
+             required>
+    </div>
+
+    <div>
+      <label>Description</label>
+      <input type="text"
+             name="description[]"
+             placeholder="Optional description">
+    </div>
+
+    <div>
+      <button type="button"
+              class="remove-btn"
+              onclick="removeEntryRow(this)">
+        ×
+      </button>
+    </div>
+  `;
+
+  container.appendChild(row);
+}
+
+function removeEntryRow(btn) {
+  const rows = document.querySelectorAll("#entryRows .entry-row");
+
+  if (rows.length === 1) {
+    alert("At least one row is required.");
+    return;
+  }
+
+  btn.closest(".entry-row").remove();
+}
+
+function openEditModal(id, name, description, active) {
+  document.getElementById("editItemId").value = id;
+  document.getElementById("editTypeName").value = name;
+  document.getElementById("editDescription").value = description;
+  document.getElementById("editActive").checked = active === "True";
+
+  document.getElementById("editModal").classList.add("show");
+}
+
+function closeEditModal() {
+  document.getElementById("editModal").classList.remove("show");
+}
+
+document.getElementById("editModal").addEventListener("click", function(e) {
+  if (e.target === this) {
+    closeEditModal();
+  }
+});
+
+document.getElementById("itemTypeSearch").addEventListener("input", function() {
+  const value = this.value.toLowerCase();
+  const rows = document.querySelectorAll("#itemTypeTable tbody tr");
+
+  rows.forEach(row => {
+    row.style.display = row.innerText.toLowerCase().includes(value) ? "" : "none";
+  });
+});
+</script>
+
+{% endblock %}

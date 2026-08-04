@@ -1,0 +1,634 @@
+{% load static %}
+{% load cm_tags %}
+{% regulations as regulations %}
+
+<div class="modal fade" id="addcoursecategoryModel" tabindex="-1" aria-labelledby="addcoursecategoryLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <!-- Modal Header -->
+            <div class="modal-header bg-gradient-primary text-white rounded-top">
+                <div class="w-100">
+                    <h5 class="modal-title fw-bold mb-1">Course Categories Management</h5>
+                    <p class="mb-0 small opacity-85">Organize and manage your course classification system</p>
+                </div>
+                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body bg-light-subtle p-0">
+                <div class="row g-0 h-100">
+                    <!-- Form Section -->
+                    <div class="col-lg-5 p-4 bg-white border-end">
+                        <div class="mb-4">
+                            <h6 class="fw-semibold text-primary mb-2 d-flex align-items-center">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                <span id="formTitle">Add New Category</span>
+                            </h6>
+                            <p class="text-muted small mb-0" id="formSubtitle">Create a new course category for better organization</p>
+                        </div>
+                        
+                        <form id="courseCategoryForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" id="formAction" value="add">
+                            <input type="hidden" name="id" id="courseId">
+                            
+                            <!-- Category Name -->
+                            <div class="mb-4">
+                                <label class="form-label fw-medium text-dark mb-2">
+                                    <i class="fas fa-tag text-primary me-1"></i>
+                                    Category Name
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="fas fa-folder text-muted"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0 ps-0" id="Course_category_name" name="Course_category_name" placeholder="e.g., Core Courses, Electives..." required>
+                                </div>
+                            </div>
+
+                            <!-- Category Code -->
+                            <div class="mb-4">
+                                <label class="form-label fw-medium text-dark mb-2">
+                                    <i class="fas fa-code text-primary me-1"></i>
+                                    Category Code
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="fas fa-hashtag text-muted"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0 ps-0" id="category_code" name="category_code" placeholder="CORE / ELEC / LAB" required>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-4">
+                                <label class="form-label fw-medium text-dark mb-2">
+                                    <i class="fas fa-align-left text-primary me-1"></i>
+                                    Description (Optional)
+                                </label>
+                                <textarea class="form-control" id="category_description" name="category_description" rows="3" placeholder="Brief description of this category..."></textarea>
+                            </div>
+
+                            <!-- Regulation -->
+                            <div class="mb-4">
+                                <label class="form-label fw-medium text-dark mb-2">
+                                    <i class="fas fa-gavel text-primary me-1"></i>
+                                    Regulation
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="fas fa-scale-balanced text-muted"></i>
+                                    </span>
+                                    <select class="form-select border-start-0 ps-0" id="regulation" name="regulation" required>
+                                        <option value="" selected disabled>Select academic regulation</option>
+                                        {% for reg in regulations %}
+                                            <option value="{{ reg.id }}">{{ reg.year }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-top">
+                                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold mb-2">
+                                    <i class="fas fa-save me-2"></i>
+                                    <span id="submitButtonText">Save Category</span>
+                                </button>
+                                <button type="button" id="cancelEditBtn" class="btn btn-outline-secondary w-100 py-2 d-none">
+                                    <i class="fas fa-times me-2"></i>Cancel Edit
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Table Section -->
+                    <div class="col-lg-7 p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h6 class="fw-semibold text-primary mb-1 d-flex align-items-center">
+            <i class="fas fa-list-check me-2"></i>
+            Existing Categories
+        </h6>
+        <p class="text-muted small mb-0">Manage your course classification system</p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" id="exportExcelBtn" class="btn btn-success rounded-pill px-3">
+            <i class="fas fa-file-excel me-1"></i> Export Excel
+        </button>
+        <div class="category-stats bg-light rounded-pill px-3 py-2">
+            <span class="fw-semibold text-primary" id="categoryCount">0</span>
+            <span class="text-muted small">categories</span>
+        </div>
+    </div>
+</div>
+                        
+                        <div class="table-container rounded-3 border-0 shadow-sm bg-white">
+                            <div class="table-responsive" style="max-height: 350px;">
+                                <table class="table table-hover mb-0" id="categoryTable">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th width="8%" class="ps-4 text-muted fw-medium small text-uppercase">#</th>
+                                            <th class="text-muted fw-medium small text-uppercase">Category Name</th>
+                                            <th width="15%" class="text-muted fw-medium small text-uppercase">Code</th>
+                                            <th width="20%" class="text-muted fw-medium small text-uppercase">Regulation</th>
+                                            <th width="20%" class="text-center text-muted fw-medium small text-uppercase">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Data will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div id="emptyState" class="text-center py-5 d-none">
+                                <div class="empty-state-icon mb-3">
+                                    <i class="fas fa-folder-open fa-3x text-light"></i>
+                                </div>
+                                <h6 class="text-muted fw-medium mb-2">No categories yet</h6>
+                                <p class="text-muted small mb-0">Start by adding your first course category</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Axios -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    const form = document.getElementById("courseCategoryForm");
+    const cancelEditBtn = document.getElementById("cancelEditBtn");
+    const emptyState = document.getElementById("emptyState");
+    const categoryCount = document.getElementById("categoryCount");
+    const formTitle = document.getElementById("formTitle");
+    const formSubtitle = document.getElementById("formSubtitle");
+    const submitButtonText = document.getElementById("submitButtonText");
+
+    // 🔹 Load all categories
+    function loadCategories() {
+        axios.get("{% url 'course_category' %}")
+        .then(res => {
+            const tbody = $("#categoryTable tbody");
+            tbody.empty();
+            
+            if (res.data.data && res.data.data.length > 0) {
+                emptyState.classList.add('d-none');
+                res.data.data.forEach((cat, i) => {
+                    tbody.append(`
+                        <tr>
+                            <td class="ps-4">
+                                <span class="text-muted fw-medium">${i + 1}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="category-icon me-3">
+                                        <i class="fas fa-folder text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold text-dark">${cat.Course_category_name}</div>
+                                        ${cat.category_description ? 
+                                            `<small class="text-muted d-block mt-1">${cat.category_description}</small>` : ''
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">
+                                    ${cat.category_code}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border rounded-pill px-3 py-2">
+                                    <i class="fas fa-gavel me-1 small text-primary"></i>
+                                    ${cat.regulation}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button class="btn btn-sm btn-outline-primary editBtn rounded-pill px-3" 
+                                            data-id="${cat.id}"
+                                            data-name="${cat.Course_category_name}"
+                                            data-code="${cat.category_code}"
+                                            data-desc="${cat.category_description}"
+                                            data-reg="${cat.regulation_id}">
+                                        <i class="fas fa-edit me-1"></i>Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger deleteBtn rounded-pill px-3" 
+                                            data-id="${cat.id}">
+                                        <i class="fas fa-trash me-1"></i>Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `);
+                });
+                categoryCount.textContent = res.data.data.length;
+            } else {
+                emptyState.classList.remove('d-none');
+                categoryCount.textContent = '0';
+            }
+        })
+        .catch(err => {
+            console.error("Error loading categories:", err);
+            showAlert("Failed to load categories", "error");
+        });
+    }
+
+    loadCategories();
+
+    // 🔹 Submit Form (Add/Edit)
+    form.addEventListener("submit", function(e) {
+        e.preventDefault();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+        
+        const formData = new FormData(form);
+        axios.post("{% url 'course_category' %}", formData)
+        .then(res => {
+            if (res.data.status === "success") {
+                showAlert(res.data.message, "success");
+                resetForm();
+                loadCategories();
+            } else {
+                showAlert(res.data.message || "An error occurred", "error");
+            }
+        })
+        .catch(err => {
+            console.error("Error saving category:", err);
+            showAlert("Failed to save category", "error");
+        })
+        .finally(() => {
+            // Restore button state
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
+    });
+
+    // 🔹 Edit Category
+    $("#categoryTable").on("click", ".editBtn", function() {
+        $("#formAction").val("edit");
+        $("#courseId").val($(this).data("id"));
+        $("#Course_category_name").val($(this).data("name"));
+        $("#category_code").val($(this).data("code"));
+        $("#category_description").val($(this).data("desc"));
+        $("#regulation").val($(this).data("reg"));
+
+        submitButtonText.textContent = "Update Category";
+        formTitle.textContent = "Edit Category";
+        formSubtitle.textContent = `Modifying "${$(this).data('name')}"`;
+        cancelEditBtn.classList.remove("d-none");
+        
+        // Scroll to form
+        $('.modal-body').animate({
+            scrollTop: 0
+        }, 300);
+    });
+
+    // 🔹 Delete Category
+    $("#categoryTable").on("click", ".deleteBtn", function() {
+        const categoryName = $(this).closest('tr').find('.fw-semibold.text-dark').text().trim();
+        
+        if (confirm(`Are you sure you want to delete "${categoryName}"?\n\nThis action cannot be undone.`)) {
+            const deleteBtn = $(this);
+            const originalHtml = deleteBtn.html();
+            
+            // Show loading state on delete button
+            deleteBtn.html('<i class="fas fa-spinner fa-spin me-1"></i>');
+            deleteBtn.prop('disabled', true);
+            
+            const formData = new FormData();
+            formData.append("action", "delete");
+            formData.append("id", $(this).data("id"));
+
+            axios.post("{% url 'course_category' %}", formData)
+            .then(res => {
+                showAlert(res.data.message, "success");
+                loadCategories();
+            })
+            .catch(err => {
+                console.error("Error deleting category:", err);
+                showAlert("Failed to delete category", "error");
+            })
+            .finally(() => {
+                // Restore button state
+                deleteBtn.html(originalHtml);
+                deleteBtn.prop('disabled', false);
+            });
+        }
+    });
+
+    // 🔹 Cancel Edit
+    cancelEditBtn.addEventListener("click", resetForm);
+
+    // 🔹 Reset form to add mode
+    function resetForm() {
+        form.reset();
+        $("#formAction").val("add");
+        $("#courseId").val("");
+        submitButtonText.textContent = "Save Category";
+        formTitle.textContent = "Add New Category";
+        formSubtitle.textContent = "Create a new course category for better organization";
+        cancelEditBtn.classList.add("d-none");
+    }
+
+    // 🔹 Show alert message
+    function showAlert(message, type) {
+        // Remove any existing alerts
+        $('.alert-dismissible').remove();
+        
+        const alertClass = type === "success" ? "alert-success" : "alert-danger";
+        const icon = type === "success" ? "fa-check-circle" : "fa-exclamation-triangle";
+        
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-4 shadow-lg" role="alert" style="z-index: 1060; min-width: 300px;">
+                <div class="d-flex align-items-center">
+                    <i class="fas ${icon} me-2 fs-5"></i>
+                    <div>${message}</div>
+                    <button type="button" class="btn-close ms-3" data-bs-dismiss="alert"></button>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(alertHtml);
+        
+        // Auto dismiss after 4 seconds
+        setTimeout(() => {
+            $('.alert-dismissible').alert('close');
+        }, 4000);
+    }
+});
+const exportExcelBtn = document.getElementById("exportExcelBtn");
+
+exportExcelBtn.addEventListener("click", function() {
+    const regulation = document.getElementById("regulation").value;
+    const url = `{% url 'export_course_category_excel' %}?` + new URLSearchParams({
+        regulation: regulation
+    });
+
+    window.location.href = url;
+});
+</script>
+
+<style>
+/* Modal Styles */
+#addcoursecategoryModel .modal-xl {
+    max-width: 1000px;
+}
+
+/* Header */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.modal-header {
+    padding: 1.25rem 2rem;
+}
+
+.modal-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+/* Form Section */
+.col-lg-5.bg-white {
+    border-right: 2px solid #e9ecef;
+}
+
+.input-group-lg .form-control,
+.input-group-lg .form-select {
+    border: none;
+    border-bottom: 2px solid #e9ecef;
+    border-radius: 0;
+    background: transparent;
+    padding-left: 0;
+    transition: all 0.3s ease;
+}
+
+.input-group-lg .form-control:focus,
+.input-group-lg .form-select:focus {
+    box-shadow: none;
+    border-bottom-color: #1a4b8c;
+    background: transparent;
+}
+
+.input-group-lg .input-group-text {
+    border: none;
+    border-bottom: 2px solid #e9ecef;
+    border-radius: 0;
+    background: transparent;
+    padding-left: 0;
+}
+
+/* Textarea */
+textarea.form-control {
+    resize: none;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+textarea.form-control:focus {
+    border-color: #1a4b8c;
+    box-shadow: 0 0 0 0.2rem rgba(26, 75, 140, 0.1);
+}
+
+/* Table Section */
+.table-container {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table-responsive {
+    border-radius: 12px;
+}
+
+.table {
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table thead {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.table th {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #495057;
+    padding: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.table td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+/* Row hover effect */
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* Category Icon */
+.category-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(26, 75, 140, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Badges */
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.4rem 0.8rem;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(26, 75, 140, 0.25);
+}
+
+.btn-outline-primary,
+.btn-outline-secondary,
+.btn-outline-danger {
+    border-width: 1.5px;
+}
+
+.btn-outline-primary:hover {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    border-color: #1a4b8c;
+    transform: translateY(-1px);
+}
+
+.btn-outline-danger:hover {
+    transform: translateY(-1px);
+}
+
+/* Category Stats */
+.category-stats {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 1px solid rgba(26, 75, 140, 0.1);
+}
+
+/* Empty State */
+.empty-state-icon {
+    opacity: 0.5;
+}
+
+/* Scrollbar */
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.table-responsive::-webkit-scrollbar {
+    height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+/* Alert Styling */
+.alert {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translate(-50%, -20px);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .col-lg-5 {
+        border-right: none;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .modal-xl {
+        margin: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-header {
+        padding: 1rem 1.5rem;
+    }
+    
+    .p-4 {
+        padding: 1.5rem !important;
+    }
+    
+    .table td,
+    .table th {
+        padding: 0.75rem;
+    }
+}
+</style>

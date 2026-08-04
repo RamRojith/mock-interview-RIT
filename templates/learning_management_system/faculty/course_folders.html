@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="folder-page">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+    .folder-page {
+        /* New color palette */
+        --rit-primary: #1a4b8c;
+        --rit-secondary: #f8b739;
+        --rit-accent: #2c5aa0;
+        --rit-light: #f8f9fa;
+        --rit-dark: #2d3748;
+        --rit-success: #28a745;
+        --rit-danger: #dc3545;
+        --rit-warning: #ffc107;
+        --rit-info: #17a2b8;
+        --rit-gray: #6c757d;
+        --rit-border: #e2e8f0;
+
+        /* Using the new variables */
+        --primary: var(--rit-primary);
+        --primary-light: #eef2f7;          /* light blue tint derived from primary */
+        --danger: var(--rit-danger);
+        --bg: var(--rit-light);
+        --card-bg: #ffffff;
+        --text-dark: var(--rit-dark);
+        --text-light: var(--rit-gray);
+        --border: var(--rit-border);
+
+        background: var(--bg);
+        padding: 1.5rem 0;
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    }
+
+    .folder-page * {
+        box-sizing: border-box;
+    }
+
+    .folder-page .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    /* Header */
+    .folder-page .header-card {
+        background: linear-gradient(135deg, var(--rit-primary), var(--rit-accent));
+        color: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 12px 30px rgba(26, 75, 140, 0.28);
+    }
+
+    .folder-page .course-title {
+        margin: 0;
+        font-size: 2.1rem;
+        font-weight: 700;
+    }
+
+    .folder-page .header-card p {
+        margin: 0.5rem 0 0;
+        opacity: 0.92;
+        font-size: 1.05rem;
+    }
+
+    /* Create card */
+    .folder-page .create-card {
+        background: var(--card-bg);
+        border-radius: 18px;
+        padding: 1.8rem;
+        margin-bottom: 2.2rem;
+        box-shadow: 0 10px 26px rgba(0,0,0,0.05);
+        border: 1px solid var(--rit-border);
+    }
+
+    .folder-page .create-card h3 {
+        margin: 0 0 1rem 0;
+        color: var(--text-dark);
+        font-size: 1.35rem;
+    }
+
+    .folder-page .folder-form {
+        display: flex;
+        gap: 12px;
+    }
+
+    .folder-page .folder-form input {
+        flex: 1;
+        padding: 0.9rem 1.1rem;
+        border-radius: 12px;
+        border: 2px solid var(--rit-border);
+        font-size: 0.97rem;
+        transition: border-color 0.2s;
+    }
+
+    .folder-page .folder-form input:focus {
+        outline: none;
+        border-color: var(--rit-primary);
+        box-shadow: 0 0 0 3px rgba(26,75,140,0.12);
+    }
+
+    .folder-page .folder-form button {
+        background: var(--rit-primary);
+        color: white;
+        border: none;
+        padding: 0 2.2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s;
+    }
+
+    .folder-page .folder-form button:hover {
+        background: var(--rit-accent);
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(26,75,140,0.28);
+    }
+
+    /* Grid */
+    .folder-page .folder-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+        gap: 22px;
+    }
+
+    /* Folder card */
+    .folder-page .folder-card {
+        background: var(--card-bg);
+        border-radius: 18px;
+        padding: 1.7rem;
+        position: relative;
+        border: 1px solid var(--rit-border);
+        box-shadow: 0 8px 22px rgba(0,0,0,0.04);
+        transition: all 0.28s ease;
+    }
+
+    .folder-page .folder-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 14px 34px rgba(0,0,0,0.08);
+        border-color: var(--rit-primary);
+    }
+
+    .folder-page .folder-actions {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        display: flex;
+        gap: 10px;
+        opacity: 0;
+        transition: opacity 0.25s;
+    }
+
+    .folder-page .folder-card:hover .folder-actions {
+        opacity: 1;
+    }
+
+    .folder-page .folder-actions i {
+        cursor: pointer;
+        font-size: 1rem;
+        background: var(--primary-light);
+        padding: 8px;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+
+    .folder-page .folder-actions i:hover {
+        transform: scale(1.15);
+    }
+
+    .folder-page .edit-icon  { color: var(--rit-primary); }
+    .folder-page .delete-icon { color: var(--rit-danger); }
+
+    .folder-page .folder-card a {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .folder-page .folder-icon {
+        font-size: 2.6rem;
+        color: var(--rit-primary);
+        margin-bottom: 0.8rem;
+    }
+
+    .folder-page .folder-name {
+        font-weight: 600;
+        color: var(--text-dark);
+        font-size: 1.05rem;
+        word-break: break-word;
+    }
+
+    /* Modals */
+    .folder-page .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.50);
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+    }
+
+    .folder-page .modal-card {
+        background: white;
+        padding: 1.8rem 1.9rem;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 360px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.22);
+        animation: scaleIn 0.22s ease;
+    }
+
+    @keyframes scaleIn {
+        from { transform: scale(0.88); opacity: 0; }
+        to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .folder-page .modal-card h3 {
+        margin: 0 0 0.9rem 0;
+        font-size: 1.3rem;
+    }
+
+    .folder-page .modal-card.danger h3 {
+        color: var(--rit-danger);
+    }
+
+    .folder-page .modal-card input[type="text"] {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        margin: 0.6rem 0 1.4rem 0;
+        border-radius: 10px;
+        border: 1px solid var(--rit-border);
+        font-size: 0.98rem;
+    }
+
+    .folder-page .modal-card input[type="text"]:focus {
+        outline: none;
+        border-color: var(--rit-primary);
+        box-shadow: 0 0 0 3px rgba(26,75,140,0.15);
+    }
+
+    .folder-page .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 1.4rem;
+    }
+
+    .folder-page .btn {
+        padding: 0.65rem 1.4rem;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+    }
+
+    .folder-page .btn-primary {
+        background: var(--rit-primary);
+        color: white;
+    }
+
+    .folder-page .btn-primary:hover {
+        background: var(--rit-accent);
+    }
+
+    .folder-page .btn-danger {
+        background: var(--rit-danger);
+        color: white;
+    }
+
+    .folder-page .btn-danger:hover {
+        background: #c82333;
+    }
+
+    .folder-page .btn-secondary {
+        background: #e2e8f0;
+        color: var(--rit-dark);
+    }
+
+    .folder-page .btn-secondary:hover {
+        background: #cbd5e1;
+    }
+    </style>
+
+    <div class="container">
+
+        <!-- Header -->
+        <div class="header-card">
+            <h1 class="course-title">{{ course.title }} — {{ course.course_code }}</h1>
+            <p>Academic Year: {{ academic_year }}  |  Batch: {{ batch }} | Section: {{ section }}</p>
+        </div>
+
+        <!-- Create new folder -->
+        <div class="create-card">
+            <h3>Create New Folder</h3>
+            <form method="POST" class="folder-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <input type="text" name="folder_name" placeholder="Folder name" required autocomplete="off">
+                <button type="submit">Create</button>
+            </form>
+        </div>
+
+        <!-- Folders grid -->
+        <div class="folder-grid">
+            {% for folder in folders %}
+            <div class="folder-card">
+                <div class="folder-actions">
+                    <i class="fas fa-pen edit-icon"
+                       onclick="openEditModal({{ folder.id }}, '{{ folder.folder_name|escapejs }}')"></i>
+                    <i class="fas fa-xmark delete-icon"
+                       onclick="openDeleteModal({{ folder.id }})"></i>
+                </div>
+
+                <a href="{% url 'upload_to_folder' course_id=folder.course.id folder_id=folder.id %}">
+                    <i class="fas fa-folder folder-icon"></i>
+                    <div class="folder-name">{{ folder.folder_name }}</div>
+                </a>
+            </div>
+            {% empty %}
+            <p style="grid-column: 1 / -1; text-align: center; color: var(--rit-gray); padding: 3rem 0;">
+                No folders created yet.
+            </p>
+            {% endfor %}
+        </div>
+
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal" onclick="closeOnBackdrop(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <h3>Edit Folder Name</h3>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="folder_id" id="editFolderId">
+                <input type="text" name="folder_name" id="editFolderName" required autocomplete="off">
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" onclick="closeModals()" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div id="deleteModal" class="modal" onclick="closeOnBackdrop(event)">
+        <div class="modal-card danger" onclick="event.stopPropagation()">
+            <h3>Delete Folder?</h3>
+            <p style="margin: 0.8rem 0 1.6rem; color: var(--rit-gray);">
+                This action cannot be undone.
+            </p>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="folder_id" id="deleteFolderId">
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="button" onclick="closeModals()" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div> <!-- end .folder-page -->
+
+<script>
+function openEditModal(id, name) {
+    document.getElementById('editFolderId').value = id;
+    document.getElementById('editFolderName').value = name;
+    document.getElementById('editModal').style.display = 'flex';
+}
+
+function openDeleteModal(id) {
+    document.getElementById('deleteFolderId').value = id;
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeModals() {
+    document.getElementById('editModal').style.display = 'none';
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+function closeOnBackdrop(e) {
+    if (e.target.classList.contains('modal')) {
+        closeModals();
+    }
+}
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModals();
+});
+</script>
+
+{% endblock %}

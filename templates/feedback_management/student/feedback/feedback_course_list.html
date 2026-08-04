@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+  :root{
+    --card:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --soft:#f8fafc;
+    --pri:#2563eb;
+    --pri2:#1e40af;
+    --ok:#16a34a;
+    --warn:#f59e0b;
+    --bad:#dc2626;
+    --r:16px;
+  }
+
+  body{
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--ink);
+  }
+
+  .wrap{ max-width: 1500px; margin: 18px auto; padding: 0 12px; }
+
+  .hero{
+    background: linear-gradient(135deg, rgba(37,99,235,.14), rgba(99,102,241,.08));
+    border:1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.06);
+  }
+  .hero-title{
+    margin:0;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .hero-sub{
+    margin-top:6px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .hero-sub .sep{ margin: 0 8px; color:#94a3b8; }
+
+  .pillbar{ display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+  .pill{
+    background: var(--soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 13px;
+    color: var(--ink);
+  }
+
+  .grid{
+    margin-top: 14px;
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+  @media (max-width: 1100px){
+    .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 700px){
+    .grid{ grid-template-columns: 1fr; }
+  }
+
+  .cardx{
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    box-shadow: 0 8px 24px rgba(0,0,0,.06);
+    padding: 14px 14px 12px;
+    display:flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+
+  .headrow{
+    display:flex;
+    gap: 10px;
+    align-items:flex-start;
+    justify-content: space-between;
+  }
+
+  .course{
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--ink);
+    line-height: 1.25;
+  }
+  .code{
+    color: var(--muted);
+    font-size: 12.5px;
+    margin-top: 3px;
+  }
+
+  .badge{
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    background: #fff;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .badge.ok{ color: var(--ok); }
+  .badge.warn{ color: #b45309; background: #fffbeb; border-color:#fde68a; }
+  .badge.bad{ color: var(--bad); background: #fef2f2; border-color:#fecaca; }
+
+  .meta{
+    margin-top: 10px;
+    background: var(--soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 10px;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .meta .rowx{
+    display:flex;
+    gap: 8px;
+    justify-content: space-between;
+    padding: 3px 0;
+    border-bottom: 1px dashed #e5e7eb;
+  }
+  .meta .rowx:last-child{ border-bottom: none; }
+  .meta .k{ color: var(--muted); }
+  .meta .v{ color: var(--ink); text-align:right; }
+
+  .window{
+    margin-top: 10px;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  .actions{
+    margin-top: auto;
+    display:flex;
+    gap: 10px;
+    padding-top: 12px;
+  }
+
+  .btnx{
+    width:100%;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration:none;
+  }
+  .btn-pri{ background: var(--pri); color:#fff; }
+  .btn-pri:hover{ background: var(--pri2); }
+  .btn-soft{ background: #fff; border-color: var(--border); color: var(--ink); }
+  .btn-soft:hover{ background: var(--soft); }
+  .btn-ok{ background: var(--ok); color:#fff; cursor:not-allowed; }
+  .btn-dis{ background: #e5e7eb; color:#374151; cursor:not-allowed; }
+</style>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+      <div>
+        <h4 class="hero-title">Course Feedback</h4>
+        <div class="hero-sub">
+          Current Year: <span style="color:var(--ink)">{{ current_year|default:"-" }}</span>
+          <span class="sep">|</span>
+          Current Semester: <span style="color:var(--ink)">{{ current_sem|default:"-" }}</span>
+        </div>
+      </div>
+
+      <div class="pillbar">
+        <span class="pill">Total Courses: {{ enrollments|length }}</span>
+      </div>
+    </div>
+  </div>
+
+  {% if enrollments %}
+    <div class="grid">
+      {% for item in enrollments %}
+        {% with e=item.obj %}
+
+        <div class="cardx">
+
+          <div class="headrow">
+            <div style="min-width:0;">
+              <div class="course">{{ e.course }}</div>
+              <div class="code">{{ e.course.course_code|default:"" }}</div>
+            </div>
+
+            {% if item.submitted %}
+              <span class="badge ok">Submitted</span>
+            {% else %}
+              {% if item.is_open %}
+                <span class="badge warn">Open</span>
+              {% else %}
+                <span class="badge bad">Closed</span>
+              {% endif %}
+            {% endif %}
+          </div>
+
+          <div class="meta">
+            <div class="rowx">
+              <div class="k">Faculty</div>
+<div class="v">{{ item.display_faculty_name }}</div>            </div>
+            {% comment %} <div class="rowx">
+              <div class="k">Department</div>
+              <div class="v">{{ e.department.department_name|default:e.department }}</div>
+            </div> {% endcomment %}
+            {% comment %} {% if e.batch %}
+              <div class="rowx">
+                <div class="k">Batch</div>
+                <div class="v">{{ e.batch }}</div>
+              </div>
+            {% endif %}
+            {% if e.section %}
+              <div class="rowx">
+                <div class="k">Section</div>
+                <div class="v">{{ e.section }}</div>
+              </div>
+            {% endif %} {% endcomment %}
+          </div>
+
+          <div class="window">
+            Window:
+            {% if item.win_start %}{{ item.win_start|date:"d M Y" }}{% else %}Not available{% endif %}
+            -
+            {% if item.win_end %}{{ item.win_end|date:"d M Y" }}{% else %}Not available{% endif %}
+          </div>
+
+          <div class="actions">
+            {% if item.submitted %}
+              <button class="btnx btn-ok" disabled>✅ Feedback Submitted</button>
+              <a class="btnx btn-soft" href="{% url 'student_feedback_form' e.id %}">View</a>
+            {% else %}
+              {% if item.is_open %}
+                <a class="btnx btn-pri" href="{% url 'student_feedback_form' e.id %}">Give Feedback</a>
+              {% else %}
+                <button class="btnx btn-dis" disabled>🔒 Feedback Closed</button>
+              {% endif %}
+            {% endif %}
+          </div>
+
+        </div>
+
+        {% endwith %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="cardx" style="margin-top:14px; padding:14px;">
+      <div style="color:var(--muted);">
+        No enrolled subjects found for your current context (Dept / Batch / Section).
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}

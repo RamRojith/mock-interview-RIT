@@ -1,0 +1,656 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+
+
+<div class="ph-page">
+  <div class="approval-alert">
+    <b>Important:</b> Configure authority approval hierarchy by creator role.  
+    Cross-department approval requires department selection.
+  </div>
+
+  <div class="ph-header">
+    <h2>Material Approval Hierarchy</h2>
+    <p>Drag roles from available list to approval hierarchy.</p>
+  </div>
+
+  <div class="ph-card">
+    <div class="ph-grid-2 align-end">
+      <div>
+        <label class="ph-label">Select Creator Role</label>
+        <select id="creatorRole" class="ph-input">
+          <option value="">Select Creator Role</option>
+          {% for r in roles %}
+            <option value="{{ r.id }}">{{ r.role }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button class="ph-btn secondary" type="button" onclick="clearAll()">Clear</button>
+    </div>
+  </div>
+
+  <div class="approval-columns">
+    <div class="ph-card">
+      <div class="ph-table-head">
+        <h4>Available Roles</h4>
+        <input id="searchAvailable" type="text" placeholder="Search role...">
+      </div>
+      <div id="availableZone" class="drop-zone"></div>
+    </div>
+
+    <div class="ph-card">
+      <div class="ph-table-head">
+        <h4>Approval Hierarchy</h4>
+        <input id="searchHierarchy" type="text" placeholder="Search hierarchy...">
+      </div>
+      <div id="hierarchyZone" class="drop-zone"></div>
+    </div>
+  </div>
+
+  <div id="msgBox"></div>
+
+  <div class="sticky-submit">
+    <span>Save the approval hierarchy for selected creator role.</span>
+    <button id="submitBtn" class="ph-btn" type="button">Submit Hierarchy</button>
+  </div>
+</div>
+
+<script>
+const ROLES = [
+  {% for r in roles %}
+    { id: "{{ r.id }}", name: "{{ r.role|escapejs }}" },
+  {% endfor %}
+];
+
+const DEPARTMENTS = [
+  {% for d in departments %}
+    { id: "{{ d.id }}", name: "{{ d.Department|escapejs }}" },
+  {% endfor %}
+];
+
+let hierarchy = [];
+let availableIds = ROLES.map(r => String(r.id));
+let draggedData = null;
+let searchAvailableText = "";
+let searchHierarchyText = "";
+
+const availableZone = document.getElementById("availableZone");
+const hierarchyZone = document.getElementById("hierarchyZone");
+const creatorRole = document.getElementById("creatorRole");
+const msgBox = document.getElementById("msgBox");
+
+function getRoleById(id) {
+  return ROLES.find(r => String(r.id) === String(id));
+}
+
+function escapeHtml(text) {
+  return String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function matches(name, query) {
+  return String(name).toLowerCase().includes(String(query).toLowerCase());
+}
+
+function render() {
+  renderAvailable();
+  renderHierarchy();
+}
+
+function renderAvailable() {
+  availableZone.innerHTML = "";
+
+  const filtered = availableIds.filter(id => {
+    const role = getRoleById(id);
+    return role && matches(role.name, searchAvailableText);
+  });
+
+  if (!filtered.length) {
+    availableZone.innerHTML = `<div class="empty-note">No roles available</div>`;
+    return;
+  }
+
+  filtered.forEach(id => {
+    const role = getRoleById(id);
+
+    const card = document.createElement("div");
+    card.className = "role-card";
+    card.draggable = true;
+    card.innerHTML = `
+      <span class="drag">⋮⋮</span>
+      <strong>${escapeHtml(role.name)}</strong>
+      <button type="button" onclick="addToHierarchy('${role.id}')">Add</button>
+    `;
+
+    card.addEventListener("dragstart", () => {
+      draggedData = { source: "available", id: role.id };
+      card.classList.add("dragging");
+    });
+
+    card.addEventListener("dragend", () => {
+      draggedData = null;
+      card.classList.remove("dragging");
+    });
+
+    availableZone.appendChild(card);
+  });
+}
+
+function renderHierarchy() {
+  hierarchyZone.innerHTML = "";
+
+  const filtered = hierarchy
+    .map((item, index) => ({ ...item, originalIndex: index }))
+    .filter(item => {
+      const role = getRoleById(item.id);
+      return role && matches(role.name, searchHierarchyText);
+    });
+
+  if (!filtered.length) {
+    hierarchyZone.innerHTML = `<div class="empty-note">Drag roles here</div>`;
+    return;
+  }
+
+  filtered.forEach(item => {
+    const role = getRoleById(item.id);
+    const index = item.originalIndex;
+
+    const card = document.createElement("div");
+    card.className = "hierarchy-card";
+    card.draggable = true;
+    card.innerHTML = `
+      <div class="level-pill">Level ${index + 1}</div>
+
+      <div class="role-body">
+        <div class="role-title">
+          <span class="drag">⋮⋮</span>
+          <strong>${escapeHtml(role.name)}</strong>
+        </div>
+
+        <div class="role-controls">
+          <label class="check-wrap">
+            <input type="checkbox" ${item.isCrossDepartment ? "checked" : ""} onchange="toggleCross(${index}, this)">
+            Cross Dept
+          </label>
+
+          <select onchange="setDept(${index}, this)" ${item.isCrossDepartment ? "" : "disabled"}>
+            <option value="">Select Department</option>
+            ${DEPARTMENTS.map(d => `
+              <option value="${d.id}" ${String(item.departmentId) === String(d.id) ? "selected" : ""}>
+                ${escapeHtml(d.name)}
+              </option>
+            `).join("")}
+          </select>
+
+          <button type="button" class="danger-btn" onclick="removeFromHierarchy(${index})">Remove</button>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener("dragstart", () => {
+      draggedData = { source: "hierarchy", index: index };
+      card.classList.add("dragging");
+    });
+
+    card.addEventListener("dragend", () => {
+      draggedData = null;
+      card.classList.remove("dragging");
+    });
+
+    card.addEventListener("dragover", e => e.preventDefault());
+
+    card.addEventListener("drop", e => {
+      e.preventDefault();
+
+      if (!draggedData) return;
+
+      if (draggedData.source === "available") {
+        addToHierarchyAt(draggedData.id, index);
+      } else {
+        reorderHierarchy(draggedData.index, index);
+      }
+    });
+
+    hierarchyZone.appendChild(card);
+  });
+}
+
+function addToHierarchy(id) {
+  if (hierarchy.some(x => String(x.id) === String(id))) return;
+
+  hierarchy.push({
+    id: String(id),
+    isCrossDepartment: false,
+    departmentId: null
+  });
+
+  availableIds = availableIds.filter(x => String(x) !== String(id));
+  render();
+}
+
+function addToHierarchyAt(id, index) {
+  if (hierarchy.some(x => String(x.id) === String(id))) return;
+
+  hierarchy.splice(index, 0, {
+    id: String(id),
+    isCrossDepartment: false,
+    departmentId: null
+  });
+
+  availableIds = availableIds.filter(x => String(x) !== String(id));
+  render();
+}
+
+function removeFromHierarchy(index) {
+  const removed = hierarchy.splice(index, 1)[0];
+  if (removed) availableIds.push(String(removed.id));
+  render();
+}
+
+function reorderHierarchy(fromIndex, toIndex) {
+  const moved = hierarchy.splice(fromIndex, 1)[0];
+  hierarchy.splice(toIndex, 0, moved);
+  render();
+}
+
+function toggleCross(index, el) {
+  hierarchy[index].isCrossDepartment = el.checked;
+  if (!el.checked) hierarchy[index].departmentId = null;
+  render();
+}
+
+function setDept(index, el) {
+  hierarchy[index].departmentId = el.value || null;
+}
+
+function clearAll() {
+  hierarchy = [];
+  availableIds = ROLES.map(r => String(r.id));
+  creatorRole.value = "";
+  msgBox.innerHTML = "";
+  render();
+}
+
+availableZone.addEventListener("dragover", e => e.preventDefault());
+hierarchyZone.addEventListener("dragover", e => e.preventDefault());
+
+hierarchyZone.addEventListener("drop", e => {
+  e.preventDefault();
+  if (draggedData && draggedData.source === "available") {
+    addToHierarchy(draggedData.id);
+  }
+});
+
+availableZone.addEventListener("drop", e => {
+  e.preventDefault();
+  if (draggedData && draggedData.source === "hierarchy") {
+    removeFromHierarchy(draggedData.index);
+  }
+});
+
+document.getElementById("searchAvailable").addEventListener("input", function () {
+  searchAvailableText = this.value;
+  renderAvailable();
+});
+
+document.getElementById("searchHierarchy").addEventListener("input", function () {
+  searchHierarchyText = this.value;
+  renderHierarchy();
+});
+
+document.getElementById("submitBtn").onclick = function () {
+  if (!creatorRole.value) {
+    showMsg("danger", "Select creator role.");
+    return;
+  }
+
+  if (!hierarchy.length) {
+    showMsg("danger", "Add at least one approver role.");
+    return;
+  }
+
+  for (const item of hierarchy) {
+    if (item.isCrossDepartment && !item.departmentId) {
+      showMsg("danger", "Select department for all cross-department approvers.");
+      return;
+    }
+  }
+
+  fetch(window.location.href, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": "{{ csrf_token }}"
+    },
+    body: JSON.stringify({
+      creatorRole: creatorRole.value,
+      roleHierarchy: hierarchy
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.error) {
+      showMsg("danger", data.error);
+    } else {
+      showMsg("success", data.message);
+    }
+  })
+  .catch(() => showMsg("danger", "Something went wrong."));
+};
+
+function showMsg(type, text) {
+  msgBox.innerHTML = `<div class="alert alert-${type} mt-3">${escapeHtml(text)}</div>`;
+}
+
+render();
+
+creatorRole.addEventListener("change", function () {
+  const creatorRoleId = this.value;
+
+  hierarchy = [];
+  availableIds = ROLES.map(r => String(r.id));
+  msgBox.innerHTML = "";
+
+  if (!creatorRoleId) {
+    render();
+    return;
+  }
+
+  fetch(`${window.location.pathname}?creator_role_id=${creatorRoleId}`)
+    .then(res => res.json())
+    .then(data => {
+      hierarchy = (data.hierarchy || []).map(item => ({
+        id: String(item.id),
+        isCrossDepartment: item.isCrossDepartment,
+        departmentId: item.departmentId ? String(item.departmentId) : null
+      }));
+
+      const usedIds = hierarchy.map(item => String(item.id));
+
+      availableIds = ROLES
+        .map(r => String(r.id))
+        .filter(id => !usedIds.includes(id));
+
+      render();
+    })
+    .catch(() => {
+      showMsg("danger", "Unable to load existing hierarchy.");
+      render();
+    });
+});
+
+</script>
+
+<style>
+.ph-page {
+  padding: 24px;
+  background: #f6f8fb;
+}
+
+.approval-alert {
+  background: #fff7e6;
+  border-left: 5px solid #f59e0b;
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-bottom: 18px;
+}
+
+.ph-header h2 {
+  margin: 0;
+  color: #1f2937;
+}
+
+.ph-header p {
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+.ph-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.ph-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+}
+
+.align-end {
+  align-items: end;
+}
+
+.ph-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #374151;
+}
+
+.ph-input,
+.ph-table-head input,
+.role-controls select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  outline: none;
+}
+
+.ph-input:focus,
+.ph-table-head input:focus,
+.role-controls select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.approval-columns {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.ph-table-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.ph-table-head h4 {
+  margin: 0;
+  color: #111827;
+}
+
+.drop-zone {
+  min-height: 360px;
+  padding: 14px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 14px;
+  background: #f8fafc;
+  transition: 0.2s ease;
+}
+
+.drop-zone.drag-over {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
+.role-card,
+.hierarchy-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: grab;
+  transition: 0.2s ease;
+}
+
+.role-card:hover,
+.hierarchy-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
+}
+
+.role-card.dragging,
+.hierarchy-card.dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+}
+
+.drag {
+  color: #94a3b8;
+  font-size: 18px;
+  cursor: grab;
+}
+
+.role-card strong,
+.role-title strong {
+  color: #1f2937;
+}
+
+.role-card button,
+.ph-btn {
+  margin-left: auto;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 14px;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ph-btn.secondary {
+  background: #64748b;
+}
+
+.role-card button:hover,
+.ph-btn:hover {
+  filter: brightness(0.95);
+}
+
+.hierarchy-card {
+  align-items: flex-start;
+}
+
+.level-pill {
+  min-width: 72px;
+  text-align: center;
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.role-body {
+  flex: 1;
+}
+
+.role-title {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.role-controls {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.check-wrap {
+  white-space: nowrap;
+  color: #374151;
+  font-size: 14px;
+}
+
+.danger-btn {
+  border: none;
+  background: #fee2e2;
+  color: #b91c1c;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.empty-note {
+  height: 300px;
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.sticky-submit {
+  position: sticky;
+  bottom: 0;
+  margin-top: 20px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  padding: 14px 18px;
+  border-radius: 14px 14px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 -8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.alert {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.alert-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.alert-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.mt-3 {
+  margin-top: 16px;
+}
+
+@media (max-width: 900px) {
+  .approval-columns,
+  .ph-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .sticky-submit {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .role-controls {
+    grid-template-columns: 1fr;
+  }
+}
+</style>  
+
+{% endblock %}

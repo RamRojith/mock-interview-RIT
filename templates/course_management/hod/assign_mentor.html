@@ -1,0 +1,756 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load cm_tags %}
+
+{% block title %}Assign Mentor{% endblock %}
+
+{% block content %}
+
+<style>
+.assign-mentor {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.assign-mentor .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.assign-mentor .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.assign-mentor .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.assign-mentor .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.assign-mentor .main-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.assign-mentor .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem;
+  border-bottom: none;
+}
+
+.assign-mentor .card-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.assign-mentor .card-header i {
+  margin-right: 0.75rem;
+}
+
+.assign-mentor .card-body {
+  padding: 2rem;
+}
+
+.assign-mentor .form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.assign-mentor .form-control,
+.assign-mentor .form-select {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.assign-mentor .form-control:focus,
+.assign-mentor .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+}
+
+.assign-mentor .stats-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  height: 100%;
+}
+
+.assign-mentor .stats-card small {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.assign-mentor .stats-card .h5 {
+  color: #1a4b8c;
+  font-weight: 800;
+  margin: 0.5rem 0 0 0;
+}
+
+.assign-mentor .students-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.assign-mentor .students-card .card-header {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.assign-mentor .students-card .card-header h5 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.assign-mentor .students-card .card-header i {
+  margin-right: 0.5rem;
+}
+
+.assign-mentor .info-badge {
+  background: rgba(255, 255, 255, 0.9);
+  color: #1a4b8c;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.assign-mentor .table-container {
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+}
+
+.assign-mentor .table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.assign-mentor .table th {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #374151;
+  font-weight: 700;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.assign-mentor .table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #4b5563;
+  vertical-align: middle;
+}
+
+.assign-mentor .table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.assign-mentor .table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.assign-mentor .table-info {
+  background-color: #f0f9ff !important;
+}
+
+.assign-mentor .badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.assign-mentor .badge.bg-info {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  color: white;
+}
+
+.assign-mentor .badge.bg-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: white;
+}
+
+.assign-mentor .badge.bg-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: white;
+}
+
+.assign-mentor .badge.bg-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: white;
+}
+
+.assign-mentor .badge.bg-light {
+  background: #f8fafc !important;
+  color: #374151;
+  border: 1px solid #e2e8f0;
+}
+
+.assign-mentor .form-check-input {
+  width: 1.2em;
+  height: 1.2em;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.assign-mentor .form-check-input:checked {
+  background-color: #1a4b8c;
+  border-color: #1a4b8c;
+}
+
+.assign-mentor .form-check-input:focus {
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+}
+
+.assign-mentor .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.assign-mentor .btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.assign-mentor .btn-primary:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.assign-mentor .btn-outline-secondary {
+  background: white;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.assign-mentor .btn-outline-secondary:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+}
+
+.assign-mentor .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.assign-mentor .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.assign-mentor .selection-info {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin-top: 1rem;
+}
+
+.assign-mentor .selection-info small {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.assign-mentor .selection-info #selectedCount {
+  color: #1a4b8c;
+  font-weight: 700;
+}
+
+.assign-mentor .text-success {
+  color: #059669 !important;
+}
+
+.assign-mentor .text-muted {
+  color: #6b7280 !important;
+}
+
+/* DataTables Customization */
+.assign-mentor .dataTables_wrapper {
+  margin-top: 1rem;
+}
+
+.assign-mentor .dataTables_length,
+.assign-mentor .dataTables_filter {
+  margin-bottom: 1rem;
+}
+
+.assign-mentor .dataTables_length select,
+.assign-mentor .dataTables_filter input {
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem;
+}
+
+.assign-mentor .dataTables_paginate .paginate_button {
+  border-radius: 8px !important;
+  margin: 0 2px;
+  border: 1px solid #d1d5db !important;
+}
+
+.assign-mentor .dataTables_paginate .paginate_button.current {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%) !important;
+  color: white !important;
+  border: none !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .assign-mentor .page-header {
+    padding: 1rem;
+  }
+  
+  .assign-mentor .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .assign-mentor .card-body {
+    padding: 1.5rem;
+  }
+  
+  .assign-mentor .students-card .card-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .assign-mentor {
+    padding: 1rem;
+  }
+  
+  .assign-mentor .page-header {
+    padding: 0.75rem;
+  }
+  
+  .assign-mentor .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .assign-mentor .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .assign-mentor .card-body {
+    padding: 1rem;
+  }
+  
+  .assign-mentor .table {
+    font-size: 0.8rem;
+  }
+  
+  .assign-mentor .table th,
+  .assign-mentor .table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .assign-mentor .action-buttons {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .assign-mentor .btn-primary,
+  .assign-mentor .btn-outline-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .assign-mentor .card-header h3 {
+    font-size: 1.25rem;
+  }
+  
+  .assign-mentor .students-card .card-header h5 {
+    font-size: 1rem;
+  }
+  
+  .assign-mentor .stats-grid {
+    gap: 0.5rem;
+  }
+  
+  .assign-mentor .stats-card {
+    padding: 0.75rem;
+  }
+}
+</style>
+
+<div class="assign-mentor">
+  <div class="page-header">
+    <h1><i class="fas fa-user-tie me-2"></i>Assign Mentor to Students</h1>
+    <p class="header-subtitle">Manage student mentorship assignments across batches and sections</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Main Card -->
+    <div class="main-card">
+      <div class="card-header">
+        <h3><i class="fas fa-user-tie me-2"></i>Assign Mentor to Students</h3>
+      </div>
+      
+      <div class="card-body">
+        <!-- Messages -->
+        
+
+        <!-- Batch Filter -->
+        <form method="GET" class="mb-4">
+          <div class="row">
+            <div class="col-md-4">
+              <label for="batch" class="form-label">Select Batch:</label>
+              <select name="batch" id="batch" class="form-select" onchange="this.form.submit()">
+                <option value="">All Batches</option>
+                {% for batch in batches %}
+                  <option value="{{ batch }}" {% if selected_batch == batch %}selected{% endif %}>
+                    {{ batch }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </form>
+
+        <!-- Main Form -->
+        <form method="POST" id="assignForm">
+          {% csrf_token %}
+          
+          <div class="row mb-4">
+            <!-- Mentor Selection -->
+            <div class="col-md-6">
+              <label for="mentor" class="form-label">Select Mentor:</label>
+              <select name="mentor" id="mentor" class="form-select" required>
+                <option value="">-- Select Faculty --</option>
+                {% for faculty in faculty_list %}
+                  <option value="{{ faculty.id }}">
+                    {{ faculty.name }} | {{ faculty.designation }} | ({{ faculty.faculty_id }})
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Stats -->
+            <div class="col-md-6">
+              <div class="row g-2">
+                <div class="col-6">
+                  <div class="stats-card">
+                    <small class="text-muted">Total Students</small>
+                    <div class="h5 mb-0">{{ total_students }}</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="stats-card">
+                    <small class="text-muted">Assigned</small>
+                    <div class="h5 mb-0 text-success">{{ assigned_count }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Students Table -->
+          {% if students %}
+          <div class="students-card">
+            <div class="card-header">
+              <h5><i class="fas fa-users me-2"></i>Students ({{ available_count }} Available)</h5>
+              <div class="info-badge">
+                <i class="fas fa-info-circle me-1"></i>
+                ✓ All students can be selected for re-assignment
+              </div>
+            </div>
+            <div class="table-container">
+              <div class="table-responsive">
+                <table id="studentsTable" class="table">
+                  <thead>
+                    <tr>
+                      <th width="8%" class="text-center">
+                        <input type="checkbox" id="selectAll" class="form-check-input">
+                      </th>
+                      <th>Reg No</th>
+                      <th>Name</th>
+                      <th>Section</th>
+                      <th>Batch</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for student in students %}
+                    <tr class="{% if student.reg_no in assigned_dict %}table-info{% endif %}">
+                      <td class="text-center">
+                        <input type="checkbox" 
+                               name="students" 
+                               value="{{ student.reg_no }}"
+                               class="form-check-input student-checkbox"
+                               id="student_{{ student.reg_no|slugify }}"
+                               data-regno="{{ student.reg_no }}">
+                      </td>
+                      <td>
+                        <strong>{{ student.reg_no }}</strong>
+                      </td>
+                      <td><strong>{{ student.name|default:"N/A" }}</strong></td>
+                      <td>
+                        <span class="badge bg-info">{{ student.section|default:"N/A" }}</span>
+                      </td>
+                      <td>
+                        <span class="badge bg-primary">{{ student.batch|default:"N/A" }}</span>
+                      </td>
+                      <td>
+                        {% if student.reg_no in assigned_dict %}
+                          {% with mentor_id=assigned_dict|get_item:student.reg_no %}
+                            {% with mentor_detail=mentor_details|get_item:mentor_id %}
+                              {% if mentor_detail %}
+                                <span class="badge bg-success me-1">
+                                  <i class="fas fa-user-tie me-1"></i> Assigned
+                                </span>
+                                <span class="badge bg-light">
+                                  {{ mentor_detail.username }}
+                                </span>
+                                <div class="mt-1 small text-muted">
+                                  <span class="text-capitalize">{{ mentor_detail.role }}</span>
+                                </div>
+                              {% else %}
+                                <span class="badge bg-success">
+                                  Assigned to {{ mentor_id }}
+                                </span>
+                              {% endif %}
+                            {% endwith %}
+                          {% endwith %}
+                        {% else %}
+                          <span class="badge bg-warning">
+                            <i class="fas fa-user-plus me-1"></i> Available
+                          </span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="row mt-4">
+            <div class="col-md-8">
+              <div class="d-flex gap-2 action-buttons">
+                <button type="submit" class="btn btn-primary" id="assignBtn" disabled>
+                  <i class="fas fa-user-plus me-2"></i>
+                  <span id="btnText">Assign/Reassign Mentor</span>
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                  <i class="fas fa-undo me-2"></i>Reset
+                </button>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="selection-info">
+                <small>
+                  Selected: <span id="selectedCount">0</span> / {{ total_students }} students
+                  {% if assigned_count > 0 %}
+                    <br><span class="text-success">
+                      <i class="fas fa-info-circle me-1"></i>
+                      {{ assigned_count }} students can be re-assigned
+                    </span>
+                  {% endif %}
+                </small>
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <h4>No Students Found</h4>
+            <p class="text-muted">No students found for the selected criteria.</p>
+          </div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DataTables CSS & JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    var table = $('#studentsTable').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        pageLength: 100, 
+        order: [[1, 'asc']], // Default sort by Reg No
+        lengthMenu: [50 , 100, 150, 200],
+        columnDefs: [
+            { orderable: false, targets: 0 } // Disable sorting on checkbox column
+        ],
+        language: {
+            search: "Search students:",
+            lengthMenu: "Show _MENU_ students",
+            info: "Showing _START_ to _END_ of _TOTAL_ students"
+        }
+    });
+
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const mentorSelect = document.getElementById('mentor');
+    const assignBtn = document.getElementById('assignBtn');
+    const selectedCount = document.getElementById('selectedCount');
+    const btnText = document.getElementById('btnText');
+
+    // Helper to get all visible checkboxes in DataTable
+    function getVisibleCheckboxes() {
+        return $('#studentsTable').find('tbody input.student-checkbox');
+    }
+
+    function updateSelectedCount() {
+        const selected = getVisibleCheckboxes().filter(':checked').length;
+        selectedCount.textContent = selected;
+    }
+
+    function updateAssignButton() {
+        const hasMentor = mentorSelect && mentorSelect.value !== '';
+        const selectedCheckboxes = getVisibleCheckboxes().filter(':checked');
+        const hasStudents = selectedCheckboxes.length > 0;
+        assignBtn.disabled = !(hasMentor && hasStudents);
+
+        if (hasMentor && hasStudents) {
+            const selectedAssigned = selectedCheckboxes.filter(function() {
+                return $(this).closest('tr').hasClass('table-info');
+            }).length;
+            const selectedAvailable = selectedCheckboxes.length - selectedAssigned;
+
+            if (selectedAssigned > 0 && selectedAvailable > 0) {
+                btnText.textContent = `Assign/Reassign (${selectedAvailable}/${selectedAssigned})`;
+            } else if (selectedAssigned > 0) {
+                btnText.textContent = `Reassign ${selectedAssigned} Student(s)`;
+            } else {
+                btnText.textContent = `Assign ${selectedAvailable} Student(s)`;
+            }
+        }
+    }
+
+    // Select All functionality
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            const checkboxes = getVisibleCheckboxes();
+            checkboxes.prop('checked', this.checked);
+            updateSelectedCount();
+            updateAssignButton();
+        });
+    }
+
+    // Individual checkbox change
+    $('#studentsTable').on('change', 'input.student-checkbox', function() {
+        updateSelectedCount();
+
+        const checkboxes = getVisibleCheckboxes();
+        const checkedCount = checkboxes.filter(':checked').length;
+        const totalCount = checkboxes.length;
+
+        if (selectAllCheckbox) {
+            if (checkedCount === 0) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = false;
+            } else if (checkedCount === totalCount) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = true;
+            } else {
+                selectAllCheckbox.indeterminate = true;
+                selectAllCheckbox.checked = false;
+            }
+        }
+
+        updateAssignButton();
+    });
+
+    // Mentor selection change
+    if (mentorSelect) {
+        mentorSelect.addEventListener('change', updateAssignButton);
+    }
+
+    updateSelectedCount();
+    updateAssignButton();
+});
+
+// Reset form
+function resetForm() {
+    document.getElementById('assignForm').reset();
+    document.getElementById('assignBtn').disabled = true;
+    document.getElementById('selectAll').checked = false;
+    document.getElementById('selectedCount').textContent = '0';
+    document.getElementById('btnText').textContent = 'Assign/Reassign Mentor';
+    document.getElementById('mentor').focus();
+
+    // Uncheck all checkboxes
+    $('#studentsTable').find('tbody input.student-checkbox').prop('checked', false);
+}
+</script>
+{% endblock %}

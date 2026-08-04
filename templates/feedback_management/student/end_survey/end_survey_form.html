@@ -1,0 +1,923 @@
+{% extends "base.html" %}
+{% load static %}
+{% load feedback_tags %}
+{% block content %}
+
+<style>
+  :root{
+    --card: #ffffff;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --border: #e5e7eb;
+    --soft: #f8fafc;
+    --pri: #2563eb;
+    --pri2: #1e40af;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --r: 18px;
+  }
+
+  *,
+  *::before,
+  *::after{
+    box-sizing: border-box;
+  }
+
+  html,
+  body{
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body{
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--ink);
+    background: #f8fafc;
+  }
+
+  .fb-wrap{
+    width: 100%;
+    max-width: 1500px;
+    margin: 22px auto;
+    padding: 0 16px;
+  }
+
+  .fb-card{
+    width: 100%;
+    min-width: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+  }
+
+  .fb-head{
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(
+      135deg,
+      rgba(37, 99, 235, 0.10),
+      rgba(99, 102, 241, 0.07)
+    );
+  }
+
+  .fb-title{
+    margin: 0;
+    color: var(--ink);
+    font-size: clamp(1.55rem, 2vw, 2rem);
+    font-weight: 800;
+    line-height: 1.25;
+    text-align: left;
+  }
+
+  .fb-sub{
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.6;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .head-badges{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .badge-light{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #ffffff;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .badge-open{
+    border-color: #bbf7d0;
+    background: #ecfdf5;
+    color: #166534;
+  }
+
+  .badge-closed{
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #991b1b;
+  }
+
+  .window-info{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .window-item{
+    padding: 7px 12px;
+    border: 1px solid #dbe4ff;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .questions-wrap{
+    width: 100%;
+    min-width: 0;
+    padding: 22px;
+  }
+
+  .category-block{
+    margin-bottom: 24px;
+  }
+
+  .category-title{
+    width: 100%;
+    margin-bottom: 14px;
+    padding: 13px 16px;
+    border: 1px solid #dbe4ff;
+    border-radius: 14px;
+    background: #eef2ff;
+    color: #1e3a8a;
+    font-size: 17px;
+    font-weight: 800;
+  }
+
+  .question-row{
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+    margin-bottom: 14px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.03);
+    overflow: hidden;
+  }
+
+  .question-left{
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .question-number{
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+    border-radius: 50%;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .question-text{
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .co-code{
+    width: fit-content;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    padding: 6px 12px;
+    border: 1px solid #bfdbfe;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+  }
+
+  .co-description{
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.65;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .question-right{
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .grade-option{
+    width: 100%;
+    min-width: 0;
+    display: flex;
+  }
+
+  .grade-option input[type="radio"]{
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .grade-label{
+    width: 100%;
+    min-width: 0;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #334155;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    user-select: none;
+  }
+
+  .grade-label::before{
+    content: "";
+    width: 16px;
+    min-width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    display: inline-block;
+    border: 2px solid #94a3b8;
+    border-radius: 50%;
+    background: #ffffff;
+    transition: all 0.2s ease;
+  }
+
+  .grade-label:hover{
+    border-color: #94a3b8;
+    background: #f8fafc;
+    transform: translateY(-1px);
+  }
+
+  .grade-option input[type="radio"]:focus-visible + .grade-label{
+    outline: 3px solid rgba(37, 99, 235, 0.25);
+    outline-offset: 2px;
+  }
+
+  .grade-option input[type="radio"]:checked + .grade-label{
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+
+  .grade-option input[type="radio"]:checked + .grade-label::before{
+    border-color: #2563eb;
+    background: radial-gradient(
+      circle at center,
+      #2563eb 0,
+      #2563eb 44%,
+      #ffffff 47%,
+      #ffffff 100%
+    );
+  }
+
+  .submitted-badge{
+    width: 100%;
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 16px;
+    border: 1px solid #bbf7d0;
+    border-radius: 14px;
+    background: #ecfdf5;
+    color: #166534;
+    font-size: 14px;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .selected-grade{
+    width: 100%;
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border: 1px solid #bbf7d0;
+    border-radius: 14px;
+    background: #ecfdf5;
+    color: #166534;
+    font-size: 14px;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .empty-message{
+    width: 100%;
+    padding: 18px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 14px;
+    background: #f8fafc;
+    color: var(--muted);
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .closed-message{
+    width: 100%;
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    border: 1px solid #fecaca;
+    border-radius: 14px;
+    background: #fef2f2;
+    color: #991b1b;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  .summary-box{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 15px 22px;
+    border-top: 1px solid var(--border);
+    background: #f8fafc;
+    color: #166534;
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .summary-title{
+    color: #334155;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .actions{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 16px 22px 22px;
+    border-top: 1px solid var(--border);
+    background: #ffffff;
+  }
+
+  .btn{
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-weight: 700;
+  }
+
+  .btn-primary{
+    background: var(--pri);
+    border-color: var(--pri);
+  }
+
+  .btn-primary:hover{
+    background: var(--pri2);
+    border-color: var(--pri2);
+  }
+
+  @media (min-width: 1500px){
+    .question-row{
+      grid-template-columns: minmax(360px, 1.25fr) minmax(680px, 1.75fr);
+      align-items: center;
+    }
+  }
+
+  @media (max-width: 1100px){
+    .fb-wrap{
+      margin: 16px auto;
+      padding: 0 12px;
+    }
+
+    .fb-head{
+      padding: 20px 18px 16px;
+    }
+
+    .questions-wrap{
+      padding: 18px;
+    }
+
+    .question-row{
+      padding: 16px;
+    }
+
+    .question-right{
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .grade-label{
+      min-height: 48px;
+      padding: 10px;
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 768px){
+    .fb-wrap{
+      margin: 10px auto;
+      padding: 0 8px;
+    }
+
+    .fb-card{
+      border-radius: 14px;
+    }
+
+    .fb-head{
+      padding: 18px 15px 15px;
+    }
+
+    .fb-title{
+      font-size: 1.55rem;
+    }
+
+    .fb-sub{
+      font-size: 14px;
+    }
+
+    .questions-wrap{
+      padding: 14px;
+    }
+
+    .category-title{
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 16px;
+    }
+
+    .question-row{
+      gap: 14px;
+      padding: 14px;
+      border-radius: 14px;
+    }
+
+    .question-left{
+      gap: 10px;
+    }
+
+    .question-number{
+      width: 30px;
+      min-width: 30px;
+      height: 30px;
+      font-size: 13px;
+    }
+
+    .question-text{
+      font-size: 14px;
+    }
+
+    .co-description{
+      font-size: 14px;
+    }
+
+    .question-right{
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .grade-label{
+      min-height: 46px;
+      padding: 9px 8px;
+      border-radius: 12px;
+      font-size: 12.5px;
+    }
+
+    .submitted-badge,
+    .selected-grade{
+      border-radius: 12px;
+    }
+
+    .summary-box{
+      padding: 14px;
+    }
+
+    .actions{
+      padding: 14px;
+    }
+
+    .actions .btn{
+      flex: 1 1 130px;
+    }
+  }
+
+  @media (max-width: 480px){
+    .fb-wrap{
+      padding: 0 5px;
+    }
+
+    .fb-head{
+      padding: 16px 13px 14px;
+    }
+
+    .fb-title{
+      font-size: 1.35rem;
+    }
+
+    .questions-wrap{
+      padding: 10px;
+    }
+
+    .question-row{
+      padding: 12px;
+    }
+
+    .question-right{
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .grade-label{
+      min-height: 44px;
+      justify-content: flex-start;
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+
+    .actions{
+      flex-direction: column-reverse;
+    }
+
+    .actions .btn{
+      width: 100%;
+      flex: none;
+    }
+  }
+</style>
+
+<div class="fb-wrap">
+  <div class="fb-card">
+
+    <div class="fb-head">
+
+      <h4 class="fb-title">
+        Course End Survey
+      </h4>
+
+      <div class="fb-sub">
+
+        {% if enrollment.course.course_name %}
+          {{ enrollment.course.course_name }}
+        {% elif enrollment.course.title %}
+          {{ enrollment.course.title }}
+        {% else %}
+          {{ course }}
+        {% endif %}
+
+        {% if enrollment.course.course_code %}
+          — {{ enrollment.course.course_code }}
+        {% endif %}
+
+        {% if enrollment.faculty %}
+          |
+          {% if enrollment.faculty.name %}
+            {{ enrollment.faculty.name }}
+          {% elif enrollment.faculty.faculty_name %}
+            {{ enrollment.faculty.faculty_name }}
+          {% else %}
+            {{ enrollment.faculty }}
+          {% endif %}
+        {% endif %}
+
+      </div>
+
+      <div class="head-badges">
+
+        {% if is_open %}
+          <span class="badge-light badge-open">
+            Survey Open
+          </span>
+        {% else %}
+          <span class="badge-light badge-closed">
+            Survey Closed
+          </span>
+        {% endif %}
+
+        {% if already_submitted %}
+          <span class="badge-light badge-open">
+            Submitted
+          </span>
+        {% endif %}
+
+      </div>
+
+      {% if window_start or window_end %}
+        <div class="window-info">
+
+          {% if window_start %}
+            <span class="window-item">
+              Opens:
+              {{ window_start|date:"d M Y, h:i A" }}
+            </span>
+          {% endif %}
+
+          {% if window_end %}
+            <span class="window-item">
+              Closes:
+              {{ window_end|date:"d M Y, h:i A" }}
+            </span>
+          {% endif %}
+
+        </div>
+      {% endif %}
+
+    </div>
+
+    <form method="POST" id="courseEndSurveyForm">
+      {% csrf_token %}
+
+      <input
+        type="hidden"
+        name="enrollment_id"
+        value="{{ enrollment.id }}"
+      >
+
+      <div class="questions-wrap">
+
+        <div class="category-title">
+          Course Outcome Assessment
+        </div>
+
+        {% if not is_open and not already_submitted %}
+          <div class="closed-message">
+            This course end survey is currently closed. You cannot submit responses now.
+          </div>
+        {% endif %}
+
+        {% for item in survey_questions %}
+
+          <div class="question-row">
+
+            <div class="question-left">
+
+              <div class="question-number">
+                {{ forloop.counter }}
+              </div>
+
+              <div class="question-text">
+
+                <div class="co-code">
+                  {{ item.co_label|default:"CO" }}
+                </div>
+
+                <div class="co-description">
+                  {{ item.question }}
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="question-right">
+
+              {% if already_submitted %}
+
+                {% if item.submission %}
+
+                  <span class="selected-grade">
+                    Submitted
+                    
+                  </span>
+
+                {% else %}
+
+                  <span class="submitted-badge">
+                    Submitted
+                  </span>
+
+                {% endif %}
+
+              {% elif is_open %}
+
+                {% for g in grade_options %}
+
+                  <div class="grade-option">
+
+                    <input
+                      type="radio"
+                      id="co_{{ item.mapping_id }}_grade_{{ g.id }}"
+                      name="co_{{ item.mapping_id }}"
+                      value="{{ g.id }}"
+                      required
+                    >
+
+                    <label
+                      for="co_{{ item.mapping_id }}_grade_{{ g.id }}"
+                      class="grade-label"
+                    >
+                      {{ g.grade }}
+                    </label>
+
+                  </div>
+
+                {% endfor %}
+
+              {% else %}
+
+                <span class="submitted-badge">
+                  Survey Closed
+                </span>
+
+              {% endif %}
+
+            </div>
+
+          </div>
+
+        {% empty %}
+
+          <div class="empty-message">
+            No course outcome questions are available for this subject.
+          </div>
+
+        {% endfor %}
+
+      </div>
+
+      {% if already_submitted %}
+
+  
+
+      {% elif survey_questions and is_open %}
+
+        <div class="summary-box">
+          <span class="summary-title">
+            Please answer all course outcome questions before submitting.
+          </span>
+        </div>
+
+      {% endif %}
+
+      <div class="actions">
+
+        <a
+          href="{% url 'course_end_survey' %}"
+          class="btn btn-secondary"
+        >
+          Back
+        </a>
+
+        {% if not already_submitted and is_open and survey_questions %}
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            id="surveySubmitButton"
+          >
+            Submit
+          </button>
+
+        {% endif %}
+
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const msgWrap = document.getElementById("msgWrap");
+  const surveyForm = document.getElementById("courseEndSurveyForm");
+  const submitButton = document.getElementById("surveySubmitButton");
+
+  if (msgWrap) {
+    setTimeout(function () {
+      msgWrap.style.transition = "opacity .4s ease";
+      msgWrap.style.opacity = "0";
+
+      setTimeout(function () {
+        if (msgWrap) {
+          msgWrap.remove();
+        }
+      }, 450);
+    }, 3000);
+  }
+
+  if (surveyForm && submitButton) {
+
+    surveyForm.addEventListener("submit", function (event) {
+
+      const questionNames = new Set();
+
+      surveyForm
+        .querySelectorAll('input[type="radio"]')
+        .forEach(function (radio) {
+          questionNames.add(radio.name);
+        });
+
+      let allAnswered = true;
+
+      questionNames.forEach(function (questionName) {
+        const selectedOption = surveyForm.querySelector(
+          'input[name="' + questionName + '"]:checked'
+        );
+
+        if (!selectedOption) {
+          allAnswered = false;
+        }
+      });
+
+      if (!allAnswered) {
+        event.preventDefault();
+
+        alert(
+          "Please select a grade for all course outcome questions."
+        );
+
+        const firstUnanswered = Array.from(questionNames).find(
+          function (questionName) {
+            return !surveyForm.querySelector(
+              'input[name="' + questionName + '"]:checked'
+            );
+          }
+        );
+
+        if (firstUnanswered) {
+          const firstRadio = surveyForm.querySelector(
+            'input[name="' + firstUnanswered + '"]'
+          );
+
+          if (firstRadio) {
+            const questionRow = firstRadio.closest(".question-row");
+
+            if (questionRow) {
+              questionRow.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+              });
+            }
+          }
+        }
+
+        return;
+      }
+
+      submitButton.disabled = true;
+      submitButton.innerText = "Submitting...";
+    });
+  }
+
+});
+</script>
+
+{% endblock %}

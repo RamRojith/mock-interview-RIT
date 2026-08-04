@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .dashboard-page {
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+        min-height: 85vh;
+        padding: 1.5rem;
+    }
+
+    .dashboard-container {
+        max-width: 1500px;
+        margin: 0 auto;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1e3a8a;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-box {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e3a8a;
+        margin-bottom: 1rem;
+    }
+
+    .dashboard-table thead th {
+        background: #1e3a8a;
+        color: white;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .dashboard-table tbody td {
+        vertical-align: middle;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .approved-badge {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .expired-badge {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .active-badge {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .deactivated-badge {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .btn-deactivate {
+        background: #dc2626;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.45rem 0.9rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .btn-deactivate:hover {
+        background: #b91c1c;
+        color: white;
+    }
+
+    .empty-box {
+        padding: 1rem;
+        border: 1px dashed #cbd5e1;
+        border-radius: 12px;
+        background: #f8fafc;
+        color: #475569;
+        text-align: center;
+    }
+
+    .modal-header {
+        background: #1e3a8a;
+        color: white;
+    }
+
+    .btn-confirm-deactivate {
+        background: #dc2626;
+        color: white;
+        border: none;
+    }
+
+    .btn-confirm-deactivate:hover {
+        background: #b91c1c;
+        color: white;
+    }
+</style>
+
+<div class="dashboard-page">
+    <div class="dashboard-container">
+
+        <h2 class="page-title">
+            <i class="fas fa-clock me-2"></i>Email Relogin Validity Dashboard
+        </h2>
+
+        {% comment %} {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %} {% endcomment %}
+
+        <div class="card-box">
+            <div class="section-title">
+                Approved Email Relogin Requests
+            </div>
+
+            {% if dashboard_requests %}
+                <div class="table-responsive">
+                    <table class="table table-bordered dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Application ID</th>
+                                <th>Student Name</th>
+                                <th>Register No</th>
+                                <th>Email ID</th>
+                                <th>Department</th>
+                                <th>Year</th>
+                                <th>Section</th>
+                                <th>Requestor</th>
+                                <th>Approved By</th>
+                                <th>Approved At</th>
+                                <th>Valid Until</th>
+                                <th>Validity Status</th>
+                                <th>Current Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in dashboard_requests %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ item.application.id }}</td>
+
+                                    <td>{{ item.application.student.name|default:"-" }}</td>
+                                    <td>{{ item.application.student.reg_no|default:"-" }}</td>
+                                    <td>{{ item.application.student.email|default:"-" }}</td>
+                                    <td>{{ item.application.student.department|default:"-" }}</td>
+                                    <td>{{ item.application.student.year|default:"-" }}</td>
+                                    <td>{{ item.application.student.section|default:"-" }}</td>
+
+                                    <td>
+                                        {% if item.application.faculty %}
+                                            {{ item.application.faculty.name|default:"-" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if item.application.processed_by %}
+                                            {{ item.application.processed_by.name|default:"-" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {{ item.application.approved_at|date:"d-m-Y h:i A" }}
+                                    </td>
+
+                                    <td>
+                                        {% if item.valid_until %}
+                                            {{ item.valid_until|date:"d-m-Y h:i A" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if item.is_expired %}
+                                            <span class="status-badge expired-badge">Time Up</span>
+                                        {% else %}
+                                            <span class="status-badge active-badge">
+                                                {{ item.remaining_text }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge approved-badge">
+                                            Approved
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <button type="button"
+                                                class="btn btn-deactivate"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deactivateModal{{ item.application.id }}">
+                                            Deactivate
+                                        </button>
+
+                                        <div class="modal fade" id="deactivateModal{{ item.application.id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">
+                                                            Confirm Deactivation
+                                                        </h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+
+                                                    <div class="modal-body text-start">
+                                                        <p class="mb-2">
+                                                            Are you sure you want to deactivate this email relogin access?
+                                                        </p>
+
+                                                        <p class="mb-1">
+                                                            <strong>Student:</strong>
+                                                            {{ item.application.student.name|default:"-" }}
+                                                        </p>
+
+                                                        <p class="mb-1">
+                                                            <strong>Register No:</strong>
+                                                            {{ item.application.student.reg_no|default:"-" }}
+                                                        </p>
+
+                                                        <p class="mb-0">
+                                                            <strong>Email:</strong>
+                                                            {{ item.application.student.email|default:"-" }}
+                                                        </p>
+                                                    </div>
+
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                            Cancel
+                                                        </button>
+
+                                                        <form method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="application_id" value="{{ item.application.id }}">
+                                                            <input type="hidden" name="action" value="deactivate">
+
+                                                            <button type="submit" class="btn btn-confirm-deactivate">
+                                                                Yes, Deactivate
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-box">
+                    No approved email relogin requests found.
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="card-box">
+            <div class="section-title">
+                Deactivated Email Relogin Requests
+            </div>
+
+            {% if deactivated_requests %}
+                <div class="table-responsive">
+                    <table class="table table-bordered dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Application ID</th>
+                                <th>Student Name</th>
+                                <th>Register No</th>
+                                <th>Email ID</th>
+                                <th>Department</th>
+                                <th>Year</th>
+                                <th>Section</th>
+                                <th>Requestor</th>
+                                <th>Approved By</th>
+                                <th>Approved At</th>
+                                <th>Deactivated At</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for application in deactivated_requests %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ application.id }}</td>
+
+                                    <td>{{ application.student.name|default:"-" }}</td>
+                                    <td>{{ application.student.reg_no|default:"-" }}</td>
+                                    <td>{{ application.student.email|default:"-" }}</td>
+                                    <td>{{ application.student.department|default:"-" }}</td>
+                                    <td>{{ application.student.year|default:"-" }}</td>
+                                    <td>{{ application.student.section|default:"-" }}</td>
+
+                                    <td>
+                                        {% if application.faculty %}
+                                            {{ application.faculty.name|default:"-" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if application.processed_by %}
+                                            {{ application.processed_by.name|default:"-" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {{ application.approved_at|date:"d-m-Y h:i A" }}
+                                    </td>
+
+                                    <td>
+                                        {{ application.deactivated_at|date:"d-m-Y h:i A" }}
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge deactivated-badge">
+                                            Deactivated
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-box">
+                    No deactivated email relogin requests found.
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

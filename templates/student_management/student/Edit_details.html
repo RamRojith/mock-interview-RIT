@@ -1,0 +1,817 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+.address-update-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.address-update-portal .page-header {
+  max-width: 900px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.address-update-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.address-update-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.address-update-portal .page-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.address-update-portal .card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.address-update-portal .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.address-update-portal .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+}
+
+.address-update-portal .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.address-update-portal .card-body {
+  padding: 2rem;
+}
+
+.address-update-portal .alert {
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-left: 4px solid;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.address-update-portal .alert-warning {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  color: #92400e;
+}
+
+.address-update-portal .alert i {
+  font-size: 1.25rem;
+}
+
+/* Section Headers */
+.address-update-portal .section-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.address-update-portal .section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.address-update-portal .section-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.address-update-portal .section-description {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Form Styling */
+.address-update-portal .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.address-update-portal .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.address-update-portal .form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.address-update-portal .required-star {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.address-update-portal .input-group {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.address-update-portal .input-group-text {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-right: none;
+  color: #64748b;
+  font-size: 0.9rem;
+  padding: 0.875rem 1rem;
+  border-radius: 12px 0 0 12px;
+  transition: all 0.3s ease;
+}
+
+.address-update-portal .form-control {
+  border: 1px solid #e2e8f0;
+  border-radius: 0 12px 12px 0;
+  padding: 0.875rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.address-update-portal .form-control:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+.address-update-portal .form-control:focus ~ .input-group-text {
+  border-color: #1a4b8c;
+  background: rgba(26, 75, 140, 0.05);
+  color: #1a4b8c;
+}
+
+.address-update-portal .form-control[readonly] {
+  background-color: #f8fafc;
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+
+.address-update-portal .form-text {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Checkbox Styling */
+.address-update-portal .form-check {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.address-update-portal .form-check:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 75, 140, 0.15);
+}
+
+.address-update-portal .form-check-input {
+  width: 1.2em;
+  height: 1.2em;
+  margin-right: 0.75rem;
+  border: 2px solid #cbd5e1;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.address-update-portal .form-check-input:checked {
+  background-color: #1a4b8c;
+  border-color: #1a4b8c;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+}
+
+.address-update-portal .form-check-label {
+  font-weight: 600;
+  color: #1a4b8c;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+/* Button Styling */
+.address-update-portal .form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #e2e8f0;
+}
+
+.address-update-portal .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.address-update-portal .btn-outline-secondary {
+  background: transparent;
+  color: #64748b;
+  border: 2px solid #cbd5e1;
+}
+
+.address-update-portal .btn-outline-secondary:hover {
+  background: #64748b;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+}
+
+.address-update-portal .btn-outline-danger {
+  background: transparent;
+  color: #ef4444;
+  border: 2px solid #ef4444;
+}
+
+.address-update-portal .btn-outline-danger:hover {
+  background: #ef4444;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.address-update-portal .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+}
+
+.address-update-portal .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+}
+
+/* Validation Styling */
+.address-update-portal .is-invalid {
+  border-color: #ef4444 !important;
+}
+
+.address-update-portal .is-invalid:focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+.address-update-portal .is-invalid ~ .input-group-text {
+  border-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.05) !important;
+  color: #ef4444 !important;
+}
+
+.address-update-portal .invalid-feedback {
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Divider */
+.address-update-portal .section-divider {
+  margin: 2rem 0;
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .address-update-portal .page-header {
+    padding: 1rem;
+  }
+  
+  .address-update-portal .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .address-update-portal .card-body {
+    padding: 1.5rem;
+  }
+  
+  .address-update-portal .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .address-update-portal {
+    padding: 1rem;
+  }
+  
+  .address-update-portal .page-header {
+    padding: 0.75rem;
+  }
+  
+  .address-update-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .address-update-portal .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .address-update-portal .card-body {
+    padding: 1.25rem;
+  }
+  
+  .address-update-portal .form-actions {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .address-update-portal .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .address-update-portal .section-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .address-update-portal .form-check {
+    padding: 1rem;
+  }
+}
+
+/* Animation for cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.address-update-portal .card {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+</style>
+
+<div class="address-update-portal">
+  <div class="page-header">
+    <h1><i class="fas fa-map-marker-alt me-2"></i>Update Communication Address</h1>
+    <p class="header-subtitle">Modify your mailing address for university correspondence</p>
+  </div>
+
+  <div class="page-container">
+    {% if admission_data %}
+      <div class="card">
+        <div class="card-header">
+          <h5><i class="fas fa-address-card me-2"></i>Address Information</h5>
+        </div>
+        <div class="card-body">
+          <form method="post" action="{% url 'edit_address' %}" id="addressForm">
+            {% csrf_token %}
+            
+            <!-- Permanent Address Section -->
+            <div class="section-header">
+              <div class="section-icon">
+                <i class="fas fa-home"></i>
+              </div>
+              <div>
+                <h3 class="section-title">Permanent Address</h3>
+                <p class="section-description">This is your permanent address (read-only)</p>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-hashtag"></i>
+                  Door No
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                  <input type="text" class="form-control" value="{{ admission_data.Permanent_Address_Door_No }}" readonly>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-road"></i>
+                  Street Name
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-road"></i></span>
+                  <input type="text" class="form-control" value="{{ admission_data.Permanent_Address_Street_Name }}" readonly>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-map-pin"></i>
+                  Location
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-map-pin"></i></span>
+                  <input type="text" class="form-control" value="{{ admission_data.Permanent_Address_Location }}" readonly>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-landmark"></i>
+                  Taluk
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-landmark"></i></span>
+                  <input type="text" class="form-control" value="{{ admission_data.Permanent_Address_Taluk }}" readonly>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-map-marked-alt"></i>
+                  District
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-map-marked-alt"></i></span>
+                  <input type="text" class="form-control" value="{{ admission_data.Permanent_Address_District }}" readonly>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-flag"></i>
+                  State
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-flag"></i></span>
+                  <input type="text" class="form-control" value="{{ admission_data.Permanent_Address_State }}" readonly>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-mail-bulk"></i>
+                  Pincode
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-mail-bulk"></i></span>
+                  <input type="text" class="form-control" value="{{ admission_data.Permanent_Address_Pincode }}" readonly>
+                </div>
+              </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Communication Address Section -->
+            <div class="section-header">
+              <div class="section-icon">
+                <i class="fas fa-envelope"></i>
+              </div>
+              <div>
+                <h3 class="section-title">Communication Address</h3>
+                <p class="section-description">Update your current mailing address for university communications</p>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="comm_door" class="form-label">
+                  <i class="fas fa-hashtag"></i>
+                  Door No <span class="required-star">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                  <input type="text" id="comm_door" name="Communication_Address_Door_No"
+                         class="form-control" value="{{ admission_data.Communication_Address_Door_No }}" required>
+                </div>
+                <div class="form-text">
+                  <i class="fas fa-info-circle"></i>
+                  Enter your door/apartment number
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="comm_street" class="form-label">
+                  <i class="fas fa-road"></i>
+                  Street Name <span class="required-star">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-road"></i></span>
+                  <input type="text" id="comm_street" name="Communication_Address_Street_Name"
+                         class="form-control" value="{{ admission_data.Communication_Address_Street_Name }}" required>
+                </div>
+                <div class="form-text">
+                  <i class="fas fa-info-circle"></i>
+                  Enter street name or area
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="comm_location" class="form-label">
+                  <i class="fas fa-map-pin"></i>
+                  Location <span class="required-star">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-map-pin"></i></span>
+                  <input type="text" id="comm_location" name="Communication_Address_Location"
+                         class="form-control" value="{{ admission_data.Communication_Address_Location }}" required>
+                </div>
+                <div class="form-text">
+                  <i class="fas fa-info-circle"></i>
+                  Enter your locality or neighborhood
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="comm_taluk" class="form-label">
+                  <i class="fas fa-landmark"></i>
+                  Taluk <span class="required-star">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-landmark"></i></span>
+                  <input type="text" id="comm_taluk" name="Communication_Address_Taluk"
+                         class="form-control" value="{{ admission_data.Communication_Address_Taluk }}" required>
+                </div>
+                <div class="form-text">
+                  <i class="fas fa-info-circle"></i>
+                  Enter your taluk or tehsil
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="comm_district" class="form-label">
+                  <i class="fas fa-map-marked-alt"></i>
+                  District <span class="required-star">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-map-marked-alt"></i></span>
+                  <input type="text" id="comm_district" name="Communication_Address_District"
+                         class="form-control" value="{{ admission_data.Communication_Address_District }}" required>
+                </div>
+                <div class="form-text">
+                  <i class="fas fa-info-circle"></i>
+                  Enter your district name
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="comm_state" class="form-label">
+                  <i class="fas fa-flag"></i>
+                  State <span class="required-star">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-flag"></i></span>
+                  <input type="text" id="comm_state" name="Communication_Address_State"
+                         class="form-control" value="{{ admission_data.Communication_Address_State }}" required>
+                </div>
+                <div class="form-text">
+                  <i class="fas fa-info-circle"></i>
+                  Enter your state name
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="comm_pincode" class="form-label">
+                  <i class="fas fa-mail-bulk"></i>
+                  Pincode <span class="required-star">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-mail-bulk"></i></span>
+                  <input type="text" id="comm_pincode" name="Communication_Address_Pincode"
+                         class="form-control" value="{{ admission_data.Communication_Address_Pincode }}" required maxlength="6" pattern="[0-9]{6}">
+                </div>
+                <div class="form-text">
+                  <i class="fas fa-info-circle"></i>
+                  6-digit postal code
+                </div>
+              </div>
+            </div>
+
+            <!-- Same as Permanent Address Checkbox -->
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="sameAsPermanent">
+              <label class="form-check-label" for="sameAsPermanent">
+                <i class="fas fa-copy"></i>
+                Same as Permanent Address
+              </label>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+              <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+              </a>
+              <div style="display: flex; gap: 1rem;">
+                <button type="reset" class="btn btn-outline-danger">
+                  <i class="fas fa-redo me-2"></i> Reset
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save me-2"></i> Save Changes
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    {% else %}
+      <div class="alert alert-warning">
+        <i class="fas fa-exclamation-circle"></i>
+        <div>
+          <h5 style="margin: 0 0 0.5rem 0;">No Student Record Found</h5>
+          <p style="margin: 0;">We couldn't find your admission data. Please contact the administration office.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Same as Permanent Address functionality
+  const sameAsPermanentCheckbox = document.getElementById('sameAsPermanent');
+  
+  // Get permanent address values safely
+  const permanentAddressFields = {
+    door: "{{ admission_data.Permanent_Address_Door_No|default:'' }}",
+    street: "{{ admission_data.Permanent_Address_Street_Name|default:'' }}",
+    location: "{{ admission_data.Permanent_Address_Location|default:'' }}",
+    taluk: "{{ admission_data.Permanent_Address_Taluk|default:'' }}",
+    district: "{{ admission_data.Permanent_Address_District|default:'' }}",
+    state: "{{ admission_data.Permanent_Address_State|default:'' }}",
+    pincode: "{{ admission_data.Permanent_Address_Pincode|default:'' }}"
+  };
+  
+  sameAsPermanentCheckbox.addEventListener('change', function() {
+    if (this.checked) {
+      document.getElementById('comm_door').value = permanentAddressFields.door;
+      document.getElementById('comm_street').value = permanentAddressFields.street;
+      document.getElementById('comm_location').value = permanentAddressFields.location;
+      document.getElementById('comm_taluk').value = permanentAddressFields.taluk;
+      document.getElementById('comm_district').value = permanentAddressFields.district;
+      document.getElementById('comm_state').value = permanentAddressFields.state;
+      document.getElementById('comm_pincode').value = permanentAddressFields.pincode;
+    } else {
+      // Restore original communication address values
+      document.getElementById('comm_door').value = "{{ admission_data.Communication_Address_Door_No|default:'' }}";
+      document.getElementById('comm_street').value = "{{ admission_data.Communication_Address_Street_Name|default:'' }}";
+      document.getElementById('comm_location').value = "{{ admission_data.Communication_Address_Location|default:'' }}";
+      document.getElementById('comm_taluk').value = "{{ admission_data.Communication_Address_Taluk|default:'' }}";
+      document.getElementById('comm_district').value = "{{ admission_data.Communication_Address_District|default:'' }}";
+      document.getElementById('comm_state').value = "{{ admission_data.Communication_Address_State|default:'' }}";
+      document.getElementById('comm_pincode').value = "{{ admission_data.Communication_Address_Pincode|default:'' }}";
+    }
+  });
+  
+  // Form validation
+  const form = document.getElementById('addressForm');
+  if (form) {
+    form.addEventListener('submit', function(event) {
+      let isValid = true;
+      const requiredFields = form.querySelectorAll('input[required]');
+      
+      // Clear previous invalid states
+      requiredFields.forEach(field => {
+        field.classList.remove('is-invalid');
+        const feedback = field.parentElement.parentElement.querySelector('.invalid-feedback');
+        if (feedback) feedback.remove();
+      });
+      
+      // Validate required fields
+      requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+          isValid = false;
+          field.classList.add('is-invalid');
+          
+          // Add error message
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'invalid-feedback';
+          errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> This field is required`;
+          field.parentElement.parentElement.appendChild(errorDiv);
+        }
+      });
+      
+      // Pincode validation
+      const pincodeField = document.getElementById('comm_pincode');
+      const pincodePattern = /^[0-9]{6}$/;
+      if (pincodeField.value && !pincodePattern.test(pincodeField.value)) {
+        isValid = false;
+        pincodeField.classList.add('is-invalid');
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'invalid-feedback';
+        errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> Please enter a valid 6-digit pincode`;
+        pincodeField.parentElement.parentElement.appendChild(errorDiv);
+      }
+      
+      if (!isValid) {
+        event.preventDefault();
+        // Scroll to first invalid field
+        const firstInvalid = form.querySelector('.is-invalid');
+        if (firstInvalid) {
+          firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          firstInvalid.focus();
+        }
+      }
+    });
+    
+    // Reset button functionality
+    const resetButton = form.querySelector('button[type="reset"]');
+    if (resetButton) {
+      resetButton.addEventListener('click', function() {
+        // Clear invalid states on reset
+        const invalidFields = form.querySelectorAll('.is-invalid');
+        invalidFields.forEach(field => {
+          field.classList.remove('is-invalid');
+          const feedback = field.parentElement.parentElement.querySelector('.invalid-feedback');
+          if (feedback) feedback.remove();
+        });
+        
+        // Uncheck the "Same as Permanent" checkbox
+        sameAsPermanentCheckbox.checked = false;
+      });
+    }
+  }
+
+  // Add animation delays to cards
+  const cards = document.querySelectorAll('.card');
+  cards.forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.2}s`;
+  });
+});
+</script>
+{% endblock %}

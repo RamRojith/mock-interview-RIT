@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Leave Applications</h2>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-bordered text-center">
+            <thead class="thead-dark">
+                <tr>
+                    <th>First Name</th>
+                    <th>Reg Number</th>
+                    <th>From Date</th>
+                    <th>To Date</th>
+                    <th>Reason for Leave</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for leave in leave_applications %}
+                <tr>
+                    <td>{{ leave.first_name }}</td>
+                    <td>{{ leave.reg_number }}</td>
+                    <td>{{ leave.from_date }}</td>
+                    <td>{{ leave.to_date }}</td>
+                    <td>{{ leave.reason_for_leave }}</td>
+                    <td>
+                        {% if leave.status == "Pending" %}
+                            <span class="badge badge-warning">Pending</span>
+                        {% elif leave.status == "Approved" %}
+                            <span class="badge badge-success">Approved</span>
+                        {% else %}
+                            <span class="badge badge-danger">Rejected</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if leave.status == "Pending" %}
+                            <form method="post" class="d-flex justify-content-center gap-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="leave_id" value="{{ leave.id }}">
+                                <button type="submit" name="action" value="approve" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </form>
+                        {% else %}
+                            <span class="badge badge-info">{{ leave.status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock content %}

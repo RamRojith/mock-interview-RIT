@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% load static %}
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Course</title>
+    <link rel="stylesheet" href="{% static 'admin_dashboard_css.css' %}" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery added -->
+</head>
+<body>
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="dashboard-header text-right">
+        <h2 class="display-5 fw-bold">ADD COURSE</h2>
+        <form method="post" action="{% url 'add_mark_page' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Programme Details -->
+            <h3 class="mt-4">Programme Details</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="department" class="form-label fw-semibold">Department</label>
+                        <select class="form-control" id="department" name="department" required>
+                            <option selected disabled value="">Choose Department...</option>
+                            {% dept_data as depts %}
+                            {% for dept in depts %}
+                            <option value="{{ dept.id }}">{{ dept.Department }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group" id="program_group" style="display:none;">
+                        <label for="program" class="control-label">Program</label>
+                        <select class="form-control" id="program" name="program" required>
+                            <option selected disabled value="">Choose Program...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="regulation" class="form-label fw-semibold">Regulation</label>
+                        <input type="text" name="regulation" id="regulation" class="form-control" placeholder="Enter Regulation" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="year" class="form-label fw-semibold">Year</label>
+                        <input type="number" name="year" id="year" class="form-control" placeholder="Enter Year" required>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="semester" class="form-label fw-semibold">Semester</label>
+                        <select name="semester" id="semester" class="form-select" required>
+                            <option value="" disabled selected>Select Semester</option>
+                            <option value="1">Semester I</option>
+                            <option value="2">Semester II</option>
+                            <option value="3">Semester III</option>
+                            <option value="4">Semester IV</option>
+                            <option value="5">Semester V</option>
+                            <option value="6">Semester VI</option>
+                            <option value="7">Semester VII</option>
+                            <option value="8">Semester VIII</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="assessment" class="form-label fw-semibold">Assessment</label>
+                        <select name="assessment" id="assessment" class="form-select" required>
+                            <option value="" disabled selected>Select Assessment</option>
+                            <option value="1">Assessment I</option>
+                            <option value="2">Assessment II</option>
+                            <option value="3">University Mark</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="text-center">Course List</h2>
+            <table class="table table-bordered" id="courseTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Reg No</th>
+                        <th>Student Name</th>
+                        <th>Course</th>
+                        <th>Grade</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        function fetchStudentsAndCourses() {
+            var department_id = $("#department").val();
+            var program_id = $("#program").val();
+            var semester = $("#semester").val();
+            var year = $("#year").val();
+            var assessment = $("#assessment").val();
+
+            if (department_id && program_id && semester && year && assessment) {
+                $.ajax({
+                    url: "{% url 'fetch_students_for_mark' %}",
+                    type: "GET",
+                    data: {
+                        department: department_id,
+                        program: program_id,
+                        semester: semester,
+                        year: year,
+                        assessment: assessment
+                    },
+                    success: function (response) {
+                        console.log("Response:", response); // Debugging
+                        var students = response.students;
+                        var courses = response.courses;
+                        var tableBody = $("#courseTable tbody");
+
+                        tableBody.empty(); // Clear table before adding new data
+
+                        students.forEach(function (student, index) {
+                            var courseOptions = courses.map(course => 
+                                `<option value="${course.course_code}">${course.title} (${course.course_code})</option>`
+                            ).join('');
+
+                            var row = `<tr>
+                                <td>${index + 1}</td>
+                                <td>
+                                    ${student.reg_number}
+                                    <input type="hidden" name="reg_number[]" value="${student.reg_number}">
+                                </td>
+                                <td>
+                                    ${student.first_name} ${student.surname}
+                                    <input type="hidden" name="student_name[]" value="${student.first_name} ${student.surname}">
+                                    <input type="hidden" name="student_id[]" value="${student.id}">
+                                </td>
+                                <td>
+                                    <select class="form-control" name="course_code[]">${courseOptions}</select>
+                                </td>
+                                <td>
+                                    <select class="form-control" name="grade[]">
+                                        <option value="O">O</option>
+                                        <option value="A+">A+</option>
+                                        <option value="A">A</option>
+                                        <option value="B+">B+</option>
+                                        <option value="B">B</option>
+                                    </select>
+                                </td>
+                            </tr>`;
+                            tableBody.append(row);
+                        });
+                    },
+                    error: function (error) {
+                        console.log("Error fetching data:", error);
+                    }
+                });
+            }
+        }
+
+        $("#department, #program, #semester, #year, #assessment").change(fetchStudentsAndCourses);
+    });
+</script>        
+                
+
+        
+                <script>
+                    $(document).ready(function() {
+                        // When the department is changed
+                        $('#department').change(function() {
+                            var departmentId = $(this).val();  // Get selected department ID
+                
+                            // If a department is selected, make an AJAX call to fetch programs
+                            if (departmentId) {
+                                $.ajax({
+                                    url: '{% url "get_programs" %}',  // URL to get programs
+                                    data: {
+                                        'department_id': departmentId  // Send the department ID
+                                    },
+                                    success: function(data) {
+                                        // Clear any previous program options
+                                        $('#program').empty();
+                                        $('#program').append('<option selected disabled value="">Choose Program...</option>');
+                
+                                        // Populate the programs dropdown with the response data
+                                        data.forEach(function(program) {
+                                            $('#program').append('<option value="' + program.id + '">' + program.program_name + '</option>');
+                                        });
+                
+                                        // Show the program dropdown
+                                        $('#program_group').show();
+                                    }
+                                });
+                            } else {
+                                // Hide the program dropdown if no department is selected
+                                $('#program_group').hide();
+                            }
+                        });
+                    });
+                </script>
+
+{% endblock content %}

@@ -1,0 +1,621 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<style>
+.upload-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.upload-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.upload-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.upload-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.upload-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.upload-portal .section-title {
+  color: #1a4b8c;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.upload-portal .section-title i {
+  font-size: 1.5rem;
+}
+
+.upload-portal .cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.upload-portal .card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.upload-portal .card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.upload-portal .card-header {
+  height: 140px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-portal .card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+}
+
+.upload-portal .card-header i {
+  font-size: 3rem;
+  color: rgba(255, 255, 255, 0.95);
+  z-index: 1;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.upload-portal .card-body {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  position: relative;
+}
+
+.upload-portal .card-icon {
+  position: absolute;
+  top: -30px;
+  right: 2rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+}
+
+.upload-portal .card-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+  padding-right: 80px;
+}
+
+.upload-portal .card-desc {
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+  flex-grow: 1;
+}
+
+.upload-portal .card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-portal .card-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.upload-portal .card-btn:hover::before {
+  left: 100%;
+}
+
+.upload-portal .card-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+}
+
+.upload-portal .card-btn:active {
+  transform: translateY(0);
+}
+
+.upload-portal .card-btn i {
+  transition: transform 0.3s ease;
+}
+
+.upload-portal .card-btn:hover i {
+  transform: translateX(3px);
+}
+
+/* Custom gradients for each card */
+.upload-portal .card:nth-child(1) .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+}
+
+.upload-portal .card:nth-child(1) .card-icon {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+}
+
+.upload-portal .card:nth-child(2) .card-header {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.upload-portal .card:nth-child(2) .card-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.upload-portal .card:nth-child(3) .card-header {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.upload-portal .card:nth-child(3) .card-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.upload-portal .card:nth-child(4) .card-header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.upload-portal .card:nth-child(4) .card-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.upload-portal .card:nth-child(5) .card-header {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.upload-portal .card:nth-child(5) .card-icon {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+/* Status indicators */
+.upload-portal .card-status {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 2;
+}
+
+.upload-portal .status-active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.upload-portal .status-pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Quick stats on cards */
+.upload-portal .card-stats {
+  display: flex;
+  justify-content: space-around;
+  margin: 1rem 0;
+  padding: 1rem 0;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.upload-portal .stat {
+  text-align: center;
+  flex: 1;
+}
+
+.upload-portal .stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  display: block;
+}
+
+.upload-portal .stat-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* Upload-specific styling */
+.upload-portal .upload-info {
+  margin-bottom: 1.5rem;
+}
+
+.upload-portal .upload-features {
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.upload-portal .upload-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.upload-portal .upload-features li i {
+  color: #10b981;
+  font-size: 0.8rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .upload-portal .page-header {
+    padding: 1rem;
+  }
+  
+  .upload-portal .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .upload-portal .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .upload-portal {
+    padding: 1rem;
+  }
+  
+  .upload-portal .page-header {
+    padding: 0.75rem;
+  }
+  
+  .upload-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .upload-portal .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .upload-portal .cards-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .upload-portal .card-body {
+    padding: 1.5rem;
+  }
+  
+  .upload-portal .card-header {
+    height: 120px;
+  }
+  
+  .upload-portal .card-header i {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .upload-portal .card-title {
+    font-size: 1.1rem;
+    padding-right: 60px;
+  }
+  
+  .upload-portal .card-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
+    top: -25px;
+  }
+  
+  .upload-portal .card-stats {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+/* Animation for page load */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.upload-portal .card {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+.upload-portal .card:nth-child(1) { animation-delay: 0.1s; }
+.upload-portal .card:nth-child(2) { animation-delay: 0.2s; }
+.upload-portal .card:nth-child(3) { animation-delay: 0.3s; }
+.upload-portal .card:nth-child(4) { animation-delay: 0.4s; }
+.upload-portal .card:nth-child(5) { animation-delay: 0.5s; }
+
+/* Focus states for accessibility */
+.upload-portal .card-btn:focus {
+  outline: 2px solid #1a4b8c;
+  outline-offset: 2px;
+}
+
+/* Hover effects for cards */
+.upload-portal .card:hover .card-header::before {
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+}
+</style>
+
+<div class="upload-portal">
+  <div class="page-header">
+    <h1><i class="fas fa-cloud-upload-alt me-2"></i>Student Upload Portal</h1>
+    <p class="header-subtitle">Upload and manage your academic records, achievements, and activities in one place</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Upload Cards Section -->
+    <h2 class="section-title"><i class="fas fa-upload me-2"></i> Upload Center</h2>
+    <div class="cards-grid">
+      <!-- Card 1 - Co/Extra Curricular Upload -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-running"></i>
+          <span class="card-status status-active">Active</span>
+        </div>
+        <div class="card-body">
+          <div class="card-icon">
+            <i class="fas fa-star"></i>
+          </div>
+          <h3 class="card-title">Co/Extra Curricular Activities</h3>
+          <p class="card-desc">
+            Upload your participation records in clubs, sports, cultural events, competitions, and other extracurricular activities to showcase your holistic development.
+          </p>
+          <ul class="upload-features">
+            <li><i class="fas fa-check-circle"></i> Support for multiple file formats</li>
+            <li><i class="fas fa-check-circle"></i> Real-time upload progress</li>
+            <li><i class="fas fa-check-circle"></i> Automatic file validation</li>
+          </ul>
+          <a href="{% url 'student_co_ex_curricular_upload' %}" class="card-btn">
+            <i class="fas fa-upload me-2"></i> Upload Now
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 2 - Publications Upload -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-book-open"></i>
+          <span class="card-status status-active">Active</span>
+        </div>
+        <div class="card-body">
+          <div class="card-icon">
+            <i class="fas fa-newspaper"></i>
+          </div>
+          <h3 class="card-title">Academic Publications</h3>
+          <p class="card-desc">
+            Submit your research papers, journal articles, conference proceedings, and other academic publications for review and institutional recognition.
+          </p>
+          <ul class="upload-features">
+            <li><i class="fas fa-check-circle"></i> Citation formatting support</li>
+            <li><i class="fas fa-check-circle"></i> DOI integration</li>
+            <li><i class="fas fa-check-circle"></i> Publication status tracking</li>
+          </ul>
+          <a href="{% url 'student_publications_upload' %}" class="card-btn">
+            <i class="fas fa-upload me-2"></i> Upload Now
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 3 - Achievements Upload -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-trophy"></i>
+          <span class="card-status status-active">Active</span>
+        </div>
+        <div class="card-body">
+          <div class="card-icon">
+            <i class="fas fa-award"></i>
+          </div>
+          <h3 class="card-title">Academic Achievements</h3>
+          <p class="card-desc">
+            Share your academic awards, certificates, scholarships, and notable accomplishments to build your comprehensive academic portfolio.
+          </p>
+          <ul class="upload-features">
+            <li><i class="fas fa-check-circle"></i> Achievement categorization</li>
+            <li><i class="fas fa-check-circle"></i> Certificate verification</li>
+            <li><i class="fas fa-check-circle"></i> Achievement timeline</li>
+          </ul>
+          <a href="{% url 'student_achievements_upload' %}" class="card-btn">
+            <i class="fas fa-upload me-2"></i> Upload Now
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 4 - Projects Upload -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-lightbulb"></i>
+          <span class="card-status status-active">Active</span>
+        </div>
+        <div class="card-body">
+          <div class="card-icon">
+            <i class="fas fa-project-diagram"></i>
+          </div>
+          <h3 class="card-title">Academic Projects</h3>
+          <p class="card-desc">
+            Upload your academic projects, research work, innovation initiatives, and technical projects with detailed documentation and team information.
+          </p>
+          <ul class="upload-features">
+            <li><i class="fas fa-check-circle"></i> Team collaboration support</li>
+            <li><i class="fas fa-check-circle"></i> Project categorization</li>
+            <li><i class="fas fa-check-circle"></i> Technical documentation</li>
+          </ul>
+          <a href="{% url 'student_project_upload' %}" class="card-btn">
+            <i class="fas fa-upload me-2"></i> Upload Now
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 5 - Professional Body Upload -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-users"></i>
+          <span class="card-status status-active">Active</span>
+        </div>
+        <div class="card-body">
+          <div class="card-icon">
+            <i class="fas fa-user-tie"></i>
+          </div>
+          <h3 class="card-title">Professional Memberships</h3>
+          <p class="card-desc">
+            Submit documentation of your professional memberships, technical affiliations, certifications, and professional development activities.
+          </p>
+          <ul class="upload-features">
+            <li><i class="fas fa-check-circle"></i> Membership verification</li>
+            <li><i class="fas fa-check-circle"></i> Expiration tracking</li>
+            <li><i class="fas fa-check-circle"></i> Professional network</li>
+          </ul>
+          <a href="{% url 'student_professional_body_upload' %}" class="card-btn">
+            <i class="fas fa-upload me-2"></i> Upload Now
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Add click animation to cards
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card => {
+    card.addEventListener('click', function(e) {
+      // Only trigger if not clicking a button
+      if (!e.target.closest('.card-btn')) {
+        const link = this.querySelector('.card-btn');
+        if (link) {
+          link.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            link.style.transform = '';
+            window.location.href = link.href;
+          }, 150);
+        }
+      }
+    });
+  });
+
+  // Add hover parallax effect
+  cards.forEach(card => {
+    card.addEventListener('mousemove', function(e) {
+      const rect = this.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const angleY = (x - centerX) / 25;
+      const angleX = (centerY - y) / 25;
+      
+      this.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateY(-8px)`;
+    });
+
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(-8px)';
+    });
+
+    card.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-8px)';
+    });
+  });
+
+  // Add animation delays to cards
+  cards.forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.1}s`;
+  });
+});
+</script>
+{% endblock content %}

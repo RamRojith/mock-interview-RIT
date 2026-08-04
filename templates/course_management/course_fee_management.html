@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Course Fee Structure</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    button {
+      margin: 0 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Fee Structure Table</h2>
+
+  <table id="feeTable">
+    <thead>
+      <tr>
+        <th>Department</th>
+        <th>Program</th>
+        <th>Mode of Study</th>
+        <th>Course Fee</th>
+        <th>Year</th>
+        <th>Actions</th> <!-- 👈 Add actions column -->
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in data %}
+      <tr data-id="{{ item.id }}" data-dept-id="{{ item.department_id }}">
+        <td contenteditable="true" data-field="department_id">{{ item.department }}</td>
+        <td contenteditable="true" data-field="program">{{ item.program }}</td>
+        <td contenteditable="true" data-field="mode_of_study">{{ item.mode_of_study }}</td>
+        <td contenteditable="true" data-field="course_fee">{{ item.course_fee }}</td>
+        <td contenteditable="true" data-field="year">{{ item.year }}</td>
+        <td>
+          <button onclick="deleteRow({{ item.id }})" style="color: red;">🗑 Delete</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  
+
+
+  <script>
+    const table = document.getElementById("feeTable");
+  
+    function getCSRFToken() {
+      let cookieValue = null;
+      const name = "csrftoken";
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + "=")) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  
+    table.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();  // prevent new line
+        e.target.blur();     // trigger blur event to save
+      }
+    });
+  
+    table.addEventListener("blur", function (e) {
+      if (e.target.hasAttribute("contenteditable")) {
+        const td = e.target;
+        const newValue = td.innerText.trim();
+        const field = td.dataset.field;
+        const tr = td.closest("tr");
+        const rowId = tr.dataset.id;
+        const department_id = tr.dataset.deptId;
+  
+        // If editing department, you'll need to convert name -> ID manually or skip
+        const payload = {
+          program: tr.querySelector('[data-field="program"]').innerText.trim(),
+          mode_of_study: tr.querySelector('[data-field="mode_of_study"]').innerText.trim(),
+          course_fee: tr.querySelector('[data-field="course_fee"]').innerText.trim(),
+          year: tr.querySelector('[data-field="year"]').innerText.trim(),
+          department_id: department_id
+        };
+  
+        fetch(`/course/course_admin/update_fee_structure/${rowId}/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken(),
+          },
+          body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+          console.log(data.message || "Updated!");
+        })
+        .catch(err => {
+          console.error("Update failed:", err);
+        });
+      }
+    }, true);
+
+  </script>
+
+  <script>
+    function getCSRFToken() {
+      let cookieValue = null;
+      const name = "csrftoken";
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + "=")) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    
+    function deleteRow(id) {
+      if (!confirm("Are you sure you want to delete this row?")) return;
+    
+      fetch(`/course/course_admin/delete_fee_structure/${id}/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCSRFToken(),
+        },
+      })
+      .then(response => {
+        if (!response.ok) throw new Error("Delete failed");
+        return response.json();
+      })
+      .then(data => {
+        console.log(data.message);
+        const row = document.querySelector(`tr[data-id="${id}"]`);
+        if (row) row.remove();
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        alert("Something went wrong while deleting.");
+      });
+    }
+    </script>
+    
+  
+</body>
+
+
+</html>
+{% endblock content %}

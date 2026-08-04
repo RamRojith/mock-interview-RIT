@@ -1,0 +1,1301 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- FontAwesome CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<!-- jQuery (required by DataTables) -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<style>
+.leave-od-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.leave-od-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.leave-od-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.leave-od-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.leave-od-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.leave-od-portal .card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.leave-od-portal .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+}
+
+.leave-od-portal .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.leave-od-portal .card-body {
+  padding: 2rem;
+}
+
+.leave-od-portal .info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.leave-od-portal .info-card {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+}
+
+.leave-od-portal .info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 75, 140, 0.15);
+}
+
+.leave-od-portal .info-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.leave-od-portal .info-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.leave-od-portal .info-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.leave-od-portal .info-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.leave-od-portal .section-title {
+  color: #1a4b8c;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.leave-od-portal .form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.leave-od-portal .input-group {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.leave-od-portal .input-group-text {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-right: none;
+  color: #64748b;
+  font-size: 1rem;
+  padding: 0.875rem 1rem;
+  border-radius: 12px 0 0 12px;
+}
+
+.leave-od-portal .form-control,
+.leave-od-portal .form-select {
+  border: 1px solid #e2e8f0;
+  border-radius: 0 12px 12px 0;
+  padding: 0.875rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.leave-od-portal .form-control:focus,
+.leave-od-portal .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+.leave-od-portal .form-control[readonly] {
+  background-color: #f8fafc;
+  color: #64748b;
+}
+
+.leave-od-portal .detail-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 82px;
+  padding: 0.95rem 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #bae6fd;
+  border-left: 4px solid #1a4b8c;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
+}
+
+.leave-od-portal .detail-card:focus-within,
+.leave-od-portal .detail-card.is-active {
+  border-color: #1a4b8c;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  box-shadow: 0 12px 28px rgba(26, 75, 140, 0.14);
+  transform: translateY(-1px);
+}
+
+.leave-od-portal .detail-card.is-filled {
+  border-color: #b9c9ea;
+}
+
+.leave-od-portal .detail-card-icon {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  font-size: 1rem;
+}
+
+.leave-od-portal .detail-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.leave-od-portal .detail-label {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #3f4b63;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.leave-od-portal .detail-card .form-control,
+.leave-od-portal .detail-card .form-select {
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #0f172a;
+  font-size: 0.98rem;
+  font-weight: 700;
+  box-shadow: none;
+  min-height: 24px;
+}
+
+.leave-od-portal .detail-card .form-select {
+  cursor: pointer;
+  padding-right: 1.75rem;
+  background-position: right 0.1rem center;
+}
+
+.leave-od-portal .detail-card .form-control::placeholder {
+  color: #71809a;
+  font-weight: 600;
+}
+
+.leave-od-portal .detail-card .form-control:focus,
+.leave-od-portal .detail-card .form-select:focus {
+  border: none;
+  box-shadow: none;
+}
+
+.leave-od-portal .duration-value {
+  color: #0f172a;
+  font-size: 1.02rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.leave-od-portal .duration-hint {
+  margin-top: 0.2rem;
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.flatpickr-calendar {
+  border: 1px solid #dbe4ef !important;
+  border-radius: 14px !important;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16) !important;
+  overflow: hidden;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  z-index: 10000 !important;
+}
+
+.flatpickr-calendar::before,
+.flatpickr-calendar::after {
+  display: none !important;
+}
+
+.flatpickr-months {
+  padding: 0.35rem 0.45rem 0;
+}
+
+.flatpickr-current-month {
+  font-size: 0.98rem !important;
+  font-weight: 700;
+}
+
+.flatpickr-weekday {
+  color: #475569 !important;
+  font-weight: 800 !important;
+}
+
+.flatpickr-day {
+  border-radius: 10px !important;
+}
+
+.flatpickr-day.today {
+  border-color: #1a4b8c !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background: #1a4b8c !important;
+  border-color: #1a4b8c !important;
+}
+
+.flatpickr-time {
+  border-top: 1px solid #e2e8f0 !important;
+}
+
+.flatpickr-time input,
+.flatpickr-time .flatpickr-am-pm {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.leave-od-portal textarea.form-control {
+  border-radius: 12px;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.leave-od-portal .form-text {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.leave-od-portal .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.leave-od-portal .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+}
+
+.leave-od-portal .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.leave-od-portal .btn-outline-info {
+  border: 1px solid #3b82f6;
+  color: #3b82f6;
+  background: transparent;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
+.leave-od-portal .btn-outline-info:hover {
+  background: #3b82f6;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.leave-od-portal .badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.leave-od-portal .badge.bg-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%) !important;
+}
+
+.leave-od-portal .badge.bg-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+}
+
+.leave-od-portal .badge.bg-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: white !important;
+}
+
+.leave-od-portal .badge.bg-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+}
+
+.leave-od-portal .badge.text-secondary {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+  color: white !important;
+}
+
+.leave-od-portal .table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 0;
+}
+
+.leave-od-portal .table th {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 0.75rem;
+  border-bottom: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.leave-od-portal .table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #374151;
+  border-right: 1px solid #f1f5f9;
+}
+
+.leave-od-portal .table th:first-child {
+  background: linear-gradient(135deg, #0d2d56 0%, #1a4b8c 100%);
+  color: white;
+}
+
+.leave-od-portal .table td:first-child {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 800;
+  border-right: 2px solid #e2e8f0;
+}
+
+.leave-od-portal .applications-table {
+  table-layout: auto;
+  width: 100% !important;
+  min-width: 0;
+}
+
+.leave-od-portal .applications-table th:nth-child(1),
+.leave-od-portal .applications-table td:nth-child(1) {
+  width: 3%;
+}
+
+.leave-od-portal .applications-table th:nth-child(2),
+.leave-od-portal .applications-table td:nth-child(2) {
+  width: 8%;
+}
+
+.leave-od-portal .applications-table th:nth-child(3),
+.leave-od-portal .applications-table td:nth-child(3),
+.leave-od-portal .applications-table th:nth-child(4),
+.leave-od-portal .applications-table td:nth-child(4) {
+  width: 10%;
+}
+
+.leave-od-portal .applications-table th:nth-child(5),
+.leave-od-portal .applications-table td:nth-child(5) {
+  width: 10%;
+}
+
+.leave-od-portal .applications-table th:nth-child(6),
+.leave-od-portal .applications-table td:nth-child(6) {
+  width: 10%;
+}
+
+.leave-od-portal .applications-table th:nth-child(7),
+.leave-od-portal .applications-table td:nth-child(7) {
+  width: 7%;
+}
+
+.leave-od-portal .applications-table th:nth-child(8),
+.leave-od-portal .applications-table td:nth-child(8) {
+  width: 18%;
+}
+
+.leave-od-portal .applications-table th:nth-child(9),
+.leave-od-portal .applications-table td:nth-child(9) {
+  width: 9%;
+}
+
+.leave-od-portal .applications-table th:nth-child(10),
+.leave-od-portal .applications-table td:nth-child(10) {
+  width: 8%;
+}
+
+.leave-od-portal .applications-table th:nth-child(11),
+.leave-od-portal .applications-table td:nth-child(11) {
+  width: 7%;
+}
+
+.leave-od-portal .date-stack,
+.leave-od-portal .applied-stack {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  color: #0f172a;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+.leave-od-portal .date-stack small,
+.leave-od-portal .applied-stack small {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.leave-od-portal .duration-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0.42rem 0.65rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-weight: 800;
+  font-size: 0.82rem;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+.leave-od-portal .reason-text,
+.leave-od-portal .remarks-text {
+  display: block;
+  color: #334155;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.leave-od-portal .proof-empty {
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.leave-od-portal .status-badge {
+  min-width: 96px;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  white-space: nowrap;
+}
+
+.leave-od-portal .approval-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.leave-od-portal .approval-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.5rem;
+  align-items: start;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.leave-od-portal .approval-level {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #1a4b8c;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.leave-od-portal .approval-person {
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.leave-od-portal .approval-status {
+  margin-top: 0.2rem;
+  display: inline-flex;
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.leave-od-portal .table tbody tr {
+  transition: all 0.3s ease;
+}
+
+.leave-od-portal .table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.03);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.leave-od-portal .table-responsive {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.leave-od-portal .dataTables_wrapper,
+.leave-od-portal .dataTables_scroll,
+.leave-od-portal .dataTables_scrollBody {
+  width: 100%;
+  overflow-x: visible !important;
+}
+
+.leave-od-portal .empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.leave-od-portal .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+  color: #1a4b8c;
+}
+
+.leave-od-portal .empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.leave-od-portal .flow-note {
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1e3a8a;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+/* DataTables Customization */
+.leave-od-portal .dataTables_wrapper {
+  margin-top: 1rem;
+}
+
+.leave-od-portal table.dataTable thead .sorting::before,
+.leave-od-portal table.dataTable thead .sorting::after,
+.leave-od-portal table.dataTable thead .sorting_asc::before,
+.leave-od-portal table.dataTable thead .sorting_asc::after,
+.leave-od-portal table.dataTable thead .sorting_desc::before,
+.leave-od-portal table.dataTable thead .sorting_desc::after {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.leave-od-portal .dataTables_filter input {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  margin-left: 0.5rem;
+}
+
+.leave-od-portal .dataTables_length select {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.4rem 2rem 0.4rem 0.75rem;
+  margin: 0 0.5rem;
+}
+
+.leave-od-portal .dataTables_info {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.leave-od-portal .dataTables_paginate .paginate_button {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  margin: 0 0.25rem;
+  padding: 0.5rem 0.75rem !important;
+  color: #64748b !important;
+}
+
+.leave-od-portal .dataTables_paginate .paginate_button.current {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.leave-od-portal .dataTables_paginate .paginate_button:hover {
+  background: #f8fafc !important;
+  color: #1a4b8c !important;
+  border-color: #1a4b8c !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .leave-od-portal .page-header {
+    padding: 1rem;
+  }
+  
+  .leave-od-portal .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .leave-od-portal .card-body {
+    padding: 1.5rem;
+  }
+
+  .leave-od-portal .table-responsive {
+    overflow: visible;
+  }
+
+  .leave-od-portal .applications-table,
+  .leave-od-portal .applications-table thead,
+  .leave-od-portal .applications-table tbody,
+  .leave-od-portal .applications-table tr,
+  .leave-od-portal .applications-table td {
+    display: block;
+    width: 100% !important;
+  }
+
+  .leave-od-portal .applications-table thead {
+    display: none;
+  }
+
+  .leave-od-portal .applications-table tr {
+    margin-bottom: 1rem;
+    border: 1px solid #dbeafe;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+  }
+
+  .leave-od-portal .applications-table td {
+    display: grid;
+    grid-template-columns: 118px minmax(0, 1fr);
+    gap: 0.85rem;
+    align-items: center;
+    min-height: 52px;
+    padding: 0.85rem 1rem;
+    text-align: left !important;
+    border-right: none;
+    border-bottom: 1px solid #eef2f7;
+  }
+
+  .leave-od-portal .applications-table td:last-child {
+    border-bottom: none;
+  }
+
+  .leave-od-portal .applications-table td::before {
+    content: attr(data-label);
+    color: #1a4b8c;
+    font-size: 0.76rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .leave-od-portal .applications-table td:first-child {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-right: none;
+  }
+
+  .leave-od-portal .applications-table td[colspan] {
+    display: block;
+    text-align: center !important;
+  }
+
+  .leave-od-portal .applications-table td[colspan]::before {
+    content: none;
+  }
+
+  .leave-od-portal .approval-flow {
+    width: 100%;
+  }
+
+  .leave-od-portal .date-stack,
+  .leave-od-portal .applied-stack {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .leave-od-portal {
+    padding: 1rem;
+  }
+  
+  .leave-od-portal .page-header {
+    padding: 0.75rem;
+  }
+  
+  .leave-od-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .leave-od-portal .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .leave-od-portal .card-body {
+    padding: 1.25rem;
+  }
+
+  .leave-od-portal .applications-table td {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 0.65rem;
+    padding: 0.8rem;
+  }
+  
+  .leave-od-portal .section-title {
+    font-size: 1.1rem;
+  }
+  
+  .leave-od-portal .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .leave-od-portal .input-group {
+    flex-direction: column;
+  }
+  
+  .leave-od-portal .input-group-text {
+    border-radius: 8px 8px 0 0;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: none;
+  }
+  
+  .leave-od-portal .form-control,
+  .leave-od-portal .form-select {
+    border-radius: 0 0 8px 8px;
+    border-left: 1px solid #e2e8f0;
+  }
+  
+  .leave-od-portal textarea.form-control {
+    border-radius: 8px;
+  }
+}
+
+/* Animation for cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.leave-od-portal .card {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+</style>
+
+<div class="leave-od-portal">
+  <div class="page-header">
+    <h1><i class="fas fa-calendar-alt me-2"></i>Leave & On-Duty Portal</h1>
+    <p class="header-subtitle">Apply for leave or on-duty and track your applications</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Form Section -->
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="fas fa-pen-square me-2"></i> Leave / OD Application</h5>
+      </div>
+      <div class="card-body">
+        <form action="{% url 'apply_leave_od' %}" method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <!-- Student Info -->
+          <h6 class="section-title"><i class="fas fa-user-graduate me-2"></i> Student Information</h6>
+          
+          <div class="info-grid">
+            <div class="info-card">
+              <div class="info-icon">
+                <i class="fas fa-user-graduate"></i>
+              </div>
+              <div class="info-content">
+                <div class="info-label">Name</div>
+                <div class="info-value">{{ student.name }}</div>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-icon">
+                <i class="fas fa-id-card"></i>
+              </div>
+              <div class="info-content">
+                <div class="info-label">Register Number</div>
+                <div class="info-value">{{ student.reg_no }}</div>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-icon">
+                <i class="fas fa-building"></i>
+              </div>
+              <div class="info-content">
+                <div class="info-label">Department</div>
+                <div class="info-value">{{ student.department }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Application Info -->
+          <h6 class="section-title"><i class="fas fa-file-alt me-2"></i> Application Details</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="detail-card" id="application_type_card">
+                <span class="detail-card-icon"><i class="fas fa-tag"></i></span>
+                <div class="detail-card-body">
+                  <label for="application_type" class="detail-label">Application Type</label>
+                  <select id="application_type" name="application_type" class="form-select" required>
+                    <option value="">Select application type</option>
+                    <option value="LEAVE">Leave</option>
+                    <option value="OD">On Duty (OD)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="detail-card" id="from_date_card">
+                <span class="detail-card-icon"><i class="fas fa-calendar-plus"></i></span>
+                <div class="detail-card-body">
+                  <label for="from_date" class="detail-label">From Date & Time</label>
+                  <input type="text" id="from_date" name="from_date" class="form-control datetime-input" placeholder="Choose start date and time" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="detail-card" id="to_date_card">
+                <span class="detail-card-icon"><i class="fas fa-calendar-check"></i></span>
+                <div class="detail-card-body">
+                  <label for="to_date" class="detail-label">To Date & Time</label>
+                  <input type="text" id="to_date" name="to_date" class="form-control datetime-input" placeholder="Choose end date and time" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="detail-card duration-card" id="duration_card">
+                <span class="detail-card-icon"><i class="fas fa-clock"></i></span>
+                <div class="detail-card-body">
+                  <span class="detail-label">Duration</span>
+                  <div id="duration_label" class="duration-value">Choose date and time</div>
+                  <div class="duration-hint">Calculated from the selected time range</div>
+                  <input type="hidden" id="total_days" name="total_days">
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Reason</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-comment-dots"></i></span>
+                <textarea id="reason" name="reason" class="form-control" rows="3" placeholder="Enter your reason..." required></textarea>
+              </div>
+            </div>
+
+            <div class="col-12" id="proof-upload-group" style="display: none;">
+              <label class="form-label">Upload Proof (PDF/Image)</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-file-upload"></i></span>
+                <input type="file" id="proof_file" name="proof_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+              </div>
+              <div class="form-text">Only required for On Duty applications</div>
+            </div>
+          </div>
+
+          <div class="text-end mt-4">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-paper-plane me-2"></i> Submit Application
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Applications Table -->
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="fas fa-tasks me-2"></i> Your Applications</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table id="applications_table" class="table table-hover align-middle applications-table w-100">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Type</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Days</th>
+                <th>Reason</th>
+                <th>Proof</th>
+                <th>Approval Flow</th>
+                <th>Status</th>
+                <th>Remarks</th>
+                <th>Applied On</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if leave_od_requests %}
+                {% for req in leave_od_requests %}
+                  <tr>
+                    <td class="text-center" data-label="#">{{ forloop.counter }}</td>
+                    <td class="text-center" data-label="Type">
+                      {% if req.application_type == 'LEAVE' %}
+                        <span class="badge text-secondary"><i class="fas fa-umbrella-beach me-1"></i> Leave</span>
+                      {% else %}
+                        <span class="badge bg-primary"><i class="fas fa-briefcase me-1"></i> OD</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-center" data-label="From">
+                      <span class="date-stack">
+                        <span>{{ req.from_date|date:"d M Y" }}</span>
+                        <small>{{ req.from_date|date:"h:i A" }}</small>
+                      </span>
+                    </td>
+                    <td class="text-center" data-label="To">
+                      <span class="date-stack">
+                        <span>{{ req.to_date|date:"d M Y" }}</span>
+                        <small>{{ req.to_date|date:"h:i A" }}</small>
+                      </span>
+                    </td>
+                    <td class="text-center" data-label="Days">
+                      <span class="duration-pill">{{ req.display_duration }}</span>
+                    </td>
+                    <td data-label="Reason"><span class="reason-text">{{ req.reason|truncatewords:8 }}</span></td>
+                    <td class="text-center" data-label="Proof">
+                      {% if req.proof_file %}
+                        <a href="{{ req.proof_file.url }}" target="_blank" class="btn btn-outline-info">
+                          <i class="fas fa-eye me-1"></i> View
+                        </a>
+                      {% else %}<span class="proof-empty">-</span>{% endif %}
+                    </td>
+                    <td data-label="Approval Flow">
+                      {% if req.approval_status_rows %}
+                        <div class="approval-flow">
+                          {% for row in req.approval_status_rows %}
+                            <div class="approval-step">
+                              <span class="approval-level">{{ row.level }}</span>
+                              <span>
+                                <span class="approval-person">{{ row.name }} ({{ row.employee_id }})</span>
+                                <span class="approval-status">{{ row.status|default:"PENDING" }}</span>
+                              </span>
+                            </div>
+                          {% endfor %}
+                        </div>
+                      {% else %}
+                        <span class="text-muted">Not created</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-center" data-label="Status">
+                      <span class="badge status-badge
+                        {% if req.status == 'APPROVED' %} bg-success
+                        {% elif req.status == 'REJECTED' %} bg-danger
+                        {% else %} bg-warning {% endif %}">
+                        {% if req.status == 'APPROVED' %}
+                          <i class="fas fa-check-circle me-1"></i>
+                        {% elif req.status == 'REJECTED' %}
+                          <i class="fas fa-times-circle me-1"></i>
+                        {% else %}
+                          <i class="fas fa-clock me-1"></i>
+                        {% endif %}
+                        {{ req.get_status_display }}
+                      </span>
+                    </td>
+                    <td data-label="Remarks"><span class="remarks-text">{{ req.remarks|default:"-" }}</span></td>
+                    <td class="text-center" data-label="Applied On">
+                      <span class="applied-stack">
+                        <span>{{ req.created_at|date:"d M Y" }}</span>
+                        <small>{{ req.created_at|date:"h:i A" }}</small>
+                      </span>
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="11" class="text-center py-4">
+                    <div class="empty-state">
+                      <i class="fas fa-inbox"></i>
+                      <p>No applications found</p>
+                    </div>
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const applicationTypeCard = document.getElementById('application_type_card');
+  const fromDateCard = document.getElementById('from_date_card');
+  const toDateCard = document.getElementById('to_date_card');
+  const durationCard = document.getElementById('duration_card');
+
+  function setCardFilled(card, filled) {
+    if (!card) return;
+    card.classList.toggle('is-filled', Boolean(filled));
+  }
+
+  function setCardActive(card, active) {
+    if (!card) return;
+    card.classList.toggle('is-active', Boolean(active));
+  }
+
+  // Flatpickr
+  const fromDateInput = flatpickr("#from_date", {
+    enableTime: true,
+    dateFormat: "Y-m-d H:i",
+    altInput: true,
+    altInputClass: "form-control datetime-input",
+    altFormat: "F j, Y h:i K",
+    disableMobile: "true",
+    minDate: "today",
+    onOpen: function() {
+      setCardActive(fromDateCard, true);
+    },
+    onClose: function() {
+      setCardActive(fromDateCard, false);
+    },
+    onChange: function(selectedDates, dateStr) {
+      setCardFilled(fromDateCard, selectedDates.length > 0);
+      if (selectedDates.length > 0) {
+        toDateInput.set("minDate", selectedDates[0]);
+        const toSelected = toDateInput.selectedDates[0];
+        if (toSelected && toSelected <= selectedDates[0]) {
+          toDateInput.clear();
+        }
+        calculateDays();
+      }
+    }
+  });
+
+  const toDateInput = flatpickr("#to_date", {
+    enableTime: true,
+    dateFormat: "Y-m-d H:i",
+    altInput: true,
+    altInputClass: "form-control datetime-input",
+    altFormat: "F j, Y h:i K",
+    disableMobile: "true",
+    minDate: "today",
+    onOpen: function() {
+      setCardActive(toDateCard, true);
+    },
+    onClose: function() {
+      setCardActive(toDateCard, false);
+    },
+    onChange: function(selectedDates) {
+      setCardFilled(toDateCard, selectedDates.length > 0);
+      calculateDays();
+    }
+  });
+
+  function calculateDays() {
+    const fromDate = fromDateInput.selectedDates[0];
+    const toDate = toDateInput.selectedDates[0];
+    const totalDaysInput = document.getElementById('total_days');
+    const durationLabel = document.getElementById('duration_label');
+
+    if (fromDate && toDate && toDate > fromDate) {
+      const diffTime = toDate - fromDate;
+      const diffDays = diffTime / (1000 * 60 * 60 * 24);
+      totalDaysInput.value = diffDays.toFixed(2);
+      durationLabel.textContent = formatDuration(diffTime);
+      setCardFilled(durationCard, true);
+    } else {
+      totalDaysInput.value = '';
+      durationLabel.textContent = 'Choose date and time';
+      setCardFilled(durationCard, false);
+    }
+  }
+
+  function formatDuration(milliseconds) {
+    let totalMinutes = Math.max(1, Math.round(milliseconds / (1000 * 60)));
+    const days = Math.floor(totalMinutes / (24 * 60));
+    totalMinutes %= 24 * 60;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    const parts = [];
+    if (days) {
+      parts.push(`${days} day${days === 1 ? '' : 's'}`);
+    }
+    if (hours) {
+      parts.push(`${hours} hour${hours === 1 ? '' : 's'}`);
+    }
+    if (minutes || parts.length === 0) {
+      parts.push(`${minutes} minute${minutes === 1 ? '' : 's'}`);
+    }
+
+    return parts.join(' ');
+  }
+
+  // Show/hide proof input for OD
+  const typeSelect = document.getElementById('application_type');
+  const proofGroup = document.getElementById('proof-upload-group');
+  const proofInput = document.getElementById('proof_file');
+
+  typeSelect.addEventListener('change', function () {
+    setCardFilled(applicationTypeCard, Boolean(this.value));
+    if (this.value === 'OD') {
+      proofGroup.style.display = 'block';
+      proofInput.required = true;
+    } else {
+      proofGroup.style.display = 'none';
+      proofInput.required = false;
+    }
+  });
+
+  setCardFilled(applicationTypeCard, Boolean(typeSelect.value));
+
+  // Initialize DataTables
+  $('#applications_table').DataTable({
+    paging: true,
+    searching: true,
+    ordering: true,
+    autoWidth: false,
+    pageLength: 10,
+    order: [[10, 'desc']],  // Default order by application date (newest first)
+    lengthMenu: [5, 10, 25, 50],
+    language: {
+      search: "_INPUT_",
+      searchPlaceholder: "Search applications...",
+      lengthMenu: "Show _MENU_ entries",
+      info: "Showing _START_ to _END_ of _TOTAL_ entries",
+      paginate: {
+        previous: "<i class='fas fa-chevron-left'></i>",
+        next: "<i class='fas fa-chevron-right'></i>"
+      }
+    },
+    responsive: true,
+    columnDefs: [
+      { responsivePriority: 1, targets: 0 },
+      { responsivePriority: 2, targets: 7 },
+      { responsivePriority: 3, targets: -1 }
+    ]
+  });
+
+  // Add animation delays to cards
+  const cards = document.querySelectorAll('.card');
+  cards.forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.2}s`;
+  });
+});
+</script>
+{% endblock %}

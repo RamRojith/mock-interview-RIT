@@ -1,0 +1,76 @@
+{% load static %}
+ 
+<!-- Update Semester Modal -->
+<div class="modal fade" id="updateSemesterModal" tabindex="-1" role="dialog" aria-labelledby="updateSemesterModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="updateSemesterModalLabel">Update Semester</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="updateSemesterForm">
+          {% csrf_token %}
+
+          <!-- Year Selection -->
+          <div class="form-group">
+            <label for="yearSelect" class="control-label">Select Year</label>
+            <select class="form-control" id="yearSelect" name="year" required>
+              <option selected disabled value="">Choose Year...</option>
+              {% for year in years %}
+              <option value="{{ year }}">{{ year }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Intake Selection -->
+          <div class="form-group mt-3">
+            <label for="intakeSelect" class="control-label">Select Intake</label>
+            <select class="form-control" id="intakeSelect" name="intake" required>
+              <option selected disabled value="">Choose Intake...</option>
+              {% for intake in intakes %}
+              <option value="{{ intake }}">{{ intake }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <button type="button" class="btn btn-primary mt-3" id="updateSemesterBtn">Update</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById("updateSemesterBtn").addEventListener("click", function() {
+    var year = document.getElementById("yearSelect").value;
+    var intake = document.getElementById("intakeSelect").value;
+
+    if (!year || !intake) {
+      alert("Please select both Year and Intake.");
+      return;
+    }
+
+    fetch("{% url 'update_semester' %}", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ year: year, intake: intake })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert("Semester updated successfully!");
+        location.reload();
+      } else {
+        alert("Error updating semester.");
+      }
+    })
+    .catch(error => console.error("Error:", error));
+  });
+</script>

@@ -1,0 +1,482 @@
+{% extends "base.html" %}
+{% load static %}
+{% load feedback_tags %}
+{% block content %}
+
+<style>
+  :root{
+    --card:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --border:#e5e7eb;
+    --soft:#f8fafc;
+    --pri:#2563eb;
+    --pri2:#1e40af;
+    --success:#16a34a;
+    --danger:#dc2626;
+    --r:18px;
+  }
+
+  body{
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--ink);
+    background: #f8fafc;
+  }
+
+  .fb-wrap{
+    max-width: 1380px;
+    margin: 22px auto;
+    padding: 0 14px;
+  }
+
+  .fb-card{
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+  }
+
+  .fb-head{
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(37,99,235,.10), rgba(99,102,241,.07));
+  }
+
+  .fb-title{
+    margin: 0;
+    font-weight: 800;
+    color: var(--ink);
+    font-size: 2rem;
+    text-align: left;
+  }
+
+  .fb-sub{
+    color: var(--muted);
+    margin-top: 8px;
+    font-size: 15px;
+    line-height: 1.6;
+    text-align: left;
+  }
+
+  .head-badges{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .badge-light{
+    background: #ffffff;
+    border: 1px solid var(--border);
+    color: var(--ink);
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .questions-wrap{
+    padding: 22px;
+  }
+
+  .category-block{
+    margin-bottom: 24px;
+  }
+
+  .category-title{
+    background: #eef2ff;
+    color: #1e3a8a;
+    padding: 13px 16px;
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: 800;
+    margin-bottom: 14px;
+    border: 1px solid #dbe4ff;
+  }
+
+  .question-row{
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) auto;
+    align-items: center;
+    gap: 18px;
+    padding: 16px 18px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: #fff;
+    margin-bottom: 12px;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.03);
+  }
+
+  .question-left{
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .question-number{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-weight: 800;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .question-text{
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.55;
+    word-break: break-word;
+  }
+
+  .question-right{
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .question-right::-webkit-scrollbar{
+    height: 6px;
+  }
+
+  .question-right::-webkit-scrollbar-thumb{
+    background: #cbd5e1;
+    border-radius: 20px;
+  }
+
+  .grade-option{
+    flex: 0 0 auto;
+  }
+
+  .grade-option input[type="radio"]{
+    display: none;
+  }
+
+  .grade-label{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 9px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #fff;
+    cursor: pointer;
+    transition: all .2s ease;
+    font-size: 14px;
+    font-weight: 700;
+    color: #334155;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .grade-label::before{
+    content: "";
+    width: 16px;
+    height: 16px;
+    border: 2px solid #94a3b8;
+    border-radius: 50%;
+    display: inline-block;
+    transition: all .2s ease;
+    background: #fff;
+    flex-shrink: 0;
+  }
+
+  .grade-label:hover{
+    border-color: #94a3b8;
+    background: #f8fafc;
+  }
+
+  .grade-option input[type="radio"]:checked + .grade-label{
+    background: #eff6ff;
+    border-color: #2563eb;
+    color: #1d4ed8;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  }
+
+  .grade-option input[type="radio"]:checked + .grade-label::before{
+    border-color: #2563eb;
+    background: radial-gradient(circle at center, #2563eb 46%, #fff 48%);
+  }
+
+  .submitted-badge{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: #166534;
+    font-weight: 800;
+    font-size: 14px;
+    border: 1px solid #bbf7d0;
+    white-space: nowrap;
+  }
+
+  .summary-box{
+    padding: 15px 22px;
+    border-top: 1px solid var(--border);
+    background: #f8fafc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .summary-title{
+    font-size: 15px;
+    color: #334155;
+    font-weight: 700;
+  }
+
+  .actions{
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 16px 22px 22px;
+    border-top: 1px solid var(--border);
+    background: #fff;
+    flex-wrap: wrap;
+  }
+
+  .btn{
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-weight: 700;
+  }
+
+  .btn-primary{
+    background: var(--pri);
+    border-color: var(--pri);
+  }
+
+  .btn-primary:hover{
+    background: var(--pri2);
+    border-color: var(--pri2);
+  }
+
+  @media (max-width: 1200px){
+    .question-row{
+      grid-template-columns: 1fr;
+      align-items: flex-start;
+    }
+
+    .question-right{
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
+
+  @media (max-width: 768px){
+    .fb-wrap{
+      padding: 0 10px;
+    }
+
+    .fb-head{
+      padding: 18px 16px 16px;
+    }
+
+    .fb-title{
+      font-size: 1.7rem;
+    }
+
+    .questions-wrap{
+      padding: 16px;
+    }
+
+    .question-row{
+      padding: 14px;
+    }
+
+    .question-right{
+      flex-wrap: wrap;
+      overflow-x: visible;
+    }
+
+    .grade-label{
+      font-size: 13px;
+      padding: 8px 14px;
+    }
+  }
+
+  @media (max-width: 480px){
+    .question-left{
+      gap: 10px;
+    }
+
+    .question-number{
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      font-size: 13px;
+    }
+
+    .question-text{
+      font-size: 14px;
+    }
+
+    .grade-label{
+      min-height: 38px;
+      font-size: 12px;
+      padding: 8px 12px;
+    }
+  }
+</style>
+
+<div class="fb-wrap">
+  <div class="fb-card">
+
+    <div class="fb-head">
+      <h4 class="fb-title">Program Exit Survey Form</h4>
+
+      <div class="fb-sub">
+        Student: {{ student.name|default:student }}
+        &nbsp; | &nbsp;
+        Batch: {{ student.batch|default:"-" }}
+        &nbsp; | &nbsp;
+        Department: {{ student.department.Department|default:student.department|default:"-" }}
+      </div>
+
+      <div class="head-badges">
+        <span class="badge-light">
+          Start:
+          {% if window_start %}
+            {{ window_start|date:"d M Y" }}
+          {% else %}
+            Not available
+          {% endif %}
+        </span>
+
+        <span class="badge-light">
+          End:
+          {% if window_end %}
+            {{ window_end|date:"d M Y" }}
+          {% else %}
+            Not available
+          {% endif %}
+        </span>
+
+        <span class="badge-light">
+          Final Year Students Only
+        </span>
+      </div>
+    </div>
+
+    {% if messages %}
+      <div id="msgWrap" class="px-3 pt-3">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} mb-2" role="alert">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="POST" id="programExitForm">
+      {% csrf_token %}
+
+      <div class="questions-wrap">
+
+        {% for cat, qlist in grouped.items %}
+          <div class="category-block">
+            <div class="category-title">
+              {{ cat|default:"General" }}
+            </div>
+
+            {% for q in qlist %}
+              <div class="question-row">
+                <div class="question-left">
+                  <span class="question-number">{{ forloop.counter }}</span>
+                  <div class="question-text">{{ q.question_text }}</div>
+                </div>
+
+                <div class="question-right">
+                  {% if already_submitted %}
+                    <span class="submitted-badge">
+                      {{ score_grade_map|get_item:answers_map|get_item:q.id|default:"Saved" }}
+                    </span>
+                  {% else %}
+                    {% for g in grade_options %}
+                      <div class="grade-option">
+                        <input
+                          type="radio"
+                          id="q{{ q.id }}_g{{ g.id }}"
+                          name="q_{{ q.id }}"
+                          value="{{ g.id }}"
+                          required
+                        >
+                        <label for="q{{ q.id }}_g{{ g.id }}" class="grade-label">
+                          {{ g.grade }}
+                        </label>
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% empty %}
+          <div class="alert alert-warning mb-0">
+            No program exit questions available.
+          </div>
+        {% endfor %}
+
+      </div>
+
+      {% if already_submitted %}
+        <div class="summary-box">
+          <div class="summary-title">Program Exit Survey already submitted</div>
+        </div>
+      {% endif %}
+
+      <div class="actions">
+        <a href="{% url 'home' %}" class="btn btn-secondary">
+          Back
+        </a>
+
+        {% if not already_submitted %}
+          <button type="submit" class="btn btn-primary">
+            Submit Program Exit Survey
+          </button>
+        {% endif %}
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const msgWrap = document.getElementById("msgWrap");
+  if (msgWrap) {
+    setTimeout(() => {
+      msgWrap.style.transition = "opacity .4s ease";
+      msgWrap.style.opacity = "0";
+      setTimeout(() => {
+        if (msgWrap) msgWrap.remove();
+      }, 450);
+    }, 3000);
+  }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Seminar Hall Approvals - Ramco Institute of Technology{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-check-circle me-2"></i>My Seminar Hall Booking Approvals</h2>
+                <p class="text-muted">Review and approve seminar hall booking requests assigned to your role</p>
+            </div>
+            <a href="{% url 'shb_hub' %}" class="btn btn-light">
+                <i class="fas fa-arrow-left me-2"></i>Back to Hub
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Pending Approvals ({{ pending_approvals|length }})</h5>
+        </div>
+        <div class="card-body">
+            {% if pending_approvals %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="approvalsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Faculty</th>
+                                <th>Department</th>
+                                <th>Event Name</th>
+                                <th>Event Type</th>
+                                <th>Date & Time</th>
+                                <th>Hall</th>
+                                <th>Approval Level</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for approval in pending_approvals %}
+                            <tr>
+                                <td><strong>{{ approval.application.booking_id }}</strong></td>
+                                <td>{{ approval.application.faculty_name }}</td>
+                                <td>{{ approval.application.department.Department|default:"N/A" }}</td>
+                                <td>{{ approval.application.event_name }}</td>
+                                <td><span class="badge bg-info">{{ approval.application.get_event_type_display }}</span></td>
+                                <td>
+                                    {{ approval.application.booking_date|date:"d M Y" }}<br>
+                                    <small class="text-muted">{{ approval.application.start_time|time:"g:i A" }} - {{ approval.application.end_time|time:"g:i A" }}</small>
+                                </td>
+                                <td>{{ approval.application.get_hall_name }}</td>
+                                <td><span class="badge bg-warning">Level {{ approval.approval_step.approval_level }}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewModal{{ approval.id }}">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- View & Approve Modal -->
+                            <div class="modal fade" id="viewModal{{ approval.id }}" tabindex="-1">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-primary text-white">
+                                            <h5 class="modal-title">Booking Details - {{ approval.application.booking_id }}</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h6 class="text-primary"><i class="fas fa-user me-2"></i>Faculty Information</h6>
+                                                    <p><strong>Name:</strong> {{ approval.application.faculty_name }}</p>
+                                                    <p><strong>Email:</strong> {{ approval.application.faculty_email }}</p>
+                                                    <p><strong>Phone:</strong> {{ approval.application.faculty_phone }}</p>
+                                                    <p><strong>Department:</strong> {{ approval.application.department.Department|default:"N/A" }}</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6 class="text-primary"><i class="fas fa-calendar me-2"></i>Event Details</h6>
+                                                    <p><strong>Event Name:</strong> {{ approval.application.event_name }}</p>
+                                                    <p><strong>Event Type:</strong> {{ approval.application.event_type }}</p>
+                                                    <p><strong>Date:</strong> {{ approval.application.booking_date|date:"d M Y" }}</p>
+                                                    <p><strong>Time:</strong> {{ approval.application.start_time|time:"g:i A" }} - {{ approval.application.end_time|time:"g:i A" }}</p>
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <h6 class="text-primary"><i class="fas fa-align-left me-2"></i>Event Description</h6>
+                                                    <p>{{ approval.application.event_description }}</p>
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h6 class="text-primary"><i class="fas fa-door-open me-2"></i>Hall & Requirements</h6>
+                                                    <p><strong>Preferred Hall:</strong> {{ approval.application.get_hall_name }}</p>
+                                                    <p><strong>Expected Attendees:</strong> {{ approval.application.expected_attendees }}</p>
+                                                    <p><strong>Technical Requirements:</strong></p>
+                                                    <ul class="list-unstyled">
+                                                        {% if approval.application.needs_projector %}<li><i class="fas fa-check text-success"></i> Projector</li>{% endif %}
+                                                        {% if approval.application.needs_microphone %}<li><i class="fas fa-check text-success"></i> Microphone</li>{% endif %}
+                                                        {% if approval.application.needs_sound_system %}<li><i class="fas fa-check text-success"></i> Sound System</li>{% endif %}
+                                                        {% if approval.application.needs_video_conferencing %}<li><i class="fas fa-check text-success"></i> Video Conferencing</li>{% endif %}
+                                                        {% if not approval.application.needs_projector and not approval.application.needs_microphone and not approval.application.needs_sound_system and not approval.application.needs_video_conferencing %}
+                                                            <li class="text-muted">None</li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    {% if approval.application.has_guest_speaker %}
+                                                    <h6 class="text-primary"><i class="fas fa-user-tie me-2"></i>Guest Speaker Details</h6>
+                                                    <p><strong>Name:</strong> {{ approval.application.guest_name|default:"N/A" }}</p>
+                                                    <p><strong>Designation:</strong> {{ approval.application.guest_designation|default:"N/A" }}</p>
+                                                    <p><strong>Organization:</strong> {{ approval.application.guest_organization|default:"N/A" }}</p>
+                                                    <p><strong>Email:</strong> {{ approval.application.guest_email|default:"N/A" }}</p>
+                                                    <p><strong>Phone:</strong> {{ approval.application.guest_phone|default:"N/A" }}</p>
+                                                    {% else %}
+                                                    <h6 class="text-primary"><i class="fas fa-user-tie me-2"></i>Guest Speaker</h6>
+                                                    <p class="text-muted">No guest speaker for this event</p>
+                                                    {% endif %}
+                                                    
+                                                    {% if approval.application.special_requirements %}
+                                                    <h6 class="text-primary mt-3"><i class="fas fa-clipboard-list me-2"></i>Special Requirements</h6>
+                                                    <p>{{ approval.application.special_requirements }}</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <form method="POST" action="{% url 'shb_my_approvals' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="approval_id" value="{{ approval.id }}">
+                                                <div class="mb-3">
+                                                    <label class="form-label"><strong>Comments (Optional)</strong></label>
+                                                    <textarea name="comments" class="form-control" rows="3" placeholder="Add your comments here..."></textarea>
+                                                </div>
+                                                <div class="d-flex gap-2">
+                                                    <button type="submit" name="action" value="approve" class="btn btn-success flex-fill">
+                                                        <i class="fas fa-check me-2"></i>Approve
+                                                    </button>
+                                                    <button type="submit" name="action" value="reject" class="btn btn-danger flex-fill">
+                                                        <i class="fas fa-times me-2"></i>Reject
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Pending Approvals</h5>
+                    <p class="text-muted">You don't have any seminar hall booking requests to approve at this time.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#approvalsTable').DataTable({
+            order: [[0, 'desc']],
+            pageLength: 25,
+            language: {
+                search: "Search applications:"
+            }
+        });
+    });
+</script>
+
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(30, 58, 138, 0.3);
+    }
+    
+    .page-header h2 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+    
+    .page-header p {
+        margin: 0.5rem 0 0 0;
+        opacity: 0.9;
+    }
+    
+    .card {
+        border: none;
+        border-radius: 12px;
+    }
+    
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+    }
+    
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .modal-header {
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+</style>
+{% endblock %}

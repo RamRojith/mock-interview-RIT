@@ -1,0 +1,382 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+  /* ✅ Scoped: won't affect base.html */
+  .approval-matrix-page{
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --border:#e5e7eb;
+    --pri:#0d6efd;
+    --ok:#16a34a;
+    --bad:#dc3545;
+    --shadow: 0 10px 30px rgba(2,6,23,.08);
+    --radius: 18px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: calc(100vh - 40px);
+    padding: 18px 12px;
+    isolation: isolate;
+  }
+  .approval-matrix-page .page-container{ max-width: 1350px; margin: 0 auto; }
+
+  .approval-matrix-page .hero{
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color:#fff;
+    border-radius: 22px;
+    padding: 22px 18px;
+    box-shadow: 0 12px 30px rgba(2,6,23,.18);
+    margin-bottom: 14px;
+  }
+  .approval-matrix-page .hero h1{ font-size: 1.6rem; font-weight: 800; margin:0; }
+  .approval-matrix-page .hero p{ margin:.35rem 0 0; opacity:.92; }
+
+  .approval-matrix-page .cardx{
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .approval-matrix-page .cardx .cardx-h{
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 10px;
+  }
+  .approval-matrix-page .cardx .cardx-b{ padding: 16px; }
+
+  .approval-matrix-page .muted{ color: var(--muted); }
+  .approval-matrix-page .pill{
+    display:inline-flex; align-items:center; gap:8px;
+    border:1px solid var(--border);
+    padding:6px 10px; border-radius: 999px;
+    background:#fff;
+    font-size:.85rem;
+  }
+  .approval-matrix-page .badge-soft{
+    font-weight:700;
+    padding:.35rem .55rem;
+    border-radius: 999px;
+    border:1px solid var(--border);
+    background:#fff;
+  }
+  .approval-matrix-page .badge-on{ color: var(--ok); border-color: rgba(22,163,74,.25); background: rgba(22,163,74,.08); }
+  .approval-matrix-page .badge-off{ color: var(--bad); border-color: rgba(220,53,69,.25); background: rgba(220,53,69,.08); }
+
+  .approval-matrix-page .table thead th{
+    font-size:.82rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    background:#f8fafc;
+  }
+  .approval-matrix-page .table td{ vertical-align: middle; }
+  .approval-matrix-page .btn{ border-radius: 12px; }
+  .approval-matrix-page .form-control, .approval-matrix-page .form-select{
+    border-radius: 12px;
+    border-color: var(--border);
+  }
+  .approval-matrix-page .actions{
+    display:flex; gap:8px; justify-content:flex-end; flex-wrap: wrap;
+  }
+
+  @media (max-width: 575px){
+    .approval-matrix-page .actions{ justify-content:flex-start; }
+  }
+</style>
+
+<div class="approval-matrix-page">
+  <div class="page-container">
+
+    <div class="hero">
+      <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+        <div>
+          <h1><i class="fa-solid fa-sitemap me-2"></i>Approval Matrix Master</h1>
+          <p class="mb-0">Manage workflow rules: Content Type + Action + Requester Role → Approver Role</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+          <span class="pill"><i class="fa-solid fa-layer-group"></i> Total Rules: <b>{{ rules|length }}</b></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+      <div class="mb-3">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} mb-2">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="row g-3">
+      <!-- LEFT: CREATE / UPDATE FORM (same page) -->
+      <div class="col-12 col-lg-4">
+        <div class="cardx">
+          <div class="cardx-h">
+            <div class="d-flex align-items-center gap-2">
+              <i class="fa-solid fa-circle-plus text-primary"></i>
+              <b id="formTitle">Create Rule</b>
+            </div>
+            <span class="muted small">No forms.py</span>
+          </div>
+
+          <div class="cardx-b">
+            <form method="post" id="ruleForm">
+              {% csrf_token %}
+              <input type="hidden" name="action" id="formAction" value="create">
+              <input type="hidden" name="rule_id" id="ruleId" value="">
+
+              <div class="mb-3">
+                <label class="form-label">Content Type <span class="text-danger">*</span></label>
+                <select class="form-select" name="content_type_id" id="contentType" required>
+                  <option value="">-- Select --</option>
+                  {% for ct in content_types %}
+                    <option value="{{ ct.id }}">{{ ct.app_label }} | {{ ct.model }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Action <span class="text-danger">*</span></label>
+                <select class="form-select" name="action_code" id="actionCode" required>
+                  <option value="">-- Select --</option>
+                  {% for k,v in ACTION_CHOICES %}
+                    <option value="{{ k }}">{{ v }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Requester Role <span class="text-danger">*</span></label>
+                <select class="form-select" name="requester_role_id" id="requesterRole" required>
+                  <option value="">-- Select --</option>
+                  {% for r in roles %}
+                    <option value="{{ r.id }}">{{ r }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Approver Role <span class="text-danger">*</span></label>
+                <select class="form-select" name="approver_role_id" id="approverRole" required>
+                  <option value="">-- Select --</option>
+                  {% for r in roles %}
+                    <option value="{{ r.id }}">{{ r }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" name="is_active" id="isActive">
+                  <option value="1">Active</option>
+                  <option value="0">Inactive</option>
+                </select>
+              </div>
+
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="fa-solid fa-floppy-disk me-2"></i><span id="submitLabel">Create</span>
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="resetBtn">
+                  <i class="fa-solid fa-rotate-left"></i>
+                </button>
+              </div>
+
+              <div class="small muted mt-3">
+                <i class="fa-solid fa-circle-info me-1"></i>
+                Unique key: <b>content type + action + requester + approver</b>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: LIST -->
+      <div class="col-12 col-lg-8">
+        <div class="cardx">
+          <div class="cardx-h">
+            <div class="d-flex align-items-center gap-2">
+              <i class="fa-solid fa-table-list text-primary"></i>
+              <b>Existing Rules</b>
+            </div>
+
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+              <input class="form-control form-control-sm" style="max-width:280px"
+                     type="text" id="tableSearch" placeholder="Search rules...">
+              <span class="badge-soft">{{ rules|length }} rows</span>
+            </div>
+          </div>
+
+          <div class="cardx-b p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0" id="rulesTable">
+                <thead>
+                  <tr>
+                    <th style="width:70px;">#</th>
+                    <th>Content Type</th>
+                    <th>Action</th>
+                    <th>Requester</th>
+                    <th>Approver</th>
+                    <th style="width:110px;">Status</th>
+                    <th style="width:220px;" class="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for r in rules %}
+                    <tr data-row>
+                      <td class="text-muted">{{ forloop.counter }}</td>
+                      <td>
+                        <div class="fw-semibold">{{ r.content_type.app_label }} | {{ r.content_type.model }}</div>
+                        <div class="small muted">CT ID: {{ r.content_type_id }}</div>
+                      </td>
+                      <td>
+                        <span class="badge-soft">{{ r.get_action_display }}</span>
+                        <div class="small muted">Code: {{ r.action }}</div>
+                      </td>
+                      <td>
+                        <div class="fw-semibold">{{ r.requester_role }}</div>
+                        <div class="small muted">ID: {{ r.requester_role_id }}</div>
+                      </td>
+                      <td>
+                        <div class="fw-semibold">{{ r.approver_role }}</div>
+                        <div class="small muted">ID: {{ r.approver_role_id }}</div>
+                      </td>
+                      <td>
+                        {% if r.is_active %}
+                          <span class="badge-soft badge-on"><i class="fa-solid fa-circle-check me-1"></i>Active</span>
+                        {% else %}
+                          <span class="badge-soft badge-off"><i class="fa-solid fa-circle-xmark me-1"></i>Inactive</span>
+                        {% endif %}
+                      </td>
+                      <td class="text-end">
+                        <div class="actions">
+                          <!-- EDIT: fill left form (no new page) -->
+                          <button type="button"
+                                  class="btn btn-sm btn-outline-primary"
+                                  onclick="fillEditForm(
+                                    '{{ r.id }}',
+                                    '{{ r.content_type_id }}',
+                                    '{{ r.action }}',
+                                    '{{ r.requester_role_id }}',
+                                    '{{ r.approver_role_id }}',
+                                    '{{ r.is_active|yesno:'1,0' }}'
+                                  )">
+                            <i class="fa-solid fa-pen-to-square me-1"></i>Edit
+                          </button>
+
+                          <!-- TOGGLE -->
+                          <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="toggle">
+                            <input type="hidden" name="rule_id" value="{{ r.id }}">
+                            <button type="submit"
+                                    class="btn btn-sm {% if r.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                              {% if r.is_active %}
+                                <i class="fa-solid fa-toggle-off me-1"></i>Deactivate
+                              {% else %}
+                                <i class="fa-solid fa-toggle-on me-1"></i>Activate
+                              {% endif %}
+                            </button>
+                          </form>
+
+                          <!-- DELETE -->
+                          <form method="post" class="d-inline" onsubmit="return confirm('Delete this rule?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="rule_id" value="{{ r.id }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                              <i class="fa-solid fa-trash me-1"></i>Delete
+                            </button>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="7" class="text-center py-5">
+                        <div class="muted"><i class="fa-regular fa-folder-open me-1"></i>No rules found.</div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="p-3 small muted border-top">
+              Tip: Use “Edit” to load the rule into the left form (same page), then “Update”.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  (function(){
+    const page = document.querySelector(".approval-matrix-page");
+    if(!page) return;
+
+    // Search filter (client-side)
+    const search = document.getElementById("tableSearch");
+    const rows = Array.from(document.querySelectorAll("#rulesTable tbody tr[data-row]"));
+    if(search){
+      search.addEventListener("input", function(){
+        const q = (this.value || "").toLowerCase().trim();
+        rows.forEach(r => {
+          const txt = (r.innerText || "").toLowerCase();
+          r.style.display = txt.includes(q) ? "" : "none";
+        });
+      });
+    }
+
+    // Reset form to create mode
+    function resetForm(){
+      document.getElementById("formTitle").innerText = "Create Rule";
+      document.getElementById("formAction").value = "create";
+      document.getElementById("ruleId").value = "";
+      document.getElementById("submitLabel").innerText = "Create";
+
+      document.getElementById("contentType").value = "";
+      document.getElementById("actionCode").value = "";
+      document.getElementById("requesterRole").value = "";
+      document.getElementById("approverRole").value = "";
+      document.getElementById("isActive").value = "1";
+
+      // scroll to form (nice UX)
+      document.getElementById("ruleForm").scrollIntoView({behavior:"smooth", block:"start"});
+    }
+
+    const resetBtn = document.getElementById("resetBtn");
+    if(resetBtn){
+      resetBtn.addEventListener("click", resetForm);
+    }
+
+    // Expose edit filler globally
+    window.fillEditForm = function(ruleId, ctId, actionCode, requesterRoleId, approverRoleId, isActive){
+      document.getElementById("formTitle").innerText = "Edit Rule";
+      document.getElementById("formAction").value = "update";
+      document.getElementById("ruleId").value = ruleId;
+      document.getElementById("submitLabel").innerText = "Update";
+
+      document.getElementById("contentType").value = ctId;
+      document.getElementById("actionCode").value = actionCode;
+      document.getElementById("requesterRole").value = requesterRoleId;
+      document.getElementById("approverRole").value = approverRoleId;
+      document.getElementById("isActive").value = isActive;
+
+      document.getElementById("ruleForm").scrollIntoView({behavior:"smooth", block:"start"});
+    }
+  })();
+</script>
+
+{% endblock %}

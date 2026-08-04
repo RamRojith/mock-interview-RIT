@@ -1,0 +1,616 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                    <div class="bg-primary p-3 rounded-circle me-3">
+                        <i class="fas fa-graduation-cap text-white fa-2x"></i>
+                    </div>
+                    <div>
+                        <h2 class="mb-0">Semester Upgrade</h2>
+                        <p class="text-muted mb-0">Manage student progression and passouts</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Sections -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Manage Sections</h5>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSectionModal">
+                        <i class="fas fa-plus"></i> Add Section
+                    </button>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Section</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sec in sections %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ sec.section }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editSectionModal{{ sec.id }}">Edit</button>
+
+                                    <form method="post" action="" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="section_action" value="delete">
+                                        <input type="hidden" name="section_id" value="{{ sec.id }}">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete section {{ sec.section }}?')">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+
+                            <!-- Edit Section Modal -->
+                            <div class="modal fade" id="editSectionModal{{ sec.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <form method="post" action="">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="section_action" value="edit">
+                                        <input type="hidden" name="section_id" value="{{ sec.id }}">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5>Edit Section</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <input type="text" name="section_name" class="form-control" value="{{ sec.section }}" required>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-success">Update</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Section Modal -->
+    <div class="modal fade" id="addSectionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" name="section_action" value="add">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5>Add New Section</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" name="section_name" class="form-control" placeholder="Enter section name" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Add Section</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Batch Selection -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Select Batch</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="">
+                        <div class="row align-items-end">
+                            <div class="col-md-6">
+                                <label for="batch" class="form-label fw-semibold">Select Batch:</label>
+                                <select name="batch" id="batch" class="form-select" onchange="this.form.submit()">
+                                    <option value="">-- Select a batch --</option>
+                                    {% for b in batches %}
+                                        <option value="{{ b }}" {% if b == selected_batch %}selected{% endif %}>{{ b }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <span class="badge bg-info fs-6 p-2">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    {{ batches|length }} batches available
+                                </span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if selected_batch %}
+
+    <!-- Current Batch Info -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Current Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="border-start border-4 border-primary ps-3">
+                                <p class="text-muted small mb-0">Batch</p>
+                                <p class="fw-semibold fs-5 mb-0">{{ selected_batch }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="border-start border-4 border-success ps-3">
+                                <p class="text-muted small mb-0">Year</p>
+                                <p class="fw-semibold fs-5 mb-0">{{ current_year }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="border-start border-4 border-info ps-3">
+                                <p class="text-muted small mb-0">Semester</p>
+                                <p class="fw-semibold fs-5 mb-0">{{ current_semester }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="border-start border-4 border-warning ps-3">
+                                <p class="text-muted small mb-0">Regulation</p>
+                                <p class="fw-semibold fs-5 mb-0">{{ current_regulation }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-3 d-flex align-items-center" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Cooldown is enforced per student based on Degree settings (Semester_Cooldown_Period). Default: {{ default_cooldown_months }} months.
+                    </div>
+
+                    {% if last_upgrade_date or next_upgrade_date %}
+                    <div class="row text-center mt-3">
+                        <div class="col-md-6 mb-3">
+                            <div class="border-start border-4 border-secondary ps-3">
+                                <p class="text-muted small mb-0">Last Update (Most Recent)</p>
+                                <p class="fw-semibold fs-6 mb-0">{{ last_upgrade_date|default:"--" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border-start border-4 border-primary ps-3">
+                                <p class="text-muted small mb-0">Next Ready (Most Recent + Config Months)</p>
+                                <p class="fw-semibold fs-6 mb-0">{{ next_upgrade_date|default:"--" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main form -->
+    <form id="semester-form" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="batch" value="{{ selected_batch }}">
+
+        <!-- Batch Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Batch Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if current_year == '4' and current_semester == '8' %}
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success p-3 rounded-circle me-3">
+                                    <i class="fas fa-user-graduate text-white fa-2x"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5>This batch has completed all semesters</h5>
+                                    <p class="text-muted">You can now move these students to the PassOut records.</p>
+                                </div>
+                                <div>
+                                    <button type="submit" name="action" value="passout" class="btn btn-success px-4 py-2">
+                                        <i class="fas fa-graduation-cap me-2"></i> Move to PassOut
+                                    </button>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="regulation" class="form-label fw-semibold">Select Regulation:</label>
+                                    <select name="regulation" id="regulation" class="form-select" required>
+                                        <option value="">-- Select Regulation --</option>
+                                        {% for r in regulations %}
+                                            <option value="{{ r }}">{{ r }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="semester" class="form-label fw-semibold">Select Semester:</label>
+                                    <select name="semester" id="semester" class="form-select" required>
+                                        {% for s in semesters %}
+                                            <option value="{{ s }}">{{ s }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" name="action" value="upgrade" class="btn btn-primary px-4 py-2">
+                                    <i class="fas fa-arrow-up me-2"></i> Upgrade Semester
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student List + Search + Pagination -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <h5 class="mb-0">Student List</h5>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge bg-primary">{{ department_students|length }} Departments</span>
+                            <div class="input-group input-group-sm" style="width: 280px;">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" id="globalSearch" class="form-control" placeholder="Search students...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+
+                        {% for department_label, students in department_students.items %}
+                        <div class="department-section mb-5" data-department="{{ department_label }}">
+
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-building text-secondary me-2"></i>
+                                <h5 class="mb-0">{{ department_label }}</h5>
+                                <span class="badge bg-secondary ms-2">{{ students|length }} students</span>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover align-middle student-table">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 36px;">
+                                                <input type="checkbox" class="select-all" />
+                                            </th>
+                                            <th>#</th>
+                                            <th>Reg No</th>
+                                            <th>Name</th>
+                                            <th>Section</th>
+                                            <th>Batch</th>
+                                            <th>Year</th>
+                                            <th>Semester</th>
+                                            <th>Regulation</th>
+                                            <th>Cooldown</th>
+                                            <th>Status</th>
+                                            <th>Last Updated</th>
+                                            <th>Ready On</th>
+                                            <th>Remaining</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for s in students %}
+                                        <tr class="student-row"
+                                            data-regno="{{ s.reg_no|lower }}"
+                                            data-name="{{ s.name|lower }}"
+                                            data-section="{{ s.section|lower }}"
+                                            data-year="{{ s.year|lower }}"
+                                            data-semester="{{ s.semester|lower }}"
+                                            data-regulation="{{ s.regulation|lower }}">
+                                            <td>
+                                                <input type="checkbox"
+                                                       name="selected_ids"
+                                                       value="{{ s.id }}"
+                                                       class="row-check"
+                                                       {% if s.cooldown_locked %}disabled{% endif %} />
+                                            </td>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td class="fw-semibold">{{ s.reg_no }}</td>
+                                            <td>{{ s.name }}</td>
+                                            <td>{{ s.section }}</td>
+                                            <td><span class="badge bg-info">{{ s.batch }}</span></td>
+                                            <td><span class="badge bg-secondary">{{ s.year }}</span></td>
+                                            <td><span class="badge bg-primary">{{ s.semester }}</span></td>
+                                            <td><span class="badge bg-warning text-dark">{{ s.regulation }}</span></td>
+
+                                            <td><span class="badge bg-dark">{{ s.cooldown_months }} mo</span></td>
+                                            <td>
+                                                {% if s.cooldown_locked %}
+                                                    <span class="badge bg-danger">Cooldown</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Ready</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-nowrap">
+                                                {{ s.last_updated|date:"d-m-Y H:i"|default:"--" }}
+                                            </td>
+                                            <td class="text-nowrap">
+                                                {{ s.ready_on|date:"d-m-Y H:i"|default:"--" }}
+                                            </td>
+                                            <td class="text-nowrap">
+                                                {% if s.cooldown_locked %}
+                                                    <span class="badge bg-danger">{{ s.remaining_days }} days</span>
+                                                {% else %}
+                                                    <span class="text-muted">--</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="pagination-controls mt-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                <div class="page-info small text-muted">
+                                    Showing <span class="current-range">...</span> of <span class="total-rows">{{ students|length }}</span>
+                                </div>
+                                <nav>
+                                    <ul class="pagination pagination-sm mb-0"></ul>
+                                </nav>
+                            </div>
+
+                            <div class="small text-muted mt-2">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Students in cooldown are shown as <span class="badge bg-danger">Cooldown</span> and cannot be selected.
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5>No students in this department</h5>
+                        </div>
+                        {% endfor %}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    {% else %}
+    <div class="card shadow-sm text-center py-5">
+        <i class="fas fa-graduation-cap fa-4x text-muted mb-3"></i>
+        <h4>Select a batch to get started</h4>
+        <p class="text-muted">Choose a batch from the dropdown above to view and manage students</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+    .student-row.hidden {
+        display: none;
+    }
+    .pagination-controls {
+        min-height: 38px;
+    }
+    .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+</style>
+
+<script>
+// Global selection across ALL tables / pages
+const selections = new Set();
+
+// Items per page (you can change this)
+const ITEMS_PER_PAGE = 25;
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    const globalSearch = document.getElementById('globalSearch');
+
+    // All department sections
+    document.querySelectorAll('.department-section').forEach(deptSection => {
+        const tbody = deptSection.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('.student-row'));
+        const paginationContainer = deptSection.querySelector('.pagination-controls ul');
+        const pageInfoCurrent = deptSection.querySelector('.current-range');
+        const totalRowsEl = deptSection.querySelector('.total-rows');
+
+        let currentPage = 1;
+        let filteredRows = [...rows];   // working copy after search
+
+        function renderPage(page) {
+            currentPage = page;
+            const start = (page - 1) * ITEMS_PER_PAGE;
+            const end = start + ITEMS_PER_PAGE;
+
+            // Hide all rows first
+            rows.forEach(r => r.classList.add('hidden'));
+
+            // Show only visible ones
+            filteredRows.slice(start, end).forEach(row => {
+                row.classList.remove('hidden');
+            });
+
+            // Update info
+            const showingStart = start + 1;
+            const showingEnd = Math.min(end, filteredRows.length);
+            pageInfoCurrent.textContent = filteredRows.length === 0 ? "0" : `${showingStart}-${showingEnd}`;
+
+            renderPagination();
+            syncCheckboxesWithGlobalSelection();
+            updateSelectAllStateForThisTable();
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredRows.length / ITEMS_PER_PAGE) || 1;
+            paginationContainer.innerHTML = '';
+
+            // Previous
+            const prev = document.createElement('li');
+            prev.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prev.innerHTML = `<a class="page-link" href="#">Previous</a>`;
+            prev.addEventListener('click', e => {
+                e.preventDefault();
+                if (currentPage > 1) renderPage(currentPage - 1);
+            });
+            paginationContainer.appendChild(prev);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement('li');
+                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                li.addEventListener('click', e => {
+                    e.preventDefault();
+                    renderPage(i);
+                });
+                paginationContainer.appendChild(li);
+            }
+
+            // Next
+            const next = document.createElement('li');
+            next.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            next.innerHTML = `<a class="page-link" href="#">Next</a>`;
+            next.addEventListener('click', e => {
+                e.preventDefault();
+                if (currentPage < totalPages) renderPage(currentPage + 1);
+            });
+            paginationContainer.appendChild(next);
+        }
+
+        function filterRows() {
+            const term = (globalSearch.value || '').trim().toLowerCase();
+            if (!term) {
+                filteredRows = [...rows];
+            } else {
+                filteredRows = rows.filter(row => {
+                    return (
+                        row.dataset.regno.includes(term) ||
+                        row.dataset.name.includes(term) ||
+                        row.dataset.section.includes(term) ||
+                        row.dataset.year.includes(term) ||
+                        row.dataset.semester.includes(term) ||
+                        row.dataset.regulation.includes(term)
+                    );
+                });
+            }
+
+            totalRowsEl.textContent = filteredRows.length;
+            currentPage = 1;
+            renderPage(1);
+        }
+
+        // Search listener
+        globalSearch.addEventListener('input', filterRows);
+
+        // Select All for this table (only visible & not disabled)
+        deptSection.querySelector('.select-all').addEventListener('change', function() {
+            const checked = this.checked;
+            deptSection.querySelectorAll('tbody .row-check:not(:disabled)').forEach(cb => {
+                if (cb.closest('tr').classList.contains('hidden')) return;
+                cb.checked = checked;
+                const id = cb.value;
+                if (checked) selections.add(id);
+                else selections.delete(id);
+            });
+            updateSelectAllStateForThisTable();
+        });
+
+        // Individual checkbox
+        deptSection.querySelectorAll('.row-check').forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (cb.disabled) {
+                    cb.checked = false;
+                    selections.delete(cb.value);
+                    return;
+                }
+                const id = cb.value;
+                if (cb.checked) selections.add(id);
+                else selections.delete(id);
+                updateSelectAllStateForThisTable();
+            });
+        });
+
+        function updateSelectAllStateForThisTable() {
+            const selectAll = deptSection.querySelector('.select-all');
+            const visibleEnabled = Array.from(
+                deptSection.querySelectorAll('tbody .row-check:not(:disabled)')
+            ).filter(cb => !cb.closest('tr').classList.contains('hidden'));
+
+            if (visibleEnabled.length === 0) {
+                selectAll.indeterminate = false;
+                selectAll.checked = false;
+                return;
+            }
+
+            const checkedCount = visibleEnabled.filter(cb => cb.checked).length;
+
+            if (checkedCount === 0) {
+                selectAll.checked = false;
+                selectAll.indeterminate = false;
+            } else if (checkedCount === visibleEnabled.length) {
+                selectAll.checked = true;
+                selectAll.indeterminate = false;
+            } else {
+                selectAll.checked = false;
+                selectAll.indeterminate = true;
+            }
+        }
+
+        function syncCheckboxesWithGlobalSelection() {
+            deptSection.querySelectorAll('.row-check').forEach(cb => {
+                if (cb.disabled) {
+                    cb.checked = false;
+                    return;
+                }
+                cb.checked = selections.has(cb.value);
+            });
+            updateSelectAllStateForThisTable();
+        }
+
+        // Initial render
+        renderPage(1);
+    });
+
+    // Before form submit → inject hidden inputs with selected ids
+    document.getElementById('semester-form').addEventListener('submit', function(e) {
+        // Remove old named checkboxes
+        this.querySelectorAll('input.row-check[name="selected_ids"]').forEach(el => {
+            el.removeAttribute('name');
+        });
+
+        // Remove previous hidden fields
+        this.querySelectorAll('input[type="hidden"][name="selected_ids"]').forEach(el => el.remove());
+
+        // Add fresh hidden inputs
+        selections.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'selected_ids';
+            input.value = id;
+            this.appendChild(input);
+        });
+    });
+
+});
+</script>
+
+{% endblock %}

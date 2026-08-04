@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                <i class="fas fa-user-edit me-2"></i>
+                Edit Student: {{ student.first_name }} {{ student.surname }}
+            </h3>
+        </div>
+
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Personal Information Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Personal Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">First Name*</label>
+                                    <input type="text" name="first_name" value="{{ student.first_name }}" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Surname*</label>
+                                    <input type="text" name="surname" value="{{ student.surname }}" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+    <label class="form-label">Gender</label>
+    <select name="gender" id="gender" class="form-select" required>
+        <option value="" disabled {% if not student.gender %}selected{% endif %}>Select Gender</option>
+        <option value="Male" {% if student.gender == "Male" %}selected{% endif %}>Male</option>
+        <option value="Female" {% if student.gender == "Female" %}selected{% endif %}>Female</option>
+        <option value="Other" {% if student.gender == "Other" %}selected{% endif %}>Other</option>
+    </select>
+</div>
+
+                            </div>
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Date of Birth</label>
+                                    <input type="date" name="date_of_birth" value="{{ student.date_of_birth|date:'Y-m-d' }}" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Age</label>
+                                    <input type="number" name="age" value="{{ student.age }}" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">NRC Number</label>
+                                    <input type="text" name="nrc_number" value="{{ student.nrc_number }}" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Passport Photo</label>
+                                    {% if student.passport_size_photo %}
+                                        <div class="mb-2">
+                                            <img src="{{ student.passport_size_photo.url }}" width="100" class="img-thumbnail">
+                                        </div>
+                                    {% endif %}
+                                    <input type="file" name="passport_size_photo" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact Information Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-address-book me-2"></i>Contact Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Mobile Number</label>
+                                    <input type="text" name="mobile_number" value="{{ student.mobile_number }}" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Email Address*</label>
+                                    <input type="email" name="email_address" value="{{ student.email_address }}" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Academic Information Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Academic Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+    <label class="form-label">Programme of Study</label>
+    <select name="programme_of_study" id="programme_of_study" class="form-select" required onchange="fetchPrograms()">
+        <option value="" disabled {% if not student.programme_of_study %}selected{% endif %}>Select Programme</option>
+        <option value="Certificate" {% if student.programme_of_study == "Certificate" %}selected{% endif %}>Certificate</option>
+        <option value="Diploma" {% if student.programme_of_study == "Diploma" %}selected{% endif %}>Diploma</option>
+        <option value="Advanced Diploma" {% if student.programme_of_study == "Advanced Diploma" %}selected{% endif %}>Advanced Diploma</option>
+        <option value="Bachelor Degree" {% if student.programme_of_study == "Bachelor Degree" %}selected{% endif %}>Bachelor Degree</option>
+        <option value="Postgraduate Diploma" {% if student.programme_of_study == "Postgraduate Diploma" %}selected{% endif %}>Postgraduate Diploma</option>
+        <option value="Master Degree" {% if student.programme_of_study == "Master Degree" %}selected{% endif %}>Master Degree</option>
+    </select>
+</div>
+
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+    <label class="form-label">Intake</label>
+    <select name="Intake" id="intake" class="form-select" required>
+        <option value="" disabled {% if not student.Intake %}selected{% endif %}>Select Intake</option>
+        <option value="January" {% if student.Intake == "January" %}selected{% endif %}>January</option>
+        <option value="April" {% if student.Intake == "April" %}selected{% endif %}>April</option>
+        <option value="July" {% if student.Intake == "July" %}selected{% endif %}>July</option>
+        <option value="October" {% if student.Intake == "October" %}selected{% endif %}>October</option>
+    </select>
+</div>
+
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+    <label class="form-label">Mode of Study</label>
+    <select name="mode_of_study" id="mode_of_study" class="form-select" required>
+        <option value="" disabled {% if not student.mode_of_study %}selected{% endif %}>Select Mode of Study</option>
+        <option value="Regular" {% if student.mode_of_study == "Regular" %}selected{% endif %}>Regular</option>
+        <option value="Evening" {% if student.mode_of_study == "Evening" %}selected{% endif %}>Evening</option>
+        <option value="Weekend" {% if student.mode_of_study == "Weekend" %}selected{% endif %}>Weekend</option>
+        <option value="Term" {% if student.mode_of_study == "Term" %}selected{% endif %}>Term</option>
+        <option value="Blended/E-Learning" {% if student.mode_of_study == "Blended/E-Learning" %}selected{% endif %}>Blended/E-Learning</option>
+        <option value="ODeL" {% if student.mode_of_study == "ODeL" %}selected{% endif %}>ODeL</option>
+    </select>
+</div>
+
+                            </div>
+                        </div>
+                        
+                      <div class="row g-3">
+    <div class="col-md-3">
+        <div class="mb-3">
+            <label class="form-label">Regulation</label>
+            <input type="text" name="regulation" value="{{ student.regulation }}" class="form-control">
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="mb-3">
+            <label class="form-label">Batch</label>
+            <input type="text" name="batch" value="{{ student.batch }}" class="form-control">
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="mb-3">
+            <label class="form-label">Year</label>
+            <select name="year" class="form-select" required>
+                <option value="" disabled>Select Year</option>
+                {% for y in years %}
+                    <option value="{{ forloop.counter }}" {% if student.year|stringformat:"s" == forloop.counter|stringformat:"s" %}selected{% endif %}>
+                        {{ y }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="mb-3">
+            <label class="form-label">Semester</label>
+            <select name="semester" class="form-select" required>
+                <option value="" disabled>Select Semester</option>
+                {% for s in semesters %}
+                    <option value="{{ forloop.counter }}" {% if student.semester|stringformat:"s" == forloop.counter|stringformat:"s" %}selected{% endif %}>
+                        {{ s }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</div>
+
+                        
+                        
+                </div>
+                
+                <!-- Institutional Information Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-university me-2"></i>Institutional Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Registration Number</label>
+                                    <input type="text" name="reg_number" value="{{ student.reg_number }}" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+    <div class="mb-3">
+        <label class="form-label">Department</label>
+        <select name="department" class="form-select" required>
+            <option value="" disabled>Select Department</option>
+            {% for dept in departments %}
+                <option value="{{ dept.id }}" 
+                    {% if student.department and student.department.id == dept.id %}selected{% endif %}>
+                    {{ dept.Department }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<div class="col-md-4">
+    <div class="mb-3">
+        <label class="form-label">Program Name</label>
+        <select name="program_name" class="form-select" required>
+            <option value="" disabled>Select Program</option>
+            {% for prog in programs %}
+                <option value="{{ prog.id }}" 
+                    {% if student.program_name == prog.program_name %}selected{% endif %}>
+                    {{ prog.program_name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-end mt-4 gap-2">
+                    <a href="{% url 'update_student_details' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 0.5rem;
+    }
+    .card-header {
+        padding: 0.75rem 1.25rem;
+    }
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+    .img-thumbnail {
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        padding: 0.25rem;
+    }
+    .bg-light {
+        background-color: #f8f9fa!important;
+    }
+</style>
+
+{% endblock %}

@@ -1,0 +1,594 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="{% static 'bootstrap/js/bootstrap.bundle.js' %}"></script>
+
+<style>
+  /* ✅ Scoped variables + styles (won't leak to base.html) */
+  .staff-accounts-page{
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --border:#e5e7eb;
+    --pri:#0d6efd;
+    --shadow: 0 10px 30px rgba(2,6,23,.08);
+    --radius: 18px;
+  }
+
+  .staff-accounts-page .page-wrap{
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: calc(100vh - 40px);
+    padding: 22px 12px;
+  }
+  .staff-accounts-page .page-container{ max-width: 1400px; margin: 0 auto; }
+
+  .staff-accounts-page .page-header{
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    border-radius: 20px;
+    padding: 22px 20px;
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(2,6,23,.18);
+  }
+  .staff-accounts-page .page-header h2{ margin:0; font-weight: 900; letter-spacing:.2px; }
+  .staff-accounts-page .page-header .sub{ color: rgba(255,255,255,.85); margin-top: 6px; }
+
+  .staff-accounts-page .chip{
+    display:inline-flex; align-items:center; gap:8px;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.22);
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+
+  .staff-accounts-page .stat-card{
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: var(--card);
+    box-shadow: 0 8px 22px rgba(17,24,39,.06);
+    height: 100%;
+  }
+  .staff-accounts-page .stat-card .label{ color: var(--muted); font-weight: 700; font-size: .9rem; }
+  .staff-accounts-page .stat-card .value{ font-weight: 900; font-size: 1.45rem; color: var(--ink); margin-top: 4px; }
+
+  .staff-accounts-page .filter-card{
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+  }
+
+  .staff-accounts-page .table-wrap{
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .staff-accounts-page .table thead th{
+    background: #0b1220;
+    color: #fff;
+    border-bottom: 0;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .staff-accounts-page .table tbody td{ vertical-align: middle; }
+
+  .staff-accounts-page .profile-img{ width:40px;height:40px;border-radius:50%;object-fit:cover; border:1px solid var(--border); }
+  .staff-accounts-page .badge-soft{
+    background: #eef2ff;
+    color: #1e40af;
+    border: 1px solid #c7d2fe;
+    font-weight: 800;
+    padding: .45rem .6rem;
+  }
+
+  .staff-accounts-page .btn-icon{
+    display:inline-flex; align-items:center; justify-content:center;
+    gap:6px;
+  }
+
+  /* ✅ Modal scoping */
+  .staff-accounts-page #loginPreviewModal .modal-content{ border-radius: 16px; box-shadow: 0 0 24px rgba(0,0,0,.25); overflow:hidden; }
+  .staff-accounts-page #loginPreviewModal .modal-body{ background: #f8f9fc; }
+  .staff-accounts-page #loginPreviewModal .profile-preview{ text-align:center; }
+  .staff-accounts-page #loginPreviewModal .profile-preview img{ width:92px;height:92px;border-radius:50%;object-fit:cover;margin-bottom: 12px; border: 2px solid #fff; box-shadow: 0 10px 25px rgba(2,6,23,.12); }
+  .staff-accounts-page #loginPreviewModal .user-info p{ margin-bottom: .25rem; color: #334155; }
+
+  .staff-accounts-page .pagination .page-link{ border-radius: 10px; margin: 0 3px; font-weight: 700; }
+  .staff-accounts-page .pagination .page-item.active .page-link{ background: var(--pri); border-color: var(--pri); }
+
+  @media (max-width: 375px){
+    .staff-accounts-page .btn-group.btn-group-sm{ flex-direction:column; }
+    .staff-accounts-page .btn-group.btn-group-sm>*{ width:100%; margin-bottom:.25rem; }
+  }
+</style>
+
+<div class="staff-accounts-page">
+  <div class="page-wrap">
+    <div class="page-container">
+
+      <!-- ✅ Header -->
+      <div class="page-header mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <h2><i class="fa-solid fa-user-shield me-2"></i>Staff & Admin Accounts</h2>
+            <div class="sub">Search, filter, paginate and login-as users securely</div>
+          </div>
+
+          <div class="chip">
+            <span class="badge bg-light text-dark" id="resultCount">0</span>
+            <span>Users (Filtered)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ Statistics -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="stat-card">
+            <div class="label"><i class="fa-solid fa-users me-2"></i>Total</div>
+            <div class="value" id="statTotal">0</div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="stat-card">
+            <div class="label"><i class="fa-solid fa-circle-check me-2 text-success"></i>Active</div>
+            <div class="value" id="statActive">0</div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="stat-card">
+            <div class="label"><i class="fa-solid fa-circle-xmark me-2 text-danger"></i>Inactive</div>
+            <div class="value" id="statInactive">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ Filters -->
+      <div class="filter-card mb-3">
+        <div class="card-body p-3 p-md-4">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <div class="fw-black" style="font-weight:900;color:var(--ink);">
+              <i class="fa-solid fa-filter me-2 text-primary"></i>Filters
+            </div>
+            <div class="text-muted small" id="showingText">Showing 0–0 of 0</div>
+          </div>
+
+          <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Search (Any Field)</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" id="globalSearch" class="form-control"
+                       placeholder="username / emp id / email / dept / role...">
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label fw-bold">Department</label>
+              <select id="departmentFilter" class="form-select">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                  <option value="{{ dept.Department }}">{{ dept.Department }} - {{ dept.Department_code }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label fw-bold">Role</label>
+              <select id="roleFilter" class="form-select">
+                <option value="">All Roles</option>
+              </select>
+            </div>
+
+            <div class="col-md-2">
+              <label class="form-label fw-bold">Page Size</label>
+              <select id="pageSize" class="form-select">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+
+            <div class="col-12 d-flex flex-wrap gap-2 mt-2">
+              <button class="btn btn-outline-secondary btn-icon" id="clearAll" type="button">
+                <i class="fa-solid fa-eraser"></i> Clear
+              </button>
+              <button class="btn btn-outline-primary btn-icon" id="refreshBtn" type="button">
+                <i class="fa-solid fa-rotate"></i> Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ Table -->
+      <div class="table-wrap">
+        <div class="table-responsive">
+          <table class="table table-hover table-striped align-middle mb-0">
+            <thead>
+              <tr>
+                <th style="width:55px">#</th>
+                <th style="width:85px" class="text-center">Profile</th>
+                <th>Username</th>
+                <th>Employee ID</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Role</th>
+                <th style="width:90px">Status</th>
+                <th style="width:170px">Last Login</th>
+                <th class="text-center" style="width:260px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTbody">
+              <tr>
+                <td colspan="10" class="text-center text-muted py-4">
+                  <i class="fa-solid fa-spinner fa-spin me-2"></i>Loading...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ✅ Pagination Controls -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+        <div class="text-muted small" id="pageInfo">Page 1 of 1</div>
+        <nav>
+          <ul class="pagination pagination-sm mb-0" id="paginationUl"></ul>
+        </nav>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ✅ Login Preview Modal -->
+  <div class="modal fade" id="loginPreviewModal" tabindex="-1" aria-labelledby="loginPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold" id="loginPreviewModalLabel">
+            <i class="fas fa-user-check me-2"></i> Confirm Login
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="profile-preview">
+            <img id="previewProfile" src="" alt="User Profile"
+                 onerror="this.onerror=null;this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';">
+          </div>
+          <div class="user-info text-center mt-2">
+            <p class="fw-bold mb-1" id="previewUsername"></p>
+            <p id="previewEmail"></p>
+            <p id="previewEmployeeId" class="text-muted"></p>
+            <p id="previewDepartment"></p>
+            <p><span class="badge bg-info" id="previewRole"></span></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <form id="confirmLoginForm" method="post" class="w-100 text-end">
+            {% csrf_token %}
+            <input type="hidden" name="login_as" id="confirmLoginId">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-success">
+              <i class="fas fa-sign-in-alt me-1"></i> Confirm Login
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const DEFAULT_PROFILE = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+  const dataUrl = "{% url 'staff_user_accounts_data' %}";
+
+  const editUrlDummy = "{% url 'edit_staff_user_accounts' 0 %}";
+  function buildEditUrl(id){ return editUrlDummy.replace("/0/", "/" + id + "/"); }
+  const resetUrlDummy = "{% url 'reset_staff_user_password' 0 %}";
+  function buildResetUrl(id){ return resetUrlDummy.replace("/0/", "/" + id + "/"); }
+  const csrfToken = "{{ csrf_token }}";
+
+  let currentPage = 1;
+  let lastMeta = null;
+  let searchTimer = null;
+
+  function escapeHtml(text){
+    if(text === null || text === undefined) return "";
+    return String(text)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function setLoading(){
+    $("#usersTbody").html(`
+      <tr>
+        <td colspan="10" class="text-center text-muted py-4">
+          <i class="fa-solid fa-spinner fa-spin me-2"></i>Loading...
+        </td>
+      </tr>
+    `);
+  }
+
+  function renderStats(stats){
+    if(!stats) return;
+    $("#statTotal").text(stats.total ?? 0);
+    $("#statActive").text(stats.active ?? 0);
+    $("#statInactive").text(stats.inactive ?? 0);
+  }
+
+  function renderRoleOptions(options){
+    const $role = $("#roleFilter");
+    const selected = $role.val() || "";
+    let html = `<option value="">All Roles</option>`;
+    (options || []).forEach(r => {
+      const rr = escapeHtml(r);
+      html += `<option value="${rr}">${rr}</option>`;
+    });
+    $role.html(html);
+
+    if(selected){
+      $role.val(selected);
+      if($role.val() === null) $role.val("");
+    }
+  }
+
+  function renderRows(rows){
+    if(!rows || rows.length === 0){
+      $("#usersTbody").html(`
+        <tr>
+          <td colspan="10" class="text-center text-muted py-4">No staff users found.</td>
+        </tr>
+      `);
+      return;
+    }
+
+    const html = rows.map(r => {
+      const profile = r.profile ? escapeHtml(r.profile) : DEFAULT_PROFILE;
+
+      const deptText = r.department
+        ? `${escapeHtml(r.department)}${r.department_code ? " - " + escapeHtml(r.department_code) : ""}`
+        : "-";
+
+      const roleText = escapeHtml(r.role || "-");
+      const roleClass = (r.role && String(r.role).toLowerCase() === "admin") ? "text-danger fw-bold" : "";
+
+      const statusBadge = r.is_active
+        ? `<span class="badge bg-success">Active</span>`
+        : `<span class="badge bg-danger">Inactive</span>`;
+
+      return `
+        <tr>
+          <td>${r.sno}</td>
+          <td class="text-center">
+            <img src="${profile}" class="profile-img" alt="Profile"
+                 onerror="this.onerror=null;this.src='${DEFAULT_PROFILE}';">
+          </td>
+          <td class="fw-semibold">${escapeHtml(r.username)}</td>
+          <td><span class="badge badge-soft">${escapeHtml(r.employee_id)}</span></td>
+          <td>${escapeHtml(r.email)}</td>
+          <td>${deptText}</td>
+          <td class="${roleClass}">${roleText}</td>
+          <td>${statusBadge}</td>
+          <td>${escapeHtml(r.last_login || "-")}</td>
+          <td class="text-center">
+            <div class="btn-group btn-group-sm" role="group">
+              <a href="${buildEditUrl(r.id)}" class="btn btn-outline-primary btn-icon">
+                <i class="fas fa-edit"></i><span class="d-none d-sm-inline">Edit</span>
+              </a>
+
+              <button type="button"
+                      class="btn btn-outline-warning btn-icon reset-password-btn"
+                      data-id="${r.id}"
+                      data-username="${escapeHtml(r.username)}">
+                <i class="fas fa-key"></i><span class="d-none d-sm-inline">Reset</span>
+              </button>
+
+              <button type="button"
+                      class="btn btn-outline-success btn-icon preview-login-btn"
+                      data-id="${r.id}"
+                      data-username="${escapeHtml(r.username)}"
+                      data-email="${escapeHtml(r.email)}"
+                      data-employeeid="${escapeHtml(r.employee_id)}"
+                      data-department="${escapeHtml(r.department)}"
+                      data-role="${escapeHtml(r.role)}"
+                      data-profile="${profile}">
+                <i class="fas fa-sign-in-alt"></i><span class="d-none d-sm-inline">Log</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    $("#usersTbody").html(html);
+  }
+
+  function renderPagination(meta){
+    if(!meta){
+      $("#paginationUl").html("");
+      $("#pageInfo").text("Page 1 of 1");
+      return;
+    }
+
+    const page = meta.page;
+    const totalPages = meta.total_pages || 1;
+
+    $("#pageInfo").text(`Page ${page} of ${totalPages}`);
+
+    const total = meta.total || 0;
+    const pageSize = meta.page_size || 25;
+    const start = total === 0 ? 0 : ((page - 1) * pageSize) + 1;
+    const end = Math.min(page * pageSize, total);
+    $("#showingText").text(`Showing ${start}–${end} of ${total}`);
+    $("#resultCount").text(total);
+
+    function li(disabled, label, targetPage, active=false){
+      const dcls = disabled ? "disabled" : "";
+      const acls = active ? "active" : "";
+      const aria = active ? 'aria-current="page"' : "";
+      return `
+        <li class="page-item ${dcls} ${acls}">
+          <a class="page-link" href="#" data-page="${targetPage}" ${aria}>${label}</a>
+        </li>
+      `;
+    }
+
+    let html = "";
+    html += li(page <= 1, "&laquo;", 1);
+    html += li(!meta.has_prev, "&lsaquo;", page - 1);
+
+    const windowSize = 2;
+    const startP = Math.max(1, page - windowSize);
+    const endP = Math.min(totalPages, page + windowSize);
+
+    if(startP > 1){
+      html += li(false, "1", 1, page === 1);
+      if(startP > 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+    }
+
+    for(let p = startP; p <= endP; p++){
+      html += li(false, String(p), p, p === page);
+    }
+
+    if(endP < totalPages){
+      if(endP < totalPages - 1) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+      html += li(false, String(totalPages), totalPages, page === totalPages);
+    }
+
+    html += li(!meta.has_next, "&rsaquo;", page + 1);
+    html += li(page >= totalPages, "&raquo;", totalPages);
+
+    $("#paginationUl").html(html);
+  }
+
+  function loadUsers(){
+    const q = $("#globalSearch").val().trim();
+    const dept = $("#departmentFilter").val().trim();
+    const role = $("#roleFilter").val().trim();
+    const pageSize = $("#pageSize").val();
+
+    setLoading();
+
+    $.ajax({
+      url: dataUrl,
+      method: "GET",
+      data: { q, dept, role, page: currentPage, page_size: pageSize },
+      success: function(resp){
+        renderRoleOptions(resp.role_options || []);
+        renderStats(resp.stats || null);
+        renderRows(resp.results || []);
+        lastMeta = resp.pagination || null;
+        renderPagination(lastMeta);
+      },
+      error: function(){
+        $("#usersTbody").html(`
+          <tr>
+            <td colspan="10" class="text-center text-danger py-4">
+              Failed to load users. Please refresh.
+            </td>
+          </tr>
+        `);
+        $("#paginationUl").html("");
+      }
+    });
+  }
+
+  $("#globalSearch").on("keyup", function(){
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function(){
+      currentPage = 1;
+      loadUsers();
+    }, 250);
+  });
+
+  $("#departmentFilter, #roleFilter, #pageSize").on("change", function(){
+    currentPage = 1;
+    loadUsers();
+  });
+
+  $("#clearAll").on("click", function(){
+    $("#globalSearch").val("");
+    $("#departmentFilter").val("");
+    $("#roleFilter").val("");
+    $("#pageSize").val("25");
+    currentPage = 1;
+    loadUsers();
+  });
+
+  $("#refreshBtn").on("click", function(){ loadUsers(); });
+
+  $(document).on("click", "#paginationUl a.page-link", function(e){
+    e.preventDefault();
+    const p = parseInt($(this).data("page"));
+    if(!p || p < 1) return;
+    if(lastMeta && p > (lastMeta.total_pages || 1)) return;
+    currentPage = p;
+    loadUsers();
+  });
+
+  $(document).on("click", ".preview-login-btn", function(){
+    const id = $(this).data("id");
+    $("#confirmLoginId").val(id);
+    $("#previewUsername").text($(this).data("username"));
+    $("#previewEmail").text($(this).data("email"));
+    $("#previewEmployeeId").text("Employee ID: " + $(this).data("employeeid"));
+    $("#previewDepartment").text("Department: " + ($(this).data("department") || "-"));
+    $("#previewRole").text($(this).data("role") || "-");
+    $("#previewProfile").attr("src", $(this).data("profile") || DEFAULT_PROFILE);
+
+    const modal = new bootstrap.Modal(document.getElementById("loginPreviewModal"));
+    modal.show();
+  });
+
+  $(document).on("click", ".reset-password-btn", function(){
+    const id = $(this).data("id");
+    const username = $(this).data("username") || "this user";
+    if(!confirm(`Reset password to 123 for ${username}?`)) return;
+
+    const $btn = $(this);
+    const originalHtml = $btn.html();
+    $btn.prop("disabled", true).html(`<i class="fa-solid fa-spinner fa-spin"></i><span class="d-none d-sm-inline">Reset</span>`);
+
+    $.ajax({
+      url: buildResetUrl(id),
+      method: "POST",
+      headers: { "X-CSRFToken": csrfToken },
+      success: function(resp){
+        alert((resp && resp.message) ? resp.message : "Password reset to 123.");
+      },
+      error: function(xhr){
+        const message = xhr.responseJSON && xhr.responseJSON.message
+          ? xhr.responseJSON.message
+          : "Unable to reset password. Please try again.";
+        alert(message);
+      },
+      complete: function(){
+        $btn.prop("disabled", false).html(originalHtml);
+      }
+    });
+  });
+
+  $(document).ready(function(){ loadUsers(); });
+})();
+</script>
+
+{% endblock %}

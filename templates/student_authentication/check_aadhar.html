@@ -1,0 +1,562 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Aadhaar Verification - RIT Student Portal</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="website icon" type="png" href="{% static 'images/ritlogo.png' %}">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #1a4b8c;
+            --primary-dark: #1e3a8a;
+            --secondary: #2c5aa0;
+            --accent: #ff6b00;
+            --light: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            --border: 1px solid rgba(255, 255, 255, 0.2);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231a4b8c' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Auth Container */
+        .auth-container {
+            display: flex;
+            max-width: 1000px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            border: var(--border);
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Left Panel */
+        .auth-left {
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 3rem;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-left::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M50 100c27.614 0 50-22.386 50-50S77.614 0 50 0 0 22.386 0 50s22.386 50 50 50zm0-10c22.091 0 40-17.909 40-40S72.091 10 50 10 10 27.909 10 50s17.909 40 40 40z'/%3E%3C/g%3E%3C/svg%3E") repeat;
+            opacity: 0.2;
+        }
+
+        .college-logo {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            padding: 1rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .college-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .college-name {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .college-tagline {
+            font-size: 1rem;
+            opacity: 0.9;
+            font-weight: 400;
+            margin-bottom: 2rem;
+        }
+
+        .auth-features {
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .auth-feature {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            opacity: 0.95;
+        }
+
+        .auth-feature i {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .auth-feature:hover i {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Right Panel */
+        .auth-right {
+            flex: 1;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-subtitle {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        /* Form Styling */
+        .form-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control {
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(26, 75, 140, 0.15);
+            background: white;
+        }
+
+        .form-label {
+            position: absolute;
+            left: 1.25rem;
+            top: 1rem;
+            font-size: 0.95rem;
+            color: #64748b;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            background: #f8fafc;
+            padding: 0 0.35rem;
+        }
+
+        .form-control:focus ~ .form-label,
+        .form-control:not(:placeholder-shown) ~ .form-label {
+            top: -0.5rem;
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        .btn-auth {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 1rem;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .btn-auth::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+            z-index: -1;
+        }
+
+        .btn-auth:hover::before {
+            left: 100%;
+        }
+
+        .btn-auth:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(26, 75, 140, 0.3);
+        }
+
+        .btn-auth:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-auth:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .auth-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .auth-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .auth-link a:hover {
+            color: var(--secondary);
+            text-decoration: underline;
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        /* Alerts */
+        .alert-custom {
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideDown 0.4s ease;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-error {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Aadhaar Info Card */
+        .info-card {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .info-card h6 {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-card p {
+            font-size: 0.85rem;
+            color: #475569;
+            margin-bottom: 0;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .auth-container {
+                flex-direction: column;
+                max-width: 480px;
+            }
+            .auth-left, .auth-right {
+                padding: 2rem;
+            }
+            .auth-features {
+                display: none;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .auth-title { font-size: 1.7rem; }
+            .auth-left, .auth-right { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <!-- Left Panel -->
+        <div class="auth-left">
+            <div class="college-logo">
+                <img src="{% static 'images/ritlogo.png' %}" alt="RIT Logo">
+            </div>
+            <div class="college-name">Ramco Institute of Technology</div>
+            <div class="college-tagline">Student Portal • Gateway to Academic Excellence</div>
+
+            <div class="auth-features">
+                <div class="auth-feature">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Access your academic records</span>
+                </div>
+                <div class="auth-feature">
+                    <i class="fas fa-book"></i>
+                    <span>View course materials and resources</span>
+                </div>
+                <div class="auth-feature">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Stay updated with academic calendar</span>
+                </div>
+                <div class="auth-feature">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>Connect with faculty and peers</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="auth-right">
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert-custom {% if message.tags %}alert-{{ message.tags }}{% else %}alert-warning{% endif %}">
+                        <i class="fas 
+                            {% if message.tags == 'success' %}fa-check-circle
+                            {% elif message.tags == 'error' %}fa-exclamation-circle
+                            {% else %}fa-exclamation-triangle
+                            {% endif %}"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="auth-header">
+                <h1 class="auth-title">Aadhaar Verification</h1>
+                <p class="auth-subtitle">Verify your Aadhaar number to proceed with registration</p>
+            </div>
+
+            <div class="info-card">
+                <h6><i class="fas fa-info-circle"></i> Why Aadhaar Verification?</h6>
+                <p>We use Aadhaar verification to ensure secure and accurate student identification for our portal. Your information is protected and used only for authentication purposes.</p>
+            </div>
+
+            <form method="post" id="aadhaar-form" action="{% url 'check_aadhar' %}">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        name="aadhar" 
+                        id="aadhar" 
+                        placeholder=" " 
+                        maxlength="14" 
+                        inputmode="numeric" 
+                        required>
+                    <label for="aadhar"><i class="fas fa-id-card me-2"></i>Aadhaar Number</label>
+                    <i class="fas fa-id-card input-icon"></i>
+                </div>
+
+                <button type="submit" class="btn-auth" id="verifyBtn" disabled>
+                    <span id="verifyText">Verify Aadhaar <i class="fas fa-arrow-right ms-2"></i></span>
+                    <span id="verifySpinner" style="display: none;">
+                        <span class="spinner"></span> Verifying...
+                    </span>
+                </button>
+            </form>
+
+            <div class="auth-link">
+                <a href="{% url 'student_login' %}"><i class="fas fa-arrow-left me-1"></i> Back to Login</a>
+            </div>
+
+            <div class="footer-note">
+                <p>By accessing this portal, you agree to abide by the institution's policies and codes of conduct.</p>
+                <p class="mt-1">Your data is protected and handled in accordance with our <a href="#" style="color:var(--primary);">Privacy Policy</a>.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const aadharInput = document.getElementById('aadhar');
+            const verifyBtn = document.getElementById('verifyBtn');
+            const form = document.getElementById('aadhaar-form');
+            const verifyText = document.getElementById('verifyText');
+            const verifySpinner = document.getElementById('verifySpinner');
+
+            // Format Aadhaar number with spaces
+            aadharInput.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, '');
+                value = value.substring(0, 12);
+                e.target.value = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+
+                verifyBtn.disabled = (value.length !== 12);
+                
+                // Add visual feedback for valid/invalid input
+                if (value.length === 12) {
+                    aadharInput.style.borderColor = 'var(--success)';
+                } else {
+                    aadharInput.style.borderColor = '#e2e8f0';
+                }
+            });
+
+            // Form submission handling
+            form.addEventListener('submit', function (e) {
+                let cleanValue = aadharInput.value.replace(/\D/g, '');
+                if (cleanValue.length !== 12) {
+                    e.preventDefault();
+                    aadharInput.focus();
+                    return;
+                }
+                
+                // Show loading state
+                verifyBtn.disabled = true;
+                verifyText.style.display = 'none';
+                verifySpinner.style.display = 'inline';
+                
+                aadharInput.value = cleanValue;
+            });
+
+            // Auto-focus input on page load
+            document.addEventListener('DOMContentLoaded', () => {
+                aadharInput.focus();
+            });
+        })();
+    </script>
+
+</body>
+</html>

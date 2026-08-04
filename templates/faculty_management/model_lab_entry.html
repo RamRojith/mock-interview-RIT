@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h3 class="mb-1">Model Lab Entry — {{ course_code }} {{ course_title }}</h3>
+      <div class="text-muted">
+        {% if selected_degree_code or selected_degree_name %}
+          <span class="me-3">
+            <i class="bi bi-mortarboard me-1"></i>
+            {{ selected_degree_code }}{% if selected_degree_code and selected_degree_name %} — {% endif %}{{ selected_degree_name }}
+          </span>
+        {% endif %}
+        {% if selected_batch %}<span class="me-3"><i class="bi bi-people me-1"></i>Batch {{ selected_batch }}</span>{% endif %}
+        {% if selected_section %}<span class="me-3"><i class="bi bi-layout-split me-1"></i>Section {{ selected_section }}</span>{% endif %}
+        {% if selected_department %}<span class="me-3"><i class="bi bi-building me-1"></i>{{ selected_department }}</span>{% endif %}
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      {% if selected_iat %}
+        <span class="badge bg-info text-dark fs-6">IAT: {{ selected_iat }}</span>
+      {% else %}
+        <span class="badge bg-warning text-dark fs-6">IAT not selected</span>
+      {% endif %}
+      {% if model_lab %}
+        <span class="badge bg-primary fs-6">Model Lab: {{ model_lab }}</span>
+      {% else %}
+        <span class="badge bg-warning text-dark fs-6">No model lab provided</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Django messages -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Form -->
+  <form method="POST">
+    {% csrf_token %}
+
+    <!-- Preserve context on submit -->
+    <input type="hidden" name="course_id" value="{{ course_id }}">
+    <input type="hidden" name="course_code" value="{{ course_code }}">
+    <input type="hidden" name="course_title" value="{{ course_title }}">
+    <input type="hidden" name="selected_department" value="{{ selected_department }}">
+    <input type="hidden" name="selected_department_id" value="{{ selected_department_id }}">
+    <input type="hidden" name="selected_batch" value="{{ selected_batch }}">
+    <input type="hidden" name="selected_section" value="{{ selected_section }}">
+    <input type="hidden" name="selected_degree_code" value="{{ selected_degree_code }}">
+    <input type="hidden" name="selected_degree_name" value="{{ selected_degree_name }}">
+    <input type="hidden" name="model_lab_id" id="model_lab_id" value="{{ selected_model_lab_id|default:'' }}">
+    <input type="hidden" name="selected_iat" value="{{ selected_iat }}">
+    <input type="hidden" name="iat" value="{{ selected_iat }}">
+
+    <!-- Only Total Checkbox -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-body py-3">
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            id="only_total"
+            name="only_total"
+            value="1"
+            {% if only_total or db_only_total_found %}checked{% endif %}
+          >
+          <label class="form-check-label fw-semibold" for="only_total">
+            Only Total
+          </label>
+          <div class="text-muted small">
+            If selected, Program and Viva will be blocked and you can enter marks directly in Total.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if students %}
+      <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <div><strong>{{ students|length }}</strong> students</div>
+          <div class="text-muted small">
+            Program ≤ 75, Viva ≤ 25, Total ≤ 100.
+            {% if only_total %}
+              Only Total mode is active.
+            {% else %}
+              Totals auto-update.
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-4">Reg No</th>
+                  <th>Name</th>
+                  <th class="text-center" style="width:160px;">Program<br><small class="text-muted">/75</small></th>
+                  <th class="text-center" style="width:160px;">Viva<br><small class="text-muted">/25</small></th>
+                  <th class="text-center" style="width:140px;">Total<br><small class="text-muted">/100</small></th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for s in students %}
+                  <tr>
+                    <td class="ps-4">
+                      {{ s.reg_no }}
+                      <input type="hidden" name="reg_nos[]" value="{{ s.reg_no }}">
+                    </td>
+                    <td>{{ s.name }}</td>
+
+                    <!-- Program -->
+                    <td class="text-center">
+                      <input
+                        type="number"
+                        name="program[{{ s.reg_no }}]"
+                        class="form-control form-control-sm mark-input program-input"
+                        data-type="program"
+                        data-target="total_{{ s.reg_no }}"
+                        data-max="75"
+                        min="0" max="75" step="1"
+                        value="{{ s.pref_program|default:'75' }}"
+                        {% if only_total %}readonly disabled{% endif %}
+                      >
+                    </td>
+
+                    <!-- Viva -->
+                    <td class="text-center">
+                      <input
+                        type="number"
+                        name="viva[{{ s.reg_no }}]"
+                        class="form-control form-control-sm mark-input viva-input"
+                        data-type="viva"
+                        data-target="total_{{ s.reg_no }}"
+                        data-max="25"
+                        min="0" max="25" step="1"
+                        value="{{ s.pref_viva|default:'25' }}"
+                        {% if only_total %}readonly disabled{% endif %}
+                      >
+                    </td>
+
+                    <!-- Total -->
+                    <td class="text-center">
+                      <input
+                        type="number"
+                        name="total[{{ s.reg_no }}]"
+                        id="total_{{ s.reg_no }}"
+                        class="form-control form-control-sm total-input"
+                        data-max="100"
+                        min="0" max="100" step="1"
+                        value="{{ s.pref_total|default:'100' }}"
+                        {% if not only_total %}readonly tabindex="-1"{% endif %}
+                      >
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+
+              <tfoot class="table-light">
+                <tr>
+                  <td class="ps-4" colspan="5">
+                    <div class="d-flex justify-content-end gap-2">
+                      <button type="reset" class="btn btn-outline-secondary btn-sm">Reset</button>
+                      <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-check2-circle me-1"></i>Save Marks
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="alert alert-info">No students found for the selected Department/Batch/Section.</div>
+    {% endif %}
+  </form>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const TOTAL_MAX = 100;
+  const onlyTotalCheckbox = document.getElementById('only_total');
+
+  function clamp(val, min, max) {
+    if (val === "" || val === null || typeof val === "undefined") return 0;
+    const n = Number(val);
+    if (isNaN(n)) return 0;
+    return Math.min(Math.max(n, min), max);
+  }
+
+  function isOnlyTotalMode() {
+    return onlyTotalCheckbox && onlyTotalCheckbox.checked;
+  }
+
+  function recalcRowTotal(targetId) {
+    if (isOnlyTotalMode()) return;
+
+    const totalEl = document.getElementById(targetId);
+    if (!totalEl) return;
+
+    const inputs = document.querySelectorAll('[data-target="' + targetId + '"]');
+    let sum = 0;
+    inputs.forEach(inp => {
+      sum += Number(inp.value || 0);
+    });
+    totalEl.value = Math.min(sum, TOTAL_MAX);
+  }
+
+  function toggleOnlyTotalMode() {
+    const programInputs = document.querySelectorAll('.program-input');
+    const vivaInputs = document.querySelectorAll('.viva-input');
+    const totalInputs = document.querySelectorAll('.total-input');
+
+    if (isOnlyTotalMode()) {
+      programInputs.forEach(inp => {
+        inp.readOnly = true;
+        inp.disabled = true;
+      });
+
+      vivaInputs.forEach(inp => {
+        inp.readOnly = true;
+        inp.disabled = true;
+      });
+
+      totalInputs.forEach(inp => {
+        inp.readOnly = false;
+        inp.removeAttribute('tabindex');
+      });
+    } else {
+      programInputs.forEach(inp => {
+        inp.readOnly = false;
+        inp.disabled = false;
+      });
+
+      vivaInputs.forEach(inp => {
+        inp.readOnly = false;
+        inp.disabled = false;
+      });
+
+      totalInputs.forEach(inp => {
+        inp.readOnly = true;
+        inp.setAttribute('tabindex', '-1');
+        recalcRowTotal(inp.id);
+      });
+    }
+  }
+
+  // Initialize mark inputs
+  document.querySelectorAll('.mark-input').forEach(inp => {
+    const maxAttr = Number(inp.getAttribute('data-max') || inp.max || 0);
+    inp.value = clamp(inp.value, 0, maxAttr);
+  });
+
+  // Initialize total inputs
+  document.querySelectorAll('.total-input').forEach(inp => {
+    const maxAttr = Number(inp.getAttribute('data-max') || inp.max || 100);
+    inp.value = clamp(inp.value, 0, maxAttr);
+  });
+
+  // Initial totals in normal mode
+  document.querySelectorAll('[id^="total_"]').forEach(totalEl => {
+    if (!isOnlyTotalMode()) {
+      recalcRowTotal(totalEl.id);
+    }
+  });
+
+  // Program/Viva live updates
+  document.querySelectorAll('.mark-input').forEach(inp => {
+    inp.addEventListener('input', function() {
+      if (isOnlyTotalMode()) return;
+      const maxAttr = Number(inp.getAttribute('data-max') || inp.max || 0);
+      const clamped = clamp(inp.value, 0, maxAttr);
+      if (String(clamped) !== String(inp.value)) {
+        inp.value = clamped;
+      }
+      recalcRowTotal(inp.getAttribute('data-target'));
+    });
+
+    inp.addEventListener('blur', function() {
+      if (isOnlyTotalMode()) return;
+      const maxAttr = Number(inp.getAttribute('data-max') || inp.max || 0);
+      inp.value = clamp(inp.value, 0, maxAttr);
+      recalcRowTotal(inp.getAttribute('data-target'));
+    });
+  });
+
+  // Total live updates in only_total mode
+  document.querySelectorAll('.total-input').forEach(inp => {
+    inp.addEventListener('input', function() {
+      if (!isOnlyTotalMode()) return;
+      const maxAttr = Number(inp.getAttribute('data-max') || inp.max || 100);
+      inp.value = clamp(inp.value, 0, maxAttr);
+    });
+
+    inp.addEventListener('blur', function() {
+      if (!isOnlyTotalMode()) return;
+      const maxAttr = Number(inp.getAttribute('data-max') || inp.max || 100);
+      inp.value = clamp(inp.value, 0, maxAttr);
+    });
+  });
+
+  if (onlyTotalCheckbox) {
+    onlyTotalCheckbox.addEventListener('change', function() {
+      toggleOnlyTotalMode();
+    });
+  }
+
+  toggleOnlyTotalMode();
+});
+</script>
+{% endblock %}

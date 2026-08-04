@@ -1,0 +1,519 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Payment Form</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="website icon" type="png" href="{% static 'image/Edenberg.png' %}">
+
+  <style>
+    :root {
+      --primary-color: #4e73df;
+      --primary-light: #e6eaf8;
+      --secondary-color: #2e59d9;
+      --accent-color: #f8f9fc;
+      --text-color: #4a4b65;
+      --light-gray: #f5f6fa;
+      --border-radius: 10px;
+      --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+    
+    body {
+      background-color: var(--light-gray);
+      font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+    
+    .page-container {
+      position: relative;
+      padding: 20px 0;
+    }
+    
+    .form-container {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 2.5rem;
+      margin: 2rem auto;
+      border: none;
+      max-width: 1000px;
+      transition: transform 0.3s ease;
+    }
+    
+    .form-container:hover {
+      transform: translateY(-3px);
+    }
+    
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-logo {
+      height: 120px;
+      width: auto;
+      max-width: 100%;
+      object-fit: contain;
+      transition: all 0.3s ease;
+    }
+    
+    .form-logo:hover {
+      transform: scale(1.03);
+    }
+    
+    .header-divider {
+      border: 0;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(78, 115, 223, 0.1), var(--primary-color), rgba(78, 115, 223, 0.1));
+      margin: 1.5rem 0;
+      opacity: 0.8;
+    }
+    
+    .form-header {
+      color: var(--primary-color);
+      text-align: center;
+      margin: 0 0 1.5rem 0;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      font-size: 1.8rem;
+    }
+    
+    .section-title {
+      color: var(--primary-color);
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .section-title i {
+      font-size: 1.1rem;
+    }
+    
+    .form-label {
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+    
+    .required-field::after {
+      content: " *";
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    
+    .form-control, .form-select {
+      padding: 0.75rem 1rem;
+      border-radius: var(--border-radius);
+      border: 1px solid #d1d3e2;
+      transition: all 0.3s;
+      font-size: 0.95rem;
+      background-color: var(--light-gray);
+    }
+    
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.2);
+      background-color: white;
+    }
+    
+    .input-icon {
+      position: relative;
+    }
+    
+    .input-icon i {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--primary-color);
+      opacity: 0.7;
+    }
+    
+    .btn-submit {
+      background-color: var(--primary-color);
+      border: none;
+      padding: 0.85rem 2.5rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      transition: all 0.3s;
+      border-radius: 50px;
+      box-shadow: 0 4px 12px rgba(78, 115, 223, 0.3);
+    }
+    
+    .btn-submit:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(78, 115, 223, 0.4);
+    }
+    
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+    
+    .btn-reset {
+      padding: 0.85rem 2.5rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      border-radius: 50px;
+      transition: all 0.3s;
+      border: 1px solid #d1d3e2;
+    }
+    
+    .btn-reset:hover {
+      background-color: #f1f1f1;
+      border-color: #c4c7d4;
+    }
+    
+    .form-note {
+      font-size: 0.85rem;
+      color: #6c757d;
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
+
+    /* Message Alert Styles */
+    .message-alert {
+      border-radius: var(--border-radius);
+      padding: 1rem 1.5rem;
+      margin: 1rem auto;
+      max-width: 800px;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+    }
+
+    .message-alert:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .message-alert .btn-close {
+      padding: 0.5rem;
+      filter: brightness(0) invert(1);
+    }
+
+    .message-alert.success {
+      background: linear-gradient(135deg, #28a745, #218838);
+      color: white;
+    }
+
+    .message-alert.error {
+      background: linear-gradient(135deg, #dc3545, #c82333);
+      color: white;
+    }
+
+    .message-alert.warning {
+      background: linear-gradient(135deg, #ffc107, #e0a800);
+      color: #212529;
+    }
+
+    .message-alert.info {
+      background: linear-gradient(135deg, #17a2b8, #138496);
+      color: white;
+    }
+
+    .message-content {
+      flex-grow: 1;
+      padding-right: 1rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .message-content i {
+      margin-right: 0.75rem;
+      font-size: 1.25rem;
+    }
+
+    /* Form Button Container */
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2.5rem;
+      gap: 15px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+      .form-container {
+        padding: 2rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .form-container {
+        padding: 1.5rem;
+        margin: 1rem auto;
+      }
+      
+      .form-logo {
+        height: 100px;
+      }
+      
+      .form-header {
+        font-size: 1.5rem;
+      }
+      
+      .form-actions {
+        flex-direction: column-reverse;
+        gap: 10px;
+      }
+      
+      .btn-submit, .btn-reset {
+        width: 100%;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .form-container {
+        padding: 1.25rem;
+        border-radius: 8px;
+      }
+      
+      .section-title {
+        font-size: 1.1rem;
+      }
+    }
+
+    /* Animation for form elements */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-group {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    /* Delay animations for sequential appearance */
+    .form-group:nth-child(1) { animation-delay: 0.1s; }
+    .form-group:nth-child(2) { animation-delay: 0.2s; }
+    .form-group:nth-child(3) { animation-delay: 0.3s; }
+    .form-group:nth-child(4) { animation-delay: 0.4s; }
+  </style>
+</head>
+<body>
+  <div class="container page-container">
+    <!-- Messages Display -->
+    {% if messages %}
+    <div class="messages-container">
+      {% for message in messages %}
+      <div class="alert message-alert {{ message.tags }} alert-dismissible fade show" role="alert">
+        <div class="message-content">
+          <i class="fas 
+            {% if message.tags == 'success' %}fa-check-circle
+            {% elif message.tags == 'error' %}fa-exclamation-circle
+            {% elif message.tags == 'warning' %}fa-exclamation-triangle
+            {% else %}fa-info-circle
+            {% endif %}"></i>
+          <span>{{ message }}</span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="form-container">
+          <!-- Logo -->
+          <div class="logo-container">
+            <img src="{% static 'image/Edenberg-Horizontal-Color.png' %}" alt="Institution Logo" class="form-logo">
+          </div>
+          
+          <!-- Horizontal Divider -->
+          <hr class="header-divider">
+          
+          <!-- Form Heading -->
+          <h2 class="form-header">Quick Payment Form</h2>
+
+          <!-- Application Status Link -->
+          
+          <form method="post" action="{% url 'quick_payment_form' %}">
+            {% csrf_token %}
+            <!-- Personal Information Section -->
+            <div class="mb-4">
+              <h5 class="section-title"><i class="fas fa-user-circle"></i>Personal Information</h5>
+              
+              <div class="row g-3">
+                <div class="col-md-6 form-group">
+                  <label for="firstName" class="form-label required-field">First Name</label>
+                  <input type="text" class="form-control" id="firstName" name="first_name" 
+                         placeholder="Enter first name" required>
+                </div>
+                
+                <div class="col-md-6 form-group">
+                  <label for="SurName" class="form-label required-field">Surname</label>
+                  <input type="text" class="form-control" id="surName" name="surname" 
+                         placeholder="Enter Surname" required>
+                </div>
+                
+                <div class="col-12 form-group">
+                  <label for="nrc" class="form-label required-field">NRC Number</label>
+                  <div class="input-icon">
+                    <input type="text" class="form-control" id="nrc" name="nrc_number" 
+                           placeholder="Enter NRC number" required>
+                    <i class="fas fa-id-card"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Contact Information Section -->
+            <div class="mb-4">
+              <h5 class="section-title"><i class="fas fa-address-book"></i>Contact Information</h5>
+              
+              <div class="row g-3">
+                <div class="col-md-6 form-group">
+                  <label for="mobile" class="form-label required-field">Mobile Number</label>
+                  <div class="input-icon">
+                    <input type="tel" class="form-control" id="mobile" name="mobile_number" 
+                           placeholder="Enter mobile number" required>
+                    <i class="fas fa-mobile-alt"></i>
+                  </div>
+                </div>
+                
+                <div class="col-md-6 form-group">
+                  <label for="email" class="form-label required-field">Email Address</label>
+                  <div class="input-icon">
+                    <input type="email" class="form-control" id="email" name="email_address" 
+                           placeholder="Enter email address" required>
+                    <i class="fas fa-envelope"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Academic Information Section -->
+            <div class="mb-4">
+              <h5 class="section-title"><i class="fas fa-graduation-cap"></i>Academic Information</h5>
+              
+              <div class="row g-3">
+                <div class="col-md-6 form-group">
+                  <label for="programme_of_study" class="form-label required-field">Programme of Study</label>
+                  <select name="programme_of_study" id="programme_of_study" class="form-select" required 
+                          onchange="fetchPrograms()">
+                    <option value="" disabled selected>Select Programme</option>
+                    <option value="Certificate">Certificate</option>
+                    <option value="Diploma">Diploma</option>
+                    <option value="Advanced Diploma">Advanced Diploma</option>
+                    <option value="Bachelor Degree">Bachelor Degree</option>
+                    <option value="Postgraduate Diploma">Postgraduate Diploma</option>
+                    <option value="Master Degree">Master Degree</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label for="program" class="form-label required-field">Program</label>
+                  <select name="first_choice" id="program" class="form-select" required disabled>
+                    <option value="" disabled selected>First select Programme </option>
+                  </select>
+                </div>
+                <div class="col-md-6 form-group">
+                  <label for="Intake" class="form-label required-field">Intake</label>
+                  <select name="Intake" id="Intake" class="form-select" required >
+                    <option value="" disabled selected>Select Intake</option>
+                    <option value="January">January</option>
+                    <option value="April">April</option>
+                    <option value="July">July</option>
+                    <option value="October">October</option>
+                    
+                  </select>
+                </div>
+                <div class="col-md-6 form-groupp">
+                    <label for="year">Year <span style="color:red;">*</span></label>
+                    <select name="year" id="year" class="form-select" required>
+                        <option value="" disabled selected>Select Year</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
+                                <div class="col-md-6 form-group">
+                    <label for="mode_of_study">Mode of Study <span style="color:red;">*</span></label>
+                    <select name="mode_of_study" id="mode_of_study" class="form-select" required>
+                        <option value="" disabled selected>Select Mode of Study</option>
+                        <option value="Regular">Regular</option>
+                        <option value="Evening">Evening</option>
+                        <option value="Weekend">Weekend</option>
+                        <option value="Term">Term</option>
+                        <option value="Blended/E-Learning">Blended/E-Learning</option>
+                        <option value="ODeL">ODeL</option>
+                    </select>
+                </div>
+                
+              </div>
+            </div>
+            
+            <!-- Form Submission -->
+            <div class="form-actions">
+              <button type="reset" class="btn btn-outline-secondary btn-reset">
+                <i class="fas fa-redo me-2"></i>Reset Form
+              </button>
+              <button type="submit" class="btn btn-primary btn-submit">
+                <i class="fas fa-money-check-alt me-2"></i>Make Quick Payment
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  function fetchPrograms() {
+      const selectedProgramType = document.getElementById('programme_of_study').value;
+      const programSelect = document.getElementById('program');
+      
+      if (!selectedProgramType) {
+          programSelect.innerHTML = '<option value="" disabled selected>First select Program Level</option>';
+          programSelect.disabled = true;
+          return;
+      }
+      
+      fetch(`/student_management/get_programs/?type=${selectedProgramType}`)
+          .then(response => response.json())
+          .then(data => {
+              programSelect.innerHTML = '<option value="" disabled selected>Select Program</option>';
+              
+              if (data.length === 0) {
+                  programSelect.innerHTML += '<option value="" disabled>No programs available for this level</option>';
+              } else {
+                  data.forEach(program => {
+                      const option = new Option(program.program_name, program.program_name);
+                      programSelect.add(option);
+                  });
+              }
+              
+              programSelect.disabled = false;
+          })
+          .catch(error => {
+              console.error('Error fetching programs:', error);
+              programSelect.innerHTML = '<option value="" disabled>Error loading programs</option>';
+          });
+  }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

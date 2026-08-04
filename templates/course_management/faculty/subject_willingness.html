@@ -1,0 +1,1083 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+.subject-willingness {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(30, 64, 175, 0.08), transparent 30%),
+    radial-gradient(circle at 95% 10%, rgba(20, 184, 166, 0.08), transparent 28%),
+    linear-gradient(145deg, #f7f9fd 0%, #edf2f8 100%);
+  min-height: 100vh;
+  padding: 2rem 1.25rem;
+}
+
+.subject-willingness .page-container,
+.subject-willingness .page-header {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.subject-willingness .page-header {
+  margin-bottom: 1.5rem;
+  text-align: center;
+  padding: 2rem 1.75rem;
+  background: linear-gradient(135deg, #173a73 0%, #1d4ed8 55%, #0ea5e9 100%);
+  border-radius: 22px;
+  color: #fff;
+  box-shadow: 0 14px 34px rgba(23, 58, 115, 0.26);
+}
+
+.subject-willingness .page-header h1 {
+  font-size: 2.1rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: .2px;
+}
+
+.subject-willingness .header-subtitle {
+  margin-top: .65rem;
+  margin-bottom: 0;
+  opacity: .95;
+  font-size: .96rem;
+}
+
+.subject-willingness .form-card,
+.subject-willingness .submissions-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  border: 1px solid #dde6f1;
+}
+
+.subject-willingness .form-header,
+.subject-willingness .submissions-header {
+  color: #fff;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.subject-willingness .form-header {
+  background: linear-gradient(135deg, #1d4ed8 0%, #0ea5e9 100%);
+}
+
+.subject-willingness .submissions-header {
+  background: linear-gradient(135deg, #0f766e 0%, #1d4ed8 100%);
+}
+
+.subject-willingness .form-header h5,
+.subject-willingness .submissions-header h6 {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: -.2px;
+}
+
+.subject-willingness .form-body,
+.subject-willingness .submissions-body {
+  padding: 1.25rem;
+}
+
+.subject-willingness .form-label {
+  font-size: .83rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: .4rem;
+  letter-spacing: .02em;
+}
+
+.subject-willingness .form-control,
+.subject-willingness .form-select {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: .66rem .86rem;
+  font-size: .92rem;
+  transition: .2s ease;
+  background-color: #fcfdff;
+}
+
+.subject-willingness .form-control:focus,
+.subject-willingness .form-select:focus {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, .14);
+}
+
+.subject-willingness .btn {
+  border-radius: 10px;
+  font-weight: 700;
+  padding: .62rem .95rem;
+}
+
+.subject-willingness .btn-success {
+  background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  border: none;
+}
+
+.subject-willingness .btn-primary {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  border: none;
+}
+
+.subject-willingness .btn-danger {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  border: none;
+}
+
+.subject-willingness .btn-secondary {
+  background: #475569;
+  border: none;
+}
+
+.subject-willingness .btn-light {
+  background: rgba(255,255,255,.95);
+  color: #1d4ed8;
+  border: none;
+}
+
+.subject-willingness .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, .14);
+}
+
+.subject-willingness .filter-box {
+  background: linear-gradient(180deg, #f8fbff 0%, #f2f6fb 100%);
+  border: 1px solid #dfe7f2;
+  border-radius: 14px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.subject-willingness .filter-actions {
+  display: flex;
+  gap: .6rem;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.subject-willingness .summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+  flex-wrap: wrap;
+  margin-bottom: .8rem;
+}
+
+.subject-willingness .summary-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .5rem .8rem;
+  background: #e8efff;
+  color: #1e40af;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: .88rem;
+}
+
+.subject-willingness .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid #d9e3ee;
+}
+
+.subject-willingness table {
+  margin-bottom: 0;
+  min-width: 1250px;
+  vertical-align: middle;
+  background: #fff;
+}
+
+.subject-willingness table thead th {
+  background: linear-gradient(90deg, #0f2f57 0%, #15407a 100%);
+  color: #fff;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding: .82rem .68rem;
+  white-space: nowrap;
+  border: none;
+}
+
+.subject-willingness table tbody td {
+  padding: .78rem .68rem;
+  font-size: .88rem;
+  color: #334155;
+  border-color: #e6edf5;
+  white-space: nowrap;
+}
+
+.subject-willingness table tbody tr:nth-child(even) {
+  background: #fbfdff;
+}
+
+.subject-willingness table tbody tr:hover {
+  background: #eef4fb;
+}
+
+.subject-willingness .course-code {
+  font-weight: 800;
+  color: #1d4ed8;
+}
+
+.subject-willingness .course-title {
+  max-width: 260px;
+  font-size: .78rem;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subject-willingness .reason-text {
+  max-width: 280px;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.subject-willingness .badge {
+  border-radius: 999px;
+  padding: .45rem .7rem;
+  font-size: .75rem;
+  font-weight: 800;
+}
+
+.subject-willingness .badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.subject-willingness .badge-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.subject-willingness .badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.subject-willingness .empty-state {
+  text-align: center;
+  padding: 2.75rem 1rem;
+  color: #64748b;
+}
+
+.subject-willingness .empty-state i {
+  font-size: 3rem;
+  color: #cbd5e1;
+  margin-bottom: 1rem;
+}
+
+.subject-willingness .modal-content {
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, .22);
+}
+
+.subject-willingness .modal-header {
+  background: linear-gradient(135deg, #16386f 0%, #1d4ed8 100%);
+  color: #fff;
+}
+
+.subject-willingness .modal-title {
+  font-weight: 800;
+}
+
+@media (max-width: 768px) {
+  .subject-willingness {
+    padding: 1rem .5rem 1.25rem;
+  }
+
+  .subject-willingness .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .subject-willingness .form-body,
+  .subject-willingness .submissions-body {
+    padding: 1rem;
+  }
+
+  .subject-willingness .btn {
+    width: 100%;
+  }
+
+  .subject-willingness .filter-actions {
+    width: 100%;
+  }
+}
+</style>
+
+
+<div class="subject-willingness">
+  <div class="page-header">
+    <h1><i class="fas fa-hand-paper me-2"></i>Subject Willingness</h1>
+    <p class="header-subtitle">Express your preference for teaching subjects in the upcoming academic year</p>
+  </div>
+
+  <div class="page-container">
+    {% if schedule_state %}
+      <div class="alert {% if schedule_state.can_act %}alert-success{% else %}alert-warning{% endif %}">
+        {{ schedule_state.status_message }}
+      </div>
+    {% endif %}
+
+    <div class="form-card">
+      <div class="form-header">
+        <h5><i class="fas fa-plus-circle me-2"></i>Submit Subject Preference</h5>
+      </div>
+
+      <div class="form-body">
+        <form method="post" action="{% url 'subject_willingness' %}" id="swForm" novalidate>
+          {% csrf_token %}
+          <fieldset {% if not schedule_state.can_act %}disabled{% endif %}>
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Academic Year</label>
+              <select name="academic_year" id="academic_year" class="form-select" required>
+                {% for ay in academic_years %}
+                  <option value="{{ ay }}" {% if forloop.first %}selected{% endif %}>{{ ay }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Degree</label>
+              <select name="degree" id="degree" class="form-select" required>
+                <option value="" disabled selected>Select Degree</option>
+                {% for d in degrees %}
+                  <option value="{{ d.id }}">{{ d.degree }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Department</label>
+              <select name="department" id="department" class="form-select" required>
+                <option value="" disabled selected>Select Department</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Regulation</label>
+              <select name="regulation" id="regulation" class="form-select" required>
+                <option value="" disabled selected>Select Regulation</option>
+                {% for r in regulations %}
+                  <option value="{{ r.id }}">{{ r.year }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Year</label>
+              <select name="year" id="year" class="form-select" required>
+                <option value="" disabled selected>Select Year</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Semester</label>
+              <select name="semester" id="semester" class="form-select" required>
+                <option value="" disabled selected>Select Semester</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Section</label>
+              <select name="section" id="section" class="form-select" required>
+                <option value="" disabled selected>Select Section</option>
+                {% for s in sections %}
+                  <option value="{{ s }}">{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Batch</label>
+              <select name="batch" id="batch" class="form-select" required>
+                <option value="" disabled selected>Select Batch</option>
+                {% for b in batches %}
+                  <option value="{{ b }}">{{ b }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Course</label>
+              <select name="course" id="course" class="form-select" required>
+                <option value="" disabled selected>Select Course</option>
+              </select>
+              <small class="text-muted">Course list shows Course Code - Title</small>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">No. of times handled (Overall)</label>
+              <input type="number" min="0" name="No_of_time_handled" class="form-control" placeholder="e.g., 3">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">No. of times handled in RIT</label>
+              <input type="number" min="0" name="No_of_time_handled_in_RIT" class="form-control" placeholder="e.g., 2">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Pass % obtained (last time)</label>
+              <input type="text" name="pass_percentage_obtained" class="form-control" placeholder="e.g., 85">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Reason for selection</label>
+              <textarea name="reason" id="reason" rows="4" class="form-control" placeholder="Explain why you prefer to teach this course" required></textarea>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-success" id="swSubmitBtn">
+              <i class="fas fa-save me-2"></i>Submit Willingness
+            </button>
+
+            <button type="reset" class="btn btn-secondary">
+              <i class="fas fa-undo me-2"></i>Clear Form
+            </button>
+          </div>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+
+    <div class="submissions-card">
+      <div class="submissions-header">
+        <h6 class="d-flex align-items-center">
+          <i class="fas fa-list-ul me-2"></i>My Submitted Willingness
+        </h6>
+
+        <div class="d-flex align-items-center flex-wrap gap-2">
+          {% if willingness_list %}
+            <span class="badge bg-light text-primary">
+              Academic Year: {{ willingness_list.0.academic_year }}
+            </span>
+          {% endif %}
+
+          <span class="badge bg-light text-primary">
+            Total: {{ willingness_list|length }}
+          </span>
+        </div>
+      </div>
+
+      <div class="submissions-body">
+
+        <div class="filter-box">
+          <form method="get" class="row g-3 align-items-end">
+
+            <div class="col-lg-2 col-md-4">
+              <label class="form-label">Academic Year</label>
+              <select name="academic_year" class="form-select">
+                <option value="">All</option>
+                {% for ay in filter_options.academic_years %}
+                  <option value="{{ ay }}" {% if selected_filters.academic_year == ay %}selected{% endif %}>
+                    {{ ay }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-lg-2 col-md-4">
+              <label class="form-label">Regulation</label>
+              <select name="regulation" class="form-select">
+                <option value="">All</option>
+                {% for r in filter_options.regulations %}
+                  <option value="{{ r.id }}" {% if selected_filters.regulation == r.id|stringformat:"s" %}selected{% endif %}>
+                    {{ r.year }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-lg-1 col-md-2">
+              <label class="form-label">Year</label>
+              <select name="year" class="form-select">
+                <option value="">All</option>
+                {% for y in filter_options.years %}
+                  <option value="{{ y }}" {% if selected_filters.year == y|stringformat:"s" %}selected{% endif %}>
+                    {{ y }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-lg-1 col-md-2">
+              <label class="form-label">Sem</label>
+              <select name="semester" class="form-select">
+                <option value="">All</option>
+                {% for s in filter_options.semesters %}
+                  <option value="{{ s }}" {% if selected_filters.semester == s|stringformat:"s" %}selected{% endif %}>
+                    {{ s }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-lg-2 col-md-4">
+              <label class="form-label">Status</label>
+              <select name="status" class="form-select">
+                <option value="">All</option>
+                {% for st in filter_options.statuses %}
+                  <option value="{{ st }}" {% if selected_filters.status == st %}selected{% endif %}>
+                    {{ st }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+              <label class="form-label">Course</label>
+              <select name="course" class="form-select">
+                <option value="">All</option>
+                {% for c in filter_options.courses %}
+                  <option value="{{ c.id }}" {% if selected_filters.course == c.id|stringformat:"s" %}selected{% endif %}>
+                    {{ c.course_code }} - {{ c.title }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-lg-1 col-md-2">
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-filter me-1"></i>Filter
+              </button>
+            </div>
+
+          </form>
+        </div>
+
+        <div class="summary-row">
+          <div class="d-flex gap-2 flex-wrap">
+            <span class="summary-pill">
+              <i class="fas fa-database"></i>
+              Records: {{ willingness_list|length }}
+            </span>
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'subject_willingness' %}" class="btn btn-secondary">
+              <i class="fas fa-rotate-left me-1"></i>Reset
+            </a>
+
+            <a class="btn btn-danger" target="_blank"
+               href="{% url 'my_willingness_pdf' %}?academic_year={{ selected_filters.academic_year|urlencode }}&regulation={{ selected_filters.regulation|urlencode }}&year={{ selected_filters.year|urlencode }}&semester={{ selected_filters.semester|urlencode }}&status={{ selected_filters.status|urlencode }}&course={{ selected_filters.course|urlencode }}">
+              <i class="fas fa-file-pdf me-1"></i>Export Filtered PDF
+            </a>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          {% if willingness_list %}
+            <table class="table table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>Degree</th>
+                  <th>Department</th>
+                  <th>Regulation</th>
+                  <th>Year</th>
+                  <th>Sem</th>
+                  <th>Section</th>
+                  <th>Batch</th>
+                  <th>Course</th>
+                  <th>Handled</th>
+                  <th>Handled @RIT</th>
+                  <th>Pass %</th>
+                  <th>Status</th>
+                  <th>Reason</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for w in willingness_list %}
+                  <tr>
+                    <td>{{ w.degree.degree }}</td>
+                    <td>{{ w.department.Department }}</td>
+                    <td>R-{{ w.regulation.year }}</td>
+                    <td>{{ w.year }}</td>
+                    <td>{{ w.semester }}</td>
+                    <td>{{ w.section|default:'-' }}</td>
+                    <td>{{ w.batch|default:'-' }}</td>
+                    <td>
+                      <div class="course-code">{{ w.course.course_code }}</div>
+                      <div class="course-title" title="{{ w.course.title }}">
+                        {{ w.course.title|truncatechars:45 }}
+                      </div>
+                    </td>
+                    <td>{{ w.No_of_time_handled|default:'-' }}</td>
+                    <td>{{ w.No_of_time_handled_in_RIT|default:'-' }}</td>
+                    <td>{{ w.pass_percentage_obtained|default:'-' }}</td>
+                    <td>
+                      {% if w.status == 'Approved' %}
+                        <span class="badge badge-success">Approved</span>
+                      {% elif w.status == 'Rejected' %}
+                        <span class="badge badge-danger">Rejected</span>
+                      {% else %}
+                        <span class="badge badge-warning">Pending</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <span class="reason-text" title="{{ w.reason }}">
+                        {{ w.reason|default:'-'|truncatechars:65 }}
+                      </span>
+                    </td>
+                    <td>
+                      {% if w.status == 'Approved' %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Cannot edit approved">
+                          <i class="fas fa-edit me-1"></i>Edit
+                        </button>
+                      {% elif schedule_state.can_act %}
+                        <button type="button"
+                                class="btn btn-sm btn-outline-primary sw-edit-btn"
+                                data-id="{{ w.id }}"
+                                data-ay="{{ w.academic_year }}"
+                                data-degree="{{ w.degree_id }}"
+                                data-dept="{{ w.department_id }}"
+                                data-reg="{{ w.regulation_id }}"
+                                data-year="{{ w.year }}"
+                                data-sem="{{ w.semester }}"
+                                data-sec="{{ w.section|default:'' }}"
+                                data-batch="{{ w.batch|default:'' }}"
+                                data-course="{{ w.course_id }}"
+                                data-handled="{{ w.No_of_time_handled|default:'' }}"
+                                data-handledrit="{{ w.No_of_time_handled_in_RIT|default:'' }}"
+                                data-pass="{{ w.pass_percentage_obtained|default:'' }}"
+                                data-reason="{{ w.reason|default:'' }}">
+                          <i class="fas fa-edit me-1"></i>Edit
+                        </button>
+                      {% else %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Editing allowed only during configured schedule">
+                          <i class="fas fa-lock me-1"></i>Read Only
+                        </button>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <div class="empty-state">
+              <i class="fas fa-inbox"></i>
+              <h4>No Willingness Found</h4>
+              <p class="text-muted mb-0">No records match the selected filters.</p>
+            </div>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="swEditModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Subject Willingness</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form method="post" action="{% url 'subject_willingness' %}" id="swEditForm">
+        {% csrf_token %}
+        <input type="hidden" name="edit_id" id="m_edit_id" />
+
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Academic Year</label>
+              <select name="academic_year" id="m_academic_year" class="form-select" required>
+                {% for ay in academic_years %}
+                  <option value="{{ ay }}" {% if forloop.first %}selected{% endif %}>{{ ay }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Degree</label>
+              <select name="degree" id="m_degree" class="form-select" required>
+                <option value="" disabled selected>Select Degree</option>
+                {% for d in degrees %}
+                  <option value="{{ d.id }}">{{ d.degree }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Department</label>
+              <select name="department" id="m_department" class="form-select" required>
+                <option value="" disabled selected>Select Department</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Regulation</label>
+              <select name="regulation" id="m_regulation" class="form-select" required>
+                <option value="" disabled selected>Select Regulation</option>
+                {% for r in regulations %}
+                  <option value="{{ r.id }}">{{ r.year }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Year</label>
+              <select name="year" id="m_year" class="form-select" required>
+                <option value="" disabled selected>Select Year</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Semester</label>
+              <select name="semester" id="m_semester" class="form-select" required>
+                <option value="" disabled selected>Select Semester</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Section</label>
+              <select name="section" id="m_section" class="form-select" required>
+                <option value="" disabled selected>Select Section</option>
+                {% for s in sections %}
+                  <option value="{{ s }}">{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Batch</label>
+              <select name="batch" id="m_batch" class="form-select" required>
+                <option value="" disabled selected>Select Batch</option>
+                {% for b in batches %}
+                  <option value="{{ b }}">{{ b }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Course</label>
+              <select name="course" id="m_course" class="form-select" required>
+                <option value="" disabled selected>Select Course</option>
+              </select>
+              <small class="text-muted">Course list shows Course Code - Title</small>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">No. of times handled (Overall)</label>
+              <input type="number" min="0" name="No_of_time_handled" id="m_handled" class="form-control" placeholder="e.g., 3">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">No. of times handled in RIT</label>
+              <input type="number" min="0" name="No_of_time_handled_in_RIT" id="m_handled_rit" class="form-control" placeholder="e.g., 2">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Pass % obtained (last time)</label>
+              <input type="text" name="pass_percentage_obtained" id="m_pass" class="form-control" placeholder="e.g., 85">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Reason for selection</label>
+              <textarea name="reason" id="m_reason" rows="4" class="form-control" placeholder="Explain why you prefer to teach this course" required></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const urls = {
+    deps: "{% url 'sw_get_departments' %}",
+    ys: "{% url 'sw_get_years_semesters' %}",
+    courses: "{% url 'sw_get_courses' %}"
+  };
+
+  function byId(id){ return document.getElementById(id); }
+
+  const degreeEl = byId('degree');
+  const deptEl = byId('department');
+  const regEl = byId('regulation');
+  const yearEl = byId('year');
+  const semEl = byId('semester');
+  const courseEl = byId('course');
+  const submitBtn = byId('swSubmitBtn');
+
+  function resetSelect(sel, placeholder){
+    if (!sel) return;
+    sel.innerHTML = `<option value="" disabled selected>${placeholder}</option>`;
+  }
+
+  function uniqueAppend(selectEl, values, labelFn){
+    const seen = new Set(Array.from(selectEl.options).map(o => String(o.value)));
+    values.forEach(v => {
+      const rawVal = String(v.id ?? v ?? '').trim();
+      const val = rawVal;
+      if (val && !seen.has(val)){
+        const o = document.createElement('option');
+        o.value = val;
+        o.textContent = labelFn ? labelFn(v) : val;
+        selectEl.appendChild(o);
+        seen.add(val);
+      }
+    });
+  }
+
+  let ysReq = 0, courseReq = 0;
+
+  function loadDepartments(){
+    resetSelect(deptEl, 'Select Department');
+    resetSelect(yearEl, 'Select Year');
+    resetSelect(semEl, 'Select Semester');
+    resetSelect(courseEl, 'Select Course');
+
+    if (!degreeEl.value) return;
+
+    fetch(`${urls.deps}?degree_id=${encodeURIComponent(degreeEl.value)}`)
+      .then(r => r.json())
+      .then(data => {
+        (data.departments || []).forEach(d => {
+          const o = document.createElement('option');
+          o.value = d.id;
+          o.textContent = d.name;
+          deptEl.appendChild(o);
+        });
+      });
+  }
+
+  function loadYearSem(){
+    const rid = ++ysReq;
+
+    resetSelect(yearEl, 'Select Year');
+    resetSelect(semEl, 'Select Semester');
+    resetSelect(courseEl, 'Select Course');
+
+    if (!deptEl.value || !regEl.value) return Promise.resolve();
+
+    return fetch(`${urls.ys}?department_id=${encodeURIComponent(deptEl.value)}&regulation_id=${encodeURIComponent(regEl.value)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (rid !== ysReq) return;
+
+        resetSelect(yearEl, 'Select Year');
+        resetSelect(semEl, 'Select Semester');
+
+        uniqueAppend(yearEl, (data.years || []), v => `Year ${v}`);
+        uniqueAppend(semEl, (data.semesters || []), v => `Semester ${v}`);
+      });
+  }
+
+  function loadCourses(){
+    const rid = ++courseReq;
+
+    resetSelect(courseEl, 'Select Course');
+
+    if (!deptEl.value || !regEl.value || !yearEl.value || !semEl.value) {
+      return Promise.resolve();
+    }
+
+    const q = new URLSearchParams({
+      department_id: deptEl.value,
+      regulation_id: regEl.value,
+      year: yearEl.value,
+      semester: semEl.value
+    }).toString();
+
+    return fetch(`${urls.courses}?${q}`)
+      .then(r => r.json())
+      .then(data => {
+        if (rid !== courseReq) return;
+
+        resetSelect(courseEl, 'Select Course');
+        uniqueAppend(courseEl, (data.courses || []), c => c.label);
+      });
+  }
+
+  if (degreeEl) degreeEl.addEventListener('change', loadDepartments);
+  if (deptEl) deptEl.addEventListener('change', () => { loadYearSem().then(loadCourses); });
+  if (regEl) regEl.addEventListener('change', () => { loadYearSem().then(loadCourses); });
+  if (yearEl) yearEl.addEventListener('change', loadCourses);
+  if (semEl) semEl.addEventListener('change', loadCourses);
+
+  const swForm = document.getElementById('swForm');
+  if (swForm && submitBtn){
+    swForm.addEventListener('submit', () => {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
+    });
+  }
+
+  const m = {
+    modal: document.getElementById('swEditModal'),
+    edit_id: document.getElementById('m_edit_id'),
+    ay: document.getElementById('m_academic_year'),
+    degree: document.getElementById('m_degree'),
+    dept: document.getElementById('m_department'),
+    reg: document.getElementById('m_regulation'),
+    year: document.getElementById('m_year'),
+    sem: document.getElementById('m_semester'),
+    section: document.getElementById('m_section'),
+    batch: document.getElementById('m_batch'),
+    course: document.getElementById('m_course'),
+    handled: document.getElementById('m_handled'),
+    handled_rit: document.getElementById('m_handled_rit'),
+    pass: document.getElementById('m_pass'),
+    reason: document.getElementById('m_reason'),
+  };
+
+  const bsModal = () => new bootstrap.Modal(m.modal);
+  let modalReq = 0;
+
+  function mResetSelect(sel, placeholder){
+    if (!sel) return;
+    sel.innerHTML = `<option value="" disabled selected>${placeholder}</option>`;
+  }
+
+  async function mLoadDepartments(){
+    mResetSelect(m.dept, 'Select Department');
+    mResetSelect(m.year, 'Select Year');
+    mResetSelect(m.sem, 'Select Semester');
+    mResetSelect(m.course, 'Select Course');
+    if (!m.degree?.value) return;
+    const deps = await fetch(`${urls.deps}?degree_id=${encodeURIComponent(m.degree.value)}`).then(r => r.json());
+    uniqueAppend(m.dept, (deps.departments || []), x => x.name);
+  }
+
+  async function mLoadYearSem(){
+    mResetSelect(m.year, 'Select Year');
+    mResetSelect(m.sem, 'Select Semester');
+    mResetSelect(m.course, 'Select Course');
+    if (!m.dept?.value || !m.reg?.value) return;
+    const ys = await fetch(`${urls.ys}?department_id=${encodeURIComponent(m.dept.value)}&regulation_id=${encodeURIComponent(m.reg.value)}`).then(r => r.json());
+    uniqueAppend(m.year, (ys.years || []), v => `Year ${String(v).trim()}`);
+    uniqueAppend(m.sem, (ys.semesters || []), v => `Semester ${String(v).trim()}`);
+  }
+
+  async function mLoadCourses(){
+    mResetSelect(m.course, 'Select Course');
+    if (!m.dept?.value || !m.reg?.value || !m.year?.value || !m.sem?.value) return;
+    const q = new URLSearchParams({
+      department_id: m.dept.value,
+      regulation_id: m.reg.value,
+      year: m.year.value,
+      semester: m.sem.value
+    }).toString();
+    const cs = await fetch(`${urls.courses}?${q}`).then(r => r.json());
+    uniqueAppend(m.course, (cs.courses || []), c => c.label);
+  }
+
+  function setSelected(sel, val){
+    if (!sel) return;
+    Array.from(sel.options).forEach(o => {
+      o.selected = String(o.value) === String(val);
+    });
+  }
+
+  async function populateModalFromBtn(btn){
+    const rid = ++modalReq;
+    const d = btn.dataset;
+
+    if (m.edit_id) m.edit_id.value = d.id || '';
+
+    setSelected(m.ay, d.ay || '');
+    setSelected(m.degree, d.degree || '');
+
+    if (m.dept) {
+      m.dept.innerHTML = '<option value="" disabled selected>Select Department</option>';
+    }
+
+    if (d.degree){
+      const deps = await fetch(`${urls.deps}?degree_id=${encodeURIComponent(d.degree)}`).then(r => r.json());
+      if (rid !== modalReq) return;
+
+      uniqueAppend(m.dept, (deps.departments || []), x => x.name);
+
+      setSelected(m.dept, d.dept || '');
+    }
+
+    setSelected(m.reg, d.reg || '');
+
+    if (m.year) m.year.innerHTML = '<option value="" disabled selected>Select Year</option>';
+    if (m.sem) m.sem.innerHTML = '<option value="" disabled selected>Select Semester</option>';
+
+    if (m.dept?.value && m.reg?.value){
+      const ys = await fetch(`${urls.ys}?department_id=${encodeURIComponent(m.dept.value)}&regulation_id=${encodeURIComponent(m.reg.value)}`).then(r => r.json());
+      if (rid !== modalReq) return;
+
+      uniqueAppend(m.year, (ys.years || []), v => `Year ${String(v).trim()}`);
+      uniqueAppend(m.sem, (ys.semesters || []), v => `Semester ${String(v).trim()}`);
+
+      setSelected(m.year, d.year || '');
+      setSelected(m.sem, d.sem || '');
+    }
+
+    if (m.course) {
+      m.course.innerHTML = '<option value="" disabled selected>Select Course</option>';
+    }
+
+    if (m.dept?.value && m.reg?.value && m.year?.value && m.sem?.value){
+      const q = new URLSearchParams({
+        department_id: m.dept.value,
+        regulation_id: m.reg.value,
+        year: m.year.value,
+        semester: m.sem.value
+      }).toString();
+
+      const cs = await fetch(`${urls.courses}?${q}`).then(r => r.json());
+      if (rid !== modalReq) return;
+
+      uniqueAppend(m.course, (cs.courses || []), c => c.label);
+
+      setSelected(m.course, d.course || '');
+    }
+
+    setSelected(m.section, d.sec || '');
+    setSelected(m.batch, d.batch || '');
+
+    if (m.handled) m.handled.value = d.handled || '';
+    if (m.handled_rit) m.handled_rit.value = d.handledrit || '';
+    if (m.pass) m.pass.value = d.pass || '';
+    if (m.reason) m.reason.value = d.reason || '';
+
+    if (m.modal) bsModal().show();
+  }
+
+  document.querySelectorAll('.sw-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => populateModalFromBtn(btn));
+  });
+
+  if (m.degree) m.degree.addEventListener('change', async () => { await mLoadDepartments(); });
+  if (m.dept) m.dept.addEventListener('change', async () => { await mLoadYearSem(); });
+  if (m.reg) m.reg.addEventListener('change', async () => { await mLoadYearSem(); });
+  if (m.year) m.year.addEventListener('change', async () => { await mLoadCourses(); });
+  if (m.sem) m.sem.addEventListener('change', async () => { await mLoadCourses(); });
+
+})();
+</script>
+
+{% endblock content %}

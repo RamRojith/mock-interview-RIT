@@ -1,0 +1,1062 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+/* ========================================
+   GLOBAL STYLES - Matching Leave/OD Portal Aesthetic
+   ======================================== */
+.ccl-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.ccl-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.ccl-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.ccl-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.ccl-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Stats Cards */
+.ccl-portal .stats-grid {
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.ccl-portal .stat-card {
+  flex: 1;
+  min-width: 130px;
+  background: white;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0,0,0,0.03);
+  transition: all 0.3s ease;
+}
+
+.ccl-portal .stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.ccl-portal .stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.ccl-portal .stat-icon.total { background: #e0f2fe; color: #0284c7; }
+.ccl-portal .stat-icon.pending { background: #fef3c7; color: #d97706; }
+.ccl-portal .stat-icon.approved { background: #d1fae5; color: #059669; }
+.ccl-portal .stat-icon.rejected { background: #fee2e2; color: #dc2626; }
+
+.ccl-portal .stat-info .stat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+.ccl-portal .stat-info .stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+/* Cards General */
+.ccl-portal .custom-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.ccl-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a4b8c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.ccl-portal .card-body-custom {
+  padding: 1.5rem;
+}
+
+/* Form Styling */
+.ccl-portal .form-label {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.ccl-portal .form-control,
+.ccl-portal .form-select {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.ccl-portal .form-control:focus,
+.ccl-portal .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+.ccl-portal .form-control[readonly] {
+  background-color: #f8fafc;
+  color: #475569;
+}
+
+/* Buttons */
+.ccl-portal .btn-primary-custom {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.ccl-portal .btn-primary-custom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.ccl-portal .btn-primary-custom:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.ccl-portal .btn-outline-custom {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.ccl-portal .btn-outline-custom:hover {
+  background: #f1f5f9;
+  border-color: #1a4b8c;
+}
+
+/* Search / toolbar */
+.ccl-portal .table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ccl-portal .table-toolbar .search-box {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+}
+
+.ccl-portal .table-toolbar .search-box i {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.ccl-portal .table-toolbar .search-box input {
+  padding-left: 2.4rem;
+}
+
+.ccl-portal .table-toolbar .page-size-select {
+  width: auto;
+}
+
+/* Table Styling */
+.ccl-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.ccl-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.ccl-portal .data-table th.sortable i {
+  margin-left: 0.3rem;
+  font-size: 0.65rem;
+  opacity: 0.5;
+}
+
+.ccl-portal .data-table th.sort-active i {
+  opacity: 1;
+}
+
+.ccl-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.ccl-portal .data-table tbody tr {
+  transition: all 0.2s;
+}
+
+.ccl-portal .data-table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.02);
+}
+
+.ccl-portal .empty-row td,
+.ccl-portal .loading-row td {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #94a3b8;
+}
+
+/* Badges */
+.ccl-portal .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.ccl-portal .badge-approved { background: #d1fae5; color: #065f46; }
+.ccl-portal .badge-rejected { background: #fee2e2; color: #b91c1c; }
+.ccl-portal .badge-pending { background: #fef3c7; color: #b45309; }
+.ccl-portal .badge-preapproved { background: #e0e7ff; color: #3730a3; }
+
+/* Approver Cell */
+.ccl-portal .approver-cell {
+  min-width: 280px;
+}
+
+.ccl-portal .approver-item {
+  background: #f8fafc;
+  padding: 0.3rem 0.6rem;
+  border-radius: 10px;
+  margin-bottom: 0.3rem;
+  font-size: 0.7rem;
+}
+
+/* Action Buttons */
+.ccl-portal .btn-icon-sm {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.7rem;
+  border-radius: 10px;
+  margin: 0 0.2rem;
+}
+
+/* Pagination footer — minimalist Prev / Page X of Y / Next */
+.ccl-portal .table-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.ccl-portal .table-footer .showing-text {
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.ccl-portal .pager {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ccl-portal .pager-btn {
+  background: transparent;
+  border: none;
+  color: #1a4b8c;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.ccl-portal .pager-btn i {
+  font-size: 0.7rem;
+}
+
+.ccl-portal .pager-btn:hover:not(:disabled) {
+  background: #eef2ff;
+}
+
+.ccl-portal .pager-btn:disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.ccl-portal .pager-info {
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0 0.5rem;
+  min-width: 96px;
+  text-align: center;
+}
+
+/* Field error */
+.ccl-portal .field-error-banner {
+  border-radius: 12px;
+}
+
+/* Modal Styling */
+.modal-content-custom {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ccl-portal {
+    padding: 1rem;
+  }
+  .ccl-portal .stats-grid {
+    gap: 0.8rem;
+  }
+  .ccl-portal .stat-card {
+    min-width: calc(50% - 0.8rem);
+  }
+  .ccl-portal .card-header-custom {
+    flex-direction: column;
+    align-items: start;
+    gap: 0.5rem;
+  }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ccl-portal .custom-card {
+  animation: fadeInUp 0.5s ease forwards;
+  opacity: 0;
+}
+
+.ccl-portal .custom-card:nth-child(1) { animation-delay: 0.1s; }
+.ccl-portal .custom-card:nth-child(2) { animation-delay: 0.2s; }
+.ccl-portal .custom-card:nth-child(3) { animation-delay: 0.3s; }
+</style>
+
+<div class="ccl-portal">
+  <div class="page-header">
+    <h1><i class="fas fa-file-signature me-2"></i> CCL Application Portal</h1>
+    <p class="header-subtitle">Apply for CCL, track requests, and view approval status</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon total"><i class="fas fa-chalkboard-user"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Total</div>
+          <div class="stat-value" id="stat-total">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon pending"><i class="fas fa-hourglass-half"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Pending</div>
+          <div class="stat-value text-warning-emphasis" id="stat-pending">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon approved"><i class="fas fa-check-double"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Approved</div>
+          <div class="stat-value text-success" id="stat-approved">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon rejected"><i class="fas fa-ban"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Rejected</div>
+          <div class="stat-value text-danger" id="stat-rejected">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CCL Balance Summary -->
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-scale-balanced me-2"></i> CCL Balance Summary</span>
+        <span class="badge bg-light text-dark"><i class="fas fa-info-circle"></i> Based on current academic year</span>
+      </div>
+      <div class="card-body-custom">
+        <div class="table-responsive">
+          <table class="table table-sm table-borderless align-middle">
+            <thead style="background:#f8fafc; border-radius: 12px;">
+              <tr>
+                <th class="ps-3">Leave Type</th>
+                <th>Total</th>
+                <th>Used</th>
+                <th>Remaining</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for lb in ccl_balance_summary %}
+              <tr>
+                <td class="ps-3 fw-semibold">{{ lb.leave_type }}</td>
+                <td>{{ lb.total|floatformat:1 }}</td>
+                <td class="text-danger fw-semibold">{{ lb.used|floatformat:1 }}</td>
+                <td class="text-success fw-bold">{{ lb.available|floatformat:1 }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" class="text-center text-muted py-3">No CCL allotment configured</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Apply / Update Form -->
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-pen-alt me-2"></i> Apply / Update CCL</span>
+        <span class="badge bg-primary text-white">Required fields marked *</span>
+      </div>
+      <div class="card-body-custom">
+        <div id="formError" class="alert alert-danger field-error-banner d-none"></div>
+        <form id="cclForm">
+          <input type="hidden" name="action" id="form_action" value="create">
+          <input type="hidden" name="ccl_id" id="ccl_id" value="">
+
+          <div class="row g-4">
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-calendar-alt me-1"></i> Academic Year *</label>
+              <input type="text" name="academic_year" id="academic_year" value="{{ academic_year }}" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-calendar-day me-1"></i> Date *</label>
+              <input type="date" name="date" id="date" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-calculator me-1"></i> CCL Value</label>
+              <input type="text" class="form-control" value="Auto-computed from punches" readonly>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label"><i class="fas fa-comment-dots me-1"></i> Reason *</label>
+              <textarea name="reason" id="reason" class="form-control" rows="3" placeholder="Enter detailed reason for CCL application..." required></textarea>
+            </div>
+            <div class="col-md-12">
+              <div class="alert alert-info mb-0 py-2" style="font-size:.85rem;">
+                <i class="fas fa-info-circle me-1"></i>
+                CCL can be claimed only for a <strong>declared holiday</strong> on which you worked.
+                Your <strong>first and last biometric punches</strong> of that day are read as IN/OUT, and the worked
+                duration decides the CCL session &amp; value automatically. If only a single punch exists,
+                contact the admin to enter the punch, then reapply.
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary-custom" id="submitBtn">
+              <i class="fas fa-paper-plane me-2"></i>Submit Application
+            </button>
+            <button type="button" class="btn btn-outline-custom d-none" id="cancelEditBtn">
+              <i class="fas fa-times me-2"></i>Cancel Edit
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Applications Table -->
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-list-check me-2"></i> Your CCL Applications</span>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+          <select class="form-select form-select-sm" id="filterAcademicYear" style="width:auto;">
+            <option value="">All Years</option>
+            {% for y in academic_years %}
+              <option value="{{ y }}">{{ y }}</option>
+            {% endfor %}
+          </select>
+          <select class="form-select form-select-sm" id="filterStatus" style="width:auto;">
+            <option value="">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Pre-approved">Pre-approved</option>
+          </select>
+          <input type="date" class="form-control form-control-sm" id="filterFrom" style="width:auto;" title="From date">
+          <input type="date" class="form-control form-control-sm" id="filterTo" style="width:auto;" title="To date">
+          <button type="button" class="btn btn-outline-custom btn-sm" id="resetFiltersBtn">
+            <i class="fas fa-undo-alt me-1"></i>Reset
+          </button>
+        </div>
+      </div>
+
+      <div class="table-toolbar">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" class="form-control" id="searchInput" placeholder="Search academic year, date, reason, status, session, worked hours…">
+        </div>
+        <select class="form-select page-size-select" id="pageSizeSelect">
+          <option value="10">10 / page</option>
+          <option value="25">25 / page</option>
+          <option value="50">50 / page</option>
+          <option value="100" selected>100 / page</option>
+        </select>
+      </div>
+
+      <div class="card-body-custom p-0">
+        <div class="table-responsive">
+          <table class="data-table table w-100" id="cclDataTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th class="sortable" data-sort="academic_year">Academic Year <i class="fas fa-sort"></i></th>
+                <th class="sortable" data-sort="date">Date <i class="fas fa-sort"></i></th>
+                <th class="sortable" data-sort="days">Days <i class="fas fa-sort"></i></th>
+                <th>Reason</th>
+                <th class="sortable" data-sort="status">Status <i class="fas fa-sort"></i></th>
+                <th>Approval Status</th>
+                <th style="width:180px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="cclTbody">
+              <tr class="loading-row"><td colspan="8"><i class="fas fa-spinner fa-spin me-2"></i>Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-footer">
+        <span class="showing-text" id="showingText">Showing 0-0 of 0</span>
+        <div class="pager" id="paginationUl"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Modal -->
+<div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-content-custom">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>CCL Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="row mb-2"><div class="col-4 fw-bold">Academic Year:</div><div class="col-8" id="v_year">-</div></div>
+        <div class="row mb-2"><div class="col-4 fw-bold">Date:</div><div class="col-8" id="v_date">-</div></div>
+        <div class="row mb-2"><div class="col-4 fw-bold">Days:</div><div class="col-8" id="v_days">-</div></div>
+        <div class="row mb-2"><div class="col-4 fw-bold">Status:</div><div class="col-8" id="v_status">-</div></div>
+        <div class="row"><div class="col-4 fw-bold">Reason:</div><div class="col-8"><div class="border rounded p-2 bg-light" id="v_reason">—</div></div></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i>Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-content-custom">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="alert alert-warning"><strong id="deleteItemLabel">—</strong></div>
+        <p class="mb-0 text-muted">⚠️ This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal"><i class="fas fa-ban me-1"></i>Cancel</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger"><i class="fas fa-trash-alt me-1"></i>Yes, delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const dataUrl = "{% url 'ccl_application_data' %}";
+  const saveUrl = "{% url 'ccl_application_save' %}";
+  const deleteUrl = "{% url 'ccl_application_delete' %}";
+  const defaultAcademicYear = "{{ academic_year|default:'' }}";
+
+  let currentPage = 1;
+  let sortField = "requested_date";
+  let sortOrder = "desc";
+  let searchTimer = null;
+  let rowsById = {};
+  let deleteTargetId = null;
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + "=") {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  function escapeHtml(value) {
+    if (value === null || value === undefined) return "";
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function formatDateDisplay(iso) {
+    if (!iso) return "-";
+    const parts = iso.split("-");
+    if (parts.length !== 3) return iso;
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const m = months[parseInt(parts[1], 10) - 1] || "";
+    return `${m} ${parseInt(parts[2], 10)}, ${parts[0]}`;
+  }
+
+  function setLoading() {
+    document.getElementById("cclTbody").innerHTML =
+      '<tr class="loading-row"><td colspan="8"><i class="fas fa-spinner fa-spin me-2"></i>Loading…</td></tr>';
+  }
+
+  function statusBadge(status) {
+    let cls = "badge-preapproved", icon = "fa-check-double";
+    if (status === "Approved") { cls = "badge-approved"; icon = "fa-check-circle"; }
+    else if (status === "Rejected") { cls = "badge-rejected"; icon = "fa-times-circle"; }
+    else if (status === "Pending") { cls = "badge-pending"; icon = "fa-clock"; }
+    return `<span class="badge-status ${cls}"><i class="fas ${icon} me-1"></i>${escapeHtml(status)}</span>`;
+  }
+
+  function approvalCell(row) {
+    if (row.is_admin_awarded) {
+      return `<span class="badge rounded-pill px-3 py-2" style="background:#e0f2fe;color:#0369a1;font-size:11.5px;font-weight:700;letter-spacing:.2px;">
+        <i class="fas fa-shield-alt me-1"></i>Awarded by Admin</span>`;
+    }
+    if (row.approver_rows && row.approver_rows.length) {
+      return `<div class="d-flex flex-column gap-1">` + row.approver_rows.map(r => {
+        let badge = `<span class="badge bg-warning text-dark ms-1">Pending</span>`;
+        if ((r.status || "").toUpperCase() === "APPROVED") badge = `<span class="badge bg-success ms-1">Approved</span>`;
+        else if ((r.status || "").toUpperCase() === "REJECTED") badge = `<span class="badge bg-danger ms-1">Rejected</span>`;
+        const desig = r.desig ? ` (${escapeHtml(r.desig)})` : "";
+        return `<div class="approver-item"><strong>Level ${escapeHtml(r.level)}:</strong> ${escapeHtml(r.emp)} — ${escapeHtml(r.name)}${desig} ${badge}</div>`;
+      }).join("") + `</div>`;
+    }
+    return `<span class="text-muted fst-italic" style="font-size:12px;">No approver records</span>`;
+  }
+
+  function renderRows(results, startIndex) {
+    rowsById = {};
+    if (!results.length) {
+      document.getElementById("cclTbody").innerHTML =
+        '<tr class="empty-row"><td colspan="8"><i class="fas fa-inbox me-2"></i>No records found.</td></tr>';
+      return;
+    }
+    const html = results.map((row, i) => {
+      rowsById[row.id] = row;
+      const reason = escapeHtml(row.reason || "—");
+      const shortReason = reason.length > 100 ? reason.slice(0, 100) + "…" : reason;
+      let actions = `<button type="button" class="btn btn-sm btn-outline-secondary btn-view" data-id="${row.id}"><i class="fas fa-eye"></i> View</button>`;
+      if (!row.is_locked) {
+        actions += ` <button type="button" class="btn btn-sm btn-warning btn-edit" data-id="${row.id}"><i class="fas fa-edit"></i> Edit</button>`;
+        actions += ` <button type="button" class="btn btn-sm btn-danger btn-delete" data-id="${row.id}"><i class="fas fa-trash-alt"></i> Del</button>`;
+      } else {
+        actions += ` <span class="text-muted small ms-1"><i class="fas fa-lock me-1"></i>Locked</span>`;
+      }
+      return `
+        <tr>
+          <td>${startIndex + i}</td>
+          <td>${escapeHtml(row.academic_year)}</td>
+          <td>${formatDateDisplay(row.date)}</td>
+          <td><strong>${Number(row.days).toFixed(1)}</strong></td>
+          <td style="min-width:220px;"><div>${shortReason}</div></td>
+          <td>${statusBadge(row.status)}</td>
+          <td class="approver-cell">${approvalCell(row)}</td>
+          <td><div class="d-flex flex-wrap gap-1">${actions}</div></td>
+        </tr>`;
+    }).join("");
+    document.getElementById("cclTbody").innerHTML = html;
+  }
+
+  function renderStats(stats) {
+    document.getElementById("stat-total").textContent = stats.total || 0;
+    document.getElementById("stat-pending").textContent = stats.pending || 0;
+    document.getElementById("stat-approved").textContent = stats.approved || 0;
+    document.getElementById("stat-rejected").textContent = stats.rejected || 0;
+  }
+
+  function renderPagination(meta) {
+    const pager = document.getElementById("paginationUl");
+    const showingText = document.getElementById("showingText");
+    if (!meta) {
+      pager.innerHTML = "";
+      showingText.textContent = "Showing 0-0 of 0";
+      return;
+    }
+    const total = meta.total || 0;
+    const page = meta.page || 1;
+    const totalPages = meta.total_pages || 1;
+    const pageSize = meta.page_size || 100;
+    const start = total === 0 ? 0 : ((page - 1) * pageSize) + 1;
+    const end = Math.min(page * pageSize, total);
+    showingText.textContent = `Showing ${start}-${end} of ${total}`;
+
+    pager.innerHTML = `
+      <button type="button" class="pager-btn" data-dir="prev" ${!meta.has_prev ? "disabled" : ""}>
+        <i class="fas fa-chevron-left"></i> Prev
+      </button>
+      <span class="pager-info">Page ${page} of ${totalPages}</span>
+      <button type="button" class="pager-btn" data-dir="next" ${!meta.has_next ? "disabled" : ""}>
+        Next <i class="fas fa-chevron-right"></i>
+      </button>`;
+  }
+
+  function updateSortHeaders() {
+    document.querySelectorAll("#cclDataTable th.sortable").forEach(th => {
+      th.classList.toggle("sort-active", th.dataset.sort === sortField);
+      const icon = th.querySelector("i");
+      if (th.dataset.sort === sortField) {
+        icon.className = sortOrder === "asc" ? "fas fa-sort-up" : "fas fa-sort-down";
+      } else {
+        icon.className = "fas fa-sort";
+      }
+    });
+  }
+
+  function buildQuery() {
+    const params = new URLSearchParams();
+    params.set("page", currentPage);
+    params.set("page_size", document.getElementById("pageSizeSelect").value);
+    params.set("sort", sortField);
+    params.set("order", sortOrder);
+    const q = document.getElementById("searchInput").value.trim();
+    const fy = document.getElementById("filterAcademicYear").value;
+    const st = document.getElementById("filterStatus").value;
+    const df = document.getElementById("filterFrom").value;
+    const dt = document.getElementById("filterTo").value;
+    if (q) params.set("q", q);
+    if (fy) params.set("fy", fy);
+    if (st) params.set("st", st);
+    if (df) params.set("df", df);
+    if (dt) params.set("dt", dt);
+    return params.toString();
+  }
+
+  function loadCclApplications() {
+    setLoading();
+    fetch(`${dataUrl}?${buildQuery()}`)
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        renderStats(data.stats || {});
+        const meta = data.pagination || null;
+        const startIndex = meta ? ((meta.page - 1) * meta.page_size) + 1 : 1;
+        renderRows(data.results || [], startIndex);
+        renderPagination(meta);
+        updateSortHeaders();
+      })
+      .catch(error => {
+        console.error("Failed to load CCL applications:", error);
+        document.getElementById("cclTbody").innerHTML =
+          `<tr class="empty-row"><td colspan="8" class="text-danger"><i class="fas fa-triangle-exclamation me-2"></i>Failed to load applications. ${escapeHtml(error.message || "Please refresh.")}</td></tr>`;
+      });
+  }
+
+  // Search (debounced) + filters
+  document.getElementById("searchInput").addEventListener("keyup", function () {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { currentPage = 1; loadCclApplications(); }, 250);
+  });
+
+  ["filterAcademicYear", "filterStatus", "filterFrom", "filterTo", "pageSizeSelect"].forEach(id => {
+    document.getElementById(id).addEventListener("change", () => { currentPage = 1; loadCclApplications(); });
+  });
+
+  document.getElementById("resetFiltersBtn").addEventListener("click", function () {
+    document.getElementById("searchInput").value = "";
+    document.getElementById("filterAcademicYear").value = "";
+    document.getElementById("filterStatus").value = "";
+    document.getElementById("filterFrom").value = "";
+    document.getElementById("filterTo").value = "";
+    currentPage = 1;
+    loadCclApplications();
+  });
+
+  // Sortable headers
+  document.querySelectorAll("#cclDataTable th.sortable").forEach(th => {
+    th.addEventListener("click", function () {
+      const field = th.dataset.sort;
+      if (sortField === field) {
+        sortOrder = sortOrder === "asc" ? "desc" : "asc";
+      } else {
+        sortField = field;
+        sortOrder = "asc";
+      }
+      currentPage = 1;
+      loadCclApplications();
+    });
+  });
+
+  // Pagination clicks — minimalist Prev / Next pager
+  document.getElementById("paginationUl").addEventListener("click", function (event) {
+    const btn = event.target.closest("button[data-dir]");
+    if (!btn || btn.disabled) return;
+    currentPage = btn.dataset.dir === "prev" ? Math.max(1, currentPage - 1) : currentPage + 1;
+    loadCclApplications();
+  });
+
+  // Apply/Update form
+  const form = document.getElementById("cclForm");
+  const actionInput = document.getElementById("form_action");
+  const cclIdInput = document.getElementById("ccl_id");
+  const submitBtn = document.getElementById("submitBtn");
+  const cancelEditBtn = document.getElementById("cancelEditBtn");
+  const academicYearField = document.getElementById("academic_year");
+  const dateField = document.getElementById("date");
+  const reasonText = document.getElementById("reason");
+  const formError = document.getElementById("formError");
+
+  function showFormError(message) {
+    formError.textContent = message;
+    formError.classList.remove("d-none");
+  }
+  function clearFormError() {
+    formError.classList.add("d-none");
+    formError.textContent = "";
+  }
+
+  function resetForm() {
+    actionInput.value = "create";
+    cclIdInput.value = "";
+    submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit Application';
+    cancelEditBtn.classList.add("d-none");
+    form.reset();
+    academicYearField.value = defaultAcademicYear;
+    clearFormError();
+  }
+
+  if (cancelEditBtn) cancelEditBtn.addEventListener("click", resetForm);
+
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    clearFormError();
+    submitBtn.disabled = true;
+    const originalHtml = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting…';
+
+    fetch(saveUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+      body: JSON.stringify({
+        action: actionInput.value,
+        ccl_id: cclIdInput.value,
+        academic_year: academicYearField.value,
+        date: dateField.value,
+        reason: reasonText.value,
+      }),
+    })
+      .then(async response => {
+        const data = await response.json();
+        return { ok: response.ok, data };
+      })
+      .then(({ ok, data }) => {
+        if (!ok || !data.success) {
+          showFormError(data.message || "Something went wrong. Please try again.");
+          return;
+        }
+        resetForm();
+        currentPage = 1;
+        loadCclApplications();
+      })
+      .catch(error => {
+        console.error("Failed to save CCL application:", error);
+        showFormError("Network error — please try again.");
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalHtml;
+      });
+  });
+
+  // Edit / View / Delete — delegated, table body is re-rendered on every load
+  document.getElementById("cclTbody").addEventListener("click", function (event) {
+    const editBtn = event.target.closest(".btn-edit");
+    const viewBtn = event.target.closest(".btn-view");
+    const deleteBtn = event.target.closest(".btn-delete");
+
+    if (editBtn) {
+      const row = rowsById[editBtn.dataset.id];
+      if (!row) return;
+      actionInput.value = "update";
+      cclIdInput.value = row.id;
+      academicYearField.value = row.academic_year;
+      dateField.value = row.date;
+      reasonText.value = row.reason || "";
+      submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Update Application';
+      cancelEditBtn.classList.remove("d-none");
+      clearFormError();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    if (viewBtn) {
+      const row = rowsById[viewBtn.dataset.id];
+      if (!row) return;
+      document.getElementById("v_year").textContent = row.academic_year || "-";
+      document.getElementById("v_date").textContent = formatDateDisplay(row.date);
+      document.getElementById("v_days").textContent = Number(row.days).toFixed(1);
+      document.getElementById("v_status").textContent = row.status || "-";
+      document.getElementById("v_reason").textContent = row.reason || "—";
+      new bootstrap.Modal(document.getElementById("viewModal")).show();
+      return;
+    }
+
+    if (deleteBtn) {
+      const row = rowsById[deleteBtn.dataset.id];
+      if (!row) return;
+      deleteTargetId = row.id;
+      document.getElementById("deleteItemLabel").textContent = `${row.academic_year} (${formatDateDisplay(row.date)})`;
+      new bootstrap.Modal(document.getElementById("deleteModal")).show();
+    }
+  });
+
+  document.getElementById("confirmDeleteBtn").addEventListener("click", function () {
+    if (!deleteTargetId) return;
+    const btn = this;
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Deleting…';
+
+    fetch(deleteUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+      body: JSON.stringify({ ccl_id: deleteTargetId }),
+    })
+      .then(async response => {
+        const data = await response.json();
+        return { ok: response.ok, data };
+      })
+      .then(({ data }) => {
+        const modalEl = document.getElementById("deleteModal");
+        bootstrap.Modal.getInstance(modalEl)?.hide();
+        if (!data.success) {
+          alert(data.message || "Failed to delete CCL application.");
+          return;
+        }
+        deleteTargetId = null;
+        loadCclApplications();
+      })
+      .catch(error => {
+        console.error("Failed to delete CCL application:", error);
+        alert("Network error — please try again.");
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      });
+  });
+
+  loadCclApplications();
+})();
+</script>
+
+{% endblock content %}

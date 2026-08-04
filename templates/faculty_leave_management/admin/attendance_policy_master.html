@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+.ap-page { background:#f0f4f8; min-height:100vh; padding:24px; }
+.ap-header {
+    background:linear-gradient(135deg,#17406f 0%,#1f6f78 100%);
+    border-radius:16px; padding:22px 28px; color:#fff;
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:20px; box-shadow:0 6px 24px rgba(23,64,111,.22);
+}
+.ap-header h2 { margin:0; font-size:20px; font-weight:800; }
+.ap-header p { margin:4px 0 0; color:rgba(255,255,255,.76); font-size:12px; }
+.ap-grid { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(340px,.9fr); gap:18px; }
+.ap-card { background:#fff; border-radius:14px; padding:20px 22px; box-shadow:0 2px 14px rgba(15,23,42,.08); margin-bottom:18px; }
+.ap-title { font-size:14px; font-weight:800; color:#17406f; display:flex; align-items:center; gap:8px; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid #e8eef7; }
+.form-label { font-size:11.5px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:.35px; margin-bottom:5px; }
+.form-control, .form-select { border:1.5px solid #dbe3ef; border-radius:9px; font-size:13px; padding:9px 12px; background:#fbfdff; }
+.form-check-label { font-size:12.5px; font-weight:700; color:#334155; }
+.check-strip { display:flex; gap:16px; flex-wrap:wrap; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; }
+.btn-save { background:#1f6f78; color:#fff; border:none; border-radius:10px; padding:10px 22px; font-weight:800; }
+.btn-save:hover { color:#fff; background:#195f67; }
+.btn-clear { background:#f8fafc; color:#475569; border:1px solid #dbe3ef; border-radius:10px; padding:10px 16px; text-decoration:none; font-weight:800; }
+.ap-table-wrap { background:#fff; border-radius:14px; box-shadow:0 2px 14px rgba(15,23,42,.08); overflow:auto; margin-bottom:18px; }
+table.ap-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+table.ap-table thead tr { background:#0f172a; }
+table.ap-table th { padding:10px 12px; color:#cbd5e1; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; text-align:left; white-space:nowrap; }
+table.ap-table td { padding:10px 12px; border-bottom:1px solid #edf2f7; vertical-align:middle; color:#334155; }
+table.ap-table tbody tr:hover { background:#f8fbff; }
+.badge-on,.badge-off,.badge-muted,.badge-warn { display:inline-block; padding:4px 9px; border-radius:999px; font-size:11px; font-weight:800; white-space:nowrap; }
+.badge-on { background:#d1fae5; color:#065f46; }
+.badge-off { background:#fee2e2; color:#991b1b; }
+.badge-muted { background:#e2e8f0; color:#475569; }
+.badge-warn { background:#fef3c7; color:#92400e; }
+.action-link { font-size:12px; font-weight:800; text-decoration:none; margin-right:10px; }
+.edit { color:#1d4ed8; }
+.delete { color:#b91c1c; }
+.scope-target { display:none; }
+@media (max-width: 992px) { .ap-grid { grid-template-columns:1fr; } }
+</style>
+
+<div class="ap-page">
+    <div class="ap-header">
+        <div>
+            <h2><i class="fas fa-user-clock me-2"></i>Attendance Policy</h2>
+            <p>Flexible and shift-based attendance rules for employee attendance report.</p>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="ap-grid">
+        <div>
+            <div class="ap-card">
+                <div class="ap-title">
+                    <i class="fas fa-sliders"></i>{% if edit_policy %}Edit Policy{% else %}Add Policy{% endif %}
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="save_policy">
+                    {% if edit_policy %}<input type="hidden" name="policy_id" value="{{ edit_policy.id }}">{% endif %}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Policy Name</label>
+                            <input type="text" name="policy_name" class="form-control" value="{{ edit_policy.policy_name|default:'' }}" placeholder="Flexible Hours" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Punch Mode</label>
+                            <select name="punch_mode" class="form-select">
+                                <option value="FIRST_LAST" {% if edit_policy.punch_mode == "FIRST_LAST" %}selected{% endif %}>First In / Last Out</option>
+                                <option value="PAIR" {% if edit_policy.punch_mode == "PAIR" %}selected{% endif %}>Pair Punches</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Minimum Punches</label>
+                            <input type="number" name="minimum_punches_required" class="form-control" min="1" value="{{ edit_policy.minimum_punches_required|default:2 }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Minimum Hours</label>
+                            <input type="number" name="minimum_working_hours" class="form-control" min="0" step="0.25" value="{{ edit_policy.minimum_working_hours|default:'0' }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Odd Punch</label>
+                            <select name="odd_punch_handling" class="form-select">
+                                <option value="MISSING_OUT" {% if edit_policy.odd_punch_handling == "MISSING_OUT" %}selected{% endif %}>Missing OUT</option>
+                                <option value="IGNORE_LAST" {% if edit_policy.odd_punch_handling == "IGNORE_LAST" %}selected{% endif %}>Ignore Last</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="check-strip">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="late_early_check" id="late_early_check" {% if not edit_policy or edit_policy.late_early_check %}checked{% endif %}>
+                                    <label class="form-check-label" for="late_early_check">Late/Early Check</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="shift_required" id="shift_required" {% if not edit_policy or edit_policy.shift_required %}checked{% endif %}>
+                                    <label class="form-check-label" for="shift_required">Shift Required</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if not edit_policy or edit_policy.is_active %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_active">Active</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn-save">{% if edit_policy %}Update Policy{% else %}Save Policy{% endif %}</button>
+                            {% if edit_policy %}<a href="{% url 'attendance_policy_master' %}" class="btn-clear">Clear</a>{% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="ap-table-wrap">
+                <table class="ap-table">
+                    <thead>
+                        <tr>
+                            <th>Policy</th>
+                            <th>Mode</th>
+                            <th>Punches</th>
+                            <th>Hours</th>
+                            <th>Shift</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for policy in policies %}
+                        <tr>
+                            <td><strong>{{ policy.policy_name }}</strong></td>
+                            <td>{{ policy.get_punch_mode_display }}</td>
+                            <td>{{ policy.minimum_punches_required }}</td>
+                            <td>{{ policy.minimum_working_hours }}</td>
+                            <td>{% if policy.shift_required %}<span class="badge-muted">Required</span>{% else %}<span class="badge-warn">No Shift</span>{% endif %}</td>
+                            <td>{% if policy.is_active %}<span class="badge-on">Active</span>{% else %}<span class="badge-off">Inactive</span>{% endif %}</td>
+                            <td>
+                                <a class="action-link edit" href="{% url 'attendance_policy_master' %}?edit_policy={{ policy.id }}">Edit</a>
+                                <a class="action-link delete" href="{% url 'attendance_policy_master' %}?delete_policy={{ policy.id }}" onclick="return confirm('Delete this attendance policy?');">Delete</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7" style="text-align:center;padding:28px;color:#94a3b8;">No attendance policies saved.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div>
+            <div class="ap-card">
+                <div class="ap-title"><i class="fas fa-users-gear"></i>Assign Policy</div>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="save_assignment">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Policy</label>
+                            <select name="policy" class="form-select" required>
+                                <option value="">Select Policy</option>
+                                {% for policy in active_policies %}
+                                <option value="{{ policy.id }}">{{ policy.policy_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Scope</label>
+                            <select name="scope_type" id="scope_type" class="form-select" required>
+                                <option value="employee">Employee</option>
+                                <option value="designation">Designation</option>
+                                <option value="category">Category</option>
+                                <option value="default">Default</option>
+                            </select>
+                        </div>
+                        <div class="col-12 scope-target" data-scope="employee">
+                            <label class="form-label">Employee</label>
+                            <select name="employee" class="form-select">
+                                <option value="">Select Employee</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp.id }}">{{ emp.faculty_id }} - {{ emp.name|default:"-" }}{% if emp.designation %} ({{ emp.designation.designation_name }}){% endif %}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12 scope-target" data-scope="designation">
+                            <label class="form-label">Designation</label>
+                            <select name="designation" class="form-select">
+                                <option value="">Select Designation</option>
+                                {% for designation in designations %}
+                                <option value="{{ designation.id }}">{{ designation.designation_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12 scope-target" data-scope="category">
+                            <label class="form-label">Category</label>
+                            <select name="category" class="form-select">
+                                <option value="">Select Category</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.category_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes</label>
+                            <input type="text" name="notes" class="form-control" placeholder="Principal / GM driver / Director driver">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="assignment_is_active" id="assignment_is_active" checked>
+                                <label class="form-check-label" for="assignment_is_active">Active</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn-save">Save Assignment</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="ap-table-wrap">
+                <table class="ap-table">
+                    <thead>
+                        <tr>
+                            <th>Scope</th>
+                            <th>Policy</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in assignments %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.scope_label }}</strong>
+                                {% if item.notes %}<div style="font-size:11px;color:#64748b;margin-top:2px;">{{ item.notes }}</div>{% endif %}
+                            </td>
+                            <td>{{ item.policy.policy_name }}</td>
+                            <td>{% if item.is_active %}<span class="badge-on">Active</span>{% else %}<span class="badge-off">Inactive</span>{% endif %}</td>
+                            <td><a class="action-link delete" href="{% url 'attendance_policy_master' %}?delete_assignment={{ item.id }}" onclick="return confirm('Delete this assignment?');">Delete</a></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" style="text-align:center;padding:28px;color:#94a3b8;">No policy assignments saved.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const scopeSelect = document.getElementById("scope_type");
+    const targets = document.querySelectorAll(".scope-target");
+
+    function toggleScope() {
+        const selected = scopeSelect.value;
+        targets.forEach(function (target) {
+            target.style.display = target.dataset.scope === selected ? "block" : "none";
+        });
+    }
+
+    scopeSelect.addEventListener("change", toggleScope);
+    toggleScope();
+});
+</script>
+{% endblock %}

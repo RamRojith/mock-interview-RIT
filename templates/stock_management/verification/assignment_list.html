@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid py-4" style="max-width:1300px;">
+  <h2 class="fw-bold text-primary mb-3"><i class="fa-solid fa-user-check me-2"></i>Verification Assignments</h2>
+
+  {% if messages %}{% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}{% endif %}
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-primary text-white fw-semibold">New Assignment</div>
+    <div class="card-body">
+      <form method="post" action="{% url 'verification_assignment_create' %}" class="row g-3">{% csrf_token %}
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Cycle (Draft) <span class="text-danger">*</span></label>
+          <select name="cycle" class="form-select" required>
+            <option value="">-- Select --</option>
+            {% for c in cycles %}<option value="{{ c.id }}">{{ c.cycle_name }} ({{ c.financial_year }})</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Lab <span class="text-danger">*</span></label>
+          <select name="lab" class="form-select" required>
+            <option value="">-- Select --</option>
+            {% for l in labs %}<option value="{{ l.id }}">{{ l.lab_code }} — {{ l.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Assigned Faculty <span class="text-danger">*</span></label>
+          <select name="assigned_faculty" class="form-select" required>
+            <option value="">-- Select --</option>
+            {% for f in faculties %}<option value="{{ f.id }}">{{ f.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">Due Date <span class="text-danger">*</span></label>
+          <input type="date" name="due_date" class="form-control" required>
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+          <button class="btn btn-primary w-100">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="table-responsive">
+      <table class="table table-bordered mb-0 align-middle">
+        <thead class="table-light text-center"><tr><th>Cycle</th><th>Lab</th><th>Faculty</th><th>Due</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for a in assignments %}
+          <tr>
+            <td>{{ a.cycle.cycle_name }}</td>
+            <td class="text-center">{{ a.lab.lab_code }} — {{ a.lab.name }}</td>
+            <td>{{ a.assigned_faculty.name|default:"-" }}</td>
+            <td class="text-center">{{ a.due_date }}</td>
+            <td class="text-center"><span class="badge bg-info text-dark">{{ a.get_status_display }}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center text-muted py-3">No assignments yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock content %}

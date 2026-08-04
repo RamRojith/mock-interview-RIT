@@ -1,0 +1,1120 @@
+{% extends 'base.html' %}
+{% load flm_tags %}
+
+{% block content %}
+
+<style>
+/* ========================================
+   GLOBAL STYLES (Matching Leave/OD Portal)
+   ======================================== */
+.ccl-approvals-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.ccl-approvals-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.ccl-approvals-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.ccl-approvals-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.ccl-approvals-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Stats Row */
+.ccl-approvals-portal .stats-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.ccl-approvals-portal .stat-card {
+  flex: 1;
+  min-width: 160px;
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  transition: all 0.3s ease;
+}
+
+.ccl-approvals-portal .stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.ccl-approvals-portal .stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: #f8fafc;
+}
+
+.ccl-approvals-portal .stat-icon.pending { background: #fef3c7; color: #d97706; }
+.ccl-approvals-portal .stat-icon.approved { background: #d1fae5; color: #059669; }
+.ccl-approvals-portal .stat-icon.rejected { background: #fee2e2; color: #dc2626; }
+
+.ccl-approvals-portal .stat-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+.ccl-approvals-portal .stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1;
+}
+
+/* Tab Row */
+.ccl-approvals-portal .tab-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0;
+}
+
+.ccl-approvals-portal .tab-pill {
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: 12px 12px 0 0;
+  color: #64748b;
+  background: transparent;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  cursor: pointer;
+}
+
+.ccl-approvals-portal .tab-pill i {
+  font-size: 0.9rem;
+}
+
+.ccl-approvals-portal .tab-pill .tab-count {
+  background: #e2e8f0;
+  color: #475569;
+  padding: 0.2rem 0.5rem;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.ccl-approvals-portal .tab-pill.pending.active {
+  color: #d97706;
+  border-bottom: 3px solid #d97706;
+  background: #fffbeb;
+}
+
+.ccl-approvals-portal .tab-pill.approved.active {
+  color: #059669;
+  border-bottom: 3px solid #059669;
+  background: #ecfdf5;
+}
+
+.ccl-approvals-portal .tab-pill.rejected.active {
+  color: #dc2626;
+  border-bottom: 3px solid #dc2626;
+  background: #fef2f2;
+}
+
+.ccl-approvals-portal .tab-pill:hover:not(.active) {
+  background: #f1f5f9;
+  color: #1a4b8c;
+}
+
+/* Filter Card */
+.ccl-approvals-portal .filter-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+}
+
+.ccl-approvals-portal .filter-card .form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.ccl-approvals-portal .filter-card .form-control,
+.ccl-approvals-portal .filter-card .form-select {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.ccl-approvals-portal .filter-card .form-control:focus,
+.ccl-approvals-portal .filter-card .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+.ccl-approvals-portal .btn-apply {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.ccl-approvals-portal .btn-apply:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.ccl-approvals-portal .btn-reset {
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.ccl-approvals-portal .btn-reset:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+/* Export Buttons */
+.ccl-approvals-portal .hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.ccl-approvals-portal .hero h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.ccl-approvals-portal .hero p {
+  color: #64748b;
+  margin: 0;
+}
+
+.ccl-approvals-portal .btn-excel,
+.ccl-approvals-portal .btn-pdf {
+  padding: 0.5rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ccl-approvals-portal .btn-excel {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.ccl-approvals-portal .btn-excel:hover {
+  background: #a7f3d0;
+  transform: translateY(-1px);
+  color: #047857;
+}
+
+.ccl-approvals-portal .btn-pdf {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.ccl-approvals-portal .btn-pdf:hover {
+  background: #fecaca;
+  transform: translateY(-1px);
+  color: #dc2626;
+}
+
+.ccl-approvals-portal .btn-bulk-approve {
+  padding: 0.5rem 1.25rem;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.ccl-approvals-portal .btn-bulk-approve:hover {
+  background: #bfdbfe;
+  transform: translateY(-1px);
+}
+
+/* Section Cards (Level Groups) */
+.ccl-approvals-portal .section-card {
+  background: white;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+}
+
+.ccl-approvals-portal .section-head {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ccl-approvals-portal .section-head-title {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #1a4b8c;
+}
+
+.ccl-approvals-portal .section-head-sub {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: normal;
+}
+
+.ccl-approvals-portal .toggle-btn {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 40px;
+  padding: 0.25rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  transition: all 0.2s;
+}
+
+.ccl-approvals-portal .toggle-btn:hover {
+  background: white;
+  border-color: #1a4b8c;
+  color: #1a4b8c;
+}
+
+/* Select Bar */
+.ccl-approvals-portal .select-bar {
+  padding: 0.75rem 1.5rem;
+  background: #fefce8;
+  border-bottom: 1px solid #fde047;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Custom Table */
+.ccl-approvals-portal .custom-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+}
+
+.ccl-approvals-portal .custom-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.ccl-approvals-portal .custom-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #374151;
+  font-size: 0.85rem;
+}
+
+.ccl-approvals-portal .custom-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.ccl-approvals-portal .custom-table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.03);
+}
+
+/* CCL Specific Badges */
+.ccl-approvals-portal .days-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #1e3a5f, #0d6efd);
+  color: white;
+  font-weight: 700;
+  padding: 0.25rem 0.7rem;
+  border-radius: 40px;
+  font-size: 0.8rem;
+  min-width: 45px;
+  text-align: center;
+}
+
+.ccl-approvals-portal .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.ccl-approvals-portal .badge-pending { background: #fef3c7; color: #b45309; }
+.ccl-approvals-portal .badge-approved { background: #d1fae5; color: #065f46; }
+.ccl-approvals-portal .badge-rejected { background: #fee2e2; color: #b91c1c; }
+
+/* Faculty ID/Name */
+.ccl-approvals-portal .fac-id {
+  font-weight: 700;
+  color: #1a4b8c;
+  font-size: 0.8rem;
+}
+
+.ccl-approvals-portal .fac-name {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Approval Buttons */
+.ccl-approvals-portal .btn-approve-main {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.ccl-approvals-portal .btn-approve-main:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+}
+
+.ccl-approvals-portal .btn-reject-main {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.ccl-approvals-portal .btn-reject-main:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+}
+
+.ccl-approvals-portal .btn-approve-all-main {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.ccl-approvals-portal .btn-approve-all-main:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.3);
+}
+
+.ccl-approvals-portal button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Pagination */
+.ccl-approvals-portal .pag-wrap {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.ccl-approvals-portal .pag-info {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.ccl-approvals-portal .pag-btns {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.ccl-approvals-portal .pag-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 0.4rem 0.7rem;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  border: none;
+}
+
+.ccl-approvals-portal .pag-btn.active {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+}
+
+.ccl-approvals-portal .pag-btn.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.ccl-approvals-portal .pag-btn:hover:not(.active) {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Empty / loading State */
+.ccl-approvals-portal .empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.ccl-approvals-portal .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+  color: #1a4b8c;
+}
+
+.ccl-approvals-portal .empty-state p {
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Modal Custom */
+.modal-content {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  border: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ccl-approvals-portal {
+    padding: 1rem;
+  }
+  .ccl-approvals-portal .page-header {
+    padding: 1rem;
+  }
+  .ccl-approvals-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+  .ccl-approvals-portal .stat-card {
+    min-width: 120px;
+    padding: 0.9rem 1rem;
+  }
+  .ccl-approvals-portal .stat-value {
+    font-size: 1.5rem;
+  }
+  .ccl-approvals-portal .hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .ccl-approvals-portal .table-responsive {
+    overflow-x: auto;
+  }
+  .ccl-approvals-portal .custom-table th,
+  .ccl-approvals-portal .custom-table td {
+    white-space: nowrap;
+  }
+  .ccl-approvals-portal .section-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+</style>
+
+<div class="ccl-approvals-portal">
+  <div class="page-header">
+    <h1><i class="fas fa-calendar-check me-2"></i> CCL Approvals Portal</h1>
+    <p class="header-subtitle">Review, approve or reject CCL applications assigned to you</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Hero + Export -->
+    <div class="hero">
+      <div>
+        <h2><i class="fas fa-clipboard-list me-2"></i> Approval Dashboard</h2>
+        <p>Manage pending requests and track previous decisions</p>
+      </div>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="heroActions">
+        <button type="button" class="btn-bulk-approve d-none" id="approveAllBtn">
+          <i class="fas fa-check-double me-1"></i> Approve All
+        </button>
+        <a href="#" id="exportExcelBtn" class="btn-excel"><i class="fas fa-file-excel me-1"></i> Excel</a>
+        <a href="#" id="exportPdfBtn" class="btn-pdf"><i class="fas fa-file-pdf me-1"></i> PDF</a>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon pending"><i class="fas fa-hourglass-half"></i></div>
+        <div>
+          <div class="stat-label">Pending</div>
+          <div class="stat-value" id="stat-pending">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon approved"><i class="fas fa-check-double"></i></div>
+        <div>
+          <div class="stat-label">Approved</div>
+          <div class="stat-value" id="stat-approved">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon rejected"><i class="fas fa-ban"></i></div>
+        <div>
+          <div class="stat-label">Rejected</div>
+          <div class="stat-value" id="stat-rejected">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-row">
+      <button type="button" class="tab-pill pending active" data-tab="pending">
+        <i class="fas fa-clock"></i> Pending <span class="tab-count" id="tabcount-pending">0</span>
+      </button>
+      <button type="button" class="tab-pill approved" data-tab="approved">
+        <i class="fas fa-check-circle"></i> Approved <span class="tab-count" id="tabcount-approved">0</span>
+      </button>
+      <button type="button" class="tab-pill rejected" data-tab="rejected">
+        <i class="fas fa-times-circle"></i> Rejected <span class="tab-count" id="tabcount-rejected">0</span>
+      </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label"><i class="fas fa-search me-1"></i>Search</label>
+          <input type="text" id="filterSearch" class="form-control" placeholder="Faculty ID, name, reason…">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label"><i class="fas fa-calendar-alt me-1"></i>Academic Year</label>
+          <select id="filterAcademicYear" class="form-select">
+            <option value="">All</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label"><i class="fas fa-layer-group me-1"></i>Level</label>
+          <select id="filterLevel" class="form-select">
+            <option value="">All</option>
+          </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+          <button type="button" class="btn-reset flex-fill text-center" id="resetFiltersBtn">
+            <i class="fas fa-undo-alt me-1"></i>Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk action buttons (pending tab only) -->
+    <div class="d-flex gap-3 mb-3 flex-wrap d-none" id="bulkActionsRow">
+      <button type="button" class="btn-approve-main" id="approveSelectedBtn">
+        <i class="fas fa-check-circle me-2"></i>Approve Selected
+      </button>
+      <button type="button" class="btn-reject-main" id="rejectSelectedBtn">
+        <i class="fas fa-times-circle me-2"></i>Reject Selected
+      </button>
+    </div>
+
+    <!-- Levels container — populated client-side -->
+    <div id="levelsContainer">
+      <div class="section-card"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div></div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pag-wrap">
+      <div class="pag-info" id="pagInfo">Page 1 of 1</div>
+      <div class="pag-btns" id="pagBtns"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Rejection Modal -->
+<div class="modal fade" id="reject-modal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header" style="background:linear-gradient(135deg,#dc2626,#b91c1c);padding:16px 20px;">
+        <h5 class="modal-title text-white fw-bold">
+          <i class="fas fa-times-circle me-2"></i>Rejection Reason
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <label class="form-label fw-semibold mb-2" style="font-size:.9rem;">
+          Please provide a reason for rejection
+        </label>
+        <textarea class="form-control" id="modal-reason"
+                  placeholder="Enter rejection reason..." rows="4" required
+                  style="border-radius:12px; border:1px solid #e2e8f0;"></textarea>
+      </div>
+      <div class="modal-footer border-0 pt-0 pb-3">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"
+                style="border-radius:40px; padding:0.5rem 1.2rem;">Cancel</button>
+        <button type="button" class="btn-reject-main" id="submitRejectionBtn"
+                style="border-radius:40px; padding:0.5rem 1.5rem;">
+          <i class="fas fa-times me-1"></i>Submit Rejection
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const dataUrl = "{% url 'ccl_approval_data' %}";
+  const actionUrl = "{% url 'ccl_approval_action' %}";
+  const exportUrlBase = "{% url 'ccl_approval_export' %}";
+
+  let currentTab = "pending";
+  let currentPage = 1;
+  let searchTimer = null;
+  let lastMeta = null;
+  let rowsById = {};
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + "=") {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  function escapeHtml(value) {
+    if (value === null || value === undefined) return "";
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function formatDateDisplay(iso) {
+    if (!iso) return "-";
+    const parts = iso.split("-");
+    if (parts.length !== 3) return iso;
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const m = months[parseInt(parts[1], 10) - 1] || "";
+    return `${parseInt(parts[2], 10)} ${m} ${parts[0]}`;
+  }
+
+  function statusBadge(status) {
+    const s = (status || "").toUpperCase();
+    if (s === "APPROVED") return `<span class="badge-status badge-approved"><i class="fas fa-check me-1"></i>Approved</span>`;
+    if (s === "REJECTED") return `<span class="badge-status badge-rejected"><i class="fas fa-times me-1"></i>Rejected</span>`;
+    if (s === "PENDING") return `<span class="badge-status badge-pending"><i class="fas fa-clock me-1"></i>Pending</span>`;
+    return `<span class="badge-status badge-pending">${escapeHtml(status)}</span>`;
+  }
+
+  function buildQuery() {
+    const params = new URLSearchParams();
+    params.set("tab", currentTab);
+    params.set("page", currentPage);
+    const q = document.getElementById("filterSearch").value.trim();
+    const ay = document.getElementById("filterAcademicYear").value;
+    const level = document.getElementById("filterLevel").value;
+    if (q) params.set("q", q);
+    if (ay) params.set("academic_year", ay);
+    if (level) params.set("level", level);
+    return params.toString();
+  }
+
+  function updateExportLinks() {
+    const params = new URLSearchParams();
+    params.set("tab", currentTab);
+    const q = document.getElementById("filterSearch").value.trim();
+    const ay = document.getElementById("filterAcademicYear").value;
+    const level = document.getElementById("filterLevel").value;
+    if (q) params.set("q", q);
+    if (ay) params.set("academic_year", ay);
+    if (level) params.set("level", level);
+    document.getElementById("exportExcelBtn").href = `${exportUrlBase}?${params.toString()}&format=excel`;
+    document.getElementById("exportPdfBtn").href = `${exportUrlBase}?${params.toString()}&format=pdf`;
+  }
+
+  function renderStats(stats) {
+    document.getElementById("stat-pending").textContent = stats.pending || 0;
+    document.getElementById("stat-approved").textContent = stats.approved || 0;
+    document.getElementById("stat-rejected").textContent = stats.rejected || 0;
+    document.getElementById("tabcount-pending").textContent = stats.pending || 0;
+    document.getElementById("tabcount-approved").textContent = stats.approved || 0;
+    document.getElementById("tabcount-rejected").textContent = stats.rejected || 0;
+  }
+
+  function renderFilterOptions(filters) {
+    const ayCurrent = document.getElementById("filterAcademicYear").value;
+    const lvlCurrent = document.getElementById("filterLevel").value;
+
+    const aySelect = document.getElementById("filterAcademicYear");
+    aySelect.innerHTML = '<option value="">All</option>' +
+      (filters.available_academic_years || []).filter(Boolean).map(y =>
+        `<option value="${escapeHtml(y)}" ${y === ayCurrent ? "selected" : ""}>${escapeHtml(y)}</option>`
+      ).join("");
+
+    const lvlSelect = document.getElementById("filterLevel");
+    lvlSelect.innerHTML = '<option value="">All</option>' +
+      (filters.available_levels || []).map(l =>
+        `<option value="${l}" ${String(l) === lvlCurrent ? "selected" : ""}>Level ${l}</option>`
+      ).join("");
+  }
+
+  function renderLevels(results) {
+    rowsById = {};
+    const container = document.getElementById("levelsContainer");
+
+    if (!results.length) {
+      container.innerHTML = `
+        <div class="section-card">
+          <div class="empty-state">
+            <i class="fas fa-folder-open"></i>
+            <p style="font-weight:600;">No CCL applications found</p>
+            <p style="font-size:.85rem;">No applications match your current filters.</p>
+          </div>
+        </div>`;
+      return;
+    }
+
+    const byLevel = {};
+    results.forEach(row => {
+      rowsById[row.id] = row;
+      (byLevel[row.level] = byLevel[row.level] || []).push(row);
+    });
+
+    const levels = Object.keys(byLevel).map(Number).sort((a, b) => a - b);
+    const isPending = currentTab === "pending";
+
+    container.innerHTML = levels.map(level => {
+      const rows = byLevel[level];
+      const rowsHtml = rows.map(row => {
+        const cb = isPending
+          ? `<td><input type="checkbox" class="form-check-input row-cb row-cb-${level}" data-id="${row.id}" style="width:16px;height:16px;cursor:pointer;"></td>`
+          : "";
+        const remarksCol = currentTab === "rejected"
+          ? `<td style="max-width:180px;word-break:break-word;">${escapeHtml(row.remarks || "-")}</td>`
+          : "";
+        return `
+          <tr>
+            ${cb}
+            <td style="white-space:nowrap;font-weight:600;">${formatDateDisplay(row.date)}</td>
+            <td><strong class="days-badge">${Number(row.days).toFixed(1)}</strong></td>
+            <td>${escapeHtml(row.academic_year || "-")}</td>
+            <td style="font-size:.8rem;">${escapeHtml(row.designation || "—")}</td>
+            <td style="max-width:220px;word-break:break-word;">${escapeHtml(row.reason || "—")}</td>
+            <td>
+              <div class="fac-id">${escapeHtml(row.faculty_name || "Unknown")}</div>
+              <div class="fac-name">${escapeHtml(row.faculty_id || "")}</div>
+            </td>
+            <td style="white-space:nowrap;">${escapeHtml(row.requested_date || "-")}</td>
+            ${remarksCol}
+            <td>${statusBadge(row.status)}</td>
+          </tr>`;
+      }).join("");
+
+      const selectBar = isPending ? `
+        <div class="select-bar">
+          <input type="checkbox" class="form-check-input sel-all" data-level="${level}" style="width:15px;height:15px;cursor:pointer;">
+          <label style="cursor:pointer;margin:0;font-weight:500;">✓ Select all on this level</label>
+        </div>` : "";
+
+      return `
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <span class="section-head-title"><i class="fas fa-layer-group me-1"></i> Level ${level}</span>
+              <span class="section-head-sub ms-2">— ${rows.length} application${rows.length === 1 ? "" : "s"}</span>
+            </div>
+            <button type="button" class="toggle-btn" data-bs-toggle="collapse" data-bs-target="#ccl-lv-${level}">
+              <i class="fas fa-chevron-up me-1"></i> Toggle Section
+            </button>
+          </div>
+          <div id="ccl-lv-${level}" class="collapse show">
+            ${selectBar}
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    ${isPending ? '<th style="width:42px;"></th>' : ""}
+                    <th>CCL Date</th><th>Days</th><th>Academic Year</th><th>Designation</th>
+                    <th>Reason</th><th>Requested By</th><th>Requested On</th>
+                    ${currentTab === "rejected" ? "<th>Remarks</th>" : ""}
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>${rowsHtml}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>`;
+    }).join("");
+
+    document.querySelectorAll(".sel-all").forEach(cb => {
+      cb.addEventListener("change", function () {
+        document.querySelectorAll(`.row-cb-${this.dataset.level}`).forEach(r => { r.checked = this.checked; });
+      });
+    });
+  }
+
+  function renderPagination(meta) {
+    const pagInfo = document.getElementById("pagInfo");
+    const pagBtns = document.getElementById("pagBtns");
+    if (!meta) {
+      pagInfo.textContent = "Page 1 of 1";
+      pagBtns.innerHTML = "";
+      return;
+    }
+    pagInfo.textContent = `Page ${meta.page} of ${meta.total_pages} (${meta.total} total)`;
+    function btn(label, page, disabled, active) {
+      return `<button type="button" class="pag-btn ${active ? "active" : ""} ${disabled ? "disabled" : ""}" data-page="${page}">${label}</button>`;
+    }
+    let html = "";
+    if (meta.has_prev) {
+      html += btn('<i class="fas fa-angle-double-left"></i>', 1, false, false);
+      html += btn('<i class="fas fa-angle-left"></i>', meta.page - 1, false, false);
+    }
+    html += btn(meta.page, meta.page, false, true);
+    if (meta.has_next) {
+      html += btn('<i class="fas fa-angle-right"></i>', meta.page + 1, false, false);
+      html += btn('<i class="fas fa-angle-double-right"></i>', meta.total_pages, false, false);
+    }
+    pagBtns.innerHTML = html;
+  }
+
+  function updateBulkActionsVisibility() {
+    const isPending = currentTab === "pending";
+    document.getElementById("bulkActionsRow").classList.toggle("d-none", !isPending);
+    document.getElementById("approveAllBtn").classList.toggle("d-none", !isPending || !(lastMeta && (lastMeta.total > 0)));
+  }
+
+  function loadApprovals() {
+    document.getElementById("levelsContainer").innerHTML =
+      '<div class="section-card"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div></div>';
+
+    fetch(`${dataUrl}?${buildQuery()}`)
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        renderStats(data.stats || {});
+        renderFilterOptions(data.filters || {});
+        renderLevels(data.results || []);
+        lastMeta = data.pagination || null;
+        renderPagination(lastMeta);
+        updateExportLinks();
+        updateBulkActionsVisibility();
+      })
+      .catch(error => {
+        console.error("Failed to load CCL approvals:", error);
+        document.getElementById("levelsContainer").innerHTML =
+          `<div class="section-card"><div class="empty-state text-danger"><i class="fas fa-triangle-exclamation"></i><p>Failed to load applications. ${escapeHtml(error.message || "Please refresh.")}</p></div></div>`;
+      });
+  }
+
+  function postAction(payload) {
+    return fetch(actionUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
+      body: JSON.stringify(payload),
+    }).then(async response => {
+      const data = await response.json().catch(() => ({}));
+      return { ok: response.ok, data };
+    });
+  }
+
+  // Tabs
+  document.querySelectorAll(".tab-pill").forEach(tab => {
+    tab.addEventListener("click", function () {
+      document.querySelectorAll(".tab-pill").forEach(t => t.classList.remove("active"));
+      this.classList.add("active");
+      currentTab = this.dataset.tab;
+      currentPage = 1;
+      loadApprovals();
+    });
+  });
+
+  // Filters
+  document.getElementById("filterSearch").addEventListener("keyup", function () {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { currentPage = 1; loadApprovals(); }, 250);
+  });
+  ["filterAcademicYear", "filterLevel"].forEach(id => {
+    document.getElementById(id).addEventListener("change", () => { currentPage = 1; loadApprovals(); });
+  });
+  document.getElementById("resetFiltersBtn").addEventListener("click", function () {
+    document.getElementById("filterSearch").value = "";
+    document.getElementById("filterAcademicYear").value = "";
+    document.getElementById("filterLevel").value = "";
+    currentPage = 1;
+    loadApprovals();
+  });
+
+  // Pagination
+  document.getElementById("pagBtns").addEventListener("click", function (event) {
+    const btn = event.target.closest("button[data-page]");
+    if (!btn || btn.classList.contains("disabled")) return;
+    currentPage = parseInt(btn.dataset.page, 10) || 1;
+    loadApprovals();
+  });
+
+  function selectedIds() {
+    return Array.from(document.querySelectorAll(".row-cb:checked")).map(cb => parseInt(cb.dataset.id, 10));
+  }
+
+  // Approve selected
+  document.getElementById("approveSelectedBtn").addEventListener("click", function () {
+    const ids = selectedIds();
+    if (!ids.length) { alert("Please select at least one CCL application to approve."); return; }
+    const btn = this;
+    btn.disabled = true;
+    postAction({ action: "approve", selected_ids: ids })
+      .then(({ ok, data }) => {
+        if (!ok || !data.success) { alert(data.message || "Failed to approve."); return; }
+        loadApprovals();
+      })
+      .catch(() => alert("Network error — please try again."))
+      .finally(() => { btn.disabled = false; });
+  });
+
+  // Reject selected
+  document.getElementById("rejectSelectedBtn").addEventListener("click", function () {
+    if (!selectedIds().length) { alert("Please select at least one CCL application to reject."); return; }
+    document.getElementById("modal-reason").value = "";
+    new bootstrap.Modal(document.getElementById("reject-modal")).show();
+  });
+
+  document.getElementById("submitRejectionBtn").addEventListener("click", function () {
+    const reason = document.getElementById("modal-reason").value.trim();
+    if (!reason) { alert("Please provide a rejection reason."); return; }
+    const ids = selectedIds();
+    const btn = this;
+    btn.disabled = true;
+    postAction({ action: "reject", selected_ids: ids, rejection_reason: reason })
+      .then(({ ok, data }) => {
+        if (!ok || !data.success) { alert(data.message || "Failed to reject."); return; }
+        bootstrap.Modal.getInstance(document.getElementById("reject-modal"))?.hide();
+        loadApprovals();
+      })
+      .catch(() => alert("Network error — please try again."))
+      .finally(() => { btn.disabled = false; });
+  });
+
+  // Approve all
+  document.getElementById("approveAllBtn").addEventListener("click", function () {
+    if (!confirm("Are you sure you want to approve ALL pending CCL applications actionable by you? This applies across all pages.")) return;
+    const btn = this;
+    btn.disabled = true;
+    postAction({ action: "approve_all" })
+      .then(({ ok, data }) => {
+        if (!ok || !data.success) { alert(data.message || "Failed to approve all."); return; }
+        loadApprovals();
+      })
+      .catch(() => alert("Network error — please try again."))
+      .finally(() => { btn.disabled = false; });
+  });
+
+  loadApprovals();
+})();
+</script>
+{% endblock %}

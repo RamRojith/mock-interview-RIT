@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'admin_dashboard_css.css' %}">
+{% endblock extra_head %}
+
+{% block content %}
+<div class="form-container">
+  <div class="container">
+    <div class="main-card">
+      <div class="card-header" style="background-color: #0d6efd; color: white;">
+        <h2><i class="fas fa-plus-circle me-2"></i>Add New Course</h2>
+      </div>
+
+      <div class="card-body">
+        <form method="post" action="" enctype="multipart/form-data" class="needs-validation" novalidate>
+          {% csrf_token %}
+
+          <!-- Programme Details -->
+          <div class="form-section">
+            <h3><i class="fas fa-graduation-cap me-2"></i>Programme Details</h3>
+            <div class="row g-4">
+
+              <!-- Degree (only asked) -->
+              <div class="col-md-4">
+                <label for="degree" class="form-label"><i class="fas fa-graduation-cap me-1"></i>Degree</label>
+                <select class="form-select" id="degree" name="degree" required>
+                  <option value="" disabled selected>Select Degree</option>
+                  {% for deg in degrees %}
+                    <option value="{{ deg.id }}" data-duration="{{ deg.duration }}">{{ deg.degree }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Department (readonly display only) -->
+              <div class="col-md-4">
+                <label class="form-label"><i class="fas fa-building me-1"></i>Department</label>
+                <input type="text" class="form-control" value="{{ user_department.Department }}" readonly>
+                <small class="text-muted d-block mt-1">Department is auto-mapped from your login.</small>
+              </div>
+
+              <!-- Regulation -->
+              <div class="col-md-4">
+                <label for="regulation" class="form-label"><i class="fas fa-gavel me-1"></i>Regulation</label>
+                <select class="form-select" id="regulation" name="regulation" required>
+                  <option value="" disabled selected>Select Regulation</option>
+                  {% for reg in regulations %}
+                    <option value="{{ reg.id }}">{{ reg.year }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Category -->
+              <div class="col-md-4">
+                <label for="elective" class="form-label"><i class="fas fa-tags me-1"></i>Category</label>
+                <select class="form-select" id="elective" name="elective" required>
+                  <option value="" disabled selected>Select Category</option>
+                </select>
+              </div>
+
+              <!-- Year -->
+              <div class="col-md-4">
+                <label for="year" class="form-label"><i class="fas fa-calendar me-1"></i>Year</label>
+                <select name="year" id="year" class="form-select" required>
+                  <option value="" disabled selected>Select Year</option>
+                </select>
+              </div>
+
+              <!-- Semester -->
+              <div class="col-md-4">
+                <label for="semester" class="form-label"><i class="fas fa-clock me-1"></i>Semester</label>
+                <select name="semester" id="semester" class="form-select" required>
+                  <option value="" disabled selected>Select Semester</option>
+                </select>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Course Table -->
+          <div class="form-section">
+            <div class="d-flex justify-content-between align-items-center">
+              <h3 class="mb-0"><i class="fas fa-book me-2"></i>Course List</h3>
+              <button type="button" id="viewCoursesBtn" class="btn btn-outline-primary">View Existing Courses</button>
+            </div>
+
+            {% if existing_courses %}
+            <div class="table-container mt-3">
+              <table class="table table-striped table-bordered">
+                <thead>
+                  <tr>
+                    <th width="20%">Course Code</th>
+                    <th>Course Name</th>
+                    <th width="20%">Category</th>
+                    <th width="20%">Year / Sem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for c in existing_courses %}
+                  <tr>
+                    <td>{{ c.course_code }}</td>
+                    <td>{{ c.title }}</td>
+                    <td>{{ c.elective.Course_category_name }}</td>
+                    <td>Y{{ c.year }} / S{{ c.semester }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% endif %}
+
+            <div class="table-container mt-3">
+              <table class="table table-hover" id="courseTable">
+                <thead>
+                  <tr>
+                    <th width="8%">#</th>
+                    <th width="35%">Course Code</th>
+                    <th width="45%">Course Name</th>
+                    <th width="12%">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="text-center"><div class="row-id">1</div></td>
+                    <td><input type="text" class="form-control" name="course_code[]" placeholder="Enter Course Code" required></td>
+                    <td><input type="text" class="form-control" name="course_name[]" placeholder="Enter Course Name" required></td>
+                    <td class="text-center">
+                      <button type="button" class="btn btn-sm btn-danger btn-action" onclick="removeRow(this)">
+                        <i class="fas fa-trash me-1"></i>Remove
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="text-center mt-4">
+              <button type="button" class="btn btn-success" onclick="addRow()">
+                <i class="fas fa-plus me-2"></i>Add More Courses
+              </button>
+            </div>
+          </div>
+
+          <!-- Submit Section -->
+          <div class="submit-section mt-4">
+            <button type="submit" class="btn btn-primary btn-lg px-5">
+              <i class="fas fa-save me-2"></i>Submit Course Data
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let rowCount = 1;
+
+function addRow() {
+  rowCount++;
+  const tableBody = document.querySelector("#courseTable tbody");
+  const newRow = document.createElement("tr");
+  newRow.innerHTML = `
+    <td class="text-center"><div class="row-id">${rowCount}</div></td>
+    <td><input type="text" class="form-control" name="course_code[]" placeholder="Enter Course Code" required></td>
+    <td><input type="text" class="form-control" name="course_name[]" placeholder="Enter Course Name" required></td>
+    <td class="text-center">
+      <button type="button" class="btn btn-sm btn-danger btn-action" onclick="removeRow(this)">
+        <i class="fas fa-trash me-1"></i>Remove
+      </button>
+    </td>
+  `;
+  tableBody.appendChild(newRow);
+}
+
+function removeRow(button) {
+  const row = button.closest("tr");
+  if (document.querySelectorAll("#courseTable tbody tr").length > 1) {
+    row.remove();
+    updateRowIds();
+  } else {
+    alert("You need to have at least one course.");
+  }
+}
+
+function updateRowIds() {
+  const rows = document.querySelectorAll("#courseTable tbody tr");
+  rowCount = 0;
+  rows.forEach((row) => {
+    rowCount++;
+    row.querySelector(".row-id").textContent = rowCount;
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const degreeSelect = document.getElementById("degree");
+  const yearSelect = document.getElementById("year");
+  const semesterSelect = document.getElementById("semester");
+  const regulationSelect = document.getElementById("regulation");
+  const categorySelect = document.getElementById("elective");
+  const viewBtn = document.getElementById("viewCoursesBtn");
+
+  const selDegree = "{{ sel_degree|default:'' }}";
+  const selRegulation = "{{ sel_regulation|default:'' }}";
+  const selCategory = "{{ sel_category|default:'' }}";
+  const selYear = "{{ sel_year|default:'' }}";
+  const selSemester = "{{ sel_semester|default:'' }}";
+
+  const getCategoriesURL = "{% url 'get_course_categories' %}";
+
+  function populateYearSemByDegree() {
+    const opt = degreeSelect.options[degreeSelect.selectedIndex];
+    const duration = parseInt(opt?.dataset.duration || '0');
+
+    yearSelect.innerHTML = '<option value="" disabled selected>Select Year</option>';
+    semesterSelect.innerHTML = '<option value="" disabled selected>Select Semester</option>';
+
+    for (let y = 1; y <= duration; y++) {
+      yearSelect.innerHTML += `<option value="${y}">Year ${y}</option>`;
+    }
+    for (let s = 1; s <= duration * 2; s++) {
+      semesterSelect.innerHTML += `<option value="${s}">Semester ${s}</option>`;
+    }
+
+    if (selYear) yearSelect.value = selYear;
+    if (selSemester) semesterSelect.value = selSemester;
+  }
+
+  degreeSelect.addEventListener("change", populateYearSemByDegree);
+
+  regulationSelect.addEventListener("change", function () {
+    const regulationId = this.value;
+    if (!regulationId) return;
+
+    categorySelect.innerHTML = '<option value="" disabled selected>Loading...</option>';
+
+    fetch(`${getCategoriesURL}?regulation_id=${regulationId}`)
+      .then(res => res.json())
+      .then(data => {
+        categorySelect.innerHTML = '<option value="" disabled selected>Select Category</option>';
+        if (data.length > 0) {
+          data.forEach(cat => {
+            const option = document.createElement("option");
+            option.value = cat.id;
+            option.textContent = cat.name;
+            categorySelect.appendChild(option);
+          });
+          if (selCategory) categorySelect.value = selCategory;
+        } else {
+          categorySelect.innerHTML = '<option value="" disabled selected>No categories found</option>';
+        }
+      })
+      .catch(() => {
+        categorySelect.innerHTML = '<option value="" disabled selected>Error loading</option>';
+      });
+  });
+
+  viewBtn?.addEventListener("click", function(){
+    const params = new URLSearchParams();
+    if (degreeSelect.value) params.set('degree', degreeSelect.value);
+    if (regulationSelect.value) params.set('regulation', regulationSelect.value);
+    if (categorySelect.value) params.set('elective', categorySelect.value);
+    if (yearSelect.value) params.set('year', yearSelect.value);
+    if (semesterSelect.value) params.set('semester', semesterSelect.value);
+
+    window.location.href = `${window.location.pathname}?${params.toString()}`;
+  });
+
+  // Bootstrap validation
+  const forms = document.querySelectorAll('.needs-validation');
+  Array.from(forms).forEach(function(form) {
+    form.addEventListener('submit', function(event) {
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.classList.add('was-validated');
+    }, false);
+  });
+
+  // Restore selections
+  if (selDegree) {
+    degreeSelect.value = selDegree;
+    populateYearSemByDegree();
+  }
+  if (selRegulation) {
+    regulationSelect.value = selRegulation;
+    regulationSelect.dispatchEvent(new Event('change'));
+  }
+});
+</script>
+
+{% endblock content %}

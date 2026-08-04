@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <h4 class="mb-3">
+    <i class="fas fa-calendar-alt me-2"></i> Faculty Internal Timetable
+  </h4>
+
+  <!-- ================= HIDDEN CONTEXT ================= -->
+  <input type="hidden" id="degree_id" value="{{ degree.id }}">
+  <input type="hidden" id="department_id" value="{{ department.id }}">
+
+  <!-- ================= FILTER SECTION ================= -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+
+      <div class="row g-3">
+
+        <!-- Batch -->
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Batch</label>
+          <select class="form-select" id="batch">
+            <option value="">Select Batch</option>
+          </select>
+        </div>
+
+        <!-- Semester -->
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Semester</label>
+          <select class="form-select" id="semester" disabled>
+            <option value="">Select Semester</option>
+          </select>
+        </div>
+
+        <!-- IAT -->
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Internal Assessment</label>
+          <select class="form-select" id="iat" disabled>
+            <option value="">Select IAT</option>
+          </select>
+        </div>
+
+      </div>
+
+      <!-- ================= BUTTONS ================= -->
+      <div class="row g-3 mt-4">
+
+        <div class="col-md-4">
+          <button type="button" id="applyFilter" class="btn btn-primary w-100">
+            <i class="fas fa-filter me-1"></i> Apply Filter
+          </button>
+        </div>
+
+        <div class="col-md-4">
+          <a href="{% url 'faculty_internal_timetable' %}" class="btn btn-outline-secondary w-100">
+            <i class="fas fa-rotate-left me-1"></i> Clear All
+          </a>
+        </div>
+
+        <div class="col-md-4">
+          <button
+            type="button"
+            id="downloadPdf"
+            class="btn btn-danger w-100"
+            disabled
+          >
+            <i class="fas fa-file-pdf me-1"></i> Download PDF
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= TIMETABLE ================= -->
+  {% if timetable %}
+    <h5 class="mb-3">
+      <i class="fas fa-table me-2"></i> Internal Exam Schedule
+    </h5>
+
+    {% regroup timetable by internal_assessment as iat_groups %}
+
+    {% for group in iat_groups %}
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header bg-dark text-white fw-semibold">
+        <i class="fas fa-clipboard-list me-2"></i>
+        {{ group.grouper }}
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped mb-0">
+          <thead class="table-secondary">
+            <tr>
+              <th>Date</th>
+              <th>Session</th>
+              <th>Course Code</th>
+              <th>Course Title</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in group.list %}
+            <tr>
+              <td>{{ t.exam_date|date:"d-m-Y" }}</td>
+              <td>
+                <span class="badge {% if t.session == 'FN' %}bg-info{% else %}bg-warning text-dark{% endif %}">
+                  {{ t.session }}
+                </span>
+              </td>
+              <td>{{ t.course.course_code }}</td>
+              <td>{{ t.course.title }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endfor %}
+
+  {% elif request.GET %}
+    <p class="text-muted">No timetable found for selected filters.</p>
+  {% endif %}
+
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(function () {
+
+  const degree = $("#degree_id").val();
+  const department = $("#department_id").val();
+
+  function fill($el, items, placeholder) {
+    let html = `<option value="">${placeholder}</option>`;
+    items.forEach(x => {
+      html += `<option value="${x.id}">${x.text}</option>`;
+    });
+    $el.html(html).prop("disabled", items.length === 0);
+  }
+
+  // 🔹 Load Batch
+  $.get("{% url 'fit_batches' %}", { degree, department }, function (res) {
+    fill($("#batch"), res.items, "Select Batch");
+  });
+
+  // 🔹 Load Semester
+  $("#batch").on("change", function () {
+    $("#semester").prop("disabled", true);
+    $("#iat").prop("disabled", true);
+
+    $.get("{% url 'fit_semesters' %}", {
+      degree,
+      department,
+      batch: this.value
+    }, function (res) {
+      fill($("#semester"), res.items, "Select Semester");
+    });
+  });
+
+  // 🔹 Load IAT
+  $("#semester").on("change", function () {
+    $.get("{% url 'fit_iats' %}", {
+      degree,
+      department,
+      batch: $("#batch").val(),
+      semester: this.value
+    }, function (res) {
+      fill($("#iat"), res.items, "Select IAT");
+    });
+  });
+
+  // 🔹 Apply Filter
+  $("#applyFilter").on("click", function () {
+    const batch = $("#batch").val();
+    const semester = $("#semester").val();
+    const iat = $("#iat").val();
+
+    if (!batch || !semester || !iat) {
+      alert("Please select Batch, Semester and Internal Assessment");
+      return;
+    }
+
+    const params = new URLSearchParams({
+      batch: batch,
+      semester: semester,
+      iat: iat
+    });
+
+    window.location.href = "?" + params.toString();
+  });
+
+  // 🔹 Download PDF (READ FROM URL — FINAL FIX)
+  $("#downloadPdf").on("click", function (e) {
+    e.preventDefault();
+
+    const params = new URLSearchParams(window.location.search);
+    const batch = params.get("batch");
+    const semester = params.get("semester");
+    const iat = params.get("iat");
+
+    if (!batch || !semester || !iat) {
+      alert("Please apply filter before downloading PDF");
+      return;
+    }
+
+    const url =
+      "{% url 'faculty_internal_timetable_pdf' %}"
+      + "?batch=" + encodeURIComponent(batch)
+      + "&semester=" + encodeURIComponent(semester)
+      + "&iat=" + encodeURIComponent(iat);
+
+      window.open(url, "_blank");
+
+  });
+
+});
+</script>
+
+<script>
+/* 🔹 Enable Download button after page reload */
+$(function () {
+
+  const params = new URLSearchParams(window.location.search);
+
+  if (
+    params.get("batch") &&
+    params.get("semester") &&
+    params.get("iat")
+  ) {
+    $("#downloadPdf").prop("disabled", false);
+  }
+
+});
+</script>
+
+{% endblock %}

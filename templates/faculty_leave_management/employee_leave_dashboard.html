@@ -1,0 +1,911 @@
+{% extends "base.html" %}
+{% load flm_tags %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* Matching Leave Application Portal aesthetic */
+.leave-applications-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.leave-applications-portal .page-header {
+  max-width: 1500px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.leave-applications-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.leave-applications-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0.5rem 0 0;
+}
+
+.leave-applications-portal .permission-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 40px;
+  padding: 0.45rem 0.9rem;
+  margin-top: 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.leave-applications-portal .page-container {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.leave-applications-portal .stats-grid {
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.leave-applications-portal .stat-card {
+  flex: 1;
+  min-width: 150px;
+  background: white;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0,0,0,0.03);
+  transition: all 0.3s ease;
+}
+
+.leave-applications-portal .stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.leave-applications-portal .stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex: 0 0 auto;
+}
+
+.leave-applications-portal .stat-icon.total { background: #e0f2fe; color: #0284c7; }
+.leave-applications-portal .stat-icon.days { background: #e0e7ff; color: #4f46e5; }
+.leave-applications-portal .stat-icon.pending { background: #fef3c7; color: #d97706; }
+.leave-applications-portal .stat-icon.approved { background: #d1fae5; color: #059669; }
+.leave-applications-portal .stat-icon.rejected { background: #fee2e2; color: #dc2626; }
+.leave-applications-portal .stat-icon.locked { background: #f1f5f9; color: #475569; }
+
+.leave-applications-portal .stat-info .stat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+.leave-applications-portal .stat-info .stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.leave-applications-portal .custom-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.leave-applications-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a4b8c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.leave-applications-portal .card-body-custom {
+  padding: 1.5rem;
+}
+
+.leave-applications-portal .form-label {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.leave-applications-portal .form-control,
+.leave-applications-portal .form-select {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.leave-applications-portal .form-control:focus,
+.leave-applications-portal .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+.leave-applications-portal .btn-primary-custom {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.leave-applications-portal .btn-primary-custom:hover {
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.leave-applications-portal .btn-outline-custom {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 500;
+  color: #334155;
+  transition: all 0.2s;
+}
+
+.leave-applications-portal .btn-outline-custom:hover {
+  background: #f1f5f9;
+  border-color: #1a4b8c;
+  color: #1a4b8c;
+}
+
+.leave-applications-portal .summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.leave-applications-portal .today-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(120px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.leave-applications-portal .today-pill {
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 14px;
+  padding: 0.85rem;
+  text-align: center;
+}
+
+.leave-applications-portal .today-label {
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.leave-applications-portal .today-value {
+  color: #0f172a;
+  font-size: 1.55rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.leave-applications-portal .summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #f1f5f9;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.9rem;
+}
+
+.leave-applications-portal .summary-row + .summary-row {
+  margin-top: 0.55rem;
+}
+
+.leave-applications-portal .summary-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leave-applications-portal .summary-count {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 40px;
+  min-width: 42px;
+  padding: 0.25rem 0.75rem;
+  text-align: center;
+  font-weight: 800;
+}
+
+.leave-applications-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 0;
+}
+
+.leave-applications-portal .data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.leave-applications-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.leave-applications-portal .data-table tbody tr {
+  transition: all 0.2s;
+}
+
+.leave-applications-portal .data-table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.02);
+  transform: translateY(-1px);
+}
+
+.leave-applications-portal .employee-name {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.leave-applications-portal .employee-id,
+.leave-applications-portal .small-muted {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.leave-applications-portal .reason-text {
+  max-width: 280px;
+  white-space: normal !important;
+  line-height: 1.35;
+}
+
+.leave-applications-portal .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.leave-applications-portal .badge-approved { background: #d1fae5; color: #065f46; }
+.leave-applications-portal .badge-rejected { background: #fee2e2; color: #b91c1c; }
+.leave-applications-portal .badge-pending { background: #fef3c7; color: #b45309; }
+.leave-applications-portal .badge-preapproved { background: #e0e7ff; color: #3730a3; }
+.leave-applications-portal .badge-default { background: #f1f5f9; color: #475569; }
+
+.leave-applications-portal .approval-hierarchy {
+  min-width: 300px;
+  white-space: normal !important;
+}
+
+.leave-applications-portal .approval-chain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.leave-applications-portal .approval-step {
+  display: grid;
+  grid-template-columns: 36px minmax(130px, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #f59e0b;
+  border-radius: 10px;
+  padding: 0.45rem 0.55rem;
+}
+
+.leave-applications-portal .approval-step.is-approved { border-left-color: #10b981; }
+.leave-applications-portal .approval-step.is-rejected { border-left-color: #ef4444; }
+
+.leave-applications-portal .approval-level {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.leave-applications-portal .approval-person {
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.leave-applications-portal .approval-person strong {
+  display: block;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leave-applications-portal .approval-meta {
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.leave-applications-portal .empty-state {
+  color: #64748b;
+  padding: 2rem;
+  text-align: center;
+}
+
+.leave-applications-portal .table-scroll {
+  max-height: 70vh;
+  overflow: auto;
+}
+
+@media (max-width: 992px) {
+  .leave-applications-portal .summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .leave-applications-portal .today-grid {
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .leave-applications-portal {
+    padding: 1rem;
+  }
+  .leave-applications-portal .stats-grid {
+    gap: 0.8rem;
+  }
+  .leave-applications-portal .stat-card {
+    min-width: calc(50% - 0.8rem);
+  }
+  .leave-applications-portal .card-header-custom {
+    flex-direction: column;
+    align-items: start;
+    gap: 0.5rem;
+  }
+  .leave-applications-portal .today-grid {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.leave-applications-portal .custom-card {
+  animation: fadeInUp 0.5s ease forwards;
+  opacity: 0;
+}
+
+.leave-applications-portal .custom-card:nth-child(1) { animation-delay: 0.1s; }
+.leave-applications-portal .custom-card:nth-child(2) { animation-delay: 0.2s; }
+.leave-applications-portal .custom-card:nth-child(3) { animation-delay: 0.3s; }
+</style>
+
+<div class="leave-applications-portal">
+  <div class="page-header">
+    <h1><i class="fas fa-calendar-check me-2"></i>Employee Leave Dashboard</h1>
+    <p class="header-subtitle">View employee leave records across academic years, departments, and statuses</p>
+    <div class="permission-chip">
+      <i class="fas fa-shield-alt"></i>
+      {{ permission_note }}
+    </div>
+  </div>
+
+  <div class="page-container">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon total"><i class="fas fa-file-lines"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Applications</div>
+          <div class="stat-value">{{ total_applications }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon days"><i class="fas fa-calendar-days"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Total Days</div>
+          <div class="stat-value">{{ total_days|floatformat:1 }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon approved"><i class="fas fa-check-double"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Approved</div>
+          <div class="stat-value text-success">{{ approved_count }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon pending"><i class="fas fa-hourglass-half"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Pending</div>
+          <div class="stat-value text-warning-emphasis">{{ pending_count }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon rejected"><i class="fas fa-ban"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Rejected</div>
+          <div class="stat-value text-danger">{{ rejected_count }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon locked"><i class="fas fa-stamp"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Pre-approved</div>
+          <div class="stat-value">{{ pre_approved_count }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-filter me-2"></i>Filters</span>
+        <a href="{% url 'employee_leave_dashboard' %}" class="btn btn-outline-custom btn-sm">
+          <i class="fas fa-undo-alt me-1"></i>Reset All
+        </a>
+      </div>
+      <div class="card-body-custom">
+        <form method="get" class="row g-3 align-items-end">
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label"><i class="fas fa-search me-1"></i>Search</label>
+            <input type="text" name="q" value="{{ filters.q }}" class="form-control" placeholder="Employee ID, name, reason">
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label"><i class="fas fa-calendar-alt me-1"></i>Academic Year</label>
+            <select name="academic_year" class="form-select">
+              <option value="">All Academic Years</option>
+              {% for year in available_academic_years %}
+                <option value="{{ year }}" {% if filters.academic_year == year %}selected{% endif %}>{{ year }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label"><i class="fas fa-building me-1"></i>Department</label>
+            <select name="department" class="form-select">
+              <option value="">All Departments</option>
+              {% for department in departments %}
+                <option value="{{ department.id }}" {% if filters.department|stringformat:"s" == department.id|stringformat:"s" %}selected{% endif %}>{{ department.Department }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label"><i class="fas fa-briefcase me-1"></i>Designation</label>
+            <select name="designation" class="form-select">
+              <option value="">All Designations</option>
+              {% for designation in designations %}
+                <option value="{{ designation.id }}" {% if filters.designation|stringformat:"s" == designation.id|stringformat:"s" %}selected{% endif %}>{{ designation.designation_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label"><i class="fas fa-layer-group me-1"></i>Category</label>
+            <select name="category" class="form-select">
+              <option value="">All Categories</option>
+              {% for category in categories %}
+                <option value="{{ category.id }}" {% if filters.category|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>{{ category.category_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label"><i class="fas fa-tag me-1"></i>Leave Type</label>
+            <select name="leave_type" class="form-select">
+              <option value="">All Leave Types</option>
+              {% for leave_type in leave_types %}
+                <option value="{{ leave_type.id }}" {% if filters.leave_type|stringformat:"s" == leave_type.id|stringformat:"s" %}selected{% endif %}>{{ leave_type.code }} - {{ leave_type.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label"><i class="fas fa-list me-1"></i>Type</label>
+            <select name="leave_kind" class="form-select">
+              <option value="">Leave + Permission</option>
+              <option value="leave" {% if filters.leave_kind == "leave" %}selected{% endif %}>Leave Only</option>
+              <option value="permission" {% if filters.leave_kind == "permission" %}selected{% endif %}>Permission Only</option>
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label"><i class="fas fa-circle-info me-1"></i>Status</label>
+            <select name="status" class="form-select">
+              <option value="">All Status</option>
+              {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label"><i class="fas fa-calendar-day me-1"></i>From Date</label>
+            <input type="date" name="from_date" value="{{ filters.from_date }}" class="form-control">
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label"><i class="fas fa-calendar-week me-1"></i>To Date</label>
+            <input type="date" name="to_date" value="{{ filters.to_date }}" class="form-control">
+          </div>
+          <div class="col-lg-1 col-md-4">
+            <label class="form-label">Rows</label>
+            <select name="per_page" class="form-select">
+              <option value="25" {% if filters.per_page == 25 %}selected{% endif %}>25</option>
+              <option value="50" {% if filters.per_page == 50 %}selected{% endif %}>50</option>
+              <option value="100" {% if filters.per_page == 100 %}selected{% endif %}>100</option>
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <button class="btn btn-primary-custom w-100" type="submit">
+              <i class="fas fa-search me-1"></i>Apply Filters
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-calendar-day me-2"></i>Today Status</span>
+        <span class="badge bg-primary">{{ today_date|date:"d M Y" }}</span>
+      </div>
+      <div class="card-body-custom">
+        <div class="today-grid">
+          <div class="today-pill">
+            <div class="today-label">Today Total</div>
+            <div class="today-value">{{ today_total }}</div>
+          </div>
+          <div class="today-pill">
+            <div class="today-label">Approved</div>
+            <div class="today-value text-success">{{ today_approved_count }}</div>
+          </div>
+          <div class="today-pill">
+            <div class="today-label">Pending</div>
+            <div class="today-value text-warning-emphasis">{{ today_pending_count }}</div>
+          </div>
+          <div class="today-pill">
+            <div class="today-label">Rejected</div>
+            <div class="today-value text-danger">{{ today_rejected_count }}</div>
+          </div>
+          <div class="today-pill">
+            <div class="today-label">Pre-approved</div>
+            <div class="today-value">{{ today_pre_approved_count }}</div>
+          </div>
+          <div class="today-pill">
+            <div class="today-label">Permission</div>
+            <div class="today-value text-primary">{{ today_permission_count }}</div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table table w-100">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Department</th>
+                <th>Leave Type</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Session</th>
+                <th>Status</th>
+                <th>Approval Hierarchy</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for record in today_leave_records %}
+                <tr>
+                  <td>
+                    <div class="employee-name">{{ record.faculty.name|default:"-" }}</div>
+                    <div class="employee-id"><i class="fas fa-id-card me-1"></i>{{ record.faculty.faculty_id|default:"-" }}</div>
+                  </td>
+                  <td>{{ record.faculty.department.Department|default:"-" }}</td>
+                  <td>
+                    {% if record.leave_type %}
+                      <span class="fw-semibold text-primary">{{ record.leave_type.code }}</span>
+                      <div class="small-muted">{{ record.leave_type.name }}</div>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>{{ record.from_date|date:"d M Y"|default:"-" }}</td>
+                  <td>{{ record.to_date|date:"d M Y"|default:"-" }}</td>
+                  <td>{{ record.session.session_name|default:"Full Day" }}</td>
+                  <td>
+                    <span class="badge-status
+                      {% if record.status == 'Approved' %}badge-approved
+                      {% elif record.status == 'Rejected' %}badge-rejected
+                      {% elif record.status == 'Pending' %}badge-pending
+                      {% elif record.status == 'Pre-approved' %}badge-preapproved
+                      {% else %}badge-default{% endif %}">
+                      {{ record.status|default:"-" }}
+                    </span>
+                  </td>
+                  <td class="approval-hierarchy">
+                    {% with rows=approver_status_map|dict_get:record.id %}
+                      {% if rows %}
+                        <div class="approval-chain">
+                          {% for approval in rows %}
+                            <div class="approval-step {% if approval.status == 'APPROVED' %}is-approved{% elif approval.status == 'REJECTED' %}is-rejected{% endif %}">
+                              <div class="approval-level">L{{ approval.level|default:"-" }}</div>
+                              <div class="approval-person">
+                                <strong>{% if approval.name %}{{ approval.name }}{% else %}{{ approval.emp|default:"-" }}{% endif %}</strong>
+                                <div class="approval-meta">
+                                  {{ approval.emp|default:"-" }}{% if approval.desig %} | {{ approval.desig }}{% endif %}
+                                </div>
+                              </div>
+                              {% if approval.status == "APPROVED" %}
+                                <span class="badge-status badge-approved">Approved</span>
+                              {% elif approval.status == "REJECTED" %}
+                                <span class="badge-status badge-rejected">Rejected</span>
+                              {% else %}
+                                <span class="badge-status badge-pending">Pending</span>
+                              {% endif %}
+                            </div>
+                          {% endfor %}
+                        </div>
+                      {% else %}
+                        <span class="small-muted">No approver records</span>
+                      {% endif %}
+                    {% endwith %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="8">
+                    <div class="empty-state">
+                      <i class="fas fa-calendar-check d-block mb-2"></i>
+                      No leave or permission records for today.
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if today_total > 12 %}
+          <div class="small-muted mt-3">Showing first 12 records for today. Use filters or the main table for the full list.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="custom-card">
+        <div class="card-header-custom">
+          <span><i class="fas fa-layer-group me-2"></i>Academic Years</span>
+        </div>
+        <div class="card-body-custom">
+          {% for row in academic_year_summary %}
+            <div class="summary-row">
+              <span>{{ row.academic_year|default:"Not Set" }}</span>
+              <strong class="summary-count">{{ row.total }}</strong>
+            </div>
+          {% empty %}
+            <div class="empty-state">No academic year data found.</div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="custom-card">
+        <div class="card-header-custom">
+          <span><i class="fas fa-tags me-2"></i>Leave Types</span>
+        </div>
+        <div class="card-body-custom">
+          {% for row in leave_type_summary %}
+            <div class="summary-row">
+              <span>{{ row.leave_type__code|default:"-" }} - {{ row.leave_type__name|default:"Not Set" }}</span>
+              <strong class="summary-count">{{ row.total }}</strong>
+            </div>
+          {% empty %}
+            <div class="empty-state">No leave type data found.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-list-check me-2"></i>Employee Leave Records</span>
+        <span class="badge bg-dark">Filtered: {{ page_obj.paginator.count }} records</span>
+      </div>
+      <div class="card-body-custom p-0">
+        <div class="table-responsive table-scroll">
+          <table class="data-table table w-100">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Employee</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Category</th>
+                <th>Academic Year</th>
+                <th>Leave Type</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Session</th>
+                <th>Days</th>
+                <th>Status</th>
+                <th>Approval Hierarchy</th>
+                <th>Requested</th>
+                <th>Reason</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for record in leave_records %}
+                <tr>
+                  <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                  <td>
+                    <div class="employee-name">{{ record.faculty.name|default:"-" }}</div>
+                    <div class="employee-id"><i class="fas fa-id-card me-1"></i>{{ record.faculty.faculty_id|default:"-" }}</div>
+                  </td>
+                  <td>{{ record.faculty.department.Department|default:"-" }}</td>
+                  <td>
+                    {% if record.faculty.designation %}
+                      {{ record.faculty.designation.designation_name }}
+                    {% elif record.designation %}
+                      {{ record.designation.designation_name }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>{{ record.faculty.category.category_name|default:"-" }}</td>
+                  <td>{{ record.academic_year|default:"-" }}</td>
+                  <td>
+                    {% if record.leave_type %}
+                      <span class="fw-semibold text-primary">{{ record.leave_type.code }}</span>
+                      <div class="small-muted">{{ record.leave_type.name }}</div>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>{{ record.from_date|date:"d M Y"|default:"-" }}</td>
+                  <td>{{ record.to_date|date:"d M Y"|default:"-" }}</td>
+                  <td>{{ record.session.session_name|default:"Full Day" }}</td>
+                  <td><strong>{{ record.days|floatformat:1 }}</strong></td>
+                  <td>
+                    <span class="badge-status
+                      {% if record.status == 'Approved' %}badge-approved
+                      {% elif record.status == 'Rejected' %}badge-rejected
+                      {% elif record.status == 'Pending' %}badge-pending
+                      {% elif record.status == 'Pre-approved' %}badge-preapproved
+                      {% else %}badge-default{% endif %}">
+                      {% if record.status == 'Approved' %}<i class="fas fa-check-circle"></i>
+                      {% elif record.status == 'Rejected' %}<i class="fas fa-times-circle"></i>
+                      {% elif record.status == 'Pending' %}<i class="fas fa-clock"></i>
+                      {% elif record.status == 'Pre-approved' %}<i class="fas fa-check-double"></i>
+                      {% else %}<i class="fas fa-circle"></i>{% endif %}
+                      {{ record.status|default:"-" }}
+                    </span>
+                  </td>
+                  <td class="approval-hierarchy">
+                    {% with rows=approver_status_map|dict_get:record.id %}
+                      {% if rows %}
+                        <div class="approval-chain">
+                          {% for approval in rows %}
+                            <div class="approval-step {% if approval.status == 'APPROVED' %}is-approved{% elif approval.status == 'REJECTED' %}is-rejected{% endif %}">
+                              <div class="approval-level">L{{ approval.level|default:"-" }}</div>
+                              <div class="approval-person">
+                                <strong>{% if approval.name %}{{ approval.name }}{% else %}{{ approval.emp|default:"-" }}{% endif %}</strong>
+                                <div class="approval-meta">
+                                  {{ approval.emp|default:"-" }}{% if approval.desig %} | {{ approval.desig }}{% endif %}
+                                </div>
+                              </div>
+                              {% if approval.status == "APPROVED" %}
+                                <span class="badge-status badge-approved">Approved</span>
+                              {% elif approval.status == "REJECTED" %}
+                                <span class="badge-status badge-rejected">Rejected</span>
+                              {% else %}
+                                <span class="badge-status badge-pending">Pending</span>
+                              {% endif %}
+                            </div>
+                          {% endfor %}
+                        </div>
+                      {% else %}
+                        <span class="small-muted">No approver records</span>
+                      {% endif %}
+                    {% endwith %}
+                  </td>
+                  <td>{{ record.requested_date|date:"d M Y h:i A"|default:"-" }}</td>
+                  <td class="reason-text" title="{{ record.reason|default:'-' }}">{{ record.reason|default:"-" }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="15">
+                    <div class="empty-state">
+                      <i class="fas fa-inbox d-block mb-2"></i>
+                      No leave records found.
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% if page_obj.paginator.num_pages > 1 %}
+        <div class="card-body-custom d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span class="small-muted">Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} records</span>
+          <div class="d-flex gap-2">
+            {% if page_obj.has_previous %}
+              <a class="btn btn-outline-custom btn-sm" href="?page={{ page_obj.previous_page_number }}{% if query_string %}&{{ query_string }}{% endif %}">
+                <i class="fas fa-chevron-left me-1"></i>Previous
+              </a>
+            {% else %}
+              <button class="btn btn-outline-custom btn-sm" disabled><i class="fas fa-chevron-left me-1"></i>Previous</button>
+            {% endif %}
+            {% if page_obj.has_next %}
+              <a class="btn btn-outline-custom btn-sm" href="?page={{ page_obj.next_page_number }}{% if query_string %}&{{ query_string }}{% endif %}">
+                Next<i class="fas fa-chevron-right ms-1"></i>
+              </a>
+            {% else %}
+              <button class="btn btn-outline-custom btn-sm" disabled>Next<i class="fas fa-chevron-right ms-1"></i></button>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

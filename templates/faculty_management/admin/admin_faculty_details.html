@@ -1,0 +1,623 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+
+<style>
+.ep {
+  --ink: #0f172a;
+  --muted: #64748b;
+  --border: #e5e7eb;
+  --card: #ffffff;
+  --soft: #f8faff;
+  --navy: #1a4b8c;
+  --navy2: #2c5aa0;
+  --navy3: #3b6bc4;
+  --shadow: 0 10px 30px rgba(2,6,23,.08);
+  --radius: 18px;
+}
+
+.ep .wrap {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: calc(100vh - 70px);
+  padding: 24px 20px;
+}
+
+/* ── header ──────────────────────────────────────── */
+.ep .hdr {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 60%, #3b6bc4 100%);
+  border-radius: 20px;
+  padding: 24px 28px;
+  color: #fff;
+  box-shadow: 0 12px 32px rgba(26,75,140,.28);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.ep .hdr::before {
+  content: '';
+  position: absolute;
+  width: 260px; height: 260px; border-radius: 50%;
+  background: rgba(255,255,255,.06);
+  top: -90px; right: -60px; pointer-events: none;
+}
+.ep .hdr::after {
+  content: '';
+  position: absolute;
+  width: 140px; height: 140px; border-radius: 50%;
+  background: rgba(255,255,255,.04);
+  bottom: -50px; left: 20%; pointer-events: none;
+}
+.ep .hdr h3 { margin: 0; font-weight: 900; font-size: 1.4rem; position: relative; z-index: 1; }
+.ep .hdr .sub { color: rgba(255,255,255,.82); margin-top: 5px; font-size: .875rem; position: relative; z-index: 1; }
+.ep .hdr .chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22);
+  padding: 7px 16px; border-radius: 999px; font-weight: 800;
+  position: relative; z-index: 1;
+}
+
+/* ── stat cards ──────────────────────────────────── */
+.ep .stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+@media(max-width:900px) { .ep .stats { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:480px) { .ep .stats { grid-template-columns: 1fr; } }
+
+.ep .stat-c {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+  display: flex; align-items: center; gap: 16px;
+  transition: transform .2s, box-shadow .2s;
+}
+.ep .stat-c:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(2,6,23,.12); }
+.ep .stat-ico {
+  width: 50px; height: 50px; border-radius: 14px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; color: #fff;
+}
+.ep .stat-val { font-size: 1.75rem; font-weight: 900; color: var(--ink); line-height: 1; }
+.ep .stat-lbl { font-size: .75rem; color: var(--muted); margin-top: 3px; font-weight: 600; }
+
+/* ── filter bar ──────────────────────────────────── */
+.ep .fbar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+.ep .fbar-title {
+  font-size: .72rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .7px; color: var(--muted);
+  display: flex; align-items: center; gap: 6px; margin-bottom: 14px;
+}
+.ep .fbar label {
+  font-size: .78rem; font-weight: 700; color: #374151; display: block; margin-bottom: 5px;
+}
+.ep .fbar select,
+.ep .fbar input[type=text] {
+  width: 100%; padding: 9px 13px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-size: .875rem; color: var(--ink);
+  background: #fafafa; outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  appearance: none; -webkit-appearance: none;
+}
+.ep .fbar select:focus,
+.ep .fbar input[type=text]:focus {
+  border-color: var(--navy2);
+  box-shadow: 0 0 0 3px rgba(26,75,140,.1);
+  background: #fff;
+}
+.ep .btn-search {
+  padding: 9px 22px; border: none; border-radius: 10px;
+  background: linear-gradient(135deg, var(--navy), var(--navy3));
+  color: #fff; font-weight: 700; font-size: .875rem; cursor: pointer;
+  white-space: nowrap; transition: opacity .15s;
+}
+.ep .btn-search:hover { opacity: .88; }
+.ep .btn-reset {
+  padding: 9px 18px; border: 1.5px solid var(--border); border-radius: 10px;
+  background: #fff; color: #374151; font-weight: 700; font-size: .875rem;
+  cursor: pointer; text-decoration: none; white-space: nowrap; transition: background .15s;
+}
+.ep .btn-reset:hover { background: #f1f5f9; }
+
+/* ── analytics row ───────────────────────────────── */
+.ep .analytics {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+@media(max-width:900px){ .ep .analytics { grid-template-columns: 1fr; } }
+
+.ep .ac {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.ep .ac-head {
+  padding: 14px 22px;
+  background: #f8faff;
+  border-bottom: 1px solid var(--border);
+  font-weight: 800; font-size: .88rem; color: var(--navy);
+  display: flex; align-items: center; gap: 8px;
+}
+.ep .ac-body { padding: 20px 22px; }
+
+.ep .chart-wrap { position: relative; height: 270px; }
+.ep .chart-ctr {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.8rem; font-weight: 900; color: var(--ink);
+  pointer-events: none; text-align: center; line-height: 1;
+}
+.ep .chart-ctr small { display: block; font-size: .65rem; font-weight: 600; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: .5px; }
+
+/* breakdown list */
+.ep .bk-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 9px; margin-bottom: 5px;
+  transition: background .12s;
+}
+.ep .bk-item:hover { background: #f1f5f9; }
+.ep .bk-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.ep .bk-name { flex: 1; font-size: .82rem; font-weight: 600; color: #374151; }
+.ep .bk-bar-wrap { width: 54px; }
+.ep .bk-bar { height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+.ep .bk-fill { height: 100%; border-radius: 3px; background: var(--navy); }
+.ep .bk-cnt { font-size: .75rem; color: var(--muted); min-width: 28px; text-align: right; font-weight: 700; }
+
+/* ── table card ──────────────────────────────────── */
+.ep .table-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.ep .tw-head {
+  padding: 14px 22px;
+  background: #f8faff;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.ep .tw-head .ttl { font-weight: 800; font-size: .9rem; color: var(--navy); }
+.ep .rcnt {
+  padding: 4px 14px; background: #eff6ff; color: #1d4ed8;
+  border: 1px solid #bfdbfe; border-radius: 999px; font-size: .75rem; font-weight: 800;
+}
+
+.ep table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+.ep thead tr { background: #0b1220; color: #fff; }
+.ep thead th {
+  padding: 13px 16px; font-weight: 800; font-size: .75rem;
+  text-transform: uppercase; letter-spacing: .6px; white-space: nowrap;
+}
+.ep tbody tr { border-bottom: 1px solid #f1f5f9; transition: background .1s; }
+.ep tbody tr:hover { background: #f8faff; }
+.ep tbody tr:last-child { border-bottom: none; }
+.ep tbody td { padding: 12px 16px; color: #374151; vertical-align: middle; }
+
+/* avatar */
+.ep .av {
+  width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  background: #e5e7eb; border: 2px solid #e5e7eb;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.ep .av img { width: 100%; height: 100%; object-fit: cover; }
+.ep .emp-name { font-weight: 700; color: var(--ink); font-size: .875rem; }
+.ep .emp-id   { font-size: .72rem; color: var(--muted); margin-top: 1px; }
+
+.ep .desig-badge {
+  display: inline-block; padding: 4px 11px; border-radius: 20px;
+  background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe;
+  font-size: .75rem; font-weight: 800;
+}
+.ep .shift-badge {
+  display: inline-block; padding: 4px 11px; border-radius: 20px;
+  background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7;
+  font-size: .75rem; font-weight: 800; white-space: nowrap;
+}
+.ep .cat-badge {
+  display: inline-block; padding: 4px 11px; border-radius: 20px;
+  background: #fef3c7; color: #92400e; border: 1px solid #fcd34d;
+  font-size: .75rem; font-weight: 800; white-space: nowrap;
+}
+
+.ep .btn-view {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 8px; font-size: .78rem; font-weight: 700;
+  background: #d1fae5; color: #065f46; text-decoration: none;
+  border: 1px solid #6ee7b7; transition: background .15s;
+}
+.ep .btn-view:hover { background: #a7f3d0; color: #064e3b; }
+.ep .btn-edit {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 8px; font-size: .78rem; font-weight: 700;
+  background: #eff6ff; color: #1d4ed8; text-decoration: none;
+  border: 1px solid #bfdbfe; transition: background .15s;
+}
+.ep .btn-edit:hover { background: #dbeafe; color: #1e40af; }
+
+/* empty state */
+.ep .empty-state { text-align: center; padding: 60px 24px; }
+.ep .empty-state .eico { font-size: 3.2rem; color: #d1d5db; }
+.ep .empty-state p { color: var(--muted); margin-top: 14px; font-size: .9rem; }
+
+/* pagination */
+.ep .pag-wrap {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 22px; border-top: 1px solid #f1f5f9; flex-wrap: wrap; gap: 10px;
+}
+.ep .pag-info { font-size: .78rem; color: var(--muted); font-weight: 600; }
+.ep .pag { display: flex; gap: 5px; flex-wrap: wrap; }
+.ep .plink {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 36px; height: 36px; padding: 0 8px;
+  border-radius: 9px; font-size: .85rem; font-weight: 700;
+  text-decoration: none; border: 1.5px solid var(--border);
+  color: #374151; background: #fff; transition: all .15s;
+}
+.ep .plink:hover { background: var(--soft); border-color: #93c5fd; color: var(--navy); }
+.ep .plink.act  { background: var(--navy); color: #fff; border-color: var(--navy); box-shadow: 0 4px 12px rgba(26,75,140,.25); }
+.ep .plink.off  { opacity: .35; pointer-events: none; }
+</style>
+
+<div class="ep">
+<div class="wrap">
+
+  <!-- ── HEADER ─────────────────────────────────────── -->
+  <div class="hdr mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+      <div>
+        <h3><i class="fa-solid fa-id-card-clip me-2"></i>Employee Directory</h3>
+        <div class="sub">View, search and manage all employee records across departments</div>
+      </div>
+      <div class="d-flex align-items-center gap-2 flex-wrap" style="position:relative;z-index:1;">
+        <span class="chip"><i class="fa-solid fa-users"></i> {{ total_faculty }} Employees</span>
+        <a href="{% url 'employee_date_upload' %}" class="btn btn-light btn-sm fw-bold">
+          <i class="fa-solid fa-file-arrow-up me-1"></i>Upload Excel
+        </a>
+        {% if request.user.is_superuser %}
+        <a href="{% url 'sync_faculty_data' %}" class="btn btn-light btn-sm fw-bold">
+          <i class="fa-solid fa-rotate me-1"></i>Sync Data
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STAT CARDS ─────────────────────────────────── -->
+  <div class="stats">
+    <div class="stat-c">
+      <div class="stat-ico" style="background:linear-gradient(135deg,#1a4b8c,#3b6bc4);">
+        <i class="fa-solid fa-users"></i>
+      </div>
+      <div>
+        <div class="stat-val">{{ total_faculty }}</div>
+        <div class="stat-lbl">Total Employees</div>
+      </div>
+    </div>
+    <div class="stat-c">
+      <div class="stat-ico" style="background:linear-gradient(135deg,#059669,#10b981);">
+        <i class="fa-solid fa-building-columns"></i>
+      </div>
+      <div>
+        <div class="stat-val">{{ departments|length }}</div>
+        <div class="stat-lbl">Departments</div>
+      </div>
+    </div>
+    <div class="stat-c">
+      <div class="stat-ico" style="background:linear-gradient(135deg,#d97706,#f59e0b);">
+        <i class="fa-solid fa-user-tie"></i>
+      </div>
+      <div>
+        <div class="stat-val">{{ designations|length }}</div>
+        <div class="stat-lbl">Designations</div>
+      </div>
+    </div>
+    <div class="stat-c">
+      <div class="stat-ico" style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
+        <i class="fa-solid fa-filter"></i>
+      </div>
+      <div>
+        <div class="stat-val">{{ page_obj.paginator.count }}</div>
+        <div class="stat-lbl">Filtered Results</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FILTER BAR ─────────────────────────────────── -->
+  <div class="fbar">
+    <div class="fbar-title"><i class="fa-solid fa-sliders"></i>Filter &amp; Search</div>
+    <form method="get" id="filterForm">
+      <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-3">
+          <label>Department</label>
+          <select name="department" id="department">
+            <option value="">All Departments</option>
+            {% for dept in departments %}
+              <option value="{{ dept.id }}" {% if selected_dept == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.Department }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-3">
+          <label>Designation</label>
+          <select name="designation" id="designation">
+            <option value="">All Designations</option>
+            {% for desig in designations %}
+              <option value="{{ desig.id }}" {% if selected_desig == desig.id|stringformat:"s" %}selected{% endif %}>{{ desig.designation_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-4">
+          <label>Search</label>
+          <input type="text" name="search" value="{{ search_query }}" placeholder="Name, Employee ID, email, phone…">
+        </div>
+        <div class="col-12 col-md-2 d-flex gap-2">
+          <button type="submit" class="btn-search w-100"><i class="fa-solid fa-magnifying-glass me-1"></i>Search</button>
+          <a href="{% url 'employee_details' %}" class="btn-reset">Reset</a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── AJAX ZONE ───────────────────────────────────── -->
+  <div id="facultyContent">
+
+    <!-- chart data -->
+    <div id="chartData"
+         data-labels='[{% for d in designations %}"{{ d.designation_name|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}]'
+         data-counts='[{% for d in designations %}{{ d.filtered_count|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}]'
+         data-total='{{ total_faculty|default:0 }}'>
+    </div>
+
+    <!-- ── ANALYTICS ──────────────────────────────────── -->
+    <div class="analytics">
+
+      <div class="ac">
+        <div class="ac-head"><i class="fa-solid fa-chart-pie"></i>Distribution by Designation</div>
+        <div class="ac-body">
+          <div class="chart-wrap">
+            <canvas id="designationChart"></canvas>
+            <div id="chartCenterText" class="chart-ctr">
+              {{ total_faculty }}
+              <small>Employees</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ac">
+        <div class="ac-head"><i class="fa-solid fa-bars-staggered"></i>Breakdown</div>
+        <div class="ac-body" style="overflow-y:auto;max-height:320px;">
+          {% for desig in designations %}
+          <div class="bk-item">
+            <div class="bk-dot" id="bkdot-{{ forloop.counter0 }}"></div>
+            <div class="bk-name">{{ desig.designation_name }}</div>
+            <div class="bk-bar-wrap">
+              <div class="bk-bar">
+                <div class="bk-fill" id="bkfill-{{ forloop.counter0 }}"
+                     style="width:{% if total_faculty > 0 %}{% widthratio desig.filtered_count total_faculty 100 %}{% else %}0{% endif %}%;"></div>
+              </div>
+            </div>
+            <div class="bk-cnt">{{ desig.filtered_count }}</div>
+          </div>
+          {% empty %}
+          <p class="text-muted small text-center py-3">No data</p>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── TABLE ──────────────────────────────────────── -->
+    <div class="table-wrap">
+      <div class="tw-head">
+        <span class="ttl"><i class="fa-solid fa-table-list me-1"></i>Employee List</span>
+        <span class="rcnt">{{ total_faculty }} employee{{ total_faculty|pluralize }}</span>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:46px;">#</th>
+              <th>Employee</th>
+              <th>Department</th>
+              <th>Designation</th>
+              <th>Shift of Work</th>
+              <th>Category</th>
+              <th>Phone</th>
+              <th>College Email</th>
+              <th>Date of Joining</th>
+              <th style="width:150px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in faculty_list %}
+            <tr>
+              <td style="color:var(--muted);font-size:.75rem;font-weight:700;">{{ page_obj.start_index|add:forloop.counter0 }}</td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="av">
+                    {% if f.profile_photo %}
+                      <img src="{{ f.profile_photo.url }}" onerror="this.onerror=null;this.src='{% static 'images/profile.jpg' %}';">
+                    {% else %}
+                      <img src="{% static 'images/profile.jpg' %}">
+                    {% endif %}
+                  </div>
+                  <div>
+                    <div class="emp-name">{{ f.name|default:"—" }}</div>
+                    <div class="emp-id">ID: {{ f.faculty_id|default:"—" }}</div>
+                  </div>
+                </div>
+              </td>
+              <td style="font-size:.85rem;">{{ f.department.Department|default:"—" }}</td>
+              <td><span class="desig-badge">{{ f.designation.designation_name|default:"—" }}</span></td>
+              <td>{% if f.shift %}<span class="shift-badge">{{ f.shift.shift_name }}</span>{% else %}<span style="color:var(--muted);">—</span>{% endif %}</td>
+              <td>{% if f.category %}<span class="cat-badge">{{ f.category.category_name }}</span>{% else %}<span style="color:var(--muted);">—</span>{% endif %}</td>
+              <td style="font-size:.83rem;">{{ f.phone|default:"—" }}</td>
+              <td style="font-size:.82rem;">{{ f.college_email|default:"—" }}</td>
+              <td style="font-size:.82rem;white-space:nowrap;">{{ f.doj|date:"d M Y"|default:"—" }}</td>
+              <td>
+                <div class="d-flex gap-1 flex-wrap">
+                  <a href="{% url 'admin_view_faculty_detail' f.id %}" class="btn-view">
+                    <i class="fa-solid fa-eye"></i>View
+                  </a>
+                  <a href="{% url 'admin_edit_faculty_details' f.id %}" class="btn-edit">
+                    <i class="fa-solid fa-pen-to-square"></i>Edit
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="10">
+                <div class="empty-state">
+                  <div class="eico"><i class="fa-solid fa-users-slash"></i></div>
+                  <p>No employee records found.<br>
+                    <small>Try adjusting your filters or <a href="{% url 'employee_details' %}">reset all</a>.</small>
+                  </p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if page_obj.paginator.num_pages > 1 %}
+      <div class="pag-wrap">
+        <div class="pag-info">
+          Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }} employees
+        </div>
+        <div class="pag">
+          {% if page_obj.has_previous %}
+            <a class="plink" href="?page={{ page_obj.previous_page_number }}&department={{ selected_dept }}&designation={{ selected_desig }}&search={{ search_query }}">
+              <i class="fa-solid fa-chevron-left" style="font-size:.68rem;"></i>
+            </a>
+          {% else %}
+            <span class="plink off"><i class="fa-solid fa-chevron-left" style="font-size:.68rem;"></i></span>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <span class="plink act">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+              <a class="plink" href="?page={{ num }}&department={{ selected_dept }}&designation={{ selected_desig }}&search={{ search_query }}">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <a class="plink" href="?page={{ page_obj.next_page_number }}&department={{ selected_dept }}&designation={{ selected_desig }}&search={{ search_query }}">
+              <i class="fa-solid fa-chevron-right" style="font-size:.68rem;"></i>
+            </a>
+          {% else %}
+            <span class="plink off"><i class="fa-solid fa-chevron-right" style="font-size:.68rem;"></i></span>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div><!-- #facultyContent -->
+
+</div>
+</div>
+
+<script>
+const PAL = ['#3b6bc4','#e05e6d','#10b981','#f59e0b','#8b5cf6','#f97316','#64748b','#06b6d4','#84cc16','#ec4899'];
+let chartInst = null;
+
+function renderChart() {
+  const el     = document.getElementById('chartData');
+  const canvas = document.getElementById('designationChart');
+  if (!el || !canvas) return;
+
+  const labels = JSON.parse(el.dataset.labels || '[]');
+  const counts = JSON.parse(el.dataset.counts || '[]');
+  const total  = parseInt(el.dataset.total  || '0', 10);
+  const pcts   = counts.map(c => total ? +((c/total)*100).toFixed(1) : 0);
+  const bg     = labels.map((_,i) => PAL[i % PAL.length]);
+
+  /* colour breakdown dots + bars */
+  document.querySelectorAll('[id^="bkdot-"]').forEach((d,i) => { d.style.background = PAL[i % PAL.length]; });
+  document.querySelectorAll('[id^="bkfill-"]').forEach((d,i) => { d.style.background = PAL[i % PAL.length]; });
+
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+
+  chartInst = new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: pcts, backgroundColor: bg, borderWidth: 0, borderRadius: 8, hoverOffset: 10 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '70%',
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, font: { size: 11, weight: '600' } } },
+        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${counts[ctx.dataIndex]} (${pcts[ctx.dataIndex]}%)` } }
+      },
+      animation: { duration: 750 }
+    }
+  });
+
+  const ct = document.getElementById('chartCenterText');
+  if (ct) { ct.querySelector('div') ? null : null; ct.childNodes[0].textContent = total || 0; }
+}
+
+async function ajaxLoad(url) {
+  try {
+    const res  = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    const html = await res.text();
+    const doc  = new DOMParser().parseFromString(html, 'text/html');
+    const next = doc.querySelector('#facultyContent');
+    const cur  = document.querySelector('#facultyContent');
+    if (next && cur) { cur.innerHTML = next.innerHTML; renderChart(); bindPag(); }
+  } catch(e) { console.error(e); }
+}
+
+function bindPag() {
+  document.querySelectorAll('.ep .plink[href]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const url = a.getAttribute('href');
+      history.pushState({}, '', url);
+      ajaxLoad(url);
+    });
+  });
+}
+
+function bindFilters() {
+  const form = document.getElementById('filterForm');
+  if (!form) return;
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const url = `${location.pathname}?${new URLSearchParams(new FormData(form))}`;
+    history.pushState({}, '', url);
+    ajaxLoad(url);
+  });
+  ['department','designation'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => form.requestSubmit());
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderChart(); bindFilters(); bindPag();
+  window.addEventListener('popstate', () => ajaxLoad(location.href));
+});
+</script>
+
+{% endblock %}

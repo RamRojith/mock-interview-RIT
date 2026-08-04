@@ -1,0 +1,929 @@
+{% extends "base.html" %}
+{% load flm_tags %}
+{% block content %}
+
+<!-- FontAwesome CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Flatpickr CSS (optional but matches referenced design) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<!-- DataTables CSS for enhanced tables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<!-- jQuery (required by DataTables) -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<style>
+/* ========================================
+   GLOBAL STYLES - Matching Leave/OD Portal Aesthetic
+   ======================================== */
+.leave-applications-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.leave-applications-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.leave-applications-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.leave-applications-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.leave-applications-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Stats Cards */
+.leave-applications-portal .stats-grid {
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.leave-applications-portal .stat-card {
+  flex: 1;
+  min-width: 130px;
+  background: white;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0,0,0,0.03);
+  transition: all 0.3s ease;
+}
+
+.leave-applications-portal .stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.leave-applications-portal .stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.leave-applications-portal .stat-icon.total { background: #e0f2fe; color: #0284c7; }
+.leave-applications-portal .stat-icon.pending { background: #fef3c7; color: #d97706; }
+.leave-applications-portal .stat-icon.approved { background: #d1fae5; color: #059669; }
+.leave-applications-portal .stat-icon.rejected { background: #fee2e2; color: #dc2626; }
+.leave-applications-portal .stat-icon.locked { background: #f1f5f9; color: #475569; }
+.leave-applications-portal .stat-icon.editable { background: #e0e7ff; color: #4f46e5; }
+
+.leave-applications-portal .stat-info .stat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+.leave-applications-portal .stat-info .stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+/* Cards General */
+.leave-applications-portal .custom-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.leave-applications-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a4b8c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.leave-applications-portal .card-body-custom {
+  padding: 1.5rem;
+}
+
+/* Form Styling */
+.leave-applications-portal .form-label {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.leave-applications-portal .form-control,
+.leave-applications-portal .form-select {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.leave-applications-portal .form-control:focus,
+.leave-applications-portal .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+.leave-applications-portal .form-control[readonly] {
+  background-color: #f8fafc;
+  color: #475569;
+}
+
+/* Buttons */
+.leave-applications-portal .btn-primary-custom {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.leave-applications-portal .btn-primary-custom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.leave-applications-portal .btn-outline-custom {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.leave-applications-portal .btn-outline-custom:hover {
+  background: #f1f5f9;
+  border-color: #1a4b8c;
+}
+
+/* Table Styling */
+.leave-applications-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.leave-applications-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.leave-applications-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.leave-applications-portal .data-table tbody tr {
+  transition: all 0.2s;
+}
+
+.leave-applications-portal .data-table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.02);
+  transform: translateY(-1px);
+}
+
+/* Badges */
+.leave-applications-portal .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.leave-applications-portal .badge-approved { background: #d1fae5; color: #065f46; }
+.leave-applications-portal .badge-rejected { background: #fee2e2; color: #b91c1c; }
+.leave-applications-portal .badge-pending { background: #fef3c7; color: #b45309; }
+.leave-applications-portal .badge-preapproved { background: #e0e7ff; color: #3730a3; }
+
+/* Approver Cell */
+.leave-applications-portal .approver-cell {
+  min-width: 280px;
+}
+
+.leave-applications-portal .approver-item {
+  background: #f8fafc;
+  padding: 0.3rem 0.6rem;
+  border-radius: 10px;
+  margin-bottom: 0.3rem;
+  font-size: 0.7rem;
+}
+
+/* Action Buttons */
+.leave-applications-portal .btn-icon-sm {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.7rem;
+  border-radius: 10px;
+  margin: 0 0.2rem;
+}
+
+/* Modal Styling */
+.modal-content-custom {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .leave-applications-portal {
+    padding: 1rem;
+  }
+  .leave-applications-portal .stats-grid {
+    gap: 0.8rem;
+  }
+  .leave-applications-portal .stat-card {
+    min-width: calc(50% - 0.8rem);
+  }
+  .leave-applications-portal .card-header-custom {
+    flex-direction: column;
+    align-items: start;
+    gap: 0.5rem;
+  }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.leave-applications-portal .custom-card {
+  animation: fadeInUp 0.5s ease forwards;
+  opacity: 0;
+}
+
+.leave-applications-portal .custom-card:nth-child(1) { animation-delay: 0.1s; }
+.leave-applications-portal .custom-card:nth-child(2) { animation-delay: 0.2s; }
+.leave-applications-portal .custom-card:nth-child(3) { animation-delay: 0.3s; }
+</style>
+
+<div class="leave-applications-portal">
+  <div class="page-header">
+    <h1><i class="fas fa-calendar-check me-2"></i> Leave Application Portal</h1>
+    <p class="header-subtitle">Apply for leave, track requests, and view approval status</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon total"><i class="fas fa-chalkboard-user"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Total</div>
+          <div class="stat-value">{{ total_count }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon pending"><i class="fas fa-hourglass-half"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Pending</div>
+          <div class="stat-value text-warning-emphasis">{{ pending_count }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon approved"><i class="fas fa-check-double"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Approved</div>
+          <div class="stat-value text-success">{{ approved_count }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon rejected"><i class="fas fa-ban"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Rejected</div>
+          <div class="stat-value text-danger">{{ rejected_count }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leave Balance Summary -->
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-scale-balanced me-2"></i> Leave Balance Summary</span>
+        <span class="badge bg-light text-dark"><i class="fas fa-info-circle"></i> Based on current academic year</span>
+      </div>
+      <div class="card-body-custom">
+        <style>
+          .balance-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:0.75rem; }
+          .balance-item { border:1px solid #e2e8f0; border-radius:12px; padding:0.7rem 0.9rem; background:#f8fafc; }
+          .balance-type { font-weight:700; color:#1a4b8c; font-size:0.8rem; margin-bottom:0.45rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+          .balance-nums { display:flex; justify-content:space-between; gap:0.4rem; text-align:center; }
+          .balance-nums div { flex:1; }
+          .balance-nums small { display:block; color:#64748b; font-size:0.6rem; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; }
+          .balance-nums b { font-size:1.05rem; }
+        </style>
+        <div class="balance-grid">
+          {% for lb in leave_balance_summary %}
+          <div class="balance-item">
+            <div class="balance-type" title="{{ lb.leave_type }}">{{ lb.leave_type }}{% if lb.frequency == 'monthly' %} <span class="badge bg-info text-dark" style="font-size:.5rem;vertical-align:middle;">Monthly</span>{% endif %}{% if not lb.restricted %} <span class="badge bg-secondary" style="font-size:.5rem;vertical-align:middle;">Not Restricted</span>{% endif %}</div>
+            <div class="balance-nums">
+              <div><small>Total</small><b>{{ lb.total|floatformat:1 }}</b></div>
+              <div><small>Used</small><b class="text-danger">{{ lb.used|floatformat:1 }}</b></div>
+              <div><small>Left</small><b class="text-success">{{ lb.available|floatformat:1 }}</b></div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center text-muted py-3 w-100">No leave balance available</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Apply / Update Form -->
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-pen-alt me-2"></i> Apply / Update Leave</span>
+        <span class="badge bg-primary text-white">Required fields marked *</span>
+      </div>
+      <div class="card-body-custom">
+        <form method="post" id="leaveForm" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="action" id="form_action" value="create">
+          <input type="hidden" name="leave_id" id="leave_id" value="">
+
+          <div class="row g-4">
+            <div class="col-md-3">
+              <label class="form-label"><i class="fas fa-calendar-alt me-1"></i> Academic Year</label>
+              <input type="text" name="academic_year" id="academic_year" value="{{ academic_year }}" class="form-control" readonly>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label"><i class="fas fa-tag me-1"></i> Leave Type *</label>
+              <select name="leave_type" id="leave_type" class="form-select" required>
+                <option value="">Select Type</option>
+                {% for lt in leave_types %}
+                  <option value="{{ lt.id }}" data-name="{{ lt.name }}" data-code="{{ lt.code|default:'' }}">{{ lt.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label"><i class="fas fa-calendar-day me-1"></i> From Date *</label>
+              <input type="date" name="from_date" id="from_date" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label"><i class="fas fa-clock me-1"></i> From Session *</label>
+              <select name="session" id="session" class="form-select" required>
+                <option value="">Select Session</option>
+                {% for s in sessions %}
+                  <option value="{{ s.id }}" data-session-name="{{ s.session_name }}" data-start-time="{{ s.start_time|time:'H:i' }}">{{ s.session_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label"><i class="fas fa-calendar-week me-1"></i> To Date *</label>
+              <input type="date" name="to_date" id="to_date" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label"><i class="fas fa-clock me-1"></i> To Session *</label>
+              <select name="to_session" id="to_session" class="form-select" required>
+                <option value="">Select Session</option>
+                {% for s in sessions %}
+                  <option value="{{ s.id }}" data-session-name="{{ s.session_name }}" data-start-time="{{ s.start_time|time:'H:i' }}">{{ s.session_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label"><i class="fas fa-calculator me-1"></i> Total Days</label>
+              <input type="text" id="days_count" class="form-control" readonly placeholder="Auto-calculated">
+            </div>
+            <div class="col-md-9">
+              <label class="form-label"><i class="fas fa-comment-dots me-1"></i> Reason</label>
+              <textarea name="reason" id="reason" class="form-control" rows="2" placeholder="Enter reason for leave..."></textarea>
+            </div>
+
+            <!-- Proof upload: shown only for On Duty / Research On Duty -->
+            <div class="col-md-6 d-none" id="proof-upload-group">
+              <label class="form-label"><i class="fas fa-file-pdf me-1"></i> Upload Proof (PDF) <span class="text-muted">(optional)</span></label>
+              <input type="file" name="proof_file" id="proof_file" class="form-control" accept="application/pdf,.pdf">
+              <div class="form-text">Optional for On Duty / Research On Duty — you may submit now and upload the PDF later. It must be uploaded before an approver can approve.</div>
+              <div class="form-text mt-1 d-none" id="existing-proof-wrap">
+                Current file:
+                <a href="#" id="existing-proof-link" target="_blank" rel="noopener">
+                  <i class="fas fa-eye me-1"></i>View uploaded PDF
+                </a>
+                <span class="text-muted">(leave empty to keep it)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary-custom" id="submitBtn">
+              <i class="fas fa-paper-plane me-2"></i>Submit Application
+            </button>
+            <button type="button" class="btn btn-outline-custom d-none" id="cancelEditBtn">
+              <i class="fas fa-times me-2"></i>Cancel Edit
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-filter me-2"></i> Filters</span>
+        <a href="{% url 'leave_application_form' %}" class="btn btn-outline-custom btn-sm">
+          <i class="fas fa-undo-alt me-1"></i>Reset All
+        </a>
+      </div>
+      <div class="card-body-custom">
+        <form method="get" class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label">Academic Year</label>
+            <select class="form-select" name="fy">
+              <option value="">All</option>
+              {% for y in academic_years %}
+                <option value="{{ y }}" {% if fy == y %}selected{% endif %}>{{ y }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Leave Type</label>
+            <select class="form-select" name="lt">
+              <option value="">All</option>
+              {% for t in leave_types %}
+                <option value="{{ t.id|stringformat:'s' }}" {% if lt == t.id|stringformat:'s' %}selected{% endif %}>{{ t.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Status</label>
+            <select class="form-select" name="st">
+              <option value="">All</option>
+              <option value="Pending" {% if st == "Pending" %}selected{% endif %}>Pending</option>
+              <option value="Approved" {% if st == "Approved" %}selected{% endif %}>Approved</option>
+              <option value="Rejected" {% if st == "Rejected" %}selected{% endif %}>Rejected</option>
+              <option value="Pre-approved" {% if st == "Pre-approved" %}selected{% endif %}>Pre-approved</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">From Date</label>
+            <input type="date" class="form-control" name="df" value="{{ df }}">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">To Date</label>
+            <input type="date" class="form-control" name="dt" value="{{ dt }}">
+          </div>
+          <div class="col-12 d-flex gap-2 mt-2">
+            <button class="btn btn-primary-custom" type="submit"><i class="fas fa-search me-1"></i> Apply Filters</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Applications Table -->
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-list-check me-2"></i> Your Applications</span>
+        <span class="badge bg-dark">Filtered: {{ total_count }} records</span>
+      </div>
+      <div class="card-body-custom p-0">
+        <div class="table-responsive">
+          <table class="data-table table w-100" id="applicationsDataTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Academic Year</th>
+                <th>Leave Type</th>
+                <th>Session</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Days</th>
+                <th>Status</th>
+                <th>Approval Status</th>
+                <th style="width:180px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for l in leaves %}
+              {% with locked=lock_map|dict_get:l.id %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ l.academic_year }}</td>
+                <td>{{ l.leave_type.name }}</td>
+                <td>{% if l.session %}{{ l.session.session_name }}{% else %}Full Day{% endif %}{% if l.to_session and l.to_session_id != l.session_id %} → {{ l.to_session.session_name }}{% endif %}</td>
+                <td>{{ l.from_date|date:"M j, Y" }}</td>
+                <td>{{ l.to_date|date:"M j, Y" }}</td>
+                <td><strong>{{ l.days|floatformat:1 }}</strong></td>
+                <td>
+                  <span class="badge-status 
+                    {% if l.status == 'Approved' %}badge-approved
+                    {% elif l.status == 'Rejected' %}badge-rejected
+                    {% elif l.status == 'Pending' %}badge-pending
+                    {% else %}badge-preapproved{% endif %}">
+                    {% if l.status == 'Approved' %}<i class="fas fa-check-circle me-1"></i>
+                    {% elif l.status == 'Rejected' %}<i class="fas fa-times-circle me-1"></i>
+                    {% elif l.status == 'Pending' %}<i class="fas fa-clock me-1"></i>
+                    {% else %}<i class="fas fa-check-double me-1"></i>{% endif %}
+                    {{ l.status }}
+                  </span>
+                </td>
+                <td class="approver-cell">
+                  {% with rows=approver_status_map|dict_get:l.id %}
+                    {% if rows %}
+                      <div class="d-flex flex-column gap-1">
+                        {% for r in rows %}
+                          <div class="approver-item">
+                            <strong>Level {{ r.level }}:</strong> {{ r.emp }} — {{ r.name }}
+                            {% if r.desig %}({{ r.desig }}){% endif %}
+                            {% if r.status == "APPROVED" %}
+                              <span class="badge bg-success ms-1">Approved</span>
+                            {% elif r.status == "REJECTED" %}
+                              <span class="badge bg-danger ms-1">Rejected</span>
+                            {% else %}
+                              <span class="badge bg-warning text-dark ms-1">Pending</span>
+                            {% endif %}
+                          </div>
+                        {% endfor %}
+                      </div>
+                    {% else %}
+                      <span class="text-muted fst-italic">No approver records</span>
+                    {% endif %}
+                  {% endwith %}
+                </td>
+                <td>
+                  <div class="d-flex flex-wrap gap-1">
+                    <button type="button" class="btn btn-sm btn-outline-secondary btn-view"
+                      data-bs-toggle="modal" data-bs-target="#viewModal"
+                      data-id="{{ l.id }}" data-year="{{ l.academic_year }}"
+                      data-type="{{ l.leave_type.name }}" data-from="{{ l.from_date|date:'M j, Y' }}"
+                      data-to="{{ l.to_date|date:'M j, Y' }}" data-reason="{{ l.reason|default:''|escape }}"
+                      data-status="{{ l.status }}"
+                      data-proof-url="{% if l.proof_file %}{{ l.proof_file.url }}{% endif %}">
+                      <i class="fas fa-eye"></i> View
+                    </button>
+
+                    {% if not locked %}
+                      <button type="button" class="btn btn-sm btn-warning btn-edit"
+                        data-id="{{ l.id }}" data-year="{{ l.academic_year }}"
+                        data-leave-type="{{ l.leave_type.id }}" data-session="{{ l.session_id }}"
+                        data-to-session="{{ l.to_session_id }}"
+                        data-from="{{ l.from_date|date:'Y-m-d' }}" data-to="{{ l.to_date|date:'Y-m-d' }}"
+                        data-reason="{{ l.reason|default:''|escape }}"
+                        data-proof-url="{% if l.proof_file %}{{ l.proof_file.url }}{% endif %}">
+                        <i class="fas fa-edit"></i> Edit
+                      </button>
+
+                      <button type="button" class="btn btn-sm btn-danger btn-delete"
+                        data-bs-toggle="modal" data-bs-target="#deleteModal"
+                        data-id="{{ l.id }}" data-label="{{ l.leave_type.name }} ({{ l.from_date|date:'M j, Y' }} → {{ l.to_date|date:'M j, Y' }})">
+                        <i class="fas fa-trash-alt"></i> Del
+                      </button>
+
+                      {% if l.leave_type.code == 'OD' or l.leave_type.code == 'ROD' or 'on duty' in l.leave_type.name|lower %}
+                      <button type="button" class="btn btn-sm {% if l.proof_file %}btn-outline-success{% else %}btn-info text-white{% endif %} btn-upload-proof"
+                        data-bs-toggle="modal" data-bs-target="#uploadProofModal"
+                        data-id="{{ l.id }}"
+                        data-label="{{ l.leave_type.name }} ({{ l.from_date|date:'M j, Y' }} → {{ l.to_date|date:'M j, Y' }})"
+                        data-has-proof="{% if l.proof_file %}1{% else %}0{% endif %}">
+                        <i class="fas fa-file-upload"></i> {% if l.proof_file %}Re-upload Proof{% else %}Upload Proof{% endif %}
+                      </button>
+                      {% endif %}
+                    {% else %}
+                      <span class="text-muted small ms-1"><i class="fas fa-lock me-1"></i>Locked</span>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% endwith %}
+              {% empty %}
+              <tr><td colspan="10" class="text-center py-5 text-muted"><i class="fas fa-inbox me-2"></i>No records found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Modal -->
+<div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-content-custom">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>Leave Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="row mb-2"><div class="col-4 fw-bold">Academic Year:</div><div class="col-8" id="v_year">-</div></div>
+        <div class="row mb-2"><div class="col-4 fw-bold">Leave Type:</div><div class="col-8" id="v_type">-</div></div>
+        <div class="row mb-2"><div class="col-4 fw-bold">From:</div><div class="col-8" id="v_from">-</div></div>
+        <div class="row mb-2"><div class="col-4 fw-bold">To:</div><div class="col-8" id="v_to">-</div></div>
+        <div class="row mb-2"><div class="col-4 fw-bold">Status:</div><div class="col-8" id="v_status">-</div></div>
+        <div class="row mb-2" id="v_proof_row" style="display:none;"><div class="col-4 fw-bold">Proof:</div><div class="col-8"><a href="#" id="v_proof" target="_blank" rel="noopener" class="btn btn-sm btn-outline-info"><i class="fas fa-file-pdf me-1"></i>View PDF</a></div></div>
+        <div class="row"><div class="col-4 fw-bold">Reason:</div><div class="col-8"><div class="border rounded p-2 bg-light" id="v_reason">—</div></div></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i>Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-content-custom">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="alert alert-warning"><strong id="deleteItemLabel">—</strong></div>
+        <p class="mb-0 text-muted">⚠️ This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal"><i class="fas fa-ban me-1"></i>Cancel</button>
+        <a id="confirmDeleteBtn" href="#" class="btn btn-danger"><i class="fas fa-trash-alt me-1"></i>Yes, delete</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Proof Modal (On Duty / Research On Duty) -->
+<div class="modal fade" id="uploadProofModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-content-custom">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="upload_proof">
+        <input type="hidden" name="leave_id" id="upload_leave_id" value="">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title"><i class="fas fa-file-upload me-2"></i>Upload OD / ROD Proof</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="mb-2 fw-semibold" id="uploadProofLabel">—</div>
+          <label class="form-label"><i class="fas fa-file-pdf me-1"></i> Proof (PDF) *</label>
+          <input type="file" name="proof_file" class="form-control" accept="application/pdf,.pdf" required>
+          <div class="form-text">The application can only be approved once this proof is uploaded.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fas fa-ban me-1"></i>Cancel</button>
+          <button type="submit" class="btn btn-info text-white"><i class="fas fa-upload me-1"></i>Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // Initialize DataTable for enhanced functionality
+  if (typeof $.fn.DataTable !== 'undefined') {
+    // Suppress DataTables alert popups (e.g. null/unknown-parameter warnings)
+    $.fn.dataTable.ext.errMode = 'none';
+    $('#applicationsDataTable').DataTable({
+      paging: true,
+      searching: true,
+      ordering: true,
+      pageLength: 10,
+      lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
+      order: [[0, 'asc']],
+      language: {
+        search: "<i class='fas fa-search'></i> Search:",
+        searchPlaceholder: "Search applications...",
+        lengthMenu: "Show _MENU_ entries",
+        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+        paginate: { previous: "<i class='fas fa-chevron-left'></i>", next: "<i class='fas fa-chevron-right'></i>" }
+      },
+      responsive: true,
+      columnDefs: [{ responsivePriority: 1, targets: 8 }, { responsivePriority: 2, targets: 9 }]
+    });
+  }
+
+  // Days calculation logic (mirrors server-side compute_leave_days)
+  const fromDate = document.getElementById("from_date");
+  const toDate = document.getElementById("to_date");
+  const daysField = document.getElementById("days_count");
+  const sessionField = document.getElementById("session");
+  const toSessionField = document.getElementById("to_session");
+
+  // Return [startFraction, endFraction] of a day covered by a session option.
+  function sessionBounds(option) {
+    if (!option) return [0.0, 1.0];
+    const name = (option.dataset.sessionName || "").trim().toUpperCase();
+    if (["FN", "MORNING", "FORENOON"].includes(name)) return [0.0, 0.5];
+    if (["AN", "AFTERNOON"].includes(name)) return [0.5, 1.0];
+    if (["FULL DAY", "FULL", "BOTH"].includes(name)) return [0.0, 1.0];
+    const start = option.dataset.startTime || "";
+    if (start) return start < "12:00" ? [0.0, 0.5] : [0.5, 1.0];
+    return [0.0, 1.0];
+  }
+
+  function calculateDays() {
+    if (!(fromDate.value && toDate.value && sessionField.value && toSessionField.value)) {
+      daysField.value = "";
+      return;
+    }
+    const start = new Date(fromDate.value);
+    const end = new Date(toDate.value);
+    const span = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    if (span <= 0) { daysField.value = ""; return; }
+
+    const [startFrac] = sessionBounds(sessionField.options[sessionField.selectedIndex]);
+    const [, endFrac] = sessionBounds(toSessionField.options[toSessionField.selectedIndex]);
+
+    let total;
+    if (span === 1) {
+      total = Math.max(0, endFrac - startFrac);
+    } else {
+      total = (1.0 - startFrac) + (span - 2) + endFrac;
+    }
+
+    if (total <= 0) { daysField.value = ""; return; }
+    daysField.value = Number.isInteger(total) ? String(total) : total.toFixed(1);
+  }
+  if (fromDate && toDate && sessionField && toSessionField) {
+    fromDate.addEventListener("change", calculateDays);
+    toDate.addEventListener("change", calculateDays);
+    sessionField.addEventListener("change", calculateDays);
+    toSessionField.addEventListener("change", calculateDays);
+  }
+
+  // Form management
+  const form = document.getElementById("leaveForm");
+  const actionInput = document.getElementById("form_action");
+  const leaveIdInput = document.getElementById("leave_id");
+  const submitBtn = document.getElementById("submitBtn");
+  const cancelEditBtn = document.getElementById("cancelEditBtn");
+  const academicYear = document.getElementById("academic_year");
+  const leaveTypeSelect = document.getElementById("leave_type");
+  const reasonText = document.getElementById("reason");
+
+  // Proof upload (On Duty / Research On Duty) elements
+  const proofGroup = document.getElementById("proof-upload-group");
+  const proofFileInput = document.getElementById("proof_file");
+  const existingProofWrap = document.getElementById("existing-proof-wrap");
+  const existingProofLink = document.getElementById("existing-proof-link");
+
+  function selectedIsOd() {
+    const opt = leaveTypeSelect.options[leaveTypeSelect.selectedIndex];
+    if (!opt) return false;
+    const name = (opt.dataset.name || "").toLowerCase();
+    const code = (opt.dataset.code || "").toUpperCase();
+    return name.includes("on duty") || code === "OD" || code === "ROD";
+  }
+
+  function updateProofVisibility() {
+    const isOd = selectedIsOd();
+    if (proofGroup) proofGroup.classList.toggle("d-none", !isOd);
+    // Proof is OPTIONAL at submission — OD/ROD can be applied now and the PDF
+    // uploaded later (before approval). So the file input is never required here.
+    if (proofFileInput) proofFileInput.required = false;
+  }
+  if (leaveTypeSelect) leaveTypeSelect.addEventListener("change", updateProofVisibility);
+
+  function resetForm() {
+    actionInput.value = "create";
+    leaveIdInput.value = "";
+    submitBtn.textContent = "Submit Application";
+    cancelEditBtn.classList.add("d-none");
+    form.reset();
+    daysField.value = "";
+    if (academicYear) academicYear.value = "{{ academic_year|default:'' }}";
+    if (proofFileInput) proofFileInput.value = "";
+    if (existingProofWrap) existingProofWrap.classList.add("d-none");
+    updateProofVisibility();
+  }
+  if (cancelEditBtn) cancelEditBtn.addEventListener("click", resetForm);
+
+  // Edit buttons
+  document.querySelectorAll(".btn-edit").forEach(btn => {
+    btn.addEventListener("click", () => {
+      actionInput.value = "update";
+      leaveIdInput.value = btn.getAttribute("data-id");
+      if (academicYear) academicYear.value = btn.getAttribute("data-year");
+      leaveTypeSelect.value = btn.getAttribute("data-leave-type");
+      fromDate.value = btn.getAttribute("data-from");
+      toDate.value = btn.getAttribute("data-to");
+      reasonText.value = btn.getAttribute("data-reason") || "";
+      sessionField.value = btn.getAttribute("data-session");
+      if (toSessionField) toSessionField.value = btn.getAttribute("data-to-session") || btn.getAttribute("data-session");
+      // Proof handling: show existing uploaded PDF (if any) for OD/ROD edits
+      const proofUrl = btn.getAttribute("data-proof-url");
+      if (proofFileInput) proofFileInput.value = "";
+      if (existingProofWrap && existingProofLink) {
+        if (proofUrl) {
+          existingProofLink.href = proofUrl;
+          existingProofWrap.classList.remove("d-none");
+        } else {
+          existingProofWrap.classList.add("d-none");
+        }
+      }
+      updateProofVisibility();
+      calculateDays();
+      submitBtn.textContent = "Update Application";
+      cancelEditBtn.classList.remove("d-none");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+
+  // Delete modal wiring
+  const deleteItemLabel = document.getElementById("deleteItemLabel");
+  const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+  document.querySelectorAll(".btn-delete").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-id");
+      const label = btn.getAttribute("data-label") || `ID ${id}`;
+      if (deleteItemLabel) deleteItemLabel.textContent = label;
+      const url = new URL(window.location.href);
+      url.searchParams.set("delete_id", id);
+      if (confirmDeleteBtn) confirmDeleteBtn.setAttribute("href", url.toString());
+    });
+  });
+
+  // Upload-proof modal wiring
+  const uploadLeaveId = document.getElementById("upload_leave_id");
+  const uploadProofLabel = document.getElementById("uploadProofLabel");
+  document.querySelectorAll(".btn-upload-proof").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (uploadLeaveId) uploadLeaveId.value = btn.getAttribute("data-id") || "";
+      if (uploadProofLabel) uploadProofLabel.textContent = btn.getAttribute("data-label") || "";
+    });
+  });
+
+  // View modal
+  const vYear = document.getElementById("v_year"), vType = document.getElementById("v_type");
+  const vFrom = document.getElementById("v_from"), vTo = document.getElementById("v_to");
+  const vReason = document.getElementById("v_reason"), vStatus = document.getElementById("v_status");
+  const vProofRow = document.getElementById("v_proof_row"), vProof = document.getElementById("v_proof");
+  document.querySelectorAll(".btn-view").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (vYear) vYear.textContent = btn.getAttribute("data-year") || "-";
+      if (vType) vType.textContent = btn.getAttribute("data-type") || "-";
+      if (vFrom) vFrom.textContent = btn.getAttribute("data-from") || "-";
+      if (vTo) vTo.textContent = btn.getAttribute("data-to") || "-";
+      if (vStatus) vStatus.textContent = btn.getAttribute("data-status") || "-";
+      if (vReason) vReason.textContent = btn.getAttribute("data-reason") || "—";
+      const proofUrl = btn.getAttribute("data-proof-url");
+      if (vProofRow && vProof) {
+        if (proofUrl) { vProof.href = proofUrl; vProofRow.style.display = ""; }
+        else { vProofRow.style.display = "none"; }
+      }
+    });
+  });
+
+  // Initialize proof visibility on load (e.g. after a validation redirect)
+  updateProofVisibility();
+});
+</script>
+{% endblock %}

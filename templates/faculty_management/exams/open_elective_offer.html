@@ -1,0 +1,694 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+.open-elective {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.open-elective .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.open-elective .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.open-elective .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.open-elective .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.open-elective .form-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.open-elective .form-card .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem;
+}
+
+.open-elective .form-card .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.open-elective .form-card .card-header i {
+  margin-right: 0.75rem;
+}
+
+.open-elective .form-card .card-body {
+  padding: 2rem;
+}
+
+.open-elective .form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.open-elective .form-control,
+.open-elective .form-select {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.open-elective .form-control:focus,
+.open-elective .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+}
+
+.open-elective .form-select[multiple] {
+  height: 120px;
+}
+
+.open-elective .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.open-elective .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.open-elective .btn-outline-primary {
+  border: 1px solid #1a4b8c;
+  background-color:white;
+  color: #1a4b8c;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.open-elective .btn-outline-primary:hover {
+  background: #1a4b8c;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.open-elective .btn-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.open-elective .btn-warning:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.open-elective .btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.open-elective .btn-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.open-elective .academic-year-banner {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.open-elective .academic-year-banner strong {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.open-elective .academic-year-banner #ay-value {
+  font-weight: 800;
+  font-size: 1.1rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 8px;
+}
+
+.open-elective .table-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.open-elective .table-card .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.open-elective .table-card .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.open-elective .table-card .card-header i {
+  margin-right: 0.75rem;
+}
+
+.open-elective .table-container {
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+}
+
+.open-elective .table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  font-size: 0.9rem;
+  table-layout: fixed;
+}
+
+.open-elective .table thead {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.open-elective .table thead th {
+  color: black !important;
+  font-weight: 700;
+}
+
+
+.open-elective .table th {
+  color: white;
+  font-weight: 700;
+  padding: 1rem;
+  text-align: left;
+  border: none;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.open-elective .table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #4b5563;
+  vertical-align: middle;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.open-elective .table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.open-elective .table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.open-elective .badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: block;
+  margin-bottom: 4px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.open-elective .badge.bg-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: white;
+}
+
+.open-elective .ay-col {
+  width: 80px;
+  max-width: 80px;
+  word-break: break-word;
+}
+
+.open-elective .action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.open-elective .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.open-elective .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.open-elective .download-section {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+/* Column widths for better layout */
+.open-elective .table th:nth-child(1),
+.open-elective .table td:nth-child(1) { width: 5%; } /* # */
+.open-elective .table th:nth-child(2),
+.open-elective .table td:nth-child(2) { width: 20%; } /* Course */
+.open-elective .table th:nth-child(3),
+.open-elective .table td:nth-child(3) { width: 15%; } /* Faculty */
+.open-elective .table th:nth-child(4),
+.open-elective .table td:nth-child(4) { width: 15%; } /* Offered From */
+.open-elective .table th:nth-child(5),
+.open-elective .table td:nth-child(5) { width: 15%; } /* Offered To */
+.open-elective .table th:nth-child(6),
+.open-elective .table td:nth-child(6) { width: 8%; } /* AY */
+.open-elective .table th:nth-child(7),
+.open-elective .table td:nth-child(7) { width: 8%; } /* Slots */
+.open-elective .table th:nth-child(8),
+.open-elective .table td:nth-child(8) { width: 8%; } /* Batch */
+.open-elective .table th:nth-child(9),
+.open-elective .table td:nth-child(9) { width: 16%; } /* Actions */
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .open-elective .page-header {
+    padding: 1rem;
+  }
+  
+  .open-elective .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .open-elective .form-card .card-body {
+    padding: 1.5rem;
+  }
+  
+  .open-elective .table-card .card-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .open-elective {
+    padding: 1rem;
+  }
+  
+  .open-elective .page-header {
+    padding: 0.75rem;
+  }
+  
+  .open-elective .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .open-elective .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .open-elective .form-card .card-body {
+    padding: 1rem;
+  }
+  
+  .open-elective .table {
+    font-size: 0.8rem;
+  }
+  
+  .open-elective .table th,
+  .open-elective .table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .open-elective .action-buttons {
+    flex-direction: column;
+  }
+  
+  .open-elective .action-buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .open-elective .form-card .card-header h5 {
+    font-size: 1.1rem;
+  }
+  
+  .open-elective .table-card .card-header h5 {
+    font-size: 1.1rem;
+  }
+  
+  .open-elective .academic-year-banner {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}
+</style>
+
+<div class="open-elective">
+  <div class="page-header">
+    <h1><i class="fas fa-book-open me-2"></i>Open Elective Offers</h1>
+    <p class="header-subtitle">Manage open elective course offerings across departments</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Form Card -->
+    <div class="form-card">
+      <div class="card-header">
+        <h5><i class="fas fa-plus-circle me-2"></i>Add/Edit Elective Offer</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" class="needs-validation" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="offer_id" id="offer_id">
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Regulation</label>
+              <select name="regulation" id="regulation" class="form-select" required>
+                <option value="">-- Select Regulation --</option>
+                {% for reg in regulations %}
+                  <option value="{{ reg.id }}">{{ reg.year }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Semester</label>
+              <select name="semester" id="semester" class="form-select" required>
+                <option value="">-- Select Semester --</option>
+                {% for i in semesters %}
+                  <option value="{{ i }}">{{ i }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Course</label>
+              <select name="course" id="course" class="form-select" required>
+                <option value="">-- Select Course --</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-md-4">
+              <label class="form-label">Faculty</label>
+              <select name="faculty" id="faculty" class="form-select">
+                <option value="">-- Select Faculty --</option>
+                {% for fac in faculties %}
+                  <option value="{{ fac.id }}">{{ fac.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Offered From Dept</label>
+              
+              <input type="text" name="offered_from_dept" id="offered_from_dept" class="form-control" value="{{ offer_from_department }}">
+            </div>
+            
+
+            <div class="col-md-4">
+              <label class="form-label">Offered To Dept</label>
+              <select name="offered_to_dept" id="offered_to_dept" class="form-select" multiple>
+                {% for dept in departments %}
+                  <option value="{{ dept.id }}">{{ dept.Department }} - {{ dept.degree.degree_code }}</option>
+                {% endfor %}
+              </select>
+              <small class="text-muted">Hold Ctrl/Cmd to select multiple departments</small>
+            </div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-md-3">
+              <label class="form-label">Slots</label>
+              <input type="text" name="slots" id="slots" class="form-control" placeholder="Enter available slots">
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Academic Year</label>
+              <select name="academic_year" id="academic_year" class="form-select"></select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Batch</label>
+              <select name="batch" id="batch" class="form-select">
+                {% for b in batches %}
+                  <option value="{{ b }}">{{ b }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-3 d-flex align-items-end">
+              <button type="submit" name="action" value="save" class="btn btn-primary w-100">
+                <i class="fas fa-save me-2"></i>Save / Update
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Academic Year Banner -->
+    <div class="academic-year-banner">
+      <div>
+        <strong>Academic Year:</strong>
+      </div>
+      <div id="ay-value">--</div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="table-card">
+      <div class="card-header">
+        <h5><i class="fas fa-list-alt me-2"></i>Current Elective Offers</h5>
+        <a href="?download=pdf" class="btn btn-outline-primary" target="_blank">
+          <i class="fas fa-download me-2"></i>Download PDF
+        </a>
+      </div>
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Course</th>
+                <th>Faculty</th>
+                <th>Offered From</th>
+                <th>Offered To</th>
+                <th class="ay-col">AY</th>
+                <th>Slots</th>
+                <th>Batch</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for offer in offers %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <strong>{{ offer.course.course_code }}</strong>
+                  <br><small class="text-muted">{{ offer.course.title }}</small>
+                </td>
+                <td>{{ offer.faculty.name|default:"--" }}</td>
+                <td>
+                  {{ offer.offered_from_dept.Department }}
+                  <br><small class="text-muted">{{ offer.offered_from_dept.degree.degree_code }}</small>
+                </td>
+                <td>
+                  {% for od in offer.to_departments.all %}
+                    <span class="badge bg-primary">{{ od.offered_to_dept.Department }} - {{ od.offered_to_dept.degree.degree_code }}</span>
+                  {% empty %}
+                    <span class="text-muted">--</span>
+                  {% endfor %}
+                </td>
+                <td class="ay-col">{{ offer.academic_year }}</td>
+                <td>{{ offer.slots|default:"--" }}</td>
+                <td>{{ offer.batch|default:"--" }}</td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn btn-warning btn-sm"
+                      onclick="editOffer('{{ offer.id }}','{{ offer.regulation.id }}','{{ offer.course.semester }}','{{ offer.course.id }}','{{ offer.faculty.id }}','{{ offer.offered_from_dept.id }}','{{ offer.slots }}','{{ offer.academic_year }}','{{ offer.batch }}')">
+                      <i class="fas fa-edit me-1"></i>Edit
+                    </button>
+                    <form method="POST" class="d-inline">
+                      {% csrf_token %}
+                      <input type="hidden" name="offer_id" value="{{ offer.id }}">
+                      <button type="submit" name="action" value="delete" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this offer?')">
+                        <i class="fas fa-trash me-1"></i>Delete
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="9" class="text-center py-4">
+                  <div class="empty-state">
+                    <i class="fas fa-book-open"></i>
+                    <h5>No Elective Offers Found</h5>
+                    <p class="text-muted">Create your first elective offer using the form above</p>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const ay = document.getElementById("academic_year");
+    const yearNow = new Date().getFullYear();
+    for (let y = yearNow - 2; y <= yearNow + 2; y++) {
+        ay.innerHTML += `<option value="${y}-${y+1}">${y}-${y+1}</option>`;
+    }
+    // initialize banner
+    const bv = document.getElementById('ay-value');
+    if (ay.value) bv.textContent = ay.value; else bv.textContent = (new Date().getFullYear()) + '-' + (new Date().getFullYear()+1);
+});
+
+// Update AY banner when changed
+document.getElementById('academic_year').addEventListener('change', function(){
+    document.getElementById('ay-value').textContent = this.value || '--';
+});
+
+// ✅ Dynamic Course Loader returns Promise
+function loadCourses(){
+    return new Promise((resolve) => {
+        let reg = document.getElementById("regulation").value;
+        let sem = document.getElementById("semester").value;
+        let courseSelect = document.getElementById("course");
+        courseSelect.innerHTML = `<option>Loading...</option>`;
+
+        if(reg && sem){
+            fetch(`{% url 'get_courses_by_reg_sem' %}?regulation=${reg}&semester=${sem}`)
+            .then(r => r.json())
+            .then(data => {
+                courseSelect.innerHTML = `<option value="">-- Select Course --</option>`;
+                data.forEach(c => {
+                    courseSelect.innerHTML += `<option value="${c.id}">${c.course_code} - ${c.title}</option>`;
+                });
+                resolve();
+            });
+        } else {
+            courseSelect.innerHTML = `<option value="">-- Select Course --</option>`;
+            resolve();
+        }
+    });
+}
+
+document.getElementById("regulation").addEventListener("change", loadCourses);
+document.getElementById("semester").addEventListener("change", loadCourses);
+
+// ✅ Edit with proper asynchronous dropdown population
+function editOffer(id, regulation, semester, course, faculty, fromDept, slots, year, batch) {
+    document.getElementById("offer_id").value = id;
+    document.getElementById("regulation").value = regulation;
+    document.getElementById("semester").value = semester;
+
+    loadCourses().then(() => {
+        document.getElementById("course").value = course;
+    });
+
+    document.getElementById("faculty").value = faculty;
+    document.getElementById("offered_from_dept").value = fromDept;
+    document.getElementById("slots").value = slots;
+    document.getElementById("academic_year").value = year;
+    // update banner when editing
+    document.getElementById('ay-value').textContent = year || document.getElementById('ay-value').textContent;
+    document.getElementById("batch").value = batch;
+
+    fetch(`{% url 'get_offered_to_list' %}?offer=${id}`)
+        .then(r => r.json())
+        .then(list => {
+            let field = document.getElementById("offered_to_dept");
+            [...field.options].forEach(o => o.selected = list.includes(parseInt(o.value)));
+        });
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+{% endblock %}

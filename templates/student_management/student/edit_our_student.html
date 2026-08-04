@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="student-edit-page">
+<div class="container mt-4">
+
+<div class="student-card">
+
+<div class="student-card-header">
+<h4>Edit Student</h4>
+</div>
+
+<div class="student-card-body">
+
+<form method="POST" enctype="multipart/form-data">
+{% csrf_token %}
+
+<div class="row">
+
+<!-- PROFILE IMAGE -->
+<div class="col-12 text-center mb-4">
+
+<div class="student-profile-preview">
+
+{% if student.profile_img %}
+<img src="{{ student.profile_img.url }}"
+     onerror="this.onerror=null;this.src='{% static 'images/profile.jpg' %}'"
+     class="student-profile-img">
+{% else %}
+<img src="{% static 'images/profile.jpg' %}" class="student-profile-img">
+{% endif %}
+
+</div>
+
+
+<div class="file-upload-wrapper mt-3">
+
+<input type="text"
+       id="image_name"
+       class="file-name-input"
+       placeholder="No file chosen"
+       value="{% if student.profile_img %}{{ student.profile_img.name }}{% endif %}"
+       readonly>
+
+<label class="student-upload-btn">
+Choose Photo
+<input type="file" name="profile_img" id="profile_img" hidden>
+</label>
+
+</div>
+
+</div>
+
+
+<div class="col-md-6 mb-3">
+<label>Name</label>
+<input type="text" name="name" class="form-control" value="{{ student.name }}">
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Register Number</label>
+<input type="text" name="reg_no" class="form-control" value="{{ student.reg_no }}">
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Aadhar Number</label>
+<input type="text" name="aadhar_number" class="form-control" value="{{ student.aadhar_number }}">
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Email</label>
+<input type="email" name="email" class="form-control" value="{{ student.email }}">
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Mobile</label>
+<input type="text" name="mobile_no" class="form-control" value="{{ student.mobile_no }}">
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Batch</label>
+<input type="text" name="batch" class="form-control" value="{{ student.batch }}">
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Section</label>
+<input type="text" name="section" class="form-control" value="{{ student.section }}">
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Year</label>
+<input type="text" name="year" class="form-control" value="{{ student.year }}">
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Semester</label>
+<input type="text" name="semester" class="form-control" value="{{ student.semester }}">
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Regulation</label>
+<input type="text" name="regulation" class="form-control" value="{{ student.regulation }}">
+</div>
+
+<div class="col-md-6 mb-3">
+<label>UMIS ID</label>
+<input type="text" name="umis_id" class="form-control" value="{{ student.umis_id }}">
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Date of Birth</label>
+<input type="date" name="date_of_birth" class="form-control"
+value="{{ student.date_of_birth|date:'Y-m-d' }}">
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Gender</label>
+<select name="gender" class="form-control">
+<option value="">Select</option>
+<option value="Male" {% if student.gender == "Male" %}selected{% endif %}>Male</option>
+<option value="Female" {% if student.gender == "Female" %}selected{% endif %}>Female</option>
+<option value="Other" {% if student.gender == "Other" %}selected{% endif %}>Other</option>
+</select>
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Mode</label>
+<select name="mode" class="form-control">
+<option value="">Select Mode</option>
+<option value="Hostel" {% if student.mode|lower == "hostel" %}selected{% endif %}>Hostel</option>
+<option value="Transport" {% if student.mode|lower == "transport" %}selected{% endif %}>Transport</option>
+</select>
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Department</label>
+<select name="department" class="form-control">
+<option value="">Select Department</option>
+{% for dept in departments %}
+<option value="{{ dept.id }}" {% if student.department_id == dept.id %}selected{% endif %}>
+{{ dept.degree.degree_code|default:"N/A" }} - {{ dept.Department }}
+</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Mentor</label>
+<select name="mentor" class="form-control">
+<option value="">Select Mentor</option>
+{% for f in faculty %}
+<option value="{{ f.id }}" {% if student.mentor_id == f.id %}selected{% endif %}>
+{{ f.name }} - {{ f.faculty_id }}
+</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Class Advisor</label>
+<select name="ca" class="form-control">
+<option value="">Select CA</option>
+{% for f in faculty %}
+<option value="{{ f.id }}" {% if student.ca_id == f.id %}selected{% endif %}>
+{{ f.name }} - {{ f.faculty_id }}
+</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Year of Admission</label>
+<input type="text" name="year_of_admission" class="form-control"
+value="{{ student.year_of_admission }}">
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Semester of Admission</label>
+<input type="text" name="semester_of_admission" class="form-control"
+value="{{ student.semester_of_admission }}">
+</div>
+
+</div>
+
+<div class="text-end mt-3">
+<button type="submit" class="student-submit-btn">
+Update Student
+</button>
+</div>
+
+</form>
+
+</div>
+</div>
+
+</div>
+</div>
+
+
+<!-- SHOW IMAGE NAME + PREVIEW -->
+<script>
+
+document.getElementById("profile_img").addEventListener("change", function(){
+
+let file = this.files[0]
+
+if(file){
+
+document.getElementById("image_name").value = file.name
+
+let reader = new FileReader()
+
+reader.onload = function(e){
+document.querySelector(".student-profile-img").src = e.target.result
+}
+
+reader.readAsDataURL(file)
+
+}
+
+})
+
+</script>
+
+
+<style>
+
+.student-edit-page .student-card{
+background:white;
+border-radius:10px;
+box-shadow:0 3px 10px rgba(0,0,0,0.08);
+}
+
+.student-edit-page .student-card-header{
+background:#1a4b8c;
+color:white;
+padding:14px 20px;
+border-radius:10px 10px 0 0;
+font-weight:600;
+}
+
+.student-edit-page .student-card-body{
+padding:25px;
+}
+
+.student-edit-page .student-profile-preview{
+width:120px;
+height:120px;
+border-radius:50%;
+overflow:hidden;
+margin:auto;
+border:4px solid #e2e8f0;
+}
+
+.student-edit-page .student-profile-img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+.file-upload-wrapper{
+display:flex;
+justify-content:center;
+align-items:center;
+gap:10px;
+margin-top:10px;
+}
+
+.file-name-input{
+width:220px;
+padding:7px 10px;
+border:1px solid #cbd5e1;
+border-radius:6px;
+font-size:13px;
+background:#f8fafc;
+}
+
+.student-edit-page .student-upload-btn{
+background:#1a4b8c;
+color:white;
+padding:7px 14px;
+border-radius:6px;
+cursor:pointer;
+font-size:13px;
+}
+
+.student-edit-page .student-upload-btn:hover{
+background:#163e72;
+}
+
+.student-edit-page .student-submit-btn{
+background:#1a4b8c;
+color:white;
+border:none;
+padding:10px 22px;
+border-radius:6px;
+font-weight:600;
+}
+
+.student-edit-page .student-submit-btn:hover{
+background:#163e72;
+}
+
+</style>
+
+{% endblock %}

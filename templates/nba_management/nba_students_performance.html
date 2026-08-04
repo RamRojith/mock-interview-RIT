@@ -1,0 +1,653 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+.nba-analytics-dashboard {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.nba-analytics-dashboard .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.nba-analytics-dashboard .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.nba-analytics-dashboard .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.nba-analytics-dashboard .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.nba-analytics-dashboard .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.nba-analytics-dashboard .stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: transform 0.3s ease;
+  border-left: 4px solid;
+}
+
+.nba-analytics-dashboard .stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.nba-analytics-dashboard .stat-card.total-modules {
+  border-left-color: #1a4b8c;
+}
+
+.nba-analytics-dashboard .stat-card.analytics-modules {
+  border-left-color: #8b5cf6;
+}
+
+.nba-analytics-dashboard .stat-card.performance-modules {
+  border-left-color: #10b981;
+}
+
+.nba-analytics-dashboard .stat-card.student-modules {
+  border-left-color: #f59e0b;
+}
+
+.nba-analytics-dashboard .stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.nba-analytics-dashboard .total-modules .stat-icon {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+}
+
+.nba-analytics-dashboard .analytics-modules .stat-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.nba-analytics-dashboard .performance-modules .stat-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.nba-analytics-dashboard .student-modules .stat-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.nba-analytics-dashboard .stat-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1a4b8c;
+  line-height: 1;
+  display: block;
+}
+
+.nba-analytics-dashboard .stat-label {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.nba-analytics-dashboard .modules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 1.5rem;
+}
+
+.nba-analytics-dashboard .module-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  border: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.nba-analytics-dashboard .module-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.nba-analytics-dashboard .card-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.nba-analytics-dashboard .badge-analytics {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+}
+
+.nba-analytics-dashboard .badge-performance {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.nba-analytics-dashboard .badge-student {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.nba-analytics-dashboard .badge-publication {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+}
+
+.nba-analytics-dashboard .card-icon-wrapper {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem 0;
+}
+
+.nba-analytics-dashboard .card-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  color: #1a4b8c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.nba-analytics-dashboard .card-title {
+  color: #1a4b8c;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.nba-analytics-dashboard .card-description {
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  flex-grow: 1;
+}
+
+.nba-analytics-dashboard .card-actions {
+  margin-top: auto;
+}
+
+.nba-analytics-dashboard .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  justify-content: center;
+  width: 100%;
+}
+
+.nba-analytics-dashboard .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+}
+
+.nba-analytics-dashboard .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.nba-analytics-dashboard .btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.nba-analytics-dashboard .btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+}
+
+.nba-analytics-dashboard .quick-actions {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.nba-analytics-dashboard .quick-actions h3 {
+  color: #1a4b8c;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.nba-analytics-dashboard .quick-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.nba-analytics-dashboard .quick-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #374151;
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.nba-analytics-dashboard .quick-link:hover {
+  background: #1a4b8c;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nba-analytics-dashboard .quick-link-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #1a4b8c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.nba-analytics-dashboard .quick-link:hover .quick-link-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.nba-analytics-dashboard .quick-link-text {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .nba-analytics-dashboard .page-header {
+    padding: 1rem;
+  }
+  
+  .nba-analytics-dashboard .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .nba-analytics-dashboard .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .nba-analytics-dashboard .modules-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .nba-analytics-dashboard {
+    padding: 1rem;
+  }
+  
+  .nba-analytics-dashboard .page-header {
+    padding: 0.75rem;
+  }
+  
+  .nba-analytics-dashboard .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .nba-analytics-dashboard .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .nba-analytics-dashboard .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .nba-analytics-dashboard .modules-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .nba-analytics-dashboard .stat-card {
+    padding: 1.25rem;
+  }
+  
+  .nba-analytics-dashboard .stat-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
+  }
+  
+  .nba-analytics-dashboard .stat-number {
+    font-size: 1.75rem;
+  }
+  
+  .nba-analytics-dashboard .quick-links {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .nba-analytics-dashboard .module-card {
+    padding: 1.25rem;
+  }
+  
+  .nba-analytics-dashboard .card-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+  
+  .nba-analytics-dashboard .card-title {
+    font-size: 1.1rem;
+  }
+  
+  .nba-analytics-dashboard .quick-actions {
+    padding: 1.5rem;
+  }
+}
+</style>
+
+<div class="nba-analytics-dashboard">
+  <div class="page-header">
+    <h1><i class="fas fa-chart-line me-2"></i>NBA Analytics Dashboard</h1>
+    <p class="header-subtitle">Comprehensive analytics and performance tracking for NBA accreditation</p>
+  </div>
+
+  <div class="page-container">
+    
+
+    <!-- Analytics Modules Grid -->
+    <div class="modules-grid">
+      <!-- NBA Enrolment Ratio -->
+      <div class="module-card">
+        <div class="card-badge badge-analytics">
+          <i class="fas fa-chart-line me-1"></i>Analytics
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+        </div>
+        <h3 class="card-title">NBA Enrolment Ratio</h3>
+        <p class="card-description">
+          Track and manage NBA enrolment ratios across different programs and time periods with detailed analytics and reporting capabilities.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'add_enrolment_ratio' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-2"></i>Manage Enrolment Ratio
+          </a>
+        </div>
+      </div>
+
+      <!-- Past Success Rates -->
+      <div class="module-card">
+        <div class="card-badge badge-analytics">
+          <i class="fas fa-trophy me-1"></i>Analytics
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-trophy"></i></div>
+        </div>
+        <h3 class="card-title">Past Success Rates</h3>
+        <p class="card-description">
+          Analyze historical success rates to identify trends, patterns, and areas for improvement with comprehensive data visualization.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'add_success_rate_stipulated' %}" class="btn btn-primary">
+            <i class="fas fa-chart-pie me-2"></i>View Success Rates
+          </a>
+        </div>
+      </div>
+
+      <!-- Placement / Higher Studies / Entrepreneurship -->
+      <div class="module-card">
+        <div class="card-badge badge-analytics">
+          <i class="fas fa-briefcase me-1"></i>Analytics
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-briefcase"></i></div>
+        </div>
+        <h3 class="card-title">Placement, Higher Studies & Entrepreneurship</h3>
+        <p class="card-description">
+          Track student outcomes including placements, higher education pursuits, and entrepreneurial ventures with detailed analytics.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'add_placement_hs_entre' %}" class="btn btn-primary">
+            <i class="fas fa-chart-pie me-2"></i>Open Module
+          </a>
+        </div>
+      </div>
+
+      <!-- Academic Performance I-Year -->
+      <div class="module-card">
+        <div class="card-badge badge-performance">
+          <i class="fas fa-signal me-1"></i>Performance
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-signal"></i></div>
+        </div>
+        <h3 class="card-title">Academic Performance I-Year</h3>
+        <p class="card-description">
+          Monitor and analyze first-year academic performance metrics to identify early intervention opportunities and track progress.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'add_academic_performance_first_year' %}" class="btn btn-success">
+            <i class="fas fa-chart-bar me-2"></i>View Performance
+          </a>
+        </div>
+      </div>
+
+      <!-- Academic Performance II-Year -->
+      <div class="module-card">
+        <div class="card-badge badge-performance">
+          <i class="fas fa-signal me-1"></i>Performance
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-signal"></i></div>
+        </div>
+        <h3 class="card-title">Academic Performance II-Year</h3>
+        <p class="card-description">
+          Track second-year academic achievements and identify patterns to enhance student success and program effectiveness.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'add_academic_performance_second_year' %}" class="btn btn-success">
+            <i class="fas fa-chart-bar me-2"></i>View Performance
+          </a>
+        </div>
+      </div>
+
+      <!-- Academic Performance III-Year -->
+      <div class="module-card">
+        <div class="card-badge badge-performance">
+          <i class="fas fa-signal me-1"></i>Performance
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-signal"></i></div>
+        </div>
+        <h3 class="card-title">Academic Performance III-Year</h3>
+        <p class="card-description">
+          Analyze third-year academic outcomes and prepare students for final year success with comprehensive performance tracking.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'add_academic_performance_third_year' %}" class="btn btn-success">
+            <i class="fas fa-chart-bar me-2"></i>View Performance
+          </a>
+        </div>
+      </div>
+
+      <!-- Societies / Chapters / Clubs -->
+      <div class="module-card">
+        <div class="card-badge badge-student">
+          <i class="fas fa-sitemap me-1"></i>Student Activities
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-sitemap"></i></div>
+        </div>
+        <h3 class="card-title">Societies / Chapters / Clubs</h3>
+        <p class="card-description">
+          List all active bodies with coordinators, inception year, and membership metrics for comprehensive student engagement tracking.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'add_societies' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-2"></i>Manage Societies
+          </a>
+        </div>
+      </div>
+
+      <!-- Student Events -->
+      <div class="module-card">
+        <div class="card-badge badge-student">
+          <i class="fas fa-flag-checkered me-1"></i>Student Activities
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-flag-checkered"></i></div>
+        </div>
+        <h3 class="card-title">Student Events</h3>
+        <p class="card-description">
+          Capture student participation with level, role, awards, date, and venue for comprehensive event management and tracking.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'add_student_events' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-2"></i>Record Events
+          </a>
+        </div>
+      </div>
+
+      <!-- Department Publications -->
+      <div class="module-card">
+        <div class="card-badge badge-publication">
+          <i class="fas fa-newspaper me-1"></i>Publications
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-newspaper"></i></div>
+        </div>
+        <h3 class="card-title">Department Publications</h3>
+        <p class="card-description">
+          Maintain department journals, magazines, and newsletters with periodicity and links for academic publication tracking.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'add_deptpubs' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-2"></i>Manage Publications
+          </a>
+        </div>
+      </div>
+
+      <!-- Student Publications -->
+      <div class="module-card">
+        <div class="card-badge badge-publication">
+          <i class="fas fa-user-graduate me-1"></i>Publications
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-user-graduate"></i></div>
+        </div>
+        <h3 class="card-title">Student Publications</h3>
+        <p class="card-description">
+          Record student publications with authors, venue type, year, DOI/link, and indexing for academic achievement tracking.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'add_studpubs' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-2"></i>Manage Publications
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Add animation to cards
+  const cards = document.querySelectorAll('.module-card');
+  cards.forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.1}s`;
+    card.classList.add('fade-in-up');
+  });
+
+  // Add animation to stat cards
+  const statCards = document.querySelectorAll('.stat-card');
+  statCards.forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.05}s`;
+    card.classList.add('fade-in-up');
+  });
+});
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .fade-in-up {
+    animation: fadeInUp 0.6s ease forwards;
+  }
+  
+  .module-card, .stat-card {
+    opacity: 0;
+  }
+`;
+document.head.appendChild(style);
+</script>
+
+{% endblock %}

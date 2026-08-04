@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .approval-page {
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+        min-height: 85vh;
+        padding: 1.5rem;
+    }
+    .approval-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    .page-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1e3a8a;
+        margin-bottom: 1.5rem;
+    }
+    .card-box {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e3a8a;
+        margin-bottom: 1rem;
+    }
+    .request-card {
+        border: 1px solid #e5e7eb;
+        border-left: 5px solid #1d4ed8;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: #f9fafb;
+    }
+    .label-text {
+        font-size: 0.8rem;
+        color: #6b7280;
+        font-weight: 600;
+        margin-bottom: 0.15rem;
+    }
+    .value-text {
+        font-size: 0.95rem;
+        color: #111827;
+        font-weight: 500;
+        margin-bottom: 0.75rem;
+        word-break: break-word;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+    .pending-badge {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    .progress-badge {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    .rejected-badge {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    .done-badge {
+        background: #dcfce7;
+        color: #166534;
+    }
+    .btn-process {
+        background: #2563eb;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.6rem 1rem;
+        font-weight: 600;
+    }
+    .btn-reject {
+        background: #dc2626;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.6rem 1rem;
+        font-weight: 600;
+    }
+    .remarks-box {
+        min-height: 90px;
+        border-radius: 10px;
+    }
+    .history-table thead th {
+        background: #1e3a8a;
+        color: white;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    .empty-box {
+        padding: 1rem;
+        border: 1px dashed #cbd5e1;
+        border-radius: 12px;
+        background: #f8fafc;
+        color: #475569;
+    }
+</style>
+
+<div class="approval-page">
+    <div class="approval-container">
+        <h2 class="page-title">
+            <i class="fas fa-tasks me-2"></i>Queries Approval
+        </h2>
+
+        <div class="card-box">
+            <div class="section-title">Logged In Approver</div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="label-text">Name</div>
+                    <div class="value-text">{{ logged_in_faculty.name|default:"-" }}</div>
+                </div>
+                <div class="col-md-4">
+                    <div class="label-text">Role</div>
+                    <div class="value-text">{{ logged_in_role|default:"-" }}</div>
+                </div>
+                <div class="col-md-4">
+                    <div class="label-text">Department</div>
+                    <div class="value-text">{{ logged_in_faculty.department|default:"-" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-box">
+            <div class="section-title">Pending Queries</div>
+
+            {% if pending_queries %}
+                {% for query in pending_queries %}
+                    <div class="request-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="mb-0">Query #{{ query.query_id }}</h5>
+                            <span class="status-badge pending-badge">Pending</span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="label-text">Applicant Type</div>
+                                <div class="value-text">{{ query.user_type|title }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="label-text">Applicant Name</div>
+                                <div class="value-text">
+                                    {% if query.student %}{{ query.student.name }}{% elif query.faculty %}{{ query.faculty.name }}{% else %}-{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="label-text">Query Type</div>
+                                <div class="value-text">{{ query.get_query_type_display }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="label-text">Priority</div>
+                                <div class="value-text">{{ query.get_priority_display }}</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="label-text">Subject</div>
+                                <div class="value-text">{{ query.subject }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="label-text">Connection Type</div>
+                                <div class="value-text">{{ query.get_connection_type_display }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="label-text">Location</div>
+                                <div class="value-text">{{ query.location_details|default:"Not specified" }}</div>
+                            </div>
+                        </div>
+
+                        <div class="label-text">Description</div>
+                        <div class="value-text">{{ query.description }}</div>
+
+                        <form method="post" class="mt-3">
+                            {% csrf_token %}
+                            <input type="hidden" name="query_id" value="{{ query.id }}">
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Approver Remarks</label>
+                                <textarea name="remarks" class="form-control remarks-box" placeholder="Remarks for moving this query to processing or for rejecting it..."></textarea>
+                            </div>
+
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="submit" name="action" value="process" class="btn btn-process">
+                                    <i class="fas fa-play me-1"></i> Move to Processing
+                                </button>
+                                <button type="submit" name="action" value="reject" class="btn btn-reject">
+                                    <i class="fas fa-times me-1"></i> Reject
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-box">No pending queries available for approval.</div>
+            {% endif %}
+        </div>
+
+        <div class="card-box">
+            <div class="section-title">Recently Processed By Me</div>
+
+            {% if processed_queries %}
+                <div class="table-responsive">
+                    <table class="table table-bordered history-table">
+                        <thead>
+                            <tr>
+                                <th>Query ID</th>
+                                <th>Applicant</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                                <th>Remarks</th>
+                                <th>Processed On</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for query in processed_queries %}
+                                <tr>
+                                    <td>{{ query.query_id }}</td>
+                                    <td>
+                                        {% if query.student %}{{ query.student.name }}{% elif query.faculty %}{{ query.faculty.name }}{% else %}-{% endif %}
+                                    </td>
+                                    <td>{{ query.subject }}</td>
+                                    <td>
+                                        {% if query.status == "in_progress" %}
+                                            <span class="status-badge progress-badge">In Progress</span>
+                                        {% elif query.status == "rejected" %}
+                                            <span class="status-badge rejected-badge">Rejected</span>
+                                        {% else %}
+                                            <span class="status-badge done-badge">{{ query.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ query.approver_remarks|default:"-" }}</td>
+                                    <td>{{ query.updated_at|date:"d-m-Y h:i A" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-box">No recent actions found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

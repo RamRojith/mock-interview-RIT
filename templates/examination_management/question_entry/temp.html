@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <form id="filter-form" method="POST">
+    {% csrf_token %}
+    <div class="row g-3">
+
+      <!-- Regulation -->
+      <div class="col-md-3">
+        <label for="regulation" class="form-label">Regulation</label>
+        <select id="regulation" name="regulation" class="form-select" required>
+          <option value="" selected hidden>-- Select Regulation --</option>
+          {% for reg in regulations %}
+            <option value="{{ reg.id }}" {% if selected.regulation_id == reg.id|stringformat:"s" %}selected{% endif %}>{{ reg.year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Year -->
+      <div class="col-md-3">
+        <label for="year" class="form-label">Year</label>
+        <select id="year" name="year" class="form-select" required {% if not selected.regulation_id %}disabled{% endif %}>
+          <option value="" selected hidden>-- Select Year --</option>
+          <option value="I" {% if selected.year == "I" %}selected{% endif %}>I Year</option>
+          <option value="II" {% if selected.year == "II" %}selected{% endif %}>II Year</option>
+          <option value="III" {% if selected.year == "III" %}selected{% endif %}>III Year</option>
+          <option value="IV" {% if selected.year == "IV" %}selected{% endif %}>IV Year</option>
+        </select>
+      </div>
+
+      <!-- Semester -->
+      <div class="col-md-3">
+        <label for="semester" class="form-label">Semester</label>
+        <select id="semester" name="semester" class="form-select" required {% if not selected.year %}disabled{% endif %}>
+          <option value="" selected hidden>-- Select Semester --</option>
+          {% if selected.semester %}
+            <option value="{{ selected.semester }}" selected>Semester {{ selected.semester }}</option>
+          {% endif %}
+        </select>
+      </div>
+
+      <!-- Academic Year -->
+      <div class="col-md-3">
+        <label for="academic_year" class="form-label">Academic Year</label>
+        <input type="text" id="academic_year" name="academic_year" class="form-control" placeholder="YYYY-YYYY" value="{{ selected.academic_year|default_if_none:'' }}" {% if not selected.semester %}disabled{% endif %} required>
+      </div>
+
+      <!-- Pattern -->
+      <div class="col-md-3">
+        <label for="pattern" class="form-label">Pattern</label>
+        <select id="pattern" name="pattern" class="form-select" required {% if not selected.academic_year %}disabled{% endif %}>
+          <option value="" selected hidden>-- Select Pattern --</option>
+          <option value="1" {% if selected.pattern == "1" %}selected{% endif %}>Pattern 1</option>
+          <option value="2" {% if selected.pattern == "2" %}selected{% endif %}>Pattern 2</option>
+          <option value="3" {% if selected.pattern == "3" %}selected{% endif %}>Pattern 3</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Container for Pattern Sections -->
+    <div id="part-sections" class="mt-4">
+      {% if selected.pattern == "1" %}
+        <div class="card p-3 mb-3"><h5>Part A</h5><p>2 Marks – 10 Questions (Default)</p></div>
+        <div class="card p-3 mb-3"><h5>Part B</h5><p>16 Marks – 5 Questions</p><div id="part-b-questions" class="mt-2"></div></div>
+      {% elif selected.pattern == "2" %}
+        <div class="card p-3 mb-3"><h5>Part A</h5><p>2 Marks – 10 Questions (Default)</p></div>
+        <div class="card p-3 mb-3"><h5>Part B</h5><p>13 Marks – 5 Questions</p><div id="part-b-questions" class="mt-2"></div></div>
+        <div class="card p-3 mb-3"><h5>Part C</h5><p>15 Marks – 1 Question</p><div id="part-c-questions" class="mt-2"></div></div>
+      {% elif selected.pattern == "3" %}
+        <div class="card p-3 mb-3"><h5>Part A</h5><p>2 Marks – 5 Questions (Default)</p></div>
+        <div class="card p-3 mb-3"><h5>Part B</h5><p>16 Marks – 2 Questions, 8 Marks – 1 Question</p><div id="part-b-questions" class="mt-2"></div></div>
+      {% endif %}
+    </div>
+
+    <!-- Filter and Save Buttons -->
+    <div class="mt-4 text-end">
+      <button type="submit" name="action" value="filter" class="btn btn-secondary">Filter</button>
+      <button type="submit" name="action" value="save" class="btn btn-primary">Save</button>
+    </div>
+    
+  </form>
+</div>
+
+<script>
+  const semestersMap = { "I":["1","2"], "II":["3","4"], "III":["5","6"], "IV":["7","8"] };
+  const regulationSelect = document.getElementById("regulation");
+  const yearSelect = document.getElementById("year");
+  const semesterSelect = document.getElementById("semester");
+  const academicInput = document.getElementById("academic_year");
+  const patternSelect = document.getElementById("pattern");
+  const partSections = document.getElementById("part-sections");
+
+  // Enable Year after Regulation
+  regulationSelect.addEventListener("change", () => {
+    yearSelect.disabled = !regulationSelect.value;
+    semesterSelect.disabled = true;
+    academicInput.disabled = true;
+    patternSelect.disabled = true;
+    semesterSelect.innerHTML = '<option value="" selected hidden>-- Select Semester --</option>';
+    academicInput.value = "";
+    partSections.innerHTML = "";
+  });
+
+  // Enable Semester after Year
+  yearSelect.addEventListener("change", () => {
+    semesterSelect.innerHTML = '<option value="" selected hidden>-- Select Semester --</option>';
+    if (semestersMap[yearSelect.value]) {
+      semestersMap[yearSelect.value].forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s;
+        opt.textContent = "Semester " + s;
+        semesterSelect.appendChild(opt);
+      });
+    }
+    semesterSelect.disabled = !yearSelect.value;
+    academicInput.disabled = true;
+    patternSelect.disabled = true;
+    academicInput.value = "";
+    partSections.innerHTML = "";
+  });
+
+  // Enable Academic Year after Semester
+  semesterSelect.addEventListener("change", () => {
+    academicInput.disabled = !semesterSelect.value;
+    academicInput.value = "";
+    patternSelect.disabled = true;
+    partSections.innerHTML = "";
+  });
+
+  // Auto-fill second year
+  academicInput.addEventListener("input", () => {
+    let val = academicInput.value.replace(/[^\d]/g,'');
+    if (val.length === 4) {
+      academicInput.value = val + "-" + (parseInt(val)+1);
+      patternSelect.disabled = false;
+    } else if (/^\d{4}-\d{4}$/.test(academicInput.value)) {
+      patternSelect.disabled = false;
+    } else {
+      patternSelect.disabled = true;
+    }
+    partSections.innerHTML = "";
+  });
+
+  // Form submission triggers pattern generation
+  document.getElementById("filter-form").addEventListener("submit", function(e) {
+    const action = e.submitter ? e.submitter.value : null; // get which button was clicked
+    if (action === "filter") {
+      const pattern = patternSelect.value;
+      if (pattern === "1") generatePattern1();
+      else if (pattern === "2") generatePattern2();
+      else if (pattern === "3") generatePattern3();
+      // Allow form submission to proceed to the server
+    }
+    // action === "save" -> allow normal POST submission
+  });
+
+  // Regenerate pattern sections on page load if pattern is selected
+  window.addEventListener("load", () => {
+    const pattern = "{{ selected.pattern|default_if_none:'' }}";
+    if (pattern === "1") generatePattern1();
+    else if (pattern === "2") generatePattern2();
+    else if (pattern === "3") generatePattern3();
+  });
+
+  // ===== Pattern Generators =====
+  function generatePattern1() {
+    partSections.innerHTML = `
+      <div class="card p-3 mb-3"><h5>Part A</h5><p>2 Marks – 10 Questions (Default)</p></div>
+      <div class="card p-3 mb-3"><h5>Part B</h5><p>16 Marks – 5 Questions</p><div id="part-b-questions" class="mt-2"></div></div>
+    `;
+    generateQuestions('b', 5, 16);
+  }
+
+  function generatePattern2() {
+    partSections.innerHTML = `
+      <div class="card p-3 mb-3"><h5>Part A</h5><p>2 Marks – 10 Questions (Default)</p></div>
+      <div class="card p-3 mb-3"><h5>Part B</h5><p>13 Marks – 5 Questions</p><div id="part-b-questions" class="mt-2"></div></div>
+      <div class="card p-3 mb-3"><h5>Part C</h5><p>15 Marks – 1 Question</p><div id="part-c-questions" class="mt-2"></div></div>
+    `;
+    generateQuestions('b', 5, 13);
+    generateQuestionsWithBothOptions('c', 1, 15);
+  }
+
+  function generatePattern3() {
+    partSections.innerHTML = `
+      <div class="card p-3 mb-3"><h5>Part A</h5><p>2 Marks – 5 Questions (Default)</p></div>
+      <div class="card p-3 mb-3"><h5>Part B</h5><p>16 Marks – 2 Questions, 8 Marks – 1 Question</p><div id="part-b-questions" class="mt-2"></div></div>
+    `;
+    generatePattern3Questions();
+  }
+
+  // ===== Question Generators =====
+  function generateQuestions(part, totalQuestions, totalMarks) {
+    const container = document.getElementById(`part-${part}-questions`);
+    container.innerHTML = "";
+    let start = part === 'b' ? 11 : 1;
+    for (let i = 0; i < totalQuestions; i++) {
+      const qNum = start + i;
+      const div = document.createElement("div");
+      div.className = "mb-3 card p-3";
+      div.innerHTML = `
+        <h6>Q${qNum} (Total Marks: ${totalMarks})</h6>
+        <div class="sub-questions mb-2">
+          ${generateOptionHTMLInteger("a", totalMarks, qNum)}
+          ${totalQuestions > 1 ? generateOptionHTMLInteger("b", totalMarks, qNum) : ""}
+        </div>
+      `;
+      container.appendChild(div);
+    }
+  }
+
+  function generatePattern3Questions() {
+    const container = document.getElementById("part-b-questions");
+    container.innerHTML = "";
+    const groups = [{ marks: 16, count: 2 }, { marks: 8, count: 1 }];
+    let qNum = 11;
+    groups.forEach(g => {
+      for (let i = 0; i < g.count; i++) {
+        const div = document.createElement("div");
+        div.className = "mb-3 card p-3";
+        div.innerHTML = `
+          <h6>Q${qNum} (Total Marks: ${g.marks})</h6>
+          <div class="sub-questions mb-2">
+            ${generateOptionHTMLInteger("a", g.marks, qNum)}
+            ${generateOptionHTMLInteger("b", g.marks, qNum)}
+          </div>
+        `;
+        container.appendChild(div);
+        qNum++;
+      }
+    });
+  }
+
+const prefilledQuestions = {{ prefilled_questions|default:"{}"|safe }};
+
+function generateOptionHTMLInteger(opt, totalMarks, qNum){
+  const key_i = `q${qNum}_${opt}_i`;
+  const key_ii = `q${qNum}_${opt}_ii`;
+  const val_i = prefilledQuestions[key_i] || "";
+  const val_ii = prefilledQuestions[key_ii] || "";
+
+  return `
+    <div class="option-group mb-2">
+      <strong>${opt}) i, ${opt}) ii</strong>
+      <div class="mb-1">
+        <label>Marks for ${opt}) i</label>
+        <input type="number" name="q${qNum}_${opt}_i" min="0" max="${totalMarks}" oninput="adjustMarksInteger(this, ${totalMarks})" value="${val_i}">
+      </div>
+      <div class="mb-1">
+        <label>Marks for ${opt}) ii</label>
+        <input type="number" name="q${qNum}_${opt}_ii" min="0" max="${totalMarks}" oninput="adjustMarksInteger(this, ${totalMarks})" value="${val_ii}">
+      </div>
+    </div>
+  `;
+}
+
+
+  function adjustMarksInteger(inputElem, totalMarks) {
+    const grp = inputElem.closest(".option-group");
+    const inputs = Array.from(grp.querySelectorAll("input"));
+    const other = inputs.find(i => i !== inputElem);
+    let val = Math.round(Number(inputElem.value) || 0);
+    val = Math.max(0, Math.min(val, totalMarks));
+    inputElem.value = val;
+    other.value = totalMarks - val;
+  }
+
+  function generateQuestionsWithBothOptions(part, totalQuestions, totalMarks) {
+    const container = document.getElementById(`part-${part}-questions`);
+    container.innerHTML = "";
+    let start = part === 'b' ? 11 : 1;
+    for (let i = 0; i < totalQuestions; i++) {
+      const qNum = start + i;
+      const div = document.createElement("div");
+      div.className = "mb-3 card p-3";
+      div.innerHTML = `
+        <h6>Q${qNum} (Total Marks: ${totalMarks})</h6>
+        <div class="sub-questions mb-2">
+          ${generateOptionHTMLInteger("a", totalMarks, qNum)}
+          ${generateOptionHTMLInteger("b", totalMarks, qNum)}
+        </div>
+      `;
+      container.appendChild(div);
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+  .filter-wrap{max-width:1200px;margin:0 auto}
+  .cardx{background:#fff;border:1px solid #e9ecef;border-radius:18px;box-shadow:0 10px 24px rgba(0,0,0,.06);overflow:hidden}
+  .cardx-h{padding:18px 20px;border-bottom:1px solid #eef1f4;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .title{margin:0;font-weight:800;font-size:20px;display:flex;align-items:center;gap:10px}
+  .sub{margin:0;color:#6c757d;font-size:13px}
+  label{font-weight:700;color:#0f172a;margin-bottom:6px}
+  .hint{font-size:12px;color:#6b7280;margin-top:6px}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e5e7eb;padding:8px 10px;border-radius:999px;font-size:12px;color:#334155}
+  .btnx{border-radius:12px}
+  .multi{min-height:140px} /* can keep, no harm */
+  .req::after{content:" *";color:#dc3545}
+  .divider{height:1px;background:#eef1f4;margin:16px 0}
+  .loader{display:none;font-size:12px;color:#64748b;margin-top:8px}
+  .loader i{margin-right:6px}
+</style>
+
+<div class="container-fluid py-4">
+  <div class="filter-wrap">
+    <div class="cardx">
+      <div class="cardx-h">
+        <div>
+          <h4 class="title">
+            <i class="fa-solid fa-file-lines"></i>
+            Consolidated Mark Statement - Download
+          </h4>
+          <p class="sub">Select Degree → Department → Batch → Section (optional) → Semester → Course</p>
+        </div>
+        <span class="chip">
+          <i class="fa-solid fa-circle-info"></i>
+          Loaded from <b>ConsolidatedAssessmentResult</b>
+        </span>
+      </div>
+
+      <div class="p-4">
+        <!-- ✅ OPEN PDF IN NEW TAB -->
+        <form method="get"
+              action="{% url 'download_consolidated_pdf' %}"
+              target="_blank"
+              rel="noopener">
+          <div class="row g-3">
+
+            <!-- Degree -->
+            <div class="col-md-6 col-lg-3">
+              <label for="degree" class="req">Degree</label>
+              <select class="form-select" id="degree" name="degree" required>
+                <option value="" selected disabled>Select Degree</option>
+                {% for d in degrees %}
+                  <option value="{{ d.id }}">
+                    {{ d.degree_code|default_if_none:"" }}{% if d.degree_code %} - {% endif %}{{ d.degree|default_if_none:"" }}
+                  </option>
+                {% empty %}
+                  <option value="">No degrees found</option>
+                {% endfor %}
+              </select>
+              <div class="hint">Step 1</div>
+            </div>
+
+            <!-- Department -->
+            <div class="col-md-6 col-lg-3">
+              <label for="department" class="req">Department</label>
+              <select class="form-select" id="department" name="department" required disabled>
+                <option value="" selected>Select Degree first</option>
+              </select>
+              <div class="loader" id="depLoader"><i class="fa-solid fa-spinner fa-spin"></i>Loading departments...</div>
+              <div class="hint">Step 2</div>
+            </div>
+
+            <!-- Batch -->
+            <div class="col-md-6 col-lg-3">
+              <label for="batch" class="req">Batch</label>
+              <select class="form-select" id="batch" name="batch" required disabled>
+                <option value="" selected>Select Department first</option>
+              </select>
+              <div class="loader" id="batchLoader"><i class="fa-solid fa-spinner fa-spin"></i>Loading batches...</div>
+              <div class="hint">Step 3</div>
+            </div>
+
+            <!-- Section (Optional) -->
+            <div class="col-md-6 col-lg-3">
+              <label for="section">Section (Optional)</label>
+              <select class="form-select" id="section" name="section" disabled>
+                <option value="" selected>Select Batch first</option>
+              </select>
+              <div class="loader" id="secLoader"><i class="fa-solid fa-spinner fa-spin"></i>Loading sections...</div>
+              <div class="hint">Step 4 (optional)</div>
+            </div>
+
+            <!-- Semester (Dynamic) -->
+            <div class="col-md-6 col-lg-3">
+              <label for="semester" class="req">Semester</label>
+              <select class="form-select" id="semester" name="semester" required disabled>
+                <option value="" selected>Select Section/Batch first</option>
+              </select>
+              <div class="loader" id="semLoader"><i class="fa-solid fa-spinner fa-spin"></i>Loading semesters...</div>
+              <div class="hint">Step 5</div>
+            </div>
+
+            <div class="col-12"><div class="divider"></div></div>
+
+            <!-- ✅ Course (Single select) -->
+            <div class="col-12">
+              <label for="courses" class="req">Course</label>
+
+              <!-- ✅ CHANGED: removed multiple -->
+              <select class="form-select" id="courses" name="courses" required disabled>
+                <option value="">Select Semester first</option>
+              </select>
+
+              <div class="loader" id="courseLoader"><i class="fa-solid fa-spinner fa-spin"></i>Loading courses...</div>
+              <div class="hint text-muted">Note: courses should come as unique (no duplicates) from API</div>
+            </div>
+
+          </div>
+
+          <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-danger btnx" type="submit">
+              <i class="fa-solid fa-file-pdf me-1"></i> Open PDF
+            </button>
+
+            <a class="btn btn-outline-secondary btnx" href="">
+              <i class="fa-solid fa-rotate-left me-1"></i> Reset
+            </a>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const degreeEl = document.getElementById("degree");
+  const depEl    = document.getElementById("department");
+  const batchEl  = document.getElementById("batch");
+  const secEl    = document.getElementById("section");
+  const semEl    = document.getElementById("semester");
+  const courseEl = document.getElementById("courses");
+
+  const depLoader    = document.getElementById("depLoader");
+  const batchLoader  = document.getElementById("batchLoader");
+  const secLoader    = document.getElementById("secLoader");
+  const semLoader    = document.getElementById("semLoader");
+  const courseLoader = document.getElementById("courseLoader");
+
+  const params = new URLSearchParams(window.location.search);
+
+  function show(el){ if(el) el.style.display="block"; }
+  function hide(el){ if(el) el.style.display="none"; }
+
+  function setDisabled(el, disabled, placeholder) {
+    el.disabled = disabled;
+    el.innerHTML = "";
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = placeholder || "Select";
+    opt.selected = true;
+    el.appendChild(opt);
+  }
+
+  function fillOptions(el, items, getValue, getLabel, placeholder, disableEmpty=false) {
+    el.innerHTML = "";
+    const first = document.createElement("option");
+    first.value = "";
+    first.textContent = placeholder || "Select";
+    first.selected = true;
+    if (disableEmpty) first.disabled = true;
+    el.appendChild(first);
+
+    items.forEach(item => {
+      const o = document.createElement("option");
+      o.value = getValue(item);
+      o.textContent = getLabel(item);
+      el.appendChild(o);
+    });
+
+    el.disabled = false;
+  }
+
+  function fillSimpleOptions(el, items, placeholder, disableEmpty=false) {
+    el.innerHTML = "";
+    const first = document.createElement("option");
+    first.value = "";
+    first.textContent = placeholder || "Select";
+    first.selected = true;
+    if (disableEmpty) first.disabled = true;
+    el.appendChild(first);
+
+    items.forEach(v => {
+      const o = document.createElement("option");
+      o.value = v;
+      o.textContent = v;
+      el.appendChild(o);
+    });
+
+    el.disabled = false;
+  }
+
+  async function getJSON(url, paramsObj) {
+    const u = new URL(url, window.location.origin);
+    Object.entries(paramsObj || {}).forEach(([k,v]) => {
+      if (v !== null && v !== undefined && v !== "") u.searchParams.set(k, v);
+    });
+    const res = await fetch(u.toString(), { headers: { "X-Requested-With": "XMLHttpRequest" } });
+    if (!res.ok) throw new Error("Failed: " + res.status);
+    return await res.json();
+  }
+
+  function resetAfterDegree() {
+    setDisabled(depEl, true, "Select Degree first");
+    setDisabled(batchEl, true, "Select Department first");
+    setDisabled(secEl, true, "Select Batch first");
+    setDisabled(semEl, true, "Select Section/Batch first");
+    setDisabled(courseEl, true, "Select Semester first");
+  }
+
+  function resetAfterDepartment() {
+    setDisabled(batchEl, true, "Select Department first");
+    setDisabled(secEl, true, "Select Batch first");
+    setDisabled(semEl, true, "Select Section/Batch first");
+    setDisabled(courseEl, true, "Select Semester first");
+  }
+
+  function resetAfterBatch() {
+    setDisabled(secEl, true, "Select Batch first");
+    setDisabled(semEl, true, "Select Section/Batch first");
+    setDisabled(courseEl, true, "Select Semester first");
+  }
+
+  function resetAfterSection() {
+    setDisabled(semEl, true, "Select Section/Batch first");
+    setDisabled(courseEl, true, "Select Semester first");
+  }
+
+  function resetAfterSemester() {
+    setDisabled(courseEl, true, "Select Semester first");
+  }
+
+  async function loadDepartments(selectedValue=null) {
+    resetAfterDegree();
+    const degree = degreeEl.value;
+    if (!degree) return;
+
+    try {
+      show(depLoader);
+      const data = await getJSON("{% url 'api_consolidate_departments' %}", { degree });
+      hide(depLoader);
+
+      fillOptions(
+        depEl,
+        data.departments || [],
+        x => x.id,
+        x => `${x.Department_code || ""}${x.Department_code ? " - " : ""}${x.Department || ""}`,
+        "Select Department",
+        true
+      );
+
+      if (selectedValue) depEl.value = selectedValue;
+    } catch (e) {
+      console.error(e);
+      hide(depLoader);
+      setDisabled(depEl, true, "Error loading departments");
+    }
+  }
+
+  async function loadBatches(selectedValue=null) {
+    resetAfterDepartment();
+    const degree = degreeEl.value;
+    const department = depEl.value;
+    if (!degree || !department) return;
+
+    try {
+      show(batchLoader);
+      const data = await getJSON("{% url 'api_consolidate_batches' %}", { degree, department });
+      hide(batchLoader);
+
+      fillSimpleOptions(batchEl, data.batches || [], "Select Batch", true);
+      if (selectedValue) batchEl.value = selectedValue;
+    } catch (e) {
+      console.error(e);
+      hide(batchLoader);
+      setDisabled(batchEl, true, "Error loading batches");
+    }
+  }
+
+  async function loadSections(selectedValue=null) {
+    resetAfterBatch();
+    const degree = degreeEl.value;
+    const department = depEl.value;
+    const batch = batchEl.value;
+    if (!degree || !department || !batch) return;
+
+    try {
+      show(secLoader);
+      const data = await getJSON("{% url 'api_consolidate_sections' %}", { degree, department, batch });
+      hide(secLoader);
+
+      // Section optional
+      fillSimpleOptions(secEl, data.sections || [], "All Sections", false);
+
+      if (selectedValue !== null) secEl.value = selectedValue;
+      secEl.disabled = false;
+
+      await loadSemesters(null);
+    } catch (e) {
+      console.error(e);
+      hide(secLoader);
+      setDisabled(secEl, true, "Error loading sections");
+    }
+  }
+
+  async function loadSemesters(selectedValue=null) {
+    resetAfterSection();
+    const degree = degreeEl.value;
+    const department = depEl.value;
+    const batch = batchEl.value;
+    const section = secEl.value;
+
+    if (!degree || !department || !batch) return;
+
+    try {
+      show(semLoader);
+      const data = await getJSON("{% url 'api_consolidate_semesters' %}", { degree, department, batch, section });
+      hide(semLoader);
+
+      const semesters = (data.semesters || []).map(String);
+      fillSimpleOptions(semEl, semesters, "Select Semester", true);
+      if (selectedValue) semEl.value = selectedValue;
+    } catch (e) {
+      console.error(e);
+      hide(semLoader);
+      setDisabled(semEl, true, "Error loading semesters");
+    }
+  }
+
+  async function loadCourses(selectedCourse=null) {
+    resetAfterSemester();
+    const degree = degreeEl.value;
+    const department = depEl.value;
+    const batch = batchEl.value;
+    const section = secEl.value;
+    const semester = semEl.value;
+
+    if (!degree || !department || !batch || !semester) return;
+
+    try {
+      show(courseLoader);
+      const data = await getJSON("{% url 'api_consolidate_courses' %}", { degree, department, batch, section, semester });
+      hide(courseLoader);
+
+      courseEl.innerHTML = "";
+      // add placeholder
+      const ph = document.createElement("option");
+      ph.value = "";
+      ph.textContent = "Select Course";
+      ph.selected = true;
+      ph.disabled = true;
+      courseEl.appendChild(ph);
+
+      (data.courses || []).forEach(c => {
+        const o = document.createElement("option");
+        o.value = String(c.course__course_id); // ✅ master course id
+
+        o.textContent = `${c.course__course__course_code} - ${c.course__course__title}`;
+        courseEl.appendChild(o);
+      });
+
+      courseEl.disabled = false;
+
+      if (selectedCourse) {
+        courseEl.value = selectedCourse;
+      }
+    } catch (e) {
+      console.error(e);
+      hide(courseLoader);
+      courseEl.disabled = true;
+      courseEl.innerHTML = `<option value="">Error loading courses</option>`;
+    }
+  }
+
+  // EVENTS
+  degreeEl.addEventListener("change", async () => { await loadDepartments(); });
+  depEl.addEventListener("change", async () => { await loadBatches(); });
+  batchEl.addEventListener("change", async () => { await loadSections(""); });
+  secEl.addEventListener("change", async () => { await loadSemesters(null); });
+  semEl.addEventListener("change", async () => { await loadCourses(); });
+
+  // RESTORE (single course from querystring)
+  async function restoreFromQuery() {
+    const d = params.get("degree");
+    const dep = params.get("department");
+    const batch = params.get("batch");
+    const section = params.get("section");
+    const semester = params.get("semester");
+    const course = params.get("courses"); // ✅ single (same name="courses")
+
+    if (d) degreeEl.value = d;
+    if (d) await loadDepartments(dep || null);
+    if (d && dep) await loadBatches(batch || null);
+
+    if (d && dep && batch) {
+      await loadSections(section !== null ? section : "");
+    }
+
+    if (d && dep && batch) {
+      if (semester) {
+        await loadSemesters(semester);
+      }
+    }
+
+    if (d && dep && batch && semester) {
+      await loadCourses(course || null);
+    }
+  }
+
+  resetAfterDegree();
+  restoreFromQuery();
+})();
+</script>
+
+{% endblock %}

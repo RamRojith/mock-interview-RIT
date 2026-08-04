@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Seminar Hall Booking - Ramco Institute of Technology{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="page-header mb-4">
+        <h2><i class="fas fa-door-open me-2"></i>Seminar Hall Booking</h2>
+        <p class="text-white">Manage seminar hall bookings, approvals, and view all applications</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Card 1: Book Seminar Hall -->
+        <div class="col-md-4">
+            <a href="{% url 'seminar_hall_booking' %}" class="card-link">
+                <div class="shb-card">
+                    <div class="card-icon bg-primary">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Book Seminar Hall</h3>
+                        <p>Submit a new booking request for seminar halls, conferences, and events</p>
+                        <div class="card-stats">
+                            <span class="badge bg-primary">
+                                <i class="fas fa-clipboard-list me-1"></i>
+                                {{ faculty_bookings_count }} My Bookings
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Card 2: My Approvals -->
+        <div class="col-md-4">
+            <a href="{% url 'shb_my_approvals' %}" class="card-link">
+                <div class="shb-card">
+                    <div class="card-icon bg-warning">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>My Approvals</h3>
+                        <p>Review and approve seminar hall booking requests assigned to you</p>
+                        <div class="card-stats">
+                            {% if pending_approvals_count > 0 %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ pending_approvals_count }} Pending
+                            </span>
+                            {% else %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>
+                                No Pending Approvals
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Card 3: Booked Seminar Applications -->
+        <div class="col-md-4">
+            <a href="{% url 'shb_all_applications' %}" class="card-link">
+                <div class="shb-card">
+                    <div class="card-icon bg-info">
+                        <i class="fas fa-list-alt"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Booked Seminar Hall Applications</h3>
+                        <p>View all seminar hall booking applications and their current status</p>
+                        <div class="card-stats">
+                            <span class="badge bg-info">
+                                <i class="fas fa-database me-1"></i>
+                                {{ all_applications_count }} Total Applications
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Info Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="info-card">
+                <div class="info-header">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <h4>Quick Guide</h4>
+                </div>
+                <div class="info-content">
+                    <div class="info-item">
+                        <div class="info-icon bg-primary">
+                            <i class="fas fa-1"></i>
+                        </div>
+                        <div class="info-text">
+                            <h5>Book Seminar Hall</h5>
+                            <p>Click on "Book Seminar Hall" to submit a new booking request. Fill in event details, select hall, and specify requirements.</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon bg-warning">
+                            <i class="fas fa-2"></i>
+                        </div>
+                        <div class="info-text">
+                            <h5>My Approvals</h5>
+                            <p>If you're an approver review pending booking requests and approve or reject them with comments.</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon bg-info">
+                            <i class="fas fa-3"></i>
+                        </div>
+                        <div class="info-text">
+                            <h5>Booked Seminar Hall Applications</h5>
+                            <p>View all booking applications across departments, check their status, and see approval workflow progress.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(30, 58, 138, 0.3);
+    }
+    
+    .page-header h2 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+    
+    .page-header p {
+        margin: 0.5rem 0 0 0;
+        opacity: 0.9;
+    }
+
+    .card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        height: 100%;
+    }
+
+    .shb-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        border: 2px solid transparent;
+    }
+
+    .shb-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .shb-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+        border-color: #3b82f6;
+    }
+
+    .shb-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .card-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        font-size: 2rem;
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-icon.bg-primary {
+        background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    }
+
+    .card-icon.bg-warning {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    }
+
+    .card-icon.bg-info {
+        background: linear-gradient(135deg, #0891b2, #06b6d4);
+    }
+
+    .card-content h3 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.75rem;
+    }
+
+    .card-content p {
+        color: #64748b;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-stats {
+        margin-top: auto;
+    }
+
+    .card-stats .badge {
+        font-size: 0.85rem;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+    }
+
+    .card-arrow {
+        position: absolute;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #3b82f6;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+    }
+
+    .shb-card:hover .card-arrow {
+        background: #3b82f6;
+        color: white;
+        transform: translateX(4px);
+    }
+
+    /* Info Card Styles */
+    .info-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .info-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        color: #1e3a8a;
+    }
+
+    .info-header h4 {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 700;
+    }
+
+    .info-content {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+    }
+
+    .info-item {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .info-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .info-text h5 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-text p {
+        font-size: 0.9rem;
+        color: #64748b;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 768px) {
+        .info-content {
+            grid-template-columns: 1fr;
+        }
+
+        .shb-card {
+            padding: 1.5rem;
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+
+        .card-content h3 {
+            font-size: 1.2rem;
+        }
+    }
+</style>
+{% endblock %}

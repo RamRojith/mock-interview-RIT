@@ -1,0 +1,644 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<style>
+.student-document-dashboard {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.student-document-dashboard .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 2.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 20px;
+  color: white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.student-document-dashboard .page-header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.student-document-dashboard .header-subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+
+.student-document-dashboard .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.student-document-dashboard .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.student-document-dashboard .stat-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: all 0.3s ease;
+  border-left: 4px solid;
+  position: relative;
+  overflow: hidden;
+}
+
+.student-document-dashboard .stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: inherit;
+  border-left: none;
+}
+
+.student-document-dashboard .stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.student-document-dashboard .stat-card.total-documents {
+  border-left-color: #1a4b8c;
+}
+
+.student-document-dashboard .stat-card.pending-reviews {
+  border-left-color: #f59e0b;
+}
+
+.student-document-dashboard .stat-card.approved-docs {
+  border-left-color: #10b981;
+}
+
+.student-document-dashboard .stat-card.rejected-docs {
+  border-left-color: #ef4444;
+}
+
+.student-document-dashboard .stat-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.student-document-dashboard .total-documents .stat-icon {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+}
+
+.student-document-dashboard .pending-reviews .stat-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.student-document-dashboard .approved-docs .stat-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.student-document-dashboard .rejected-docs .stat-icon {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.student-document-dashboard .stat-content {
+  flex: 1;
+}
+
+.student-document-dashboard .stat-number {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.student-document-dashboard .total-documents .stat-number { color: #1a4b8c; }
+.student-document-dashboard .pending-reviews .stat-number { color: #f59e0b; }
+.student-document-dashboard .approved-docs .stat-number { color: #10b981; }
+.student-document-dashboard .rejected-docs .stat-number { color: #ef4444; }
+
+.student-document-dashboard .stat-label {
+  font-size: 1rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.student-document-dashboard .documents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.student-document-dashboard .document-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  transition: all 0.3s ease;
+  border: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.student-document-dashboard .document-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+}
+
+.student-document-dashboard .document-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+}
+
+.student-document-dashboard .card-badge {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 2;
+}
+
+.student-document-dashboard .badge-active {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.student-document-dashboard .badge-updated {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+}
+
+.student-document-dashboard .badge-new {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.student-document-dashboard .card-icon-wrapper {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem 0;
+}
+
+.student-document-dashboard .card-icon {
+  width: 100px;
+  height: 100px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  color: #1a4b8c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.student-document-dashboard .document-card:hover .card-icon {
+  transform: scale(1.1);
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+}
+
+.student-document-dashboard .card-title {
+  color: #1a4b8c;
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0 0 1rem 0;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.student-document-dashboard .card-text {
+  color: #64748b;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  text-align: center;
+  flex-grow: 1;
+}
+
+.student-document-dashboard .card-actions {
+  margin-top: auto;
+}
+
+.student-document-dashboard .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.student-document-dashboard .btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.student-document-dashboard .btn:hover::before {
+  left: 100%;
+}
+
+.student-document-dashboard .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+}
+
+.student-document-dashboard .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(26, 75, 140, 0.4);
+}
+
+.student-document-dashboard .quick-actions {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  padding: 2.5rem;
+  margin-top: 2rem;
+  border: 1px solid #f1f5f9;
+}
+
+.student-document-dashboard .quick-actions h3 {
+  color: #1a4b8c;
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.student-document-dashboard .quick-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.student-document-dashboard .quick-link {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 16px;
+  text-decoration: none;
+  color: #374151;
+  transition: all 0.3s ease;
+  border: 2px solid #e2e8f0;
+  position: relative;
+  overflow: hidden;
+}
+
+.student-document-dashboard .quick-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.student-document-dashboard .quick-link:hover {
+  background: #1a4b8c;
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #1a4b8c;
+}
+
+.student-document-dashboard .quick-link:hover::before {
+  transform: scaleX(1);
+}
+
+.student-document-dashboard .quick-link-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: #e0f2fe;
+  color: #1a4b8c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.student-document-dashboard .quick-link:hover .quick-link-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.student-document-dashboard .quick-link-text {
+  font-weight: 700;
+  font-size: 1rem;
+  flex: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .student-document-dashboard .documents-grid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .student-document-dashboard .page-header {
+    padding: 2rem;
+  }
+  
+  .student-document-dashboard .page-header h1 {
+    font-size: 2.25rem;
+  }
+  
+  .student-document-dashboard .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .student-document-dashboard .documents-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+  
+  .student-document-dashboard .quick-links {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .student-document-dashboard {
+    padding: 1rem;
+  }
+  
+  .student-document-dashboard .page-header {
+    padding: 1.5rem;
+  }
+  
+  .student-document-dashboard .page-header h1 {
+    font-size: 2rem;
+  }
+  
+  .student-document-dashboard .header-subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .student-document-dashboard .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-document-dashboard .documents-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-document-dashboard .stat-card {
+    padding: 1.5rem;
+  }
+  
+  .student-document-dashboard .stat-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+  
+  .student-document-dashboard .stat-number {
+    font-size: 2rem;
+  }
+  
+  .student-document-dashboard .quick-links {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-document-dashboard .document-card {
+    padding: 1.5rem;
+  }
+  
+  .student-document-dashboard .card-icon {
+    width: 80px;
+    height: 80px;
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .student-document-dashboard .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .student-document-dashboard .stat-card {
+    padding: 1.25rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .student-document-dashboard .document-card {
+    padding: 1.25rem;
+  }
+  
+  .student-document-dashboard .card-title {
+    font-size: 1.3rem;
+  }
+  
+  .student-document-dashboard .quick-actions {
+    padding: 1.5rem;
+  }
+  
+  .student-document-dashboard .quick-link {
+    padding: 1.25rem;
+  }
+}
+</style>
+
+<div class="student-document-dashboard">
+  <div class="page-header">
+    <h1><i class="fas fa-file-alt me-2"></i>Student Document Verification</h1>
+    <p class="header-subtitle">Manage and verify student academic and extracurricular documents</p>
+  </div>
+
+  <div class="page-container">
+    
+
+    <!-- Documents Grid -->
+    <div class="documents-grid">
+      <!-- Card 1: Student Co & Ex Curricular -->
+      <div class="document-card">
+        
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-users"></i></div>
+        </div>
+        <h3 class="card-title">Student Co & Ex Curricular</h3>
+        <p class="card-text">Manage and approve student co-curricular and extracurricular activities, events, and participation records with comprehensive tracking and verification.</p>
+        <div class="card-actions">
+          <a href="{% url 'mentor_coex_approval' %}" class="btn btn-primary">
+            <i class="fas fa-tasks me-2"></i>Manage Activities
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 2: Student Publications -->
+      <div class="document-card">
+        
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+        </div>
+        <h3 class="card-title">Student Publications</h3>
+        <p class="card-text">Review and approve student research papers, journal publications, conference proceedings, and academic publications with detailed evaluation tools.</p>
+        <div class="card-actions">
+          <a href="{% url 'mentor_publications_approval' %}" class="btn btn-primary">
+            <i class="fas fa-file-alt me-2"></i>Review Publications
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 3: Student Achievements -->
+      <div class="document-card">
+        
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-trophy"></i></div>
+        </div>
+        <h3 class="card-title">Student Achievements</h3>
+        <p class="card-text">Verify and approve student awards, recognitions, certifications, and notable accomplishments with comprehensive validation and documentation.</p>
+        <div class="card-actions">
+          <a href="{% url 'mentor_achievements_approval' %}" class="btn btn-primary">
+            <i class="fas fa-award me-2"></i>Verify Achievements
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 4: Student Membership -->
+      <div class="document-card">
+        
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-user-tie"></i></div>
+        </div>
+        <h3 class="card-title">Student Membership</h3>
+        <p class="card-text">Manage professional memberships, organizational affiliations, and association memberships with verification and approval workflows.</p>
+        <div class="card-actions">
+          <a href="{% url 'mentor_professional_approval' %}" class="btn btn-primary">
+            <i class="fas fa-users me-2"></i>Manage Memberships
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 5: Student Projects -->
+      <div class="document-card">
+        
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-project-diagram"></i></div>
+        </div>
+        <h3 class="card-title">Student Projects</h3>
+        <p class="card-text">Review and approve academic projects, research initiatives, and collaborative works with comprehensive evaluation and feedback systems.</p>
+        <div class="card-actions">
+          <a href="{% url 'mentor_projects_approval' %}" class="btn btn-primary">
+            <i class="fas fa-tasks me-2"></i>Review Projects
+          </a>
+        </div>
+      </div>
+    </div>
+
+    
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Add animation to cards
+  const cards = document.querySelectorAll('.document-card');
+  cards.forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.1}s`;
+    card.classList.add('fade-in-up');
+  });
+
+  // Add animation to stat cards
+  const statCards = document.querySelectorAll('.stat-card');
+  statCards.forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.05}s`;
+    card.classList.add('fade-in-up');
+  });
+
+  // Add animation to quick links
+  const quickLinks = document.querySelectorAll('.quick-link');
+  quickLinks.forEach((link, index) => {
+    link.style.animationDelay = `${index * 0.1}s`;
+    link.classList.add('fade-in-up');
+  });
+});
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .fade-in-up {
+    animation: fadeInUp 0.8s ease forwards;
+  }
+  
+  .document-card, .stat-card, .quick-link {
+    opacity: 0;
+  }
+`;
+document.head.appendChild(style);
+</script>
+
+{% endblock content %}

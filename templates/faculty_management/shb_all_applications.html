@@ -1,0 +1,932 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Booked Seminar Applications - Ramco Institute of Technology{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-calendar-check me-2"></i>Booked Seminar Applications</h2>
+                <p class="text-white opacity-90">View and manage all seminar hall booking applications</p>
+            </div>
+            <a href="{% url 'shb_hub' %}" class="btn-back">
+                <i class="fas fa-arrow-left me-2"></i>Back to Hub
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card stat-total">
+                <div class="stat-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ total_count }}</h3>
+                    <p>Total Applications</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-pending">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ pending_count }}</h3>
+                    <p>Pending Review</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-approved">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ approved_count }}</h3>
+                    <p>Approved</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-rejected">
+                <div class="stat-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ rejected_count }}</h3>
+                    <p>Rejected</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="filter-card mb-4">
+        <div class="filter-header">
+            <i class="fas fa-filter me-2"></i>Filter Applications
+        </div>
+        <form method="GET" action="{% url 'shb_all_applications' %}" class="filter-form" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <label class="filter-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                        <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                        <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="filter-label">Department</label>
+                    <select name="department" class="form-select">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if department_filter == dept.id|stringformat:"s" %}selected{% endif %}>
+                                {{ dept.Department }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="filter-label">Event Type</label>
+                    <select name="event_type" class="form-select">
+                        <option value="">All Types</option>
+                        {% for value, label in event_types %}
+                            <option value="{{ value }}" {% if event_type_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="filter-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Booking ID, Event Name, Faculty..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="fas fa-search me-2"></i>Search
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="exportPDF()" title="Export to PDF">
+                        <i class="fas fa-file-pdf"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Applications Grid -->
+    {% if applications %}
+        <div class="row g-4">
+            {% for app in applications %}
+            <div class="col-md-6 col-lg-4">
+                <div class="application-card">
+                    <div class="card-header-custom">
+                        <div class="booking-id">
+                            <i class="fas fa-hashtag me-1"></i>{{ app.booking_id }}
+                        </div>
+                        <div class="status-badge status-{{ app.status }}">
+                            {% if app.status == 'pending' %}
+                                <i class="fas fa-clock me-1"></i>Pending
+                            {% elif app.status == 'approved' %}
+                                <i class="fas fa-check me-1"></i>Approved
+                            {% elif app.status == 'rejected' %}
+                                <i class="fas fa-times me-1"></i>Rejected
+                            {% else %}
+                                <i class="fas fa-ban me-1"></i>Cancelled
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card-body-custom">
+                        <h5 class="event-title">{{ app.event_name }}</h5>
+                        <div class="event-type">
+                            <i class="fas fa-tag me-1"></i>{{ app.event_type }}
+                        </div>
+                        
+                        <div class="info-row">
+                            <i class="fas fa-user text-primary"></i>
+                            <span>{{ app.faculty_name }}</span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <i class="fas fa-building text-info"></i>
+                            <span>{{ app.department.Department|default:"N/A" }}</span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <i class="fas fa-calendar text-success"></i>
+                            <span>{{ app.booking_date|date:"d M Y" }}</span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <i class="fas fa-clock text-warning"></i>
+                            <span>{{ app.start_time|time:"g:i A" }} - {{ app.end_time|time:"g:i A" }}</span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <i class="fas fa-door-open text-secondary"></i>
+                            <span>{{ app.get_hall_name }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer-custom">
+                        <button class="btn-view" data-bs-toggle="modal" data-bs-target="#detailsModal{{ app.id }}">
+                            <i class="fas fa-eye me-2"></i>View Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Details Modal -->
+            <div class="modal fade" id="detailsModal{{ app.id }}" tabindex="-1">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content modern-modal">
+                        <div class="modal-header-modern">
+                            <div>
+                                <h4 class="modal-title-modern">
+                                    <i class="fas fa-file-alt me-2"></i>Booking Details
+                                </h4>
+                                <p class="modal-subtitle">{{ app.booking_id }}</p>
+                            </div>
+                            <button type="button" class="btn-close-modern" data-bs-dismiss="modal">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="modal-body-modern">
+                            <!-- Status Banner -->
+                            <div class="status-banner status-banner-{{ app.status }}">
+                                <div class="status-banner-content">
+                                    <div class="status-banner-icon">
+                                        {% if app.status == 'pending' %}
+                                            <i class="fas fa-clock"></i>
+                                        {% elif app.status == 'approved' %}
+                                            <i class="fas fa-check-circle"></i>
+                                        {% elif app.status == 'rejected' %}
+                                            <i class="fas fa-times-circle"></i>
+                                        {% else %}
+                                            <i class="fas fa-ban"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h5>Application Status</h5>
+                                        <p>{{ app.status|title }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Faculty Information Section -->
+                            <div class="detail-section">
+                                <div class="section-header">
+                                    <i class="fas fa-user-circle"></i>
+                                    <h5>Faculty Information</h5>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <label>Full Name</label>
+                                            <p>{{ app.faculty_name }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <label>Department</label>
+                                            <p>{{ app.department.Department|default:"N/A" }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <label>Email Address</label>
+                                            <p>{{ app.faculty_email }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <label>Phone Number</label>
+                                            <p>{{ app.faculty_phone }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Event Information Section -->
+                            <div class="detail-section">
+                                <div class="section-header">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <h5>Event Information</h5>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <div class="detail-item">
+                                            <label>Event Name</label>
+                                            <p class="event-name-large">{{ app.event_name }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="detail-item">
+                                            <label>Event Type</label>
+                                            <p><span class="badge-custom">{{ app.event_type }}</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="detail-item">
+                                            <label>Event Description</label>
+                                            <p class="description-text">{{ app.event_description }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Schedule & Venue Section -->
+                            <div class="detail-section">
+                                <div class="section-header">
+                                    <i class="fas fa-clock"></i>
+                                    <h5>Schedule & Venue</h5>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="detail-item">
+                                            <label>Event Date</label>
+                                            <p><i class="fas fa-calendar me-2 text-primary"></i>{{ app.booking_date|date:"l, F d, Y" }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="detail-item">
+                                            <label>Start Time</label>
+                                            <p><i class="fas fa-clock me-2 text-success"></i>{{ app.start_time|time:"g:i A" }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="detail-item">
+                                            <label>End Time</label>
+                                            <p><i class="fas fa-clock me-2 text-danger"></i>{{ app.end_time|time:"g:i A" }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <label>Preferred Hall</label>
+                                            <p><i class="fas fa-door-open me-2 text-info"></i>{{ app.get_hall_name }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <label>Expected Attendees</label>
+                                            <p><i class="fas fa-users me-2 text-warning"></i>{{ app.expected_attendees }} people</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Technical Requirements Section -->
+                            <div class="detail-section">
+                                <div class="section-header">
+                                    <i class="fas fa-tools"></i>
+                                    <h5>Technical Requirements</h5>
+                                </div>
+                                <div class="requirements-grid">
+                                    <div class="requirement-item {% if app.needs_projector %}active{% endif %}">
+                                        <i class="fas fa-video"></i>
+                                        <span>Projector</span>
+                                    </div>
+                                    <div class="requirement-item {% if app.needs_microphone %}active{% endif %}">
+                                        <i class="fas fa-microphone"></i>
+                                        <span>Microphone</span>
+                                    </div>
+                                    <div class="requirement-item {% if app.needs_sound_system %}active{% endif %}">
+                                        <i class="fas fa-volume-up"></i>
+                                        <span>Sound System</span>
+                                    </div>
+                                    <div class="requirement-item {% if app.needs_video_conferencing %}active{% endif %}">
+                                        <i class="fas fa-laptop"></i>
+                                        <span>Video Conferencing</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Guest Speaker Section -->
+                            {% if app.has_guest_speaker %}
+                            <div class="detail-section">
+                                <div class="section-header">
+                                    <i class="fas fa-user-tie"></i>
+                                    <h5>Guest Speaker Information</h5>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <label>Guest Name</label>
+                                            <p>{{ app.guest_name|default:"N/A" }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <label>Designation</label>
+                                            <p>{{ app.guest_designation|default:"N/A" }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <label>Organization</label>
+                                            <p>{{ app.guest_organization|default:"N/A" }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <label>Email</label>
+                                            <p>{{ app.guest_email|default:"N/A" }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <label>Phone</label>
+                                            <p>{{ app.guest_phone|default:"N/A" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Special Requirements Section -->
+                            {% if app.special_requirements %}
+                            <div class="detail-section">
+                                <div class="section-header">
+                                    <i class="fas fa-clipboard-list"></i>
+                                    <h5>Special Requirements</h5>
+                                </div>
+                                <div class="special-requirements-box">
+                                    <p>{{ app.special_requirements }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="modal-footer-modern">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-2"></i>Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h4>No Applications Found</h4>
+            <p>No seminar hall booking applications match your filters.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    /* Page Header */
+    .page-header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(30, 58, 138, 0.3);
+    }
+    
+    .page-header h2 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+    }
+    
+    .btn-back {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .btn-back:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+        transform: translateX(-4px);
+    }
+
+    /* Statistics Cards */
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .stat-total .stat-icon { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .stat-pending .stat-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .stat-approved .stat-icon { background: linear-gradient(135deg, #10b981, #059669); }
+    .stat-rejected .stat-icon { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    
+    .stat-content h3 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+        color: #1e293b;
+    }
+    
+    .stat-content p {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+
+    /* Filter Card */
+    .filter-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .filter-header {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 1rem;
+    }
+    
+    .filter-label {
+        font-weight: 600;
+        color: #475569;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Application Cards */
+    .application-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .application-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+    }
+    
+    .card-header-custom {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        padding: 1rem 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .booking-id {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 0.95rem;
+    }
+    
+    .status-badge {
+        padding: 0.4rem 0.9rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #d1fae5; color: #065f46; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+    .status-cancelled { background: #e5e7eb; color: #374151; }
+    
+    .card-body-custom {
+        padding: 1.25rem;
+        flex: 1;
+    }
+    
+    .event-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+    }
+    
+    .event-type {
+        display: inline-block;
+        background: #dbeafe;
+        color: #1e40af;
+        padding: 0.3rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .info-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 0;
+        color: #475569;
+        font-size: 0.9rem;
+    }
+    
+    .info-row i {
+        width: 20px;
+        font-size: 0.95rem;
+    }
+    
+    .card-footer-custom {
+        padding: 1rem 1.25rem;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .btn-view {
+        width: 100%;
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        border: none;
+        padding: 0.75rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .btn-view:hover {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Modern Modal Styles */
+    .modern-modal {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    
+    .modal-header-modern {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        padding: 2rem;
+        border: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    
+    .modal-title-modern {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .modal-subtitle {
+        margin: 0.5rem 0 0 0;
+        opacity: 0.9;
+        font-size: 0.95rem;
+    }
+    
+    .btn-close-modern {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-close-modern:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+    
+    .modal-body-modern {
+        padding: 2rem;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    
+    /* Status Banner */
+    .status-banner {
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .status-banner-pending { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+    .status-banner-approved { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+    .status-banner-rejected { background: linear-gradient(135deg, #fee2e2, #fecaca); }
+    .status-banner-cancelled { background: linear-gradient(135deg, #e5e7eb, #d1d5db); }
+    
+    .status-banner-content {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    
+    .status-banner-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+    }
+    
+    .status-banner-pending .status-banner-icon { color: #d97706; }
+    .status-banner-approved .status-banner-icon { color: #059669; }
+    .status-banner-rejected .status-banner-icon { color: #dc2626; }
+    .status-banner-cancelled .status-banner-icon { color: #6b7280; }
+    
+    .status-banner h5 {
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    .status-banner p {
+        margin: 0.25rem 0 0 0;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    /* Detail Sections */
+    .detail-section {
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 2px solid #f1f5f9;
+    }
+    
+    .detail-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        color: #1e3a8a;
+    }
+    
+    .section-header i {
+        font-size: 1.3rem;
+    }
+    
+    .section-header h5 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+    
+    .detail-item {
+        margin-bottom: 0;
+    }
+    
+    .detail-item label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .detail-item p {
+        margin: 0;
+        font-size: 1rem;
+        color: #1e293b;
+        font-weight: 500;
+    }
+    
+    .event-name-large {
+        font-size: 1.3rem !important;
+        font-weight: 700 !important;
+        color: #1e3a8a !important;
+    }
+    
+    .description-text {
+        line-height: 1.7;
+        color: #475569 !important;
+    }
+    
+    .badge-custom {
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        color: #1e40af;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    /* Requirements Grid */
+    .requirements-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+    
+    .requirement-item {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 1.25rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .requirement-item i {
+        font-size: 2rem;
+        color: #cbd5e1;
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+    
+    .requirement-item span {
+        font-size: 0.9rem;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+    
+    .requirement-item.active {
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        border-color: #3b82f6;
+    }
+    
+    .requirement-item.active i {
+        color: #3b82f6;
+    }
+    
+    .requirement-item.active span {
+        color: #1e40af;
+    }
+    
+    .special-requirements-box {
+        background: #f8fafc;
+        border-left: 4px solid #3b82f6;
+        padding: 1.25rem;
+        border-radius: 8px;
+    }
+    
+    .special-requirements-box p {
+        margin: 0;
+        line-height: 1.7;
+        color: #475569;
+    }
+    
+    .modal-footer-modern {
+        padding: 1.5rem 2rem;
+        background: #f8fafc;
+        border-top: 2px solid #e2e8f0;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 1.5rem;
+    }
+    
+    .empty-state h4 {
+        color: #475569;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        color: #94a3b8;
+        margin: 0;
+    }
+    
+    @media (max-width: 768px) {
+        .requirements-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+<script>
+    function exportPDF() {
+        // Get current form values
+        const form = document.getElementById('filterForm');
+        const formData = new FormData(form);
+        
+        // Build query string with export_pdf parameter
+        const params = new URLSearchParams(formData);
+        params.append('export_pdf', 'true');
+        
+        // Redirect to same URL with export parameter
+        window.location.href = '{% url "shb_all_applications" %}?' + params.toString();
+    }
+</script>
+{% endblock %}

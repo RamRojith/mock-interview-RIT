@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+.pd-page { background:#f0f4f8; min-height:100vh; padding:24px; }
+.pd-header {
+    background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 60%,#3b6fd4 100%);
+    border-radius:16px; padding:22px 28px;
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:20px; box-shadow:0 6px 24px rgba(26,75,140,.28);
+}
+.pd-header-left h2 { margin:0; color:#fff; font-size:20px; font-weight:800; letter-spacing:.2px; }
+.pd-header-left p { margin:4px 0 0; color:rgba(255,255,255,.75); font-size:12px; }
+.pd-back-btn {
+    background:rgba(255,255,255,.18); color:#fff;
+    border:1.5px solid rgba(255,255,255,.35);
+    border-radius:9px; padding:8px 18px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    display:flex; align-items:center; gap:7px; transition:all .2s;
+}
+.pd-back-btn:hover { background:rgba(255,255,255,.28); color:#fff; text-decoration:none; }
+.pd-filter {
+    background:#fff; border-radius:14px;
+    padding:20px 24px; margin-bottom:18px;
+    box-shadow:0 2px 12px rgba(0,0,0,.07);
+}
+.pd-filter-title {
+    font-size:13px; font-weight:700; color:#1a4b8c;
+    margin-bottom:14px; display:flex; align-items:center; gap:7px;
+}
+.pd-filter .form-label,
+.entry-panel .form-label {
+    font-size:11.5px; font-weight:700; color:#374151;
+    text-transform:uppercase; letter-spacing:.4px; margin-bottom:5px;
+}
+.pd-filter .form-select,
+.pd-filter input[type="date"],
+.entry-panel .form-select,
+.entry-panel input[type="text"],
+.entry-panel input[type="time"] {
+    border:1.5px solid #dbe3ef; border-radius:9px;
+    font-size:13px; padding:9px 13px;
+    background:#fafbff; transition:border .2s, box-shadow .2s;
+    min-height:41px;
+}
+.pd-filter .form-select:focus,
+.pd-filter input[type="date"]:focus,
+.entry-panel .form-select:focus,
+.entry-panel input[type="text"]:focus,
+.entry-panel input[type="time"]:focus {
+    border-color:#1a4b8c;
+    box-shadow:0 0 0 3px rgba(26,75,140,.1);
+    outline:none;
+}
+.btn-view {
+    width:100%; background:linear-gradient(135deg,#1a4b8c,#2c5aa0);
+    color:#fff; border:none; border-radius:10px;
+    padding:10px; font-weight:700; font-size:13.5px;
+    cursor:pointer; transition:all .2s;
+    display:flex; align-items:center; justify-content:center; gap:7px;
+}
+.btn-view:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(26,75,140,.32); color:#fff; }
+.btn-save {
+    width:100%; background:linear-gradient(135deg,#0f766e,#0d9488);
+    color:#fff; border:none; border-radius:10px;
+    padding:10px; font-weight:700; font-size:13.5px;
+    display:flex; align-items:center; justify-content:center; gap:7px;
+}
+.emp-card {
+    background:linear-gradient(135deg,#eef5ff,#e2edff);
+    border:1.5px solid #bdd4f8; border-radius:14px;
+    padding:16px 20px; margin-bottom:18px;
+    display:flex; align-items:center; gap:16px;
+}
+.emp-avatar {
+    width:50px; height:50px; border-radius:50%;
+    background:linear-gradient(135deg,#1a4b8c,#2c5aa0);
+    color:#fff; font-size:20px; font-weight:900;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; box-shadow:0 3px 12px rgba(26,75,140,.35);
+}
+.emp-name { font-size:15px; font-weight:800; color:#1a4b8c; }
+.emp-meta { font-size:12px; color:#5a7296; margin-top:3px; }
+.emp-period {
+    margin-left:auto; background:#fff; border:1.5px solid #c3d8f8;
+    border-radius:10px; padding:8px 16px; text-align:center;
+}
+.emp-period .ep-month { font-size:15px; font-weight:800; color:#1a4b8c; }
+.emp-period .ep-year { font-size:11px; color:#8aa5c8; }
+.entry-panel {
+    background:#fff; border-radius:14px;
+    padding:20px 24px; margin-bottom:18px;
+    box-shadow:0 2px 12px rgba(0,0,0,.07);
+    border-left:4px solid #0d9488;
+}
+.entry-panel-title {
+    font-size:13px; font-weight:700; color:#0f766e;
+    margin-bottom:14px; display:flex; align-items:center; gap:7px;
+}
+.stat-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+.stat-card {
+    flex:1; min-width:110px; background:#fff; border-radius:13px;
+    padding:14px 12px; text-align:center;
+    box-shadow:0 2px 10px rgba(0,0,0,.06);
+    border-top:3px solid var(--sc); transition:transform .2s;
+}
+.stat-card:hover { transform:translateY(-2px); }
+.stat-val { font-size:28px; font-weight:900; color:var(--sc); line-height:1; }
+.stat-lbl { font-size:10.5px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.5px; margin-top:5px; }
+.tbl-card { background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.06); overflow:hidden; margin-bottom:18px; }
+.tbl-card-header {
+    padding:15px 22px; border-bottom:1px solid #eef2f8;
+    display:flex; align-items:center; gap:9px;
+}
+.tch-title { font-size:14px; font-weight:700; color:#1a4b8c; }
+.tch-count { margin-left:auto; font-size:11.5px; color:#94a3b8; }
+table.ptbl { width:100%; border-collapse:collapse; font-size:12.5px; }
+table.ptbl thead tr { background:#0b1220; }
+table.ptbl thead th {
+    padding:10px 13px; color:#8da2b8;
+    font-size:10.5px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.6px; text-align:center; white-space:nowrap;
+}
+table.ptbl thead th:first-child { text-align:left; padding-left:20px; }
+table.ptbl thead th:nth-child(2) { text-align:left; }
+table.ptbl tbody tr { transition:background .1s; }
+table.ptbl tbody tr:hover { background:#f5f8ff !important; }
+table.ptbl tbody tr:last-child td { border-bottom:none; }
+table.ptbl tbody td {
+    padding:8px 13px; border-bottom:1px solid #f1f5fb;
+    text-align:center; vertical-align:middle; white-space:nowrap;
+}
+table.ptbl tbody td:first-child { text-align:left; padding-left:20px; font-weight:700; color:#1e293b; }
+table.ptbl tbody td:nth-child(2) { text-align:left; color:#64748b; font-size:12px; }
+.r-weekend td { background:#f8fafc; color:#aab8c4; }
+.r-holiday td { background:#fffbeb; }
+.r-leave td { background:#eff6ff; }
+.r-absent td { background:#fff5f5; }
+.r-selected td { box-shadow:inset 0 0 0 9999px rgba(219,234,254,.45); }
+.t-ok { background:#d1fae5 !important; color:#065f46; font-weight:700; font-family:'Courier New',monospace; font-size:13px; }
+.t-late { background:#fee2e2 !important; color:#b91c1c; font-weight:700; font-family:'Courier New',monospace; font-size:13px; }
+.t-out { background:#d1fae5 !important; color:#065f46; font-weight:700; font-family:'Courier New',monospace; font-size:13px; }
+.t-nil { color:#d1d5db; font-size:12px; }
+.t-dur { color:#1d4ed8; font-weight:700; font-family:'Courier New',monospace; font-size:13px; }
+.sb {
+    display:inline-flex; align-items:center; gap:4px;
+    padding:3px 10px; border-radius:20px;
+    font-size:11px; font-weight:700;
+}
+.sb-prs { background:#d1fae5; color:#065f46; }
+.sb-late { background:#fee2e2; color:#b91c1c; }
+.sb-abs { background:#fee2e2; color:#b91c1c; }
+.sb-hol { background:#fef3c7; color:#92400e; }
+.sb-wknd { background:#f1f5f9; color:#64748b; }
+.sb-lv { background:#dbeafe; color:#1d4ed8; }
+.sb-sing { background:#fef3c7; color:#b45309; }
+.sb-nil { background:#f1f5f9; color:#94a3b8; font-weight:500; }
+.lv-badge {
+    display:inline-flex; align-items:center; gap:4px;
+    padding:3px 10px; border-radius:20px;
+    font-size:11.5px; font-weight:800; letter-spacing:.3px;
+}
+.lv-CL { background:#dbeafe; color:#1e40af; }
+.lv-CCL { background:#d1fae5; color:#065f46; }
+.lv-ML { background:#fce7f3; color:#9d174d; }
+.lv-OD { background:#e0e7ff; color:#3730a3; }
+.lv-LOP { background:#fee2e2; color:#b91c1c; }
+.lv-VL { background:#fef3c7; color:#92400e; }
+.lv-WL { background:#ede9fe; color:#6d28d9; }
+.lv-AB { background:#fee2e2; color:#991b1b; }
+.lv-DEF { background:#f1f5f9; color:#374151; }
+.tbl-legend {
+    display:flex; flex-wrap:wrap; gap:14px;
+    padding:12px 20px; border-top:1px solid #f0f4f8;
+    font-size:11.5px; color:#64748b;
+}
+.lg-item { display:flex; align-items:center; gap:5px; }
+.lg-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+.pd-prompt {
+    background:#fff; border-radius:14px;
+    padding:70px 20px; text-align:center;
+    box-shadow:0 2px 12px rgba(0,0,0,.06);
+}
+.pd-prompt .pi { font-size:52px; color:#e2e8f0; display:block; margin-bottom:14px; }
+.pd-prompt h5 { font-size:16px; font-weight:700; color:#64748b; margin:0 0 6px; }
+.pd-prompt p { font-size:13px; color:#94a3b8; margin:0; }
+.pd-error {
+    background:#fff5f5; border:1.5px solid #fca5a5;
+    border-radius:12px; padding:12px 18px;
+    display:flex; align-items:center; gap:9px;
+    font-size:13px; color:#991b1b; margin-bottom:16px;
+}
+.select2-container--default .select2-selection--single {
+    min-height:41px; border-radius:9px; border:1.5px solid #dbe3ef;
+    display:flex; align-items:center; background:#fafbff;
+}
+.select2-container { width:100% !important; }
+@media(max-width:768px){
+    .pd-header { flex-direction:column; gap:12px; align-items:flex-start; }
+    .stat-row { gap:8px; }
+    .stat-card { min-width:90px; }
+    .emp-period { display:none; }
+}
+</style>
+
+<div class="pd-page">
+    <div class="pd-header">
+        <div class="pd-header-left">
+            <h2><i class="fas fa-user-clock me-2"></i>Punch Entry</h2>
+            <p>Enter manual IN and OUT punch timings with employee punch details below</p>
+        </div>
+        <a href="{% url 'employee_punch_details' %}" class="pd-back-btn">
+            <i class="fas fa-fingerprint"></i> Punch Details
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="pd-filter">
+        <div class="pd-filter-title">
+            <i class="fas fa-filter"></i> Select Employee &amp; Date
+        </div>
+        <form method="get" id="pdForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-7 col-md-6">
+                    <label class="form-label">Employee</label>
+                    <select id="faculty_id" name="faculty_id" class="form-select">
+                        <option value="">Choose employee</option>
+                        {% for faculty in faculty_options %}
+                        <option value="{{ faculty.faculty_id }}" {% if faculty.faculty_id == selected_faculty_id %}selected{% endif %}>
+                            {{ faculty.faculty_id }} - {{ faculty.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-4">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="punch_date" class="form-control" value="{{ selected_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-lg-2 col-md-2">
+                    <button type="submit" class="btn-view">
+                        <i class="fas fa-search"></i> View
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if error_message %}
+    <div class="pd-error">
+        <i class="fas fa-exclamation-circle"></i>{{ error_message }}
+    </div>
+    {% endif %}
+
+    {% if selected_faculty %}
+    <div class="emp-card">
+        <div class="emp-avatar">{{ selected_faculty.name|first|upper }}</div>
+        <div>
+            <div class="emp-name">{{ selected_faculty.name }}</div>
+            <div class="emp-meta">
+                <strong>ID:</strong> {{ selected_faculty.faculty_id }}
+                {% if selected_faculty.designation %}
+                &nbsp;&bull;&nbsp;{{ selected_faculty.designation.designation_name }}
+                {% endif %}
+                {% if selected_faculty.department %}
+                &nbsp;&bull;&nbsp;{{ selected_faculty.department.Department }}
+                {% endif %}
+            </div>
+        </div>
+        <div class="emp-period">
+            <div class="ep-month">{{ selected_date|date:"d M Y" }}</div>
+            <div class="ep-year">{{ month_label }} {{ selected_year }}</div>
+        </div>
+    </div>
+
+    <div class="entry-panel">
+        <div class="entry-panel-title">
+            <i class="fas fa-keyboard"></i> Enter Punch Time
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="faculty_id" value="{{ selected_faculty.faculty_id }}">
+            <input type="hidden" name="punch_date" value="{{ selected_date|date:'Y-m-d' }}">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-3 col-md-4 col-6">
+                    <label class="form-label">Device ID</label>
+                    <input type="text" class="form-control" value="{{ manual_punch_device_id }}" readonly>
+                </div>
+                <div class="col-lg-3 col-md-4 col-6">
+                    <label class="form-label">Punch Time</label>
+                    <input type="time" name="punch_time" class="form-control" step="60" required>
+                </div>
+                <div class="col-lg-2 col-md-3">
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i> Save Entry
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="stat-row">
+        <div class="stat-card" style="--sc:#1a4b8c;">
+            <div class="stat-val">{{ punch_summary.total }}</div>
+            <div class="stat-lbl">Total Days</div>
+        </div>
+        <div class="stat-card" style="--sc:#16a34a;">
+            <div class="stat-val">{{ punch_summary.present }}</div>
+            <div class="stat-lbl">Present</div>
+        </div>
+        <div class="stat-card" style="--sc:#dc2626;">
+            <div class="stat-val">{{ punch_summary.absent }}</div>
+            <div class="stat-lbl">Absent</div>
+        </div>
+        <div class="stat-card" style="--sc:#d97706;">
+            <div class="stat-val">{{ punch_summary.late }}</div>
+            <div class="stat-lbl">Late IN</div>
+        </div>
+        <div class="stat-card" style="--sc:#b45309;">
+            <div class="stat-val">{{ punch_summary.holiday }}</div>
+            <div class="stat-lbl">Holiday / Weekend</div>
+        </div>
+        <div class="stat-card" style="--sc:#1d4ed8;">
+            <div class="stat-val">{{ punch_summary.leave }}</div>
+            <div class="stat-lbl">On Leave</div>
+        </div>
+        <div class="stat-card" style="--sc:#7c3aed;">
+            <div class="stat-val">{{ punch_summary.single }}</div>
+            <div class="stat-lbl">Single Punch</div>
+        </div>
+    </div>
+
+    <div class="tbl-card">
+        <div class="tbl-card-header">
+            <i class="fas fa-fingerprint" style="color:#1a4b8c;"></i>
+            <span class="tch-title">Selected Date Punches &mdash; {{ selected_date|date:"d M Y" }}</span>
+            <span class="tch-count">{{ selected_date_punches|length }} punches</span>
+        </div>
+        {% if selected_date_punches %}
+        <div style="overflow-x:auto;">
+            <table class="ptbl">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Time</th>
+                        <th>Device</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for punch in selected_date_punches %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td class="t-ok">{{ punch.time }}</td>
+                        {% comment %} <td>{{ punch.direction|default:"-" }}</td> {% endcomment %}
+                        <td>{{ punch.device_location }} <span class="text-muted">({{ punch.device_id }})</span></td>
+                        {% comment %} <td>{{ punch.device_log_id|default:"-" }}</td> {% endcomment %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="pd-prompt" style="box-shadow:none;border-radius:0;padding:34px 20px;">
+            <i class="fas fa-calendar-times pi" style="font-size:34px;"></i>
+            <h5>No Punches On Selected Date</h5>
+            <p>Enter the punch time above to add an attendance record.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if punch_detail_rows %}
+    <div class="tbl-card">
+        <div class="tbl-card-header">
+            <i class="fas fa-table" style="color:#1a4b8c;"></i>
+            <span class="tch-title">Punch History &mdash; {{ month_label }} {{ selected_year }}</span>
+            <span class="tch-count">{{ punch_detail_rows|length }} days</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="ptbl">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Day</th>
+                        <th>IN Time</th>
+                        <th>IN Remark</th>
+                        <th>OUT Time</th>
+                        <th>OUT Remark</th>
+                        <th>Duration</th>
+                        <th>Leave</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for row in punch_detail_rows %}
+                    <tr class="{% if row.is_selected %}r-selected{% elif row.is_weekend and not row.leave_code %}r-weekend{% elif row.is_holiday and not row.leave_code %}r-holiday{% elif row.leave_code %}r-leave{% elif not row.in_time and not row.is_holiday and not row.is_weekend %}r-absent{% endif %}">
+                        <td>{{ row.date_str }}</td>
+                        <td>{{ row.day_name }}</td>
+                        <td class="{% if row.in_time %}{% if row.is_late %}t-late{% else %}t-ok{% endif %}{% else %}t-nil{% endif %}">
+                            {{ row.in_time|default:"-" }}
+                        </td>
+                        <td>
+                            {% if row.in_remark == "Ok" %}
+                                <span class="sb sb-prs"><i class="fas fa-check"></i>Ok</span>
+                            {% elif row.in_remark == "Late" %}
+                                <span class="sb sb-late"><i class="fas fa-clock"></i>Late</span>
+                            {% else %}
+                                <span class="sb sb-nil">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="{% if row.out_time %}t-out{% else %}t-nil{% endif %}">
+                            {{ row.out_time|default:"-" }}
+                        </td>
+                        <td>
+                            {% if row.out_remark == "Ok" %}
+                                <span class="sb sb-prs"><i class="fas fa-check"></i>Ok</span>
+                            {% else %}
+                                <span class="sb sb-nil">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="{% if row.duration %}t-dur{% else %}t-nil{% endif %}">
+                            {{ row.duration|default:"-" }}
+                        </td>
+                        <td>
+                            {% if row.leave_code %}
+                                <span class="lv-badge
+                                    {% if row.leave_code == 'CL' %}lv-CL
+                                    {% elif row.leave_code == 'CCL' %}lv-CCL
+                                    {% elif row.leave_code == 'ML' %}lv-ML
+                                    {% elif row.leave_code == 'OD' %}lv-OD
+                                    {% elif row.leave_code == 'LOP' %}lv-LOP
+                                    {% elif row.leave_code == 'VL' %}lv-VL
+                                    {% elif row.leave_code == 'WL' %}lv-WL
+                                    {% elif row.leave_code == 'AB' %}lv-AB
+                                    {% else %}lv-DEF
+                                    {% endif %}">
+                                    {{ row.leave_code }}
+                                </span>
+                            {% else %}
+                                <span class="sb-nil" style="color:#d1d5db;font-size:12px;">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.is_weekend and not row.leave_code %}
+                                <span class="sb sb-wknd"><i class="fas fa-umbrella-beach"></i>&nbsp;Weekend</span>
+                            {% elif row.is_holiday and not row.leave_code %}
+                                <span class="sb sb-hol"><i class="fas fa-sun"></i>&nbsp;Holiday</span>
+                            {% elif row.leave_code %}
+                                {% if row.in_time and row.out_time %}
+                                    <span class="sb sb-prs"><i class="fas fa-check-circle"></i>&nbsp;Present</span>
+                                {% elif row.in_time %}
+                                    <span class="sb sb-sing"><i class="fas fa-exclamation"></i>&nbsp;Single Punch</span>
+                                {% else %}
+                                    <span class="sb sb-lv"><i class="fas fa-calendar-minus"></i>&nbsp;On Leave</span>
+                                {% endif %}
+                            {% elif row.in_time and row.out_time %}
+                                {% if row.is_late %}
+                                    <span class="sb sb-late"><i class="fas fa-clock"></i>&nbsp;Late Present</span>
+                                {% else %}
+                                    <span class="sb sb-prs"><i class="fas fa-check-circle"></i>&nbsp;Present</span>
+                                {% endif %}
+                            {% elif row.total_punches == 1 %}
+                                <span class="sb sb-sing"><i class="fas fa-exclamation"></i>&nbsp;Single Punch</span>
+                            {% else %}
+                                <span class="sb sb-abs"><i class="fas fa-times-circle"></i>&nbsp;Absent</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="tbl-legend">
+            <span class="lg-item"><span class="lg-dot" style="background:#d1fae5;"></span>Present</span>
+            <span class="lg-item"><span class="lg-dot" style="background:#fee2e2;"></span>Absent / Late IN</span>
+            <span class="lg-item"><span class="lg-dot" style="background:#fffbeb;"></span>Holiday</span>
+            <span class="lg-item"><span class="lg-dot" style="background:#f8fafc;"></span>Weekend</span>
+            <span class="lg-item"><span class="lg-dot" style="background:#eff6ff;"></span>On Leave</span>
+            <span class="lg-item"><span class="lg-dot" style="background:#fef3c7;"></span>Single Punch</span>
+        </div>
+    </div>
+    {% else %}
+    <div class="pd-prompt">
+        <i class="fas fa-calendar-times pi"></i>
+        <h5>No Punch Records Found</h5>
+        <p>No attendance data available for {{ month_label }} {{ selected_year }}.</p>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="pd-prompt">
+        <i class="fas fa-users pi"></i>
+        <h5>Select an Employee</h5>
+        <p>Choose an employee and date above to enter punch timings and view daily punch records.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.jQuery && typeof jQuery.fn.select2 !== 'undefined') {
+        jQuery('#faculty_id').select2({
+            placeholder: 'Choose employee',
+            allowClear: true,
+            width: '100%'
+        });
+    }
+});
+</script>
+{% endblock %}

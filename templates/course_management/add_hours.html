@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block content %}
+{% load static %}
+{% load cm_tags %}
+{% departments as departments %}
+
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+
+      <div class="card shadow rounded-4">
+        <div class="card-header" style="background-color:#0d6efd;color:white;border-radius:1rem 1rem 0 0;">
+          <h2 class="mb-0"><i class="fas fa-clock me-2"></i>ADD HOURS</h2>
+        </div>
+
+        <div class="card-body p-4">
+          <form method="post" action="{% url 'add_hours' %}" id="hoursForm">
+            {% csrf_token %}
+
+            <h3 class="mt-4">Programme Details</h3>
+            <div class="row">
+
+              <div class="col-md-4">
+                <label class="fw-semibold">Department</label>
+                <select id="department" name="department" class="form-control" required>
+                  <option value="" disabled selected>Choose Department</option>
+                  {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.Department }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="fw-semibold">Regulation</label>
+                <select id="regulation_year" name="regulation_year" class="form-select" required>
+                  <option value="" disabled selected>Select Regulation</option>
+                  {% for regulation in regulations %}
+                    <option value="{{ regulation.year }}">{{ regulation.year }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="fw-semibold">Year</label>
+                <select id="year" name="year" class="form-select" required>
+                  <option value="" disabled selected>Select Year</option>
+                  <option value="1">Year I</option>
+                  <option value="2">Year II</option>
+                  <option value="3">Year III</option>
+                  <option value="4">Year IV</option>
+                </select>
+              </div>
+
+              <div class="col-md-4 mt-3">
+                <label class="fw-semibold">Semester</label>
+                <select id="semester" name="semester" class="form-select" required>
+                  <option value="" disabled selected>Select Semester</option>
+                  {% for i in "12345678" %}
+                    <option value="{{ i }}">Semester {{ i }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+            </div>
+
+            <!-- ================= TABLE ================= -->
+            <div class="table-responsive mt-4">
+              <table class="table table-bordered text-center align-middle">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Code</th>
+                    <th>Course</th>
+                    <th>L–T–P Hrs / Week</th>
+                    <th>L–T–P No of Weeks</th>
+                    <th>Total Hours</th>
+                    <th>Credits</th>
+                  </tr>
+                </thead>
+
+                <tbody id="courseTableBody"></tbody>
+
+                <tfoot>
+                  <tr>
+                    <td colspan="5" class="text-end"><b>Total Hours</b></td>
+                    <td id="totalHoursSum">0</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td colspan="5" class="text-end"><b>Total Credits</b></td>
+                    <td id="totalCreditsSum">0</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <button class="btn btn-primary" id="submitBtn">Submit</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(function () {
+
+  let ltpList = [];
+
+  // ✅ value will be config.id, label will be L-T-P
+  function buildLTPOptions(list, selectedId) {
+    let html = `<option value="">-- Select L-T-P --</option>`;
+    list.forEach(l => {
+      const label = `${l.lecture}-${l.tutorial}-${l.laboratory}`;
+      html += `<option value="${l.id}" ${String(l.id) === String(selectedId) ? "selected" : ""}>${label}</option>`;
+    });
+    return html;
+  }
+
+  $("#regulation_year").change(function () {
+    $.get("{% url 'get_ltp_config' %}", { regulation_year: this.value }, function (res) {
+      ltpList = res.ltp || [];
+      fetchCourses();
+    });
+  });
+
+  function fetchCourses() {
+    if (!$("#department").val() || !$("#year").val() || !$("#semester").val()) return;
+    if (ltpList.length === 0) return;
+
+    $.get("{% url 'get_courses' %}", {
+      department_id: $("#department").val(),
+      year: $("#year").val(),
+      semester: $("#semester").val(),
+      regulation_year: $("#regulation_year").val(),
+    }, function (res) {
+
+      let body = $("#courseTableBody").empty();
+
+      res.courses.forEach((c, i) => {
+
+        // ✅ selected option is saved hour_config_id (from backend)
+        const selectedConfigId = c.hour_config_id || "";
+
+        body.append(`
+          <tr>
+            <td>${i+1}</td>
+
+            <td>${c.course_code}
+              <input type="hidden" name="course_code[]" value="${c.course_code}">
+            </td>
+
+            <td>${c.title}
+              <input type="hidden" name="course_title[]" value="${c.title}">
+            </td>
+
+            <td>
+              <!-- ✅ dropdown value = CourseHourConfig.id -->
+              <select class="form-select ltp-hpwk">
+                ${buildLTPOptions(ltpList, selectedConfigId)}
+              </select>
+
+              <!-- ✅ store selected config id -->
+              <input type="hidden" name="hour_config_id[]" class="hour-config-id" value="${selectedConfigId}">
+            </td>
+
+            <td>
+              <input type="number" class="form-control ltp-npwk" value="${c.lecture_npwk || ''}">
+              <input type="hidden" name="leture_npwk[]" class="lecture-npwk" value="${c.lecture_npwk || ''}">
+              <input type="hidden" name="tutorial_npwk[]" class="tutorial-npwk" value="${c.tutorial_npwk || c.lecture_npwk || ''}">
+              <input type="hidden" name="laboratory_npwk[]" class="laboratory-npwk" value="${c.laboratory_npwk || c.lecture_npwk || ''}">
+            </td>
+
+            <td><input name="total_hours[]" class="form-control total-hours" value="${c.total_hours || ''}" readonly></td>
+            <td><input name="credits[]" class="form-control credit" value="${c.credits || ''}"></td>
+          </tr>
+        `);
+      });
+
+      calculateTotals();
+    });
+  }
+
+  function calculateTotals() {
+    let th = 0, tc = 0;
+
+    $("#courseTableBody tr").each(function () {
+      const r = $(this);
+
+      const cfgId = r.find(".hour-config-id").val();
+      const weeks = +(r.find(".ltp-npwk").val() || 0);
+
+      // keep weeks synced to hidden npwk fields (same weeks for L/T/P)
+      r.find(".lecture-npwk").val(weeks);
+      r.find(".tutorial-npwk").val(weeks);
+      r.find(".laboratory-npwk").val(weeks);
+
+      let total = 0;
+      if (cfgId) {
+        const cfg = ltpList.find(x => String(x.id) === String(cfgId));
+        if (cfg) {
+          total = (+(cfg.lecture||0) * weeks) + (+(cfg.tutorial||0) * weeks) + (+(cfg.laboratory||0) * weeks);
+        }
+      }
+
+      r.find(".total-hours").val(total);
+      th += total;
+      tc += +(r.find(".credit").val() || 0);
+    });
+
+    $("#totalHoursSum").text(th);
+    $("#totalCreditsSum").text(tc);
+  }
+
+  // ✅ when dropdown changes, store selected config id
+  $(document).on("change", ".ltp-hpwk", function () {
+    const r = $(this).closest("tr");
+    const cfgId = $(this).val();
+    r.find(".hour-config-id").val(cfgId);
+    calculateTotals();
+  });
+
+  $(document).on("input", ".ltp-npwk, .credit", calculateTotals);
+  $("#department,#year,#semester").change(fetchCourses);
+
+});
+</script>
+
+<script>
+$(function () {
+  $("#hoursForm").on("submit", function (e) {
+    e.preventDefault();
+    $.ajax({
+      url: $(this).attr("action"),
+      method: "POST",
+      data: $(this).serialize(),
+      success: function (res) {
+        alert(res.message || "Saved successfully");
+      },
+      error: function () {
+        alert("Server error. Please try again.");
+      }
+    });
+  });
+});
+</script>
+
+<style>
+.total-hours { background:#f8f9fa; }
+input, select { text-align:center; }
+</style>
+
+{% endblock %}

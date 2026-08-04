@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid py-4" style="max-width:1200px;">
+  <h2 class="fw-bold text-primary mb-3"><i class="fa-solid fa-book me-2"></i>Stock Registers</h2>
+
+  {% if messages %}{% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}{% endif %}
+
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white fw-semibold">Create Register</div>
+        <div class="card-body">
+          <form method="post" action="{% url 'register_create' %}">{% csrf_token %}
+            <div class="mb-3"><label class="form-label fw-semibold">Lab <span class="text-danger">*</span></label>
+              <select name="lab" class="form-select" required>
+                <option value="">-- Lab without a register --</option>
+                {% for l in labs %}<option value="{{ l.id }}">{{ l.lab_code }} — {{ l.name }}</option>{% endfor %}
+              </select></div>
+            <div class="mb-3"><label class="form-label fw-semibold">Register Number <span class="text-danger">*</span></label>
+              <input type="text" name="register_number" class="form-control" required></div>
+            <div class="mb-3"><label class="form-label fw-semibold">Financial Year</label>
+              <input type="text" name="financial_year" class="form-control" value="{{ current_fy }}"></div>
+            <button class="btn btn-primary"><i class="fas fa-save me-1"></i>Create Register</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+          <table class="table table-bordered mb-0 align-middle">
+            <thead class="table-light text-center"><tr><th>Register No</th><th>Lab</th><th>Financial Year</th><th>Created</th></tr></thead>
+            <tbody>
+              {% for r in registers %}
+              <tr><td>{{ r.register_number }}</td><td>{{ r.lab.lab_code }} — {{ r.lab.name }}</td><td class="text-center">{{ r.financial_year }}</td><td class="text-center">{{ r.created_date }}</td></tr>
+              {% empty %}
+              <tr><td colspan="4" class="text-center text-muted py-3">No registers created yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

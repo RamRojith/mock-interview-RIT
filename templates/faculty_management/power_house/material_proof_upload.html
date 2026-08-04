@@ -1,0 +1,584 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.proof-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.proof-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.proof-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.proof-portal .header-subtitle {
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.proof-portal .page-container,
+.proof-portal .alert-custom {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.proof-portal .alert-custom {
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+}
+
+.proof-portal .alert-success-custom {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.proof-portal .alert-error-custom {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.proof-portal .custom-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.proof-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.proof-portal .card-body-custom {
+  padding: 1.5rem;
+}
+
+.proof-portal .form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.proof-portal .scrap-row {
+  display: grid;
+  grid-template-columns: 1.5fr 2fr 1fr auto;
+  gap: 1rem;
+  align-items: end;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+}
+
+.proof-portal label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.proof-portal input,
+.proof-portal select,
+.proof-portal textarea,
+.proof-portal .search-box {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.proof-portal textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.proof-portal input:focus,
+.proof-portal select:focus,
+.proof-portal textarea:focus,
+.proof-portal .search-box:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26,75,140,0.1);
+  outline: none;
+}
+
+.proof-portal .btn-primary-custom {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.65rem 1.2rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  cursor: pointer;
+}
+
+.proof-portal .btn-secondary-custom {
+  background: #64748b;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.65rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.proof-portal .remove-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 1.3rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.proof-portal .table-tools {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.proof-portal .search-box {
+  width: 260px;
+}
+
+.proof-portal .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.proof-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.proof-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.proof-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 0.85rem;
+  vertical-align: top;
+}
+
+.proof-portal .ticket-line,
+.proof-portal .scrap-line {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 0.35rem 0.6rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.proof-portal .ticket-line strong,
+.proof-portal .scrap-line strong {
+  color: #1a4b8c;
+}
+
+.proof-portal .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.proof-portal .badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.proof-portal .badge-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.proof-portal .badge-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.proof-portal .empty-row {
+  text-align: center;
+  padding: 2rem !important;
+  color: #64748b;
+  font-weight: 700;
+}
+
+@media(max-width: 992px) {
+  .proof-portal .form-grid-3,
+  .proof-portal .scrap-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media(max-width: 768px) {
+  .proof-portal {
+    padding: 1rem;
+  }
+
+  .proof-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .proof-portal .search-box,
+  .proof-portal .btn-primary-custom,
+  .proof-portal .btn-secondary-custom,
+  .proof-portal .remove-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+</style>
+
+<div class="proof-portal">
+
+  <div class="page-header">
+    <h1><i class="fas fa-file-upload me-2"></i> Material Proof Upload</h1>
+    <p class="header-subtitle">Upload proof documents for issued material requests linked with tickets</p>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert-custom {% if message.tags == 'error' %}alert-error-custom{% else %}alert-success-custom{% endif %}">
+        {% if message.tags == 'error' %}
+          <i class="fas fa-circle-xmark me-2"></i>
+        {% else %}
+          <i class="fas fa-circle-check me-2"></i>
+        {% endif %}
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="page-container">
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <i class="fas fa-upload me-2"></i> Upload Proof
+      </div>
+
+      <div class="card-body-custom">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <div class="form-grid-3">
+            <div>
+              <label>Issued Request</label>
+              <select name="request_id" required>
+                <option value="">Select Issued Request</option>
+
+                {% for req in issued_requests %}
+                  <option value="{{ req.id }}">
+                    {{ req.request_no }}
+                    -
+                    {% if req.ticket %}
+                      Ticket #{{ req.ticket.id }} - {{ req.ticket.issue }}
+                    {% else %}
+                      No Ticket
+                    {% endif %}
+                    -
+                    {{ req.department.Department|default:"-" }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div>
+              <label>Proof Document</label>
+              <input type="file" name="proof_file" required>
+            </div>
+
+            <div>
+              <label>Description</label>
+              <textarea name="description" placeholder="Describe the submitted proof document..." required></textarea>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <label>Remarks</label>
+            <input type="text" name="remarks" placeholder="Optional remarks">
+          </div>
+
+          <div class="custom-card" style="box-shadow:none; margin-bottom:1.5rem;">
+            <div class="card-header-custom">
+              <span><i class="fas fa-recycle me-2"></i> Scrap items</span>
+
+              <button type="button"
+                      class="btn-secondary-custom"
+                      onclick="addScrapRow()">
+                + Add Scrap Item
+              </button>
+            </div>
+
+            <div class="card-body-custom">
+              <div id="scrapRows">
+                <div class="scrap-row">
+
+                  <div>
+                    <label>Type of Scrap</label>
+                    <input type="text"
+                           name="scrap_type[]"
+                           placeholder="E-waste / Metal / Plastic">
+                  </div>
+
+                  <div>
+                    <label>Scrap Item Name</label>
+                    <input type="text"
+                           name="scrap_name[]"
+                           placeholder="Enter scrap item name">
+                  </div>
+
+                  <div>
+                    <label>Count</label>
+                    <input type="number"
+                           min="0"
+                           name="scrap_count[]"
+                           placeholder="Count">
+                  </div>
+
+                  <div>
+                    <button type="button"
+                            class="remove-btn"
+                            onclick="removeScrapRow(this)">
+                      ×
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-primary-custom" type="submit">
+            <i class="fas fa-paper-plane"></i> Submit Proof
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <div class="table-tools">
+          <span><i class="fas fa-list-check me-2"></i> My Uploaded Proofs</span>
+          <input type="text" id="uploadedProofSearch" class="search-box" placeholder="Search proofs...">
+        </div>
+      </div>
+
+      <div class="card-body-custom">
+        <div class="table-responsive">
+          <table id="uploadedProofTable" class="data-table">
+            <thead>
+              <tr>
+                <th>Request No</th>
+                <th>Ticket</th>
+                <th>User</th>
+                <th>Department</th>
+                <th>Scrap Items</th>
+                <th>Proof</th>
+                <th>Description</th>
+                <th>Remarks</th>
+                <th>Status</th>
+                <th>Uploaded At</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for proof in uploaded_proofs %}
+              <tr>
+                <td>
+                  <strong>{{ proof.material_request.request_no }}</strong>
+                </td>
+
+                <td>
+                  {% if proof.material_request.ticket %}
+                    <div class="ticket-line">
+                      <strong>Ticket #{{ proof.material_request.ticket.id }}</strong>
+                    </div>
+                    <div class="ticket-line">
+                      <strong>Issue:</strong> {{ proof.material_request.ticket.issue }}
+                    </div>
+                    <div class="ticket-line">
+                      <strong>Location:</strong> {{ proof.material_request.ticket.location }}
+                    </div>
+                    <div class="ticket-line">
+                      <strong>Status:</strong> {{ proof.material_request.ticket.status }}
+                    </div>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if proof.material_request.ticket.student %}
+                    <div class="ticket-line">
+                      <strong>Student:</strong> {{ proof.material_request.ticket.student.name }}
+                    </div>
+                    <div class="ticket-line">
+                      <strong>Reg No:</strong> {{ proof.material_request.ticket.student.reg_no }}
+                    </div>
+                  {% elif proof.material_request.ticket.faculty %}
+                    <div class="ticket-line">
+                      <strong>Faculty:</strong> {{ proof.material_request.ticket.faculty.name }}
+                    </div>
+                    <div class="ticket-line">
+                      <strong>Faculty ID:</strong> {{ proof.material_request.ticket.faculty.faculty_id }}
+                    </div>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>{{ proof.material_request.department.Department|default:"-" }}</td>
+
+                <td>
+                  {% for scrap in proof.scrap_items.all %}
+                    <div class="scrap-line">
+                      <strong>Type:</strong> {{ scrap.scrap_type }}<br>
+                      <strong>Name:</strong> {{ scrap.name }}<br>
+                      <strong>Count:</strong> {{ scrap.count }}
+                    </div>
+                  {% empty %}
+                    -
+                  {% endfor %}
+                </td>
+
+                <td>
+                  <a href="{{ proof.proof_file.url }}" target="_blank" class="btn-primary-custom">
+                    <i class="fas fa-eye"></i> View
+                  </a>
+                </td>
+
+                <td>{{ proof.description|default:"-" }}</td>
+
+                <td>{{ proof.remarks|default:"-" }}</td>
+
+                <td>
+                  {% if proof.status == "VERIFIED" %}
+                    <span class="badge-status badge-success">
+                      <i class="fas fa-check-circle"></i> Verified
+                    </span>
+                  {% elif proof.status == "REJECTED" %}
+                    <span class="badge-status badge-danger">
+                      <i class="fas fa-times-circle"></i> Rejected
+                    </span>
+                  {% else %}
+                    <span class="badge-status badge-pending">
+                      <i class="fas fa-clock"></i> Pending
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td>{{ proof.uploaded_at }}</td>
+              </tr>
+
+              {% empty %}
+              <tr>
+                <td colspan="10" class="empty-row">
+                  <i class="fas fa-inbox me-2"></i> No proof uploaded.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function addScrapRow() {
+  const container = document.getElementById("scrapRows");
+  const firstRow = container.querySelector(".scrap-row");
+  const newRow = firstRow.cloneNode(true);
+
+  newRow.querySelectorAll("input").forEach(input => {
+    input.value = "";
+  });
+
+  container.appendChild(newRow);
+}
+
+function removeScrapRow(btn) {
+  const rows = document.querySelectorAll(".scrap-row");
+
+  if (rows.length === 1) {
+    const row = btn.closest(".scrap-row");
+    row.querySelectorAll("input").forEach(input => {
+      input.value = "";
+    });
+    return;
+  }
+
+  btn.closest(".scrap-row").remove();
+}
+
+document.getElementById("uploadedProofSearch")?.addEventListener("input", function() {
+  const value = this.value.toLowerCase();
+  const rows = document.querySelectorAll("#uploadedProofTable tbody tr");
+
+  rows.forEach(row => {
+    if (row.querySelector(".empty-row")) return;
+    row.style.display = row.innerText.toLowerCase().includes(value) ? "" : "none";
+  });
+});
+</script>
+
+{% endblock %}

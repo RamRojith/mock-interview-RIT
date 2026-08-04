@@ -1,0 +1,121 @@
+{% load static %}
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ student.first_name }} {{ student.surname }} - {{ transaction.reference_token }}</title>
+          <link rel="website icon" type="png" href="{% static 'image/Edenberg.png' %}">
+
+
+    <style>
+        @page {
+            size: A4;
+            margin: 40px;
+        }
+
+        body {
+            font-family: "DejaVu Sans", sans-serif;
+            font-size: 13px;
+            color: #333;
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin: 10px 0 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .info-table,
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .info-table td {
+            padding: 8px;
+            vertical-align: top;
+        }
+
+        .info-table .label {
+            font-weight: bold;
+            background-color: #f0f0f0;
+            width: 30%;
+        }
+
+        .transaction-table th,
+        .transaction-table td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .transaction-table th {
+            background-color: #f9f9f9;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Official Payment Receipt</h1>
+
+    <div class="section">
+        <h2>Student Information</h2>
+        <table class="info-table">
+            <tr><td class="label">Name</td><td>{{ student.first_name }} {{ student.surname }}</td></tr>
+            <tr><td class="label">NRC</td><td>{{ student.nrc_number }}</td></tr>
+            <tr><td class="label">Gender</td><td>{{ student.gender|default:"-" }}</td></tr>
+            <tr><td class="label">Date of Birth</td><td>{{ student.date_of_birth|default:"-" }}</td></tr>
+            <tr><td class="label">Programme of Study</td><td>{{ student.programme_of_study }}</td></tr>
+            <tr><td class="label">Program</td><td>{{ student.first_choice }}</td></tr>
+            <tr><td class="label">Mode of Study</td><td>{{ student.mode_of_study }}</td></tr>
+            <tr><td class="label">Intake</td><td>{{ student.Intake }}</td></tr>
+            <tr><td class="label">Batch</td><td>{{ student.batch|default:"-" }}</td></tr>
+            <tr><td class="label">Email</td><td>{{ student.email_address }}</td></tr>
+            <tr><td class="label">Mobile Number</td><td>{{ student.mobile_number|default:"-" }}</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Transaction Details</h2>
+        <table class="transaction-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Reference Number</th>
+                    <th class="text-right">Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ transaction.fee_type }} Fee - {{ transaction.semester }}</td>
+                    <td>{{ transaction.reference_token }}</td>
+                    <td class="text-right">{{ transaction.amount }} {{ transaction.currency }}</td>
+                    <td>{{ transaction.decision }}</td>
+                    <td>{{ transaction.created_at|date:"Y-m-d H:i" }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        Thank you for your payment!
+    </div>
+</body>
+</html>

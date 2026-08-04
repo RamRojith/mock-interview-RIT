@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+    .verif-wrap { padding: 1rem 2rem; }
+    .panel { background:#fff; border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,.06); overflow:hidden; margin-bottom:1.5rem; }
+    .panel-head { background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%); color:#fff; padding:.85rem 1.25rem; font-weight:600; display:flex; justify-content:space-between; align-items:center; }
+    .panel-body { padding:1.25rem 1.5rem; }
+    .meta dt { color:#64748b; font-weight:600; font-size:.8rem; }
+    .meta dd { font-weight:600; color:#1e293b; margin-bottom:.75rem; }
+    .panel thead th { background:#f1f5f9; color:#334155; font-size:.85rem; text-align:center; }
+    .panel tbody td { vertical-align:middle; text-align:center; font-size:.9rem; }
+</style>
+
+<div class="verif-wrap">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="panel">
+        <div class="panel-head">
+            <span><i class="fas fa-clipboard-check me-2"></i>{{ cycle.cycle_name }}</span>
+            <span>
+                {% if cycle.status == "ACTIVE" %}<span class="badge bg-success">ACTIVE</span>
+                {% elif cycle.status == "CLOSED" %}<span class="badge bg-secondary">CLOSED</span>
+                {% else %}<span class="badge bg-warning text-dark">DRAFT</span>{% endif %}
+            </span>
+        </div>
+        <div class="panel-body">
+            <dl class="row meta mb-0">
+                <div class="col-md-3"><dt>Financial Year</dt><dd>{{ cycle.financial_year }}</dd></div>
+                <div class="col-md-3"><dt>Start Date</dt><dd>{{ cycle.start_date|date:"d M Y" }}</dd></div>
+                <div class="col-md-3"><dt>End Date</dt><dd>{{ cycle.end_date|date:"d M Y" }}</dd></div>
+                <div class="col-md-3"><dt>Created By</dt><dd>{{ cycle.created_by.name|default:"-" }}</dd></div>
+                {% if cycle.principal_approved_by %}
+                <div class="col-md-3"><dt>Approved By</dt><dd>{{ cycle.principal_approved_by.name }}</dd></div>
+                <div class="col-md-3"><dt>Approved At</dt><dd>{{ cycle.principal_approved_at|date:"d M Y, h:i A" }}</dd></div>
+                {% endif %}
+            </dl>
+
+            <div class="mt-3 d-flex gap-2 flex-wrap">
+                <a href="{% url 'verification_assignment' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>Add Assignment
+                </a>
+                {% if cycle.status == "DRAFT" %}
+                <form method="post" action="{% url 'verification_cycle_action' cycle.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="submit">
+                    <input type="hidden" name="next" value="{% url 'verification_cycle_detail' cycle.id %}">
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="fas fa-paper-plane me-1"></i>Submit for Approval
+                    </button>
+                </form>
+                {% endif %}
+                {% if is_principal and cycle.status == "DRAFT" and assignments %}
+                <form method="post" action="{% url 'verification_cycle_action' cycle.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="approve">
+                    <input type="hidden" name="next" value="{% url 'verification_cycle_detail' cycle.id %}">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-check me-1"></i>Approve & Activate
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head"><span><i class="fas fa-list-check me-2"></i>Assignments</span></div>
+        <div class="table-responsive">
+            <table class="table table-bordered mb-0">
+                <thead>
+                    <tr>
+                        <th>S.No</th><th>Lab</th><th>Department</th><th>Assigned Faculty</th>
+                        <th>Due Date</th><th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in assignments %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ a.lab.lab_code }} - {{ a.lab.name }}</td>
+                        <td>{{ a.lab.department|default:"-" }}</td>
+                        <td>{{ a.assigned_faculty.name|default:"-" }}</td>
+                        <td>{{ a.due_date|date:"d M Y" }}</td>
+                        <td>
+                            {% if a.status == "APPROVED" %}<span class="badge bg-success">APPROVED</span>
+                            {% elif a.status == "SUBMITTED" %}<span class="badge bg-info text-dark">SUBMITTED</span>
+                            {% elif a.status == "IN_PROGRESS" %}<span class="badge bg-primary">IN PROGRESS</span>
+                            {% elif a.status == "REJECTED" %}<span class="badge bg-danger">REJECTED</span>
+                            {% else %}<span class="badge bg-secondary">ASSIGNED</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-muted">No assignments added yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <a href="{% url 'verification_cycle' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i>Back to Cycles
+    </a>
+</div>
+{% endblock content %}

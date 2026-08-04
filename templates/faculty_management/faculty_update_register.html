@@ -1,0 +1,651 @@
+
+{% load authorizer_tags %}
+{% block content %}
+
+
+<head>
+    <title>Faculty Registration Form</title>
+    {% load static %}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Main Container Styling */
+        form {
+            max-width: 1100px;
+            margin: 20px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Section Headings */
+        form h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #333;
+            text-decoration: underline;
+        }
+        
+        /* Form Rows */
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -15px;
+        }
+        
+        .col-md-3, .col-md-4 {
+            padding: 15px;
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        /* Form Groups */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color:rgb(51, 91, 132);
+        }
+        
+        .form-control, .form-select, .form-control-file {
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 14px;
+            color: #495057;
+        }
+        
+        textarea.form-control {
+            resize: none;
+        }
+        
+        /* Table Styling */
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+        }
+        
+        table th, table td {
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+        }
+        
+        thead th {
+            background-color: #f1f1f1;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        /* Add/Remove Buttons */
+        #add-education, #add-experience, .remove-education-row, .remove-experience-row {
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .remove-education-row, .remove-experience-row {
+            padding: 5px 10px;
+            background-color: #e74c3c;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        #add-education, #add-experience {
+            background-color: #ffb84d;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        /* Submit Button */
+        #submit-button {
+            font-size: 16px;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Custom checkbox styling */
+        .custom-checkbox-group {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+    
+        .custom-checkbox-group label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+        }
+    
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 2px; /* Space between checkbox and label */
+            padding: 5px 10px;
+            margin-bottom: 5px;
+            background-color: #fff;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+    
+        .form-check:hover {
+            background-color: #e9ecef;
+        }
+    
+        .form-check-input {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+    
+        .form-check-label {
+            font-size: 15px;
+            cursor: pointer;
+        }
+        /* Ensure the select box dropdown appears above other elements */
+            .input-field {
+                position: relative; /* Establish a stacking context */
+            }
+            
+            .input-field select {
+                z-index: 10; /* Ensure the select box itself has a lower z-index than the dropdown */
+                position: relative; /* Ensure the select box is positioned relative to its parent */
+            }
+            
+            /* Target the multiselect dropdown container */
+            .multiselect-dropdown {
+                z-index: 1000; /* Ensure the dropdown has a high z-index */
+                position: absolute; /* Position the dropdown absolutely */
+            }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .row {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Registration</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 900px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2, h3 {
+            color: #343a40;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+        .form-group label {
+            font-weight: 600;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+        }
+        .btn-warning, .btn-success {
+            border-radius: 20px;
+            padding: 8px 20px;
+            font-weight: 600;
+        }
+        .table {
+            background: white;
+        }
+        .table th, .table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .btn-danger {
+            border-radius: 15px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+
+<div class="container mt-5">
+    {% if educational_formset.errors or experience_formset.errors %}
+    <div class="alert alert-danger">
+        <strong>Errors:</strong>
+        <ul>
+            {% for form in educational_formset %}
+                {% if form.errors and form.has_changed %}  {# Show errors only if form is modified #}
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>Educational Detail - {{ field|title }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+
+            {% for form in experience_formset %}
+                {% if form.errors and form.has_changed %}  {# Show errors only if form is modified #}
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>Experience Detail - {{ field|title }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show text-center message-alert" role="alert" aria-live="assertive"
+                    style="background-color:
+                    {% if message.tags == 'success' %}#28a745; color: white;
+                    {% elif message.tags == 'error' %}#dc3545; color: white;
+                    {% elif message.tags == 'warning' %}#fff3cd; color: black;
+                    {% elif message.tags == 'info' %}#d1ecf1; color: black;
+                    {% else %}#f8f9fa; color: black;
+                    {% endif %};">
+                <div class="d-flex justify-content-center align-items-center">
+                    <span>{{ message }}</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <h2 class="text-center mb-4">Faculty Registration Form</h2>
+    <form method="post" enctype="multipart/form-data" onsubmit="hideButton()">
+        {% csrf_token %}
+
+        <!-- Personal Information -->
+        <h3>Personal Information</h3>
+        <!-- Row 1 -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    {{ faculty_form.name }}
+
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="name">Sure Name</label>
+                    {{ faculty_form.sure_name }}
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="father_or_husband_name">Father/Husband Name</label>
+                    {{ faculty_form.father_or_husband_name }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="date_of_birth">Date of Birth</label>
+                    {{ faculty_form.date_of_birth }}
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="gender">Gender</label>
+                    {{ faculty_form.gender }}
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="department" class="form-label fw-semibold">Department</label>
+                    {{ faculty_form.department }}
+                  </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="present_designation">Present Designation</label>
+                    {{ faculty_form.present_designation }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="date_of_joining">Date of Joining</label>
+                    {{ faculty_form.date_of_joining }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="aadhar_nrc_number">Passport/National_Id</label>
+                    {{ faculty_form.aadhar_nrc_number }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="mobile_number">Mobile Number</label>
+                    {{ faculty_form.mobile_number }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 4 -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="whatsapp_number">WhatsApp Number</label>
+                    {{ faculty_form.whatsapp_number }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="personal_mail_id">Personal Email</label>
+                    {{ faculty_form.personal_mail_id }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="official_mail_id">Official Email</label>
+                    {{ faculty_form.official_mail_id }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 5 -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="address_for_communication">Address for Communication</label>
+                    {{ faculty_form.address_for_communication }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="present_address">Present Address</label>
+                    {{ faculty_form.present_address }}
+                </div>
+            </div>
+           
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="signature">Upload Signature</label>
+                    {% if faculty_form.instance.signature %}
+                        <label for="signature">Current</label>
+                        <a href="{{ faculty_form.instance.signature.url }}" target="_blank" class="btn btn-info btn-sm">
+                            View Current File
+                        </a>
+                        <label class="form-label"> Change: </label>
+                    {% endif %}
+                    <input type="file" name="signature" class="form-control mt-2" id="signature">
+                </div>
+            </div>
+        
+        </div>
+
+        <!-- Row 6 -->
+        
+
+
+
+        <h3>Educational Details</h3>
+        {{ educational_formset.management_form }}
+        <table id="educational-details-table" class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Degree</th>
+                    <th>Branch Specialization</th>
+                    <th>Institute/University</th>
+                    <th>Year of Passing</th>
+                    <th>Actions</th> 
+                </tr>
+            </thead>
+            
+
+            <tbody id="educational-formset-body">
+                {% for form in educational_formset %}
+                <tr class="education-form-row">
+                    {{ form.id }}
+                    <td>{{ form.degree }}</td>
+                    <td>{{ form.branch_specialization }}</td>
+                    <td>{{ form.institute_university }}</td>
+                    <td>{{ form.year_of_passing }}</td>
+                    
+                    <td>
+                        <button type="button" class="remove-form btn btn-sm btn-danger">Remove</button>
+                        <span>Delete</span>
+                        {{ form.id }}
+                        {{ form.DELETE }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="button" id="add-education" class="btn btn-sm btn-warning">+ Add More Education</button>
+        
+        <h3>Experience Details</h3>
+        {{ experience_formset.management_form }}
+        <table id="experience-details-table" class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Designation</th>
+                    <th>Department</th>
+                    <th>Institution/Organization</th>
+                    <th>Period From</th>
+                    <th>Period To</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="experience-formset-body">
+                {% for form in experience_formset %}
+                <tr id="experience-form-row">
+                        {{ form.id }}
+                    <td>{{ form.designation }}</td>
+                    <td>{{ form.department }}</td>
+                    <td>{{ form.institution_organization }}</td>
+                    <td>{{ form.period_from }}</td>
+                    <td>{{ form.period_to }}</td>
+                     <td>
+
+                        <button type="button" class="remove-experience-row btn btn-sm btn-danger" >
+                            Remove
+                        </button>
+                        <label>
+                            <span>Delete</span>
+                            {{ form.id }}
+                            {{ form.DELETE }}
+                        </label>
+                    </td> 
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="button" id="add-experience" class="btn btn-sm btn-warning">+ Add More Experience</button>
+         
+
+
+        <!-- Submit Button -->
+        <div class="row mt-4">
+            <div class="col text-center">
+                <button type="submit" id="submit-button" class="btn btn-success">Submit</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    function updateTotalForms(prefix) {
+        let totalFormsInput = document.querySelector(`#id_${prefix}-TOTAL_FORMS`);
+        if (totalFormsInput) {
+            totalFormsInput.value = document.querySelectorAll(`#${prefix}-details-table tbody tr:not([style*='display: none'])`).length;
+        }
+    }
+
+    function addRow(prefix) {
+        let tableBody = document.querySelector(`#${prefix}-details-table tbody`);
+        let totalFormsInput = document.querySelector(`#id_${prefix}-TOTAL_FORMS`);
+        
+        if (!tableBody || !totalFormsInput) return; // Avoid errors if elements are missing
+
+        let totalForms = parseInt(totalFormsInput.value, 10);
+        let hiddenRow = tableBody.querySelector("tr[style*='display: none']");
+
+        if (!hiddenRow) return; // Avoid errors if no hidden row exists
+
+        let newRow = hiddenRow.cloneNode(true);
+        newRow.style.display = ""; // Make row visible
+        newRow.id = `${prefix}-form-${totalForms}`;
+
+        newRow.querySelectorAll("input, select").forEach((input) => {
+            let name = input.name.replace(/\d+/, totalForms);
+            let id = input.id.replace(/\d+/, totalForms);
+            input.name = name;
+            input.id = id;
+            input.value = "";
+        });
+
+        let removeButton = newRow.querySelector(".remove-education-row, .remove-experience-row");
+        if (removeButton) removeButton.style.display = "inline-block";
+
+        tableBody.appendChild(newRow);
+        totalFormsInput.value = totalForms + 1; // Update form count
+    }
+
+    function removeRow(event, prefix) {
+        let row = event.target.closest("tr");
+        if (row) {
+            row.remove();
+            updateTotalForms(prefix);
+        }
+    }
+
+    let addEducationBtn = document.getElementById("add-education");
+    let addExperienceBtn = document.getElementById("add-experience");
+
+    if (addEducationBtn) {
+        addEducationBtn.addEventListener("click", function() {
+            addRow("educational");
+        });
+    }
+
+    if (addExperienceBtn) {
+        addExperienceBtn.addEventListener("click", function() {
+            addRow("experience");
+        });
+    }
+
+    document.addEventListener("click", function(event) {
+        if (event.target.classList.contains("remove-education-row")) {
+            removeRow(event, "educational");
+        }
+        if (event.target.classList.contains("remove-experience-row")) {
+            removeRow(event, "experience");
+        }
+    });
+});
+</script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+    // EDUCATIONAL FORMSET
+    let educationTable = document.getElementById("educational-details-table");
+    let educationBody = document.getElementById("educational-formset-body");
+    let addEducationBtn = document.getElementById("add-education");
+
+    let educationTotalForms = document.getElementById("id_education-TOTAL_FORMS");
+
+    addEducationBtn.addEventListener("click", function () {
+        let formIdx = educationTotalForms.value;
+        let newForm = educationBody.children[0].cloneNode(true);
+
+        newForm.querySelectorAll("input, select").forEach(function (input) {
+            input.name = input.name.replace(/\d+/, formIdx);
+            input.id = input.id.replace(/\d+/, formIdx);
+            input.value = "";
+        });
+
+        newForm.querySelector(".remove-form").style.display = "inline";
+        educationBody.appendChild(newForm);
+        educationTotalForms.value = parseInt(formIdx) + 1;
+    });
+
+    educationBody.addEventListener("click", function (event) {
+        if (event.target.classList.contains("remove-form")) {
+            event.target.closest("tr").remove();
+        }
+    });
+
+    // EXPERIENCE FORMSET
+    let experienceTable = document.getElementById("experience-details-table");
+    let experienceBody = document.getElementById("experience-formset-body");
+    let addExperienceBtn = document.getElementById("add-experience");
+
+    let experienceTotalForms = document.getElementById("id_experience-TOTAL_FORMS");
+
+    addExperienceBtn.addEventListener("click", function () {
+        let formIdx = experienceTotalForms.value;
+        let newForm = experienceBody.children[0].cloneNode(true);
+
+        newForm.querySelectorAll("input, select").forEach(function (input) {
+            input.name = input.name.replace(/\d+/, formIdx);
+            input.id = input.id.replace(/\d+/, formIdx);
+            input.value = "";
+        });
+
+        newForm.querySelector(".remove-experience-row").style.display = "inline";
+        experienceBody.appendChild(newForm);
+        experienceTotalForms.value = parseInt(formIdx) + 1;
+    });
+
+    experienceBody.addEventListener("click", function (event) {
+        if (event.target.classList.contains("remove-experience-row")) {
+            event.target.closest("tr").remove();
+        }
+    });
+});
+document.addEventListener("DOMContentLoaded", function () {
+    setTimeout(function () {
+      const alerts = document.querySelectorAll('.message-alert');
+      alerts.forEach(alert => {
+        alert.classList.remove('show'); // Bootstrap hide animation
+        setTimeout(() => alert.remove(), 500); // Allow fade-out before removal
+      });
+    }, 5000); // 15 seconds
+  });
+</script>
+{% endblock content %}

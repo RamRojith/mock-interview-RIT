@@ -1,0 +1,906 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ===== CSS Variables ===== */
+:root {
+  --primary-blue: #1a4b8c;
+  --primary-blue-light: #2c5aa0;
+  --primary-blue-dark: #0d3a6c;
+  --blue-light: #f0f9ff;
+  --blue-light-2: #e0f2fe;
+  --blue-border: #bae6fd;
+  --white: #ffffff;
+  --off-white: #f8fafc;
+  --gray-light: #f1f5f9;
+  --gray-border: #e2e8f0;
+  --gray-medium: #cbd5e1;
+  --gray-text: #64748b;
+  --dark-text: #1e293b;
+  --black: #000000;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
+  --shadow-blue: 0 4px 20px rgba(26, 75, 140, 0.15);
+  --shadow-blue-hover: 0 8px 40px rgba(26, 75, 140, 0.25);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Global Styles ===== */
+.modern-container {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, var(--off-white) 0%, var(--gray-light) 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  color: var(--dark-text);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ===== Page Header ===== */
+.modern-container .page-header {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  color: var(--white);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modern-container .page-title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.modern-container .page-title i {
+  font-size: 1.8rem;
+  opacity: 0.9;
+}
+
+.modern-container .badge {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  padding: 0.5rem 1.25rem;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ===== Buttons ===== */
+.modern-container .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: var(--transition);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.modern-container .btn-primary {
+  background: var(--white);
+  color: var(--primary-blue);
+  border: 2px solid transparent;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.modern-container .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  background: var(--off-white);
+}
+
+.modern-container .btn-secondary {
+  background: var(--gray-light);
+  color: var(--dark-text);
+  border: 1px solid var(--gray-border);
+}
+
+.modern-container .btn-secondary:hover {
+  background: var(--gray-medium);
+}
+
+/* ===== Modal ===== */
+.modern-container .modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  backdrop-filter: blur(5px);
+}
+
+.modern-container .modal-content {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  position: relative;
+  box-shadow: var(--shadow-lg);
+  overflow-y: auto;
+}
+
+.modern-container .modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  color: var(--gray-text);
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  z-index: 1001;
+}
+
+.modern-container .modal-close:hover {
+  background: var(--gray-light);
+  color: var(--dark-text);
+}
+
+/* ===== Card Header ===== */
+.modern-container .card-header {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  color: var(--white);
+  padding: 1.5rem;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.modern-container .card-header i {
+  font-size: 1.3rem;
+}
+
+/* ===== Form Styles ===== */
+.modern-container form {
+  padding: 1.5rem;
+}
+
+.modern-container .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.modern-container .form-label {
+  display: block;
+  font-weight: 600;
+  color: var(--dark-text);
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.modern-container .form-control {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  transition: var(--transition);
+  background: var(--white);
+  box-sizing: border-box;
+}
+
+.modern-container .form-control:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+}
+
+.modern-container textarea.form-control {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.modern-container input[type="file"].form-control {
+  padding: 0.75rem;
+}
+
+.modern-container .form-text {
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--gray-text);
+  font-size: 0.85rem;
+}
+
+/* ===== Form Actions ===== */
+.modern-container .form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--gray-border);
+}
+
+/* ===== Documents Section ===== */
+.modern-container .documents-section {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-border);
+  box-shadow: var(--shadow-sm);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+.modern-container .documents-section:nth-child(1) { animation-delay: 0.1s; }
+.modern-container .documents-section:nth-child(2) { animation-delay: 0.2s; }
+
+.modern-container .section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-blue-dark);
+  margin: 0 0 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--gray-light);
+}
+
+.modern-container .section-title i {
+  color: var(--primary-blue);
+}
+
+/* ===== Document Table ===== */
+.modern-container .document-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 1rem;
+}
+
+.modern-container .document-table thead {
+  background: var(--off-white);
+}
+
+.modern-container .document-table th {
+  color: var(--primary-blue);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem;
+  border-bottom: 2px solid var(--gray-border);
+  text-align: left;
+}
+
+.modern-container .document-table td {
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid var(--gray-light);
+  vertical-align: top;
+}
+
+.modern-container .document-table tbody tr {
+  transition: var(--transition);
+}
+
+.modern-container .document-table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.03);
+}
+
+/* ===== Document Name ===== */
+.modern-container .document-name {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.modern-container .document-icon {
+  font-size: 1.5rem;
+  color: var(--primary-blue);
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+}
+
+.modern-container .document-title {
+  font-weight: 700;
+  color: var(--dark-text);
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.modern-container .document-description {
+  color: var(--gray-text);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* ===== Document Meta ===== */
+.modern-container .document-meta {
+  color: var(--gray-text);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.modern-container .document-meta i {
+  opacity: 0.7;
+}
+
+/* ===== Document Actions ===== */
+.modern-container .document-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.modern-container .action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  background: var(--off-white);
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--dark-text);
+  text-decoration: none;
+  transition: var(--transition);
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+
+.modern-container .action-btn:hover {
+  background: var(--gray-light);
+  transform: translateY(-1px);
+}
+
+.modern-container .action-btn.edit:hover {
+  background: var(--blue-light);
+  border-color: var(--blue-border);
+  color: var(--primary-blue);
+}
+
+.modern-container .action-btn.delete:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+/* ===== YouTube Button ===== */
+.modern-container .action-btn[href*="youtube"] {
+  background: #ff0000;
+  color: white;
+  border-color: #ff0000;
+}
+
+.modern-container .action-btn[href*="youtube"]:hover {
+  background: #cc0000;
+  border-color: #cc0000;
+}
+
+/* ===== Empty State ===== */
+.modern-container .empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--gray-text);
+}
+
+.modern-container .empty-icon {
+  font-size: 3rem;
+  color: var(--primary-blue);
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.modern-container .empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--dark-text);
+  margin: 0 0 0.5rem 0;
+}
+
+.modern-container .empty-state p {
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* ===== Error Message ===== */
+.modern-container .action-btn[style*="color:#e74c3c"],
+.modern-container p[style*="color:#e74c3c"] {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #991b1b;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+  .modern-container {
+    padding: 1rem;
+  }
+  
+  .modern-container .page-header {
+    padding: 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .modern-container .page-title {
+    font-size: 1.75rem;
+  }
+  
+  .modern-container .documents-section {
+    padding: 1.5rem;
+  }
+  
+  .modern-container .document-table {
+    display: block;
+    overflow-x: auto;
+  }
+  
+  .modern-container .document-table th,
+  .modern-container .document-table td {
+    padding: 0.875rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .modern-container .document-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .modern-container .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .modern-container .modal-content {
+    max-height: 80vh;
+  }
+  
+  .modern-container .form-actions {
+    flex-direction: column;
+  }
+  
+  .modern-container .form-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .modern-container .page-header {
+    padding: 1.25rem;
+  }
+  
+  .modern-container .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .modern-container .documents-section {
+    padding: 1.25rem;
+  }
+  
+  .modern-container .section-title {
+    font-size: 1.25rem;
+  }
+  
+  .modern-container .document-name {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .modern-container .document-title {
+    font-size: 1rem;
+  }
+  
+  .modern-container .empty-state {
+    padding: 2rem 1rem;
+  }
+  
+  .modern-container .empty-icon {
+    font-size: 2.5rem;
+  }
+}
+</style>
+
+<div class="modern-container">
+
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-cloud-upload-alt"></i>
+            Course Materials
+            <span class="badge">{{ folder.course.course_code }} — {{ folder.course.title }}</span>
+        </h1>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="openAddModal('document')">
+                <i class="fas fa-plus"></i> Add Document
+            </button>
+            <button class="btn btn-primary" onclick="openAddModal('video')">
+                <i class="fas fa-video"></i> Add Video
+            </button>
+        </div>
+    </div>
+
+    <!-- Document Modal -->
+    <div class="modal" id="documentModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('documentModal')">×</button>
+            <div class="card-header">
+                <i class="fas fa-file-alt"></i>
+                <span id="documentModalTitle">Upload New Document</span>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" id="documentForm" action="{% url 'upload_to_folder' course_id=folder.course.id folder_id=folder.id %}">
+                {% csrf_token %}
+
+                <input type="hidden" name="edit_document_id" id="editDocumentId">
+
+                <div class="form-group">
+                    <label class="form-label">Document Title</label>
+                    <input type="text" name="title" class="form-control" required placeholder="e.g. Unit 3 Notes - DBMS">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description (optional)</label>
+                    <textarea name="description" class="form-control" rows="4" placeholder="Key topics, chapter references..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">File (PDF, DOCX, PPTX, XLSX recommended)</label>
+                    <div id="currentDocumentFile" style="display:none; margin-bottom:12px; padding:12px; background:#F0F4FF; border-radius:8px;"></div>
+                    <input type="file" name="file" class="form-control" id="documentFileInput">
+                    <small class="form-text">Max 50MB • Preferred: PDF, Word (.docx), PowerPoint (.pptx)</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" name="action" value="upload_document" id="documentSubmitBtn" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Upload Document
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('documentModal')">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Video Modal -->
+    <div class="modal" id="videoModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('videoModal')">×</button>
+            <div class="card-header">
+                <i class="fas fa-video"></i>
+                <span id="videoModalTitle">Upload New Video</span>
+            </div>
+
+            <form method="post" id="videoForm" action="{% url 'upload_to_folder' course_id=folder.course.id folder_id=folder.id %}">
+                {% csrf_token %}
+
+                <input type="hidden" name="edit_video_id" id="editVideoId">
+
+                <div class="form-group">
+                    <label class="form-label">Video Title</label>
+                    <input type="text" name="title" class="form-control" required placeholder="e.g. Lecture 4 - Normalization in DBMS">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description (optional)</label>
+                    <textarea name="description" class="form-control" rows="4" placeholder="Main topics covered, timestamps..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">YouTube URL <span style="color:#e74c3c;">*</span></label>
+                    <input type="url" name="youtube_url" class="form-control" required
+                           placeholder="https://www.youtube.com/watch?v=xxxxxxxxxxx   or   https://youtu.be/xxxxxxxxxxx">
+                    <small class="form-text">Short links (youtu.be) and full watch links are supported</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" name="action" value="upload_video" id="videoSubmitBtn" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Add Video
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('videoModal')">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Documents Section -->
+    <div class="documents-section">
+        <h2 class="section-title">
+            <i class="fas fa-folder-open"></i> Uploaded Documents
+        </h2>
+
+        {% if documents %}
+        <table class="document-table">
+            <thead>
+                <tr>
+                    <th>Document</th>
+                    <th>Uploaded</th>
+                    <th>Size</th>
+                    <th style="width: 220px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for doc in documents %}
+                <tr>
+                    <td>
+                        <div class="document-name">
+                            <i class="fas fa-file-alt document-icon"></i>
+                            <div>
+                                <div class="document-title">{{ doc.document_title }}</div>
+                                {% if doc.description %}
+                                <div class="document-description">{{ doc.description|truncatewords:35 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="document-meta">
+                        <i class="far fa-calendar-alt"></i> {{ doc.uploaded_at|date:"M d, Y" }}
+                    </td>
+                    <td class="document-meta">
+                        <i class="fas fa-database"></i> {{ doc.file.size|filesizeformat }}
+                    </td>
+                    <td>
+                        <div class="document-actions">
+                            <a href="{{ doc.file.url }}" target="_blank" class="action-btn">
+                                <i class="far fa-eye"></i> View
+                            </a>
+                            <a href="{{ doc.file.url }}" download class="action-btn">
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                            <button class="action-btn edit" onclick="openEditDocument({{ doc.id }}, '{{ doc.document_title|escapejs }}', '{{ doc.description|escapejs|default:'' }}')">
+                                <i class="far fa-edit"></i> Edit
+                            </button>
+                            <form method="post" action="{% url 'upload_to_folder' course_id=folder.course.id folder_id=folder.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="delete_document" value="{{ doc.id }}">
+                                <button type="submit" class="action-btn delete" onclick="return confirm('Delete this document?')">
+                                    <i class="far fa-trash-alt"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-file-upload empty-icon"></i>
+            <h3>No documents yet</h3>
+            <p>Start by adding lecture notes, slides or PDFs.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Videos Section -->
+    <div class="documents-section">
+        <h2 class="section-title">
+            <i class="fas fa-video"></i> Uploaded Videos
+        </h2>
+
+        {% if videos %}
+        <table class="document-table">
+            <thead>
+                <tr>
+                    <th>Video</th>
+                    <th>Uploaded</th>
+                    <th style="width: 180px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for vid in videos %}
+                <tr>
+                    <td>
+                        <div class="document-name">
+                            <i class="fas fa-video document-icon"></i>
+                            <div style="flex:1;">
+                                <div class="document-title">{{ vid.title }}</div>
+                                
+                                {% if vid.youtube_video_id %}
+                                
+                                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                    <a href="https://www.youtube.com/watch?v={{ vid.youtube_video_id }}" 
+                                       target="_blank" 
+                                       class="action-btn" 
+                                       style="font-size: 0.85rem; padding: 6px 10px;">
+                                        <i class="fab fa-youtube"></i> Watch on YouTube
+                                    </a>
+                                </div>
+                                {% else %}
+                                <p style="color:#e74c3c; margin:12px 0; font-size:0.95rem;">
+                                    <i class="fas fa-exclamation-triangle"></i> Cannot embed — invalid or unsupported YouTube link.<br>
+                                    <small>Entered URL: {{ vid.youtube_url|truncatechars:80 }}</small><br>
+                                    <small>Please edit and provide a valid YouTube video URL (standard, youtu.be, shorts, etc.)</small>
+                                </p>
+                                {% endif %}
+                                
+                                {% if vid.description %}
+                                <div class="document-description">{{ vid.description|truncatewords:40 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="document-meta">
+                        <i class="far fa-calendar-alt"></i> {{ vid.uploaded_at|date:"M d, Y" }}
+                    </td>
+                    <td>
+                        <div class="document-actions">
+                            <button class="action-btn edit" onclick="openEditVideo({{ vid.id }}, '{{ vid.title|escapejs }}', '{{ vid.youtube_url|escapejs }}', '{{ vid.description|escapejs|default:'' }}')">
+                                <i class="far fa-edit"></i> Edit
+                            </button>
+                            <form method="post" action="{% url 'upload_to_folder' course_id=folder.course.id folder_id=folder.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="delete_video" value="{{ vid.id }}">
+                                <button type="submit" class="action-btn delete" onclick="return confirm('Delete this video?')">
+                                    <i class="far fa-trash-alt"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-video empty-icon"></i>
+            <h3>No videos yet</h3>
+            <p>Add YouTube lecture recordings or tutorials.</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+// Modal & Form Handling
+// ────────────────────────────────────────────────
+
+function resetDocumentForm() {
+    const form = document.getElementById('documentForm');
+    form.reset();
+    document.getElementById('documentModalTitle').textContent = 'Upload New Document';
+    document.getElementById('documentSubmitBtn').value = 'upload_document';
+    document.getElementById('documentSubmitBtn').innerHTML = '<i class="fas fa-upload"></i> Upload Document';
+    document.getElementById('currentDocumentFile').style.display = 'none';
+    document.getElementById('currentDocumentFile').innerHTML = '';
+    document.getElementById('editDocumentId').value = '';
+}
+
+function resetVideoForm() {
+    const form = document.getElementById('videoForm');
+    form.reset();
+    document.getElementById('videoModalTitle').textContent = 'Upload New Video';
+    document.getElementById('videoSubmitBtn').value = 'upload_video';
+    document.getElementById('videoSubmitBtn').innerHTML = '<i class="fas fa-upload"></i> Add Video';
+    document.getElementById('editVideoId').value = '';
+}
+
+function openAddModal(type) {
+    if (type === 'document') {
+        resetDocumentForm();
+        document.getElementById('documentModal').style.display = 'flex';
+    } else if (type === 'video') {
+        resetVideoForm();
+        document.getElementById('videoModal').style.display = 'flex';
+    }
+}
+
+function openEditDocument(id, title, description) {
+    resetDocumentForm();
+    
+    document.getElementById('documentModalTitle').textContent = 'Edit Document';
+    document.getElementById('documentForm').querySelector('input[name="title"]').value = title;
+    document.getElementById('documentForm').querySelector('textarea[name="description"]').value = description;
+    
+    // Show current file info
+    document.getElementById('currentDocumentFile').style.display = 'block';
+    document.getElementById('currentDocumentFile').innerHTML = 'Current file exists • Upload new file to replace (optional)';
+
+    // Change submit button
+    document.getElementById('documentSubmitBtn').value = 'update_document';
+    document.getElementById('documentSubmitBtn').innerHTML = '<i class="fas fa-save"></i> Update Document';
+
+    // Set hidden ID
+    document.getElementById('editDocumentId').value = id;
+
+    document.getElementById('documentModal').style.display = 'flex';
+}
+
+function openEditVideo(id, title, url, description) {
+    resetVideoForm();
+    
+    document.getElementById('videoModalTitle').textContent = 'Edit Video';
+    document.getElementById('videoForm').querySelector('input[name="title"]').value = title;
+    document.getElementById('videoForm').querySelector('input[name="youtube_url"]').value = url;
+    document.getElementById('videoForm').querySelector('textarea[name="description"]').value = description;
+
+    // Change submit button
+    document.getElementById('videoSubmitBtn').value = 'update_video';
+    document.getElementById('videoSubmitBtn').innerHTML = '<i class="fas fa-save"></i> Update Video';
+
+    // Set hidden ID
+    document.getElementById('editVideoId').value = id;
+
+    document.getElementById('videoModal').style.display = 'flex';
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        if (modalId === 'documentModal') resetDocumentForm();
+        if (modalId === 'videoModal') resetVideoForm();
+    }
+}
+
+// Close on outside click
+document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', e => {
+        if (e.target === modal) closeModal(modal.id);
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load canva_tags %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --primary: #4361EE;
+        --primary-light: #EFF3FF;
+        --secondary: #3A0CA3;
+        --accent: #00B4D8;
+        --text-dark: #2B2D42;
+        --text-medium: #4A4B63;
+        --text-light: #8D8E9E;
+        --border: #E2E4ED;
+        --bg-light: #F8F9FC;
+        --success: #10B981;
+        --warning: #F59E0B;
+        --danger: #EF4444;
+    }
+    
+    .submission-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 20px;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    
+    .assignment-header {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid var(--border);
+    }
+    
+    .assignment-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+    }
+    
+    .assignment-meta {
+        display: flex;
+        gap: 1.5rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.95rem;
+        color: var(--text-medium);
+    }
+    
+    .meta-icon {
+        color: var(--primary);
+    }
+    
+    .download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: var(--primary-light);
+        color: var(--primary);
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        margin-top: 1rem;
+        transition: all 0.2s;
+    }
+    
+    .download-btn:hover {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .submissions-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+    }
+    
+    .submissions-table thead th {
+        text-align: left;
+        padding: 16px;
+        font-weight: 600;
+        color: var(--text-dark);
+        background: var(--bg-light);
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .submissions-table tbody tr {
+        transition: all 0.2s;
+    }
+    
+    .submissions-table tbody tr:hover {
+        background: rgba(67, 97, 238, 0.03);
+    }
+    
+    .submissions-table td {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .status-submitted {
+        background: #E3FCEF;
+        color: #006644;
+    }
+    
+    .status-pending {
+        background: #FFF3E0;
+        color: #EF6C00;
+    }
+    
+    .status-not-submitted {
+        background: #FFEBEE;
+        color: #C62828;
+    }
+    
+    .status-marked {
+        background: #E3F2FD;
+        color: #1565C0;
+    }
+    
+    .view-submission {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .view-submission:hover {
+        text-decoration: underline;
+    }
+    
+    .marks-input {
+        width: 80px;
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+    }
+    
+    .marks-input:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+    }
+    
+    .row-save-btn {
+        padding: 8px 16px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition
+
+: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .row-save-btn:hover {
+        background: var(--secondary);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(67, 97, 238, 0.2);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: var(--bg-light);
+        border-radius: 12px;
+        border: 1px dashed var(--border);
+        margin-top: 2rem;
+    }
+    
+    .empty-icon {
+        font-size: 3rem;
+        color: var(--primary);
+        opacity: 0.2;
+        margin-bottom: 1.5rem;
+    }
+    
+    .empty-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text-dark);
+    }
+    
+    .total-marks {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .marks-display {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 12px;
+        font-size: 0.95rem;
+        color: var(--text-medium);
+        background: var(--bg-light);
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+    }
+</style>
+
+<div class="submission-container">
+    <div class="assignment-header">
+        <h1 class="assignment-title">{{ assignment.title }}</h1>
+        <p>{{ assignment.description }}</p>
+        
+        <div class="assignment-meta">
+            <div class="meta-item">
+                <i class="fas fa-calendar-alt meta-icon"></i>
+                <span>Due: {{ assignment.due_date|date:"M d, Y h:i A" }}</span>
+                {% if now > assignment.due_date %}
+                <span style="color: var(--danger); margin-left: 8px;">(Past Due)</span>
+                {% endif %}
+            </div>
+            <div class="meta-item">
+                <i class="fas fa-star meta-icon"></i>
+                <span>Total Marks: {{ assignment.total_marks }}</span>
+            </div>
+            <div class="meta-item">
+                <i class="fas fa-folder meta-icon"></i>
+                <span>Course: {{ assignment.course_code }}</span>
+            </div>
+            <div class="meta-item">
+                <i class="fas fa-users meta-icon"></i>
+                <span>Batch: {{ assignment.batch }} | Intake: {{ assignment.intake }}</span>
+            </div>
+        </div>
+        
+        <a href="{{ assignment.assignment_file.url }}" download class="download-btn">
+            <i class="fas fa-download"></i>
+            Download Assignment File
+        </a>
+        
+        <div class="total-marks">
+            <i class="fas fa-chart-pie meta-icon"></i>
+            <span>Submission Summary:</span>
+            <span class="marks-display" style="color: var(--success);">
+                <i class="fas fa-check-circle"></i>
+                Submitted: {{ submitted_count }}/{{ total_students }}
+            </span>
+            <span class="marks-display" style="color: var(--primary);">
+                <i class="fas fa-check-double"></i>
+                Marked: {{ marked_count }}
+            </span>
+            <span class="marks-display" style="color: var(--warning);">
+                <i class="fas fa-hourglass-half"></i>
+                Pending: {{ pending_count }}
+            </span>
+            <span class="marks-display" style="color: var(--danger);">
+                <i class="fas fa-times-circle"></i>
+                Not Submitted: {{ total_students|subtract:submitted_count }}
+            </span>
+        </div>
+    </div>
+    
+    {% if student_submissions %}
+    <div class="table-responsive">
+        <table class="submissions-table">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Status</th>
+                    <th>Submission Date</th>
+                    <th>Submitted File</th>
+                    <th>Marks</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in student_submissions %}
+                <tr>
+                    <td>
+                        <strong>{{ item.student.first_name }} {{ item.student.surname }}</strong>
+                        <div style="font-size: 0.85rem; color: var(--text-light); margin-top: 4px;">
+                            {{ item.student.reg_number }} | {{ item.enrollment.Programme_of_study }}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge status-{% if item.status == 'marked' %}marked{% elif item.status == 'completed' %}submitted{% elif item.status == 'pending' %}pending{% else %}not-submitted{% endif %}">
+                            <i class="fas fa-{% if item.status == 'marked' %}check-double{% elif item.status == 'completed' %}check-circle{% elif item.status == 'pending' %}hourglass-half{% else %}times-circle{% endif %}"></i>
+                            {{ item.submission.get_status_display|default:"Not Submitted" }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if item.submitted_at %}
+                            {{ item.submitted_at|date:"M d, Y h:i A" }}
+                        {% else %}
+                            <span style="color: var(--text-light);">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.submission and item.submission.submitted_file %}
+                        <a href="{{ item.submission.submitted_file.url }}" target="_blank" class="view-submission">
+                            <i class="fas fa-eye"></i> View File
+                        </a>
+                        {% else %}
+                        <span style="color: var(--text-light);">No submission</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <input type="number" 
+                               name="marks" 
+                               class="marks-input" 
+                               value="{{ item.marks_obtained|default_if_none:'' }}" 
+                               min="0" 
+                               max="{{ assignment.total_marks }}" 
+                               step="0.01"
+                               placeholder="0-{{ assignment.total_marks }}"
+                               {% if not item.submission %}disabled{% endif %}>
+                    </td>
+                    <td>
+                        <form method="post" action="">
+                            {% csrf_token %}
+                            <input type="hidden" name="student_reg_no" value="{{ item.student.reg_number }}">
+                            <input type="hidden" name="marks" class="hidden-marks" value="{{ item.marks_obtained|default_if_none:'' }}">
+                            <button type="submit" class="row-save-btn" {% if not item.submission %}disabled{% endif %}>
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const marksInputs = document.querySelectorAll('.marks-input');
+            
+            marksInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const form = this.closest('tr').querySelector('form');
+                    const hiddenInput = form.querySelector('.hidden-marks');
+                    
+                    hiddenInput.value = this.value;
+
+                    // Preventing values beyond total marks
+                    if (parseFloat(this.value) > parseFloat(this.max)) {
+                        this.value = this.max;
+                        hiddenInput.value = this.max;
+                    }
+                });
+            });
+        });
+    </script>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-users empty-icon"></i>
+            <h3 class="empty-title">No Students Enrolled</h3>
+            <p>There are no students enrolled in this course for the selected intake and batch.</p>
+        </div>
+    {% endif %}
+</div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,1296 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.student-leave-approvals-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.student-leave-approvals-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.student-leave-approvals-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.student-leave-approvals-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.student-leave-approvals-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.student-leave-approvals-portal .hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.student-leave-approvals-portal .hero h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.student-leave-approvals-portal .hero p {
+  color: #64748b;
+  margin: 0;
+}
+
+.student-leave-approvals-portal .stats-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.student-leave-approvals-portal .stat-card {
+  flex: 1;
+  min-width: 160px;
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+}
+
+.student-leave-approvals-portal .stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.student-leave-approvals-portal .stat-icon.pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.student-leave-approvals-portal .stat-icon.approved {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.student-leave-approvals-portal .stat-icon.rejected {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.student-leave-approvals-portal .stat-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.student-leave-approvals-portal .stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1;
+}
+
+.student-leave-approvals-portal .tab-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.student-leave-approvals-portal .tab-pill {
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: 12px 12px 0 0;
+  color: #64748b;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.student-leave-approvals-portal .tab-count {
+  background: #e2e8f0;
+  color: #475569;
+  padding: 0.2rem 0.5rem;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.student-leave-approvals-portal .tab-pill.pending.active {
+  color: #d97706;
+  border-bottom: 3px solid #d97706;
+  background: #fffbeb;
+}
+
+.student-leave-approvals-portal .tab-pill.approved.active {
+  color: #059669;
+  border-bottom: 3px solid #059669;
+  background: #ecfdf5;
+}
+
+.student-leave-approvals-portal .tab-pill.rejected.active {
+  color: #dc2626;
+  border-bottom: 3px solid #dc2626;
+  background: #fef2f2;
+}
+
+.student-leave-approvals-portal .filter-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+}
+
+.student-leave-approvals-portal .form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.student-leave-approvals-portal .form-control,
+.student-leave-approvals-portal .form-select {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+}
+
+.student-leave-approvals-portal .btn-apply {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.student-leave-approvals-portal .btn-reset {
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.student-leave-approvals-portal .section-card {
+  background: white;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+}
+
+.student-leave-approvals-portal .section-head {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-leave-approvals-portal .section-head-title {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #1a4b8c;
+}
+
+.student-leave-approvals-portal .section-head-sub {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.student-leave-approvals-portal .toggle-btn {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 40px;
+  padding: 0.25rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.student-leave-approvals-portal .select-bar {
+  padding: 0.75rem 1.5rem;
+  background: #fefce8;
+  border-bottom: 1px solid #fde047;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.student-leave-approvals-portal .table-responsive {
+  overflow: visible;
+}
+
+.student-leave-approvals-portal .custom-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+  table-layout: auto;
+}
+
+.student-leave-approvals-portal .custom-table th {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 1rem 0.75rem;
+  border-bottom: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.student-leave-approvals-portal .custom-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #374151;
+  font-size: 0.85rem;
+  border-right: 1px solid #f1f5f9;
+}
+
+.student-leave-approvals-portal .custom-table th:first-child {
+  background: linear-gradient(135deg, #0d2d56 0%, #1a4b8c 100%);
+}
+
+.student-leave-approvals-portal .date-stack,
+.student-leave-approvals-portal .applied-stack {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  color: #0f172a;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.student-leave-approvals-portal .date-stack small,
+.student-leave-approvals-portal .applied-stack small {
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.student-leave-approvals-portal .duration-pill {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.38rem 0.65rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.student-leave-approvals-portal .custom-table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.03);
+}
+
+.student-leave-approvals-portal .type-pill {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border-radius: 40px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.student-leave-approvals-portal .type-pill.leave {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.student-leave-approvals-portal .type-pill.od {
+  background: #f3e8ff;
+  color: #6b21a5;
+}
+
+.student-leave-approvals-portal .badge-s {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.student-leave-approvals-portal .badge-pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.student-leave-approvals-portal .badge-approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.student-leave-approvals-portal .badge-rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.student-leave-approvals-portal .student-name {
+  font-weight: 800;
+  color: #1a4b8c;
+  font-size: 0.85rem;
+}
+
+.student-leave-approvals-portal .student-reg {
+  font-size: 0.76rem;
+  color: #64748b;
+}
+
+.student-leave-approvals-portal .approval-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.student-leave-approvals-portal .approval-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.5rem;
+  align-items: start;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.student-leave-approvals-portal .approval-level {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #1a4b8c;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.student-leave-approvals-portal .approval-person {
+  display: block;
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.student-leave-approvals-portal .approval-status {
+  margin-top: 0.2rem;
+  display: inline-flex;
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.student-leave-approvals-portal .btn-approve-main {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: white;
+}
+
+.student-leave-approvals-portal .btn-reject-main {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: white;
+}
+
+.student-leave-approvals-portal .btn-approve-all-main {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: white;
+}
+
+.student-leave-approvals-portal .pag-wrap {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-leave-approvals-portal .pag-info {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.student-leave-approvals-portal .pag-btns {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.student-leave-approvals-portal .pag-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 0.4rem 0.7rem;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.student-leave-approvals-portal .pag-btn.active {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+}
+
+.student-leave-approvals-portal .empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.student-leave-approvals-portal .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+  color: #1a4b8c;
+}
+
+.modal-content {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+@media (max-width: 1200px) {
+  .student-leave-approvals-portal {
+    padding: 1rem;
+  }
+
+  .student-leave-approvals-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .student-leave-approvals-portal .stats-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .student-leave-approvals-portal .tab-row {
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .student-leave-approvals-portal .custom-table,
+  .student-leave-approvals-portal .custom-table thead,
+  .student-leave-approvals-portal .custom-table tbody,
+  .student-leave-approvals-portal .custom-table tr,
+  .student-leave-approvals-portal .custom-table td {
+    display: block;
+    width: 100% !important;
+  }
+
+  .student-leave-approvals-portal .custom-table thead {
+    display: none;
+  }
+
+  .student-leave-approvals-portal .custom-table tr {
+    margin-bottom: 1rem;
+    border: 1px solid #dbeafe;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+  }
+
+  .student-leave-approvals-portal .custom-table td {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: center;
+    min-height: 50px;
+    padding: 0.85rem 1rem;
+    text-align: left !important;
+    border-right: none;
+    border-bottom: 1px solid #eef2f7;
+  }
+
+  .student-leave-approvals-portal .custom-table td:last-child {
+    border-bottom: none;
+  }
+
+  .student-leave-approvals-portal .custom-table td::before {
+    content: attr(data-label);
+    color: #1a4b8c;
+    font-size: 0.75rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .student-leave-approvals-portal .custom-table td[colspan] {
+    display: block;
+    text-align: center !important;
+  }
+
+  .student-leave-approvals-portal .custom-table td[colspan]::before {
+    content: none;
+  }
+
+  .student-leave-approvals-portal .section-head,
+  .student-leave-approvals-portal .pag-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .student-leave-approvals-portal .custom-table td {
+    grid-template-columns: 96px minmax(0, 1fr);
+    padding: 0.8rem;
+  }
+
+  .student-leave-approvals-portal .stats-row {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<div class="student-leave-approvals-portal">
+  <div class="page-header">
+    <h1>
+      <i class="fas fa-user-check me-2"></i>
+      Student Leave / OD Approvals
+    </h1>
+    <p class="header-subtitle">
+      Review, approve, or reject student leave and on-duty applications assigned to you
+    </p>
+  </div>
+
+  <div class="page-container">
+
+    <div class="hero">
+      <div>
+        <h2>
+          <i class="fas fa-clipboard-list me-2"></i>
+          Approval Dashboard
+        </h2>
+        <p>Manage pending requests and track previous decisions</p>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon pending">
+          <i class="fas fa-hourglass-half"></i>
+        </div>
+        <div>
+          <div class="stat-label">Pending</div>
+          <div class="stat-value">{{ pending_count|default:0 }}</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon approved">
+          <i class="fas fa-check-double"></i>
+        </div>
+        <div>
+          <div class="stat-label">Approved</div>
+          <div class="stat-value">{{ approved_count|default:0 }}</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon rejected">
+          <i class="fas fa-ban"></i>
+        </div>
+        <div>
+          <div class="stat-label">Rejected</div>
+          <div class="stat-value">{{ rejected_count|default:0 }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-row">
+      <a href="?tab=pending&q={{ q|urlencode }}&application_type={{ application_type_filter|urlencode }}&study_year={{ study_year_filter|urlencode }}&level={{ level_filter|urlencode }}"
+         class="tab-pill pending {% if tab == 'pending' %}active{% endif %}">
+        <i class="fas fa-clock"></i>
+        Pending
+        <span class="tab-count">{{ pending_count }}</span>
+      </a>
+
+      <a href="?tab=approved&q={{ q|urlencode }}&application_type={{ application_type_filter|urlencode }}&study_year={{ study_year_filter|urlencode }}&level={{ level_filter|urlencode }}"
+         class="tab-pill approved {% if tab == 'approved' %}active{% endif %}">
+        <i class="fas fa-check-circle"></i>
+        Approved
+        <span class="tab-count">{{ approved_count }}</span>
+      </a>
+
+      <a href="?tab=rejected&q={{ q|urlencode }}&application_type={{ application_type_filter|urlencode }}&study_year={{ study_year_filter|urlencode }}&level={{ level_filter|urlencode }}"
+         class="tab-pill rejected {% if tab == 'rejected' %}active{% endif %}">
+        <i class="fas fa-times-circle"></i>
+        Rejected
+        <span class="tab-count">{{ rejected_count }}</span>
+      </a>
+    </div>
+
+    <div class="filter-card">
+      <form method="get">
+        <input type="hidden" name="tab" value="{{ tab }}">
+
+        <div class="row g-3 align-items-end">
+
+          <div class="col-md-4">
+            <label class="form-label">
+              <i class="fas fa-search me-1"></i>
+              Search
+            </label>
+            <input type="text"
+                   name="q"
+                   class="form-control"
+                   placeholder="Student name, register no, reason..."
+                   value="{{ q }}">
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">
+              <i class="fas fa-file-alt me-1"></i>
+              Type
+            </label>
+            <select name="application_type" class="form-select">
+              <option value="">All</option>
+              <option value="LEAVE" {% if application_type_filter == "LEAVE" %}selected{% endif %}>Leave</option>
+              <option value="OD" {% if application_type_filter == "OD" %}selected{% endif %}>OD</option>
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">
+              <i class="fas fa-user-graduate me-1"></i>
+              Study Year
+            </label>
+            <select name="study_year" class="form-select">
+              <option value="">All</option>
+              {% for year in available_study_years %}
+                {% if year %}
+                  <option value="{{ year }}" {% if study_year_filter == year|stringformat:"s" %}selected{% endif %}>
+                    Year {{ year }}
+                  </option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">
+              <i class="fas fa-layer-group me-1"></i>
+              Level
+            </label>
+            <select name="level" class="form-select">
+              <option value="">All</option>
+              {% for lvl in available_levels %}
+                <option value="{{ lvl }}" {% if level_filter == lvl|stringformat:"s" %}selected{% endif %}>
+                  Level {{ lvl }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn-apply flex-fill">
+              <i class="fas fa-filter me-1"></i>
+              Apply
+            </button>
+
+            <a href="{% url 'approve_leave_od' %}?tab={{ tab }}"
+               class="btn-reset flex-fill text-center">
+              <i class="fas fa-undo-alt me-1"></i>
+              Reset
+            </a>
+          </div>
+
+        </div>
+      </form>
+    </div>
+
+    <form method="post" id="approval-form">
+      {% csrf_token %}
+
+      <input type="hidden" name="tab" value="{{ tab }}">
+      <input type="hidden" name="q" value="{{ q }}">
+      <input type="hidden" name="application_type" value="{{ application_type_filter }}">
+      <input type="hidden" name="study_year" value="{{ study_year_filter }}">
+      <input type="hidden" name="level" value="{{ level_filter }}">
+      <input type="hidden" name="page" value="{{ page_obj.number|default:'1' }}">
+      <input type="hidden" name="rejection_reason" id="rejection-reason">
+
+      {% if tab == 'pending' and grouped_approvals %}
+        <div class="d-flex gap-3 mb-3 flex-wrap">
+          <button type="submit"
+                  name="action"
+                  value="approve"
+                  class="btn-approve-main">
+            <i class="fas fa-check-circle me-2"></i>
+            Approve Selected
+          </button>
+
+          <button type="button"
+                  class="btn-reject-main"
+                  onclick="showRejectModal()">
+            <i class="fas fa-times-circle me-2"></i>
+            Reject Selected
+          </button>
+
+          <button type="button"
+                  class="btn-approve-all-main"
+                  onclick="approveAll()">
+            <i class="fas fa-check-double me-2"></i>
+            Approve All
+          </button>
+        </div>
+      {% endif %}
+
+      {% if grouped_approvals %}
+
+        {% for level, approvals in grouped_approvals.items %}
+
+          <div class="section-card">
+
+            <div class="section-head">
+              <div>
+                <span class="section-head-title">
+                  <i class="fas fa-layer-group me-1"></i>
+                  Level {{ level }}
+                </span>
+
+                <span class="section-head-sub ms-2">
+                  — {{ approvals|length }} application{{ approvals|length|pluralize }}
+                </span>
+              </div>
+
+              <button type="button"
+                      class="toggle-btn"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#student-leave-lv-{{ level }}">
+                <i class="fas fa-chevron-up me-1"></i>
+                Toggle Section
+              </button>
+            </div>
+
+            <div id="student-leave-lv-{{ level }}" class="collapse show">
+
+              {% if tab == 'pending' %}
+                <div class="select-bar">
+                  <input type="checkbox"
+                         class="form-check-input sel-all"
+                         id="sel-all-lv-{{ level }}"
+                         data-level="{{ level }}"
+                         style="width:15px;height:15px;cursor:pointer;">
+
+                  <label for="sel-all-lv-{{ level }}"
+                         style="cursor:pointer;margin:0;font-weight:500;">
+                    Select all on this level
+                  </label>
+                </div>
+              {% endif %}
+
+              <div class="table-responsive">
+                <table class="custom-table">
+                  <thead>
+                    <tr>
+                      {% if tab == 'pending' %}
+                        <th style="width:42px;"></th>
+                      {% endif %}
+                      <th>Type</th>
+                      <th>Student</th>
+                      <th>From</th>
+                      <th>To</th>
+                      <th>Days</th>
+                      <th>Study Year</th>
+                      <th>Department</th>
+                      <th>Reason</th>
+                      <th>Applied On</th>
+                      <th>Proof</th>
+                      {% if tab == 'rejected' %}
+                        <th>Remarks</th>
+                      {% endif %}
+                      <th>Approval Flow</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {% for approval in approvals %}
+                      {% with app=approval.leave_application student=approval.leave_application.student %}
+
+                        <tr>
+                          {% if tab == 'pending' %}
+                            <td data-label="Select">
+                              <input type="checkbox"
+                                     name="selected_ids"
+                                     value="{{ approval.id }}"
+                                     class="form-check-input row-cb row-cb-{{ level }}"
+                                     style="width:16px;height:16px;cursor:pointer;">
+                            </td>
+                          {% endif %}
+
+                          <td data-label="Type">
+                            {% if app.application_type == "OD" %}
+                              <span class="type-pill od">
+                                <i class="fas fa-briefcase me-1"></i>
+                                OD
+                              </span>
+                            {% else %}
+                              <span class="type-pill leave">
+                                <i class="fas fa-calendar-minus me-1"></i>
+                                Leave
+                              </span>
+                            {% endif %}
+                          </td>
+
+                          <td data-label="Student">
+                            {% if student %}
+                              <div class="student-name">{{ student.name|default:"-" }}</div>
+                              <div class="student-reg">{{ student.reg_no|default:"-" }}</div>
+                            {% else %}
+                              <span style="color:#9ca3af;">Unknown</span>
+                            {% endif %}
+                          </td>
+
+                          <td data-label="From">
+                            <span class="date-stack">
+                              <span>{{ app.from_date|date:"d M Y"|default:"-" }}</span>
+                              <small>{{ app.from_date|date:"h:i A"|default:"" }}</small>
+                            </span>
+                          </td>
+
+                          <td data-label="To">
+                            <span class="date-stack">
+                              <span>{{ app.to_date|date:"d M Y"|default:"-" }}</span>
+                              <small>{{ app.to_date|date:"h:i A"|default:"" }}</small>
+                            </span>
+                          </td>
+
+                          <td data-label="Days">
+                            <span class="duration-pill">
+                              {% if app.display_duration %}
+                                {{ app.display_duration }}
+                              {% else %}
+                                -
+                              {% endif %}
+                            </span>
+                          </td>
+
+                          <td data-label="Study Year">
+                            {{ app.study_year|default:"-" }}
+                          </td>
+
+                          <td data-label="Department">
+                            {% if app.department %}
+                              {{ app.department.Department|default:app.department }}
+                            {% else %}
+                              -
+                            {% endif %}
+                          </td>
+
+                          <td data-label="Reason" style="max-width:260px;word-break:break-word;">
+                            {{ app.reason|default:"-" }}
+                          </td>
+
+                          <td data-label="Applied On">
+                            {% if app.created_at %}
+                              <span class="applied-stack">
+                                <span>{{ app.created_at|date:"d M Y" }}</span>
+                                <small>{{ app.created_at|date:"h:i A" }}</small>
+                              </span>
+                            {% else %}
+                              -
+                            {% endif %}
+                          </td>
+
+                          <td data-label="Proof">
+                            {% if app.proof_file %}
+                              <button type="button" class="btn-view-proof"
+                                      data-proof-url="{{ app.proof_file.url }}"
+                                      data-proof-title="{{ app.application_type|default:'Proof' }} — {{ student.name|default:'' }}"
+                                      style="border:1px solid #1a4b8c;color:#1a4b8c;background:#fff;border-radius:40px;padding:4px 12px;font-size:.78rem;cursor:pointer;">
+                                <i class="fas fa-file-pdf me-1"></i>View
+                              </button>
+                            {% else %}
+                              <span style="color:#9ca3af;">—</span>
+                            {% endif %}
+                          </td>
+
+                          {% if tab == 'rejected' %}
+                            <td data-label="Remarks" style="max-width:220px;word-break:break-word;">
+                              {{ approval.reason|default:app.remarks|default:"-" }}
+                            </td>
+                          {% endif %}
+
+                          <td data-label="Approval Flow">
+                            {% if app.approval_status_rows %}
+                              <div class="approval-flow">
+                                {% for row in app.approval_status_rows %}
+                                  <div class="approval-step">
+                                    <span class="approval-level">{{ row.level }}</span>
+                                    <span>
+                                      <span class="approval-person">{{ row.name }} ({{ row.employee_id }})</span>
+                                      <span class="approval-status">{{ row.status|default:"PENDING" }}</span>
+                                    </span>
+                                  </div>
+                                {% endfor %}
+                              </div>
+                            {% else %}
+                              <span style="color:#9ca3af;">Not created</span>
+                            {% endif %}
+                          </td>
+
+                          <td data-label="Status">
+                            {% if approval.status == 'PENDING' %}
+                              <span class="badge-s badge-pending">
+                                <i class="fas fa-clock"></i>
+                                Pending
+                              </span>
+                            {% elif approval.status == 'APPROVED' %}
+                              <span class="badge-s badge-approved">
+                                <i class="fas fa-check"></i>
+                                Approved
+                              </span>
+                            {% elif approval.status == 'REJECTED' %}
+                              <span class="badge-s badge-rejected">
+                                <i class="fas fa-times"></i>
+                                Rejected
+                              </span>
+                            {% else %}
+                              <span class="badge-s badge-pending">
+                                {{ approval.status }}
+                              </span>
+                            {% endif %}
+                          </td>
+                        </tr>
+
+                      {% endwith %}
+                    {% empty %}
+                      <tr>
+                        <td colspan="{% if tab == 'pending' %}14{% elif tab == 'rejected' %}14{% else %}13{% endif %}">
+                          <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No applications in this level.</p>
+                          </div>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+        {% endfor %}
+
+        {% if page_obj %}
+          <div class="pag-wrap">
+            <div class="pag-info">
+              <i class="fas fa-table me-1"></i>
+              Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </div>
+
+            <div class="pag-btns">
+
+              {% if page_obj.has_previous %}
+                <a href="?tab={{ tab }}&q={{ q|urlencode }}&application_type={{ application_type_filter|urlencode }}&study_year={{ study_year_filter|urlencode }}&level={{ level_filter|urlencode }}&page=1"
+                   class="pag-btn">
+                  <i class="fas fa-angle-double-left"></i>
+                </a>
+
+                <a href="?tab={{ tab }}&q={{ q|urlencode }}&application_type={{ application_type_filter|urlencode }}&study_year={{ study_year_filter|urlencode }}&level={{ level_filter|urlencode }}&page={{ page_obj.previous_page_number }}"
+                   class="pag-btn">
+                  <i class="fas fa-angle-left"></i>
+                </a>
+              {% endif %}
+
+              <span class="pag-btn active">
+                {{ page_obj.number }}
+              </span>
+
+              {% if page_obj.has_next %}
+                <a href="?tab={{ tab }}&q={{ q|urlencode }}&application_type={{ application_type_filter|urlencode }}&study_year={{ study_year_filter|urlencode }}&level={{ level_filter|urlencode }}&page={{ page_obj.next_page_number }}"
+                   class="pag-btn">
+                  <i class="fas fa-angle-right"></i>
+                </a>
+
+                <a href="?tab={{ tab }}&q={{ q|urlencode }}&application_type={{ application_type_filter|urlencode }}&study_year={{ study_year_filter|urlencode }}&level={{ level_filter|urlencode }}&page={{ page_obj.paginator.num_pages }}"
+                   class="pag-btn">
+                  <i class="fas fa-angle-double-right"></i>
+                </a>
+              {% endif %}
+
+            </div>
+          </div>
+        {% endif %}
+
+      {% else %}
+
+        <div class="section-card">
+          <div class="empty-state">
+            <i class="fas fa-folder-open"></i>
+            <p style="font-weight:600;margin-top:0.5rem;">
+              No student Leave / OD applications found
+            </p>
+            <p style="font-size:0.85rem;">
+              No applications match your current filters.
+            </p>
+          </div>
+        </div>
+
+      {% endif %}
+
+    </form>
+  </div>
+</div>
+
+<div class="modal fade" id="proof-modal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header" style="background:linear-gradient(135deg,#1a4b8c,#123a70);padding:14px 20px;">
+        <h5 class="modal-title text-white fw-bold" id="proof-modal-title">
+          <i class="fas fa-file-pdf me-2"></i>Proof Document
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0" style="height:78vh;background:#525659;">
+        <iframe id="proof-frame" src="" title="Proof PDF" style="width:100%;height:100%;border:0;"></iframe>
+      </div>
+      <div class="modal-footer border-0 py-2">
+        <a id="proof-open-tab" href="#" target="_blank" rel="noopener" class="btn btn-outline-primary"
+           style="border-radius:40px;padding:0.4rem 1.2rem;">
+          <i class="fas fa-external-link-alt me-1"></i>Open in new tab
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                style="border-radius:40px;padding:0.4rem 1.2rem;">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="reject-modal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow-lg">
+
+      <div class="modal-header"
+           style="background:linear-gradient(135deg,#dc2626,#b91c1c);padding:16px 20px;">
+        <h5 class="modal-title text-white fw-bold">
+          <i class="fas fa-times-circle me-2"></i>
+          Rejection Reason
+        </h5>
+
+        <button type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal">
+        </button>
+      </div>
+
+      <div class="modal-body p-4">
+        <label class="form-label fw-semibold mb-2" style="font-size:.9rem;">
+          Please provide a reason for rejection
+        </label>
+
+        <textarea class="form-control"
+                  id="modal-reason"
+                  placeholder="Enter rejection reason..."
+                  rows="4"
+                  required
+                  style="border-radius:12px;border:1px solid #e2e8f0;"></textarea>
+      </div>
+
+      <div class="modal-footer border-0 pt-0 pb-3">
+        <button type="button"
+                class="btn btn-outline-secondary"
+                data-bs-dismiss="modal"
+                style="border-radius:40px;padding:0.5rem 1.2rem;">
+          Cancel
+        </button>
+
+        <button type="button"
+                class="btn-reject-main"
+                onclick="submitRejection()"
+                style="border-radius:40px;padding:0.5rem 1.5rem;">
+          <i class="fas fa-times me-1"></i>
+          Submit Rejection
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.sel-all').forEach(function(cb) {
+  cb.addEventListener('change', function() {
+    var lv = this.dataset.level;
+
+    document.querySelectorAll('.row-cb-' + lv).forEach(function(rowCb) {
+      rowCb.checked = cb.checked;
+    });
+  });
+});
+
+// Proof viewer popup — open the PDF in a modal iframe on the same window
+(function() {
+  var proofModalEl = document.getElementById('proof-modal');
+  var proofFrame = document.getElementById('proof-frame');
+  var proofTitle = document.getElementById('proof-modal-title');
+  var proofOpenTab = document.getElementById('proof-open-tab');
+
+  document.querySelectorAll('.btn-view-proof').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var url = btn.getAttribute('data-proof-url');
+      var title = btn.getAttribute('data-proof-title') || 'Proof Document';
+      if (!url) return;
+      proofFrame.src = url;
+      proofOpenTab.href = url;
+      proofTitle.innerHTML = '<i class="fas fa-file-pdf me-2"></i>' + title;
+      new bootstrap.Modal(proofModalEl).show();
+    });
+  });
+
+  proofModalEl.addEventListener('hidden.bs.modal', function() { proofFrame.src = ''; });
+})();
+
+function showRejectModal() {
+  var checked = document.querySelectorAll('input[name="selected_ids"]:checked');
+
+  if (checked.length === 0) {
+    alert('Please select at least one application to reject.');
+    return;
+  }
+
+  var modal = new bootstrap.Modal(document.getElementById('reject-modal'));
+  modal.show();
+}
+
+function submitRejection() {
+  var reason = document.getElementById('modal-reason').value.trim();
+
+  if (!reason) {
+    alert('Please provide a rejection reason.');
+    return;
+  }
+
+  document.getElementById('rejection-reason').value = reason;
+
+  var form = document.getElementById('approval-form');
+
+  var oldAction = form.querySelector('input[name="action"]');
+  if (oldAction) {
+    oldAction.remove();
+  }
+
+  var actionInput = document.createElement('input');
+  actionInput.type = 'hidden';
+  actionInput.name = 'action';
+  actionInput.value = 'reject';
+
+  form.appendChild(actionInput);
+  form.submit();
+}
+
+function approveAll() {
+  if (!confirm('Are you sure you want to approve ALL pending applications? This will approve across all pages.')) {
+    return;
+  }
+
+  var form = document.getElementById('approval-form');
+
+  var oldAction = form.querySelector('input[name="action"]');
+  if (oldAction) {
+    oldAction.remove();
+  }
+
+  var actionInput = document.createElement('input');
+  actionInput.type = 'hidden';
+  actionInput.name = 'action';
+  actionInput.value = 'approve_all';
+
+  form.appendChild(actionInput);
+  form.submit();
+}
+
+document.querySelectorAll('.toggle-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var icon = this.querySelector('i');
+
+    if (icon.classList.contains('fa-chevron-up')) {
+      icon.classList.remove('fa-chevron-up');
+      icon.classList.add('fa-chevron-down');
+    } else {
+      icon.classList.remove('fa-chevron-down');
+      icon.classList.add('fa-chevron-up');
+    }
+  });
+});
+</script>
+
+{% endblock content %}

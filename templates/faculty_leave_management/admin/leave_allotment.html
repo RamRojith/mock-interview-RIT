@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if list %}
+    <h2>Leave Allotment List</h2>
+
+    <input type="text" id="searchInput" class="form-control" placeholder="Search for roles..." onkeyup="filterTable()">
+    <button class="btn btn-outline-primary btn-sm mt-5" 
+        onclick="window.location.href='{% url 'leave_allotment_create' %}'">
+        <i class="fa-solid fa-plus"></i> Add New
+    </button>
+
+
+    <table class="table mt-3" id="leaveTable">
+        <thead>
+            <tr>
+                <th>Academic year</th>
+                <th>Role</th>
+                <th>Leave Type</th>
+                <th>Leave days</th>
+     
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for leave in leave_allotments %}
+                <tr>
+                    <td>{{ leave.academic_year }}</td>
+                    <td>{{ leave.role }}</td>
+                    <td>{{ leave.leave_type }}</td>
+                    <td>{{ leave.default_allotment }}</td>
+        
+                    <td>
+                        <button class="btn btn-outline-warning btn-sm" 
+                            onclick="window.location.href='{% url 'leave_allotment_update' leave.id %}'">
+                            Edit
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" 
+                                onclick="window.location.href='{% url 'leave_allotment_delete' leave.id %}'">
+                            Delete
+                        </button>
+
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        function filterTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById('leaveTable');
+            const rows = table.getElementsByTagName('tr');
+    
+            for (let i = 1; i < rows.length; i++) { // Skip header row
+                const cells = rows[i].getElementsByTagName('td');
+                let match = false;
+    
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j]) {
+                        const text = cells[j].textContent || cells[j].innerText;
+                        if (text.toLowerCase().indexOf(filter) > -1) {
+                            match = true;
+                            break;
+                        }
+                    }
+                }
+                rows[i].style.display = match ? '' : 'none';
+            }
+        }
+    </script>
+{% elif create %}
+<h2 class="text-center mt-4"> {% if form.instance.pk %}Update {% else %}Create {% endif %}Leave Allotment</h2>
+
+<form method="post" id="leave-allotment-form" class="container mt-4">
+    {% csrf_token %}
+    <div class="card shadow-sm p-4 mb-4 rounded">
+        <h4 class="mb-3">Leave Details</h4>
+        {{ form.non_field_errors }}
+        {{ form.as_p }}
+    </div>
+
+    <div class="card shadow-sm p-4 mb-4 rounded">
+        <h4 class="mb-3">Leave Allotment Entries</h4>
+        <table id="formset-table" class="table table-bordered table-striped mt-2">
+            {{ formset.management_form }}
+            <thead class="table-dark">
+                <tr>
+                    <th>Leave Type</th>
+                    <th>Default Allotment</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in formset %}
+                <tr class="formset-row">
+                    <td>
+                        <div class="form-group mb-2">
+                            {{ form.leave_type }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="form-group mb-2">
+                            {{ form.default_allotment }}
+                        </div>
+                    </td>
+              
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger remove-row">Remove</button>
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if not form.instance.pk %}
+        <button type="button" id="add-more" class="btn btn-outline-secondary mt-3">Add More</button>
+        {% endif %}
+    </div>
+
+    <div class="text-center">
+        <button type="submit" class="btn btn-success me-2">Submit</button>
+        <button type="button" class="btn btn-outline-primary" 
+            onclick="window.location.href='{% url 'leave_allotment_list' %}'">
+            Back to Leave Allotment List
+        </button>
+        
+    </div>
+</form>
+
+<script>
+    let formIndex = {{ formset.total_form_count }};
+    const formsetTable = document.querySelector('#formset-table tbody');
+    const emptyFormHtml = '{{ formset.empty_form.as_p|escapejs }}';
+
+    document.getElementById('add-more').addEventListener('click', function() {
+        // Replace __prefix__ with the new index value
+        const newFormHtml = emptyFormHtml.replace(/__prefix__/g, formIndex);
+
+        // Extract the select and input elements
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = newFormHtml;
+        const selectField = tempDiv.querySelector('select');
+        const inputField = tempDiv.querySelector('input');
+
+        // Create new row and maintain consistent structure
+        const newRow = document.createElement('tr');
+        newRow.classList.add('formset-row');
+        newRow.innerHTML = `
+            <td>
+                <div class="form-group mb-2">
+                    ${selectField.outerHTML}
+                </div>
+            </td>
+            <td>
+                <div class="form-group mb-2">
+                    ${inputField.outerHTML}
+                </div>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-danger remove-row">Remove</button>
+            </td>
+        `;
+
+        formsetTable.appendChild(newRow);
+
+        formIndex++;
+        document.querySelectorAll('[name$="-TOTAL_FORMS"]').forEach(input => {
+            input.value = formIndex;
+        });
+    });
+
+    // Event delegation for dynamic removal
+    document.querySelector('#formset-table').addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-row')) {
+            e.target.closest('tr').remove();
+            formIndex--;
+            document.querySelectorAll('[name$="-TOTAL_FORMS"]').forEach(input => {
+                input.value = formIndex;
+            });
+        }
+    });
+</script>
+
+{% elif update %}
+
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>{{ title }}</h3>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="id_academic_year" class="form-label">Academic Year</label>
+                    {{ form.academic_year }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_role" class="form-label">Role</label>
+                    {{ form.role }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_start_date" class="form-label">Start Date</label>
+                    {{ form.start_date }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_end_date" class="form-label">End Date</label>
+                    {{ form.end_date }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_leave_type" class="form-label">Leave Type</label>
+                    {{ form.leave_type }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_default_allotment" class="form-label">Default Allotment</label>
+                    {{ form.default_allotment }}
+                </div>
+                <button type="submit" class="btn btn-success">Update</button>
+                <button type="button" class="btn btn-outline-primary" 
+                    onclick="window.location.href='{% url 'leave_allotment_list' %}'">
+                    Back to Leave Allotment List
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the specific fields by name or other identifier
+        const academicYearFields = document.querySelectorAll('[name*="academic_year"]');
+        const roleFields = document.querySelectorAll('[name*="role"]');
+        const leaveTypeFields = document.querySelectorAll('[name*="leave_type"]');
+    
+        // Function to make fields unchangeable but not frozen
+        function makeUnchangeable(fields) {
+            fields.forEach(field => {
+                field.setAttribute('readonly', true);
+                field.style.pointerEvents = 'none';  // Disable interaction without freezing
+                field.style.backgroundColor = 'transparent';  // Keep the background normal
+                field.style.border = 'none';  // Remove the border
+                field.style.color = '#333';  // Keep text color consistent
+            });
+        }
+    
+        // Apply to the desired fields
+        makeUnchangeable(academicYearFields);
+        makeUnchangeable(roleFields);
+        makeUnchangeable(leaveTypeFields);
+    });
+    
+    
+</script>
+{% elif delete %}
+<h2>Confirm Delete</h2>
+<p>Are you sure you want to delete this leave allotment?</p>
+<strong>Academic Year:</strong> {{ leave_allotment.academic_year }} <br>
+<strong>Role:</strong> {{ leave_allotment.role }}<br>
+<strong>Leave type:</strong> {{ leave_allotment.leave_type }}
+<form method="post">
+    {% csrf_token %}
+
+    <button type="submit" class="btn btn-danger btn-sm">Yes, Delete</button>
+    <button type="button" class="btn btn-secondary btn-sm" 
+        onclick="window.location.href='{% url 'leave_allotment_list' %}'">
+        Cancel
+    </button>
+</form>
+{% endif %}
+{% endblock %}

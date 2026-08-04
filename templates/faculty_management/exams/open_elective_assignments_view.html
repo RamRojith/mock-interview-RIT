@@ -1,0 +1,537 @@
+{% extends "base.html" %}
+{% load static %}
+{% load fm_tags %}
+{% block content %}
+
+<style>
+.elective-assignments {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.elective-assignments .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.elective-assignments .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.elective-assignments .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.elective-assignments .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.elective-assignments .header-bar {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.elective-assignments .header-bar .title-info h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  margin: 0 0 0.25rem 0;
+}
+
+.elective-assignments .header-bar .title-info p {
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+.elective-assignments .btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.elective-assignments .btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+}
+
+.elective-assignments .filters-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.elective-assignments .filters-card .card-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #374151;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.elective-assignments .filters-card .card-header h6 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.elective-assignments .filters-card .card-header i {
+  margin-right: 0.75rem;
+  color: #1a4b8c;
+}
+
+.elective-assignments .filters-card .card-body {
+  padding: 1.5rem;
+}
+
+.elective-assignments .form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.elective-assignments .form-control,
+.elective-assignments .form-select {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.elective-assignments .form-control:focus,
+.elective-assignments .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+}
+
+.elective-assignments .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.elective-assignments .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.elective-assignments .table-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.elective-assignments .table-card .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.elective-assignments .table-card .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.elective-assignments .table-card .card-header i {
+  margin-right: 0.75rem;
+}
+
+.elective-assignments .table-container {
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+}
+
+.elective-assignments .table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.elective-assignments .table thead {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.elective-assignments .table th {
+  color: white;
+  font-weight: 700;
+  padding: 1rem;
+  text-align: left;
+  border: none;
+}
+
+.elective-assignments .table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #4b5563;
+  vertical-align: middle;
+}
+
+.elective-assignments .table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.elective-assignments .table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.elective-assignments .badge {
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-block;
+  margin: 0.1rem;
+}
+
+.elective-assignments .badge.bg-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: white;
+}
+
+.elective-assignments .badge.bg-secondary {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+  color: white;
+}
+
+.elective-assignments .badge.bg-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: white;
+}
+
+.elective-assignments .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.elective-assignments .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.elective-assignments .course-title {
+  font-weight: 600;
+  color: #1a4b8c;
+  margin-bottom: 0.25rem;
+}
+
+.elective-assignments .course-code {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.elective-assignments .faculty-info {
+  font-weight: 500;
+  color: #374151;
+}
+
+.elective-assignments .academic-year {
+  font-weight: 600;
+  color: #1a4b8c;
+}
+
+.elective-assignments .semester-badge {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  color: white;
+}
+.elective-assignments .table thead th {
+  color: #000 !important;
+  font-weight: 700;
+}
+
+/* Column widths for better layout */
+.elective-assignments .table th:nth-child(1),
+.elective-assignments .table td:nth-child(1) { width: 5%; } /* SL */
+.elective-assignments .table th:nth-child(2),
+.elective-assignments .table td:nth-child(2) { width: 25%; } /* Course */
+.elective-assignments .table th:nth-child(3),
+.elective-assignments .table td:nth-child(3) { width: 15%; } /* Faculty */
+.elective-assignments .table th:nth-child(4),
+.elective-assignments .table td:nth-child(4) { width: 20%; } /* Offered To */
+.elective-assignments .table th:nth-child(5),
+.elective-assignments .table td:nth-child(5) { width: 12%; } /* Academic Year */
+.elective-assignments .table th:nth-child(6),
+.elective-assignments .table td:nth-child(6) { width: 8%; } /* Semester */
+.elective-assignments .table th:nth-child(7),
+.elective-assignments .table td:nth-child(7) { width: 8%; } /* Slots */
+.elective-assignments .table th:nth-child(8),
+.elective-assignments .table td:nth-child(8) { width: 7%; } /* Batch */
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .elective-assignments .page-header {
+    padding: 1rem;
+  }
+  
+  .elective-assignments .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .elective-assignments .header-bar {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .elective-assignments .filters-card .card-body {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .elective-assignments {
+    padding: 1rem;
+  }
+  
+  .elective-assignments .page-header {
+    padding: 0.75rem;
+  }
+  
+  .elective-assignments .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .elective-assignments .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .elective-assignments .filters-card .card-body {
+    padding: 1rem;
+  }
+  
+  .elective-assignments .table {
+    font-size: 0.8rem;
+  }
+  
+  .elective-assignments .table th,
+  .elective-assignments .table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .elective-assignments .table-card .card-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .elective-assignments .header-bar .title-info h2 {
+    font-size: 1.25rem;
+  }
+  
+  .elective-assignments .table-card .card-header h5 {
+    font-size: 1.1rem;
+  }
+  
+  .elective-assignments .badge {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+  }
+}
+</style>
+
+<div class="elective-assignments">
+  <div class="page-header">
+    <h1><i class="fas fa-tasks me-2"></i>Open Elective Assignments</h1>
+    <p class="header-subtitle">View and manage open elective course assignments across departments</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Header Bar -->
+    <div class="header-bar">
+      <div class="title-info">
+        <h2>Open Elective Assignments</h2>
+        <p>Comprehensive view of all elective course offerings</p>
+      </div>
+      <a href="?{% if selected_ay %}academic_year={{ selected_ay }}&{% endif %}{% if selected_sem %}semester={{ selected_sem }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}download=pdf"
+         class="btn btn-danger">
+        <i class="fas fa-file-pdf me-2"></i> Download PDF
+      </a>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="filters-card">
+      <div class="card-header">
+        <h6><i class="fas fa-filter me-2"></i>Filter Assignments</h6>
+      </div>
+      <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label">Academic Year</label>
+            <select name="academic_year" class="form-select">
+              <option value="">All Academic Years</option>
+              {% for ay in academic_years %}
+                <option value="{{ ay }}" {% if ay == selected_ay %}selected{% endif %}>{{ ay }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Semester</label>
+            <select name="semester" class="form-select">
+              <option value="">All Semesters</option>
+              {% for sem in semesters %}
+                <option value="{{ sem }}" {% if sem|stringformat:"s" == selected_sem|stringformat:"s" %}selected{% endif %}>
+                  Semester {{ sem }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Search Courses & Faculty</label>
+            <input type="text" name="search" value="{{ search_query }}" placeholder="Search by course, faculty, or code..." class="form-control">
+          </div>
+
+          <div class="col-md-2">
+            <button class="btn btn-primary w-100">
+              <i class="fas fa-search me-2"></i> Filter
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="table-card">
+      <div class="card-header">
+        <h5><i class="fas fa-list-alt me-2"></i>Elective Assignments</h5>
+        <div class="text-white small">
+          Showing {{ offers|length }} assignment{{ offers|length|pluralize }}
+        </div>
+      </div>
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>SL</th>
+                <th>Course</th>
+                <th>Faculty</th>
+                <th>Offered By</th>
+                <th>Offered To</th>
+                <th>Academic Year</th>
+                <th>Semester</th>
+                <th>Slots</th>
+                <th>Batch</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for offer in offers %}
+              <tr>
+                <td>
+                  <strong>{{ forloop.counter }}</strong>
+                </td>
+                <td>
+                  <div class="course-title">{{ offer.course.title }}</div>
+                  <div class="course-code">{{ offer.course.course_code }}</div>
+                </td>
+                <td>
+                  <div class="faculty-info">{{ offer.faculty.name }}</div>
+                  {% if offer.faculty.designation %}
+                    <small class="text-muted">{{ offer.faculty.designation }}</small>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="badge bg-primary">{{ offer.department.Department }}</div>
+                </td>
+                <td>
+                  {% for d in offer.to_departments.all %}
+                    <span class="badge bg-primary">{{ d.offered_to_dept.Department }}</span>
+                  {% empty %}
+                    <span class="text-muted">Not specified</span>
+                  {% endfor %}
+                </td>
+                <td>
+                  <span class="academic-year">{{ offer.academic_year }}</span>
+                </td>
+                <td>
+                  <span class="badge semester-badge">Sem {{ offer.course.semester }}</span>
+                </td>
+                <td>
+                  <strong>{{ offer.slots|default:"0" }}</strong>
+                </td>
+                <td>
+                  <span class="badge bg-secondary">{{ offer.batch|default:"-" }}</span>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="8" class="text-center py-5">
+                  <div class="empty-state">
+                    <i class="fas fa-search"></i>
+                    <h5>No Assignments Found</h5>
+                    <p class="text-muted">
+                      {% if selected_ay or selected_sem or search_query %}
+                        Try adjusting your filters to see more results
+                      {% else %}
+                        No elective assignments have been created yet
+                      {% endif %}
+                    </p>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

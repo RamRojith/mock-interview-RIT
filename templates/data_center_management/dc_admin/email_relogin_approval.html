@@ -1,0 +1,453 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .approval-page {
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+        min-height: 85vh;
+        padding: 1.5rem;
+    }
+
+    .approval-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1e3a8a;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-box {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e3a8a;
+        margin-bottom: 1rem;
+    }
+
+    .request-card {
+        border: 1px solid #e5e7eb;
+        border-left: 5px solid #1d4ed8;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: #f9fafb;
+    }
+
+    .label-text {
+        font-size: 0.8rem;
+        color: #6b7280;
+        font-weight: 600;
+        margin-bottom: 0.15rem;
+    }
+
+    .value-text {
+        font-size: 0.95rem;
+        color: #111827;
+        font-weight: 500;
+        margin-bottom: 0.75rem;
+        word-break: break-word;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .pending-badge {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .approved-badge {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .rejected-badge {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .deactivated-badge {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .btn-approve {
+        background: #16a34a;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.6rem 1rem;
+        font-weight: 600;
+    }
+
+    .btn-reject {
+        background: #dc2626;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.6rem 1rem;
+        font-weight: 600;
+    }
+
+    .remarks-box {
+        min-height: 90px;
+        border-radius: 10px;
+    }
+
+    .history-table thead th {
+        background: #1e3a8a;
+        color: white;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .empty-box {
+        padding: 1rem;
+        border: 1px dashed #cbd5e1;
+        border-radius: 12px;
+        background: #f8fafc;
+        color: #475569;
+    }
+
+    .modal-header-approve {
+        background: #16a34a;
+        color: white;
+    }
+
+    .modal-header-reject {
+        background: #dc2626;
+        color: white;
+    }
+</style>
+
+<div class="approval-page">
+    <div class="approval-container">
+
+        <h2 class="page-title">
+            <i class="fas fa-envelope-open-text me-2"></i>Email Relogin Approval
+        </h2>
+
+        {% comment %} {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %} {% endcomment %}
+
+        <div class="card-box">
+            <div class="section-title">Logged In Approver</div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="label-text">Name</div>
+                    <div class="value-text">{{ logged_in_faculty.name|default:"-" }}</div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="label-text">Role</div>
+                    <div class="value-text">{{ logged_in_role|default:"-" }}</div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="label-text">Department</div>
+                    <div class="value-text">{{ logged_in_faculty.department|default:"-" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-box">
+            <div class="section-title">Pending Email Relogin Applications</div>
+
+            {% if pending_applications %}
+                {% for application in pending_applications %}
+                    <div class="request-card">
+
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="mb-0">
+                                Application #{{ application.id }}
+                            </h5>
+                            <span class="status-badge pending-badge">Pending</span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="label-text">Student Name</div>
+                                <div class="value-text">{{ application.student.name|default:"-" }}</div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="label-text">Register Number</div>
+                                <div class="value-text">{{ application.student.reg_no|default:"-" }}</div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="label-text">Email ID</div>
+                                <div class="value-text">{{ application.student.email|default:"-" }}</div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="label-text">Applied On</div>
+                                <div class="value-text">{{ application.created_at|date:"d-m-Y h:i A" }}</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="label-text">Requestor Name</div>
+                                <div class="value-text">
+                                    {% if application.faculty %}
+                                        {{ application.faculty.name }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="label-text">Faculty ID</div>
+                                <div class="value-text">
+                                    {% if application.faculty %}
+                                        {{ application.faculty.faculty_id|default:"-" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="label-text">Department</div>
+                                <div class="value-text">
+                                    {% if application.faculty %}
+                                        {{ application.faculty.department|default:"-" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="label-text">Requestor Mail</div>
+                                <div class="value-text">
+                                    {% if application.faculty %}
+                                        {{ application.faculty.college_email|default:"-" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="label-text">Reason</div>
+                        <div class="value-text">{{ application.reason|default:"-" }}</div>
+
+                        <form method="post"
+                              class="mt-3 approval-form"
+                              id="approvalForm{{ application.id }}">
+                            {% csrf_token %}
+
+                            <input type="hidden" name="application_id" value="{{ application.id }}">
+                            <input type="hidden" name="action" id="actionField{{ application.id }}">
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Remarks</label>
+                                <textarea name="remarks" class="form-control remarks-box"
+                                          placeholder="Remarks for approving or rejecting this email relogin application..."></textarea>
+                            </div>
+
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="button"
+                                        class="btn btn-approve"
+                                        onclick="openApprovalModal('{{ application.id }}', 'approve')">
+                                    <i class="fas fa-check me-1"></i> Approve
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-reject"
+                                        onclick="openApprovalModal('{{ application.id }}', 'reject')">
+                                    <i class="fas fa-times me-1"></i> Reject
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-box">
+                    No pending email relogin applications available.
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="card-box">
+            <div class="section-title">Recently Processed By Me</div>
+
+            {% if processed_applications %}
+                <div class="table-responsive">
+                    <table class="table table-bordered history-table">
+                        <thead>
+                            <tr>
+                                <th>Application ID</th>
+                                <th>Student Name</th>
+                                <th>Register No</th>
+                                <th>Email ID</th>
+                                <th>Status</th>
+                                <th>Remarks</th>
+                                <th>Approved / Rejected On</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for application in processed_applications %}
+                                <tr>
+                                    <td>{{ application.id }}</td>
+                                    <td>{{ application.student.name|default:"-" }}</td>
+                                    <td>{{ application.student.reg_no|default:"-" }}</td>
+                                    <td>{{ application.student.email|default:"-" }}</td>
+
+                                    <td>
+                                        {% if application.status == "APPROVED" %}
+                                            <span class="status-badge approved-badge">Approved</span>
+                                        {% elif application.status == "REJECTED" %}
+                                            <span class="status-badge rejected-badge">Rejected</span>
+                                        {% elif application.status == "DEACTIVATED" %}
+                                            <span class="status-badge deactivated-badge">Deactivated</span>
+                                        {% else %}
+                                            <span class="status-badge pending-badge">Pending</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>{{ application.approver_remarks|default:"-" }}</td>
+
+                                    <td>
+                                        {% if application.status == "APPROVED" %}
+                                            {{ application.approved_at|date:"d-m-Y h:i A" }}
+                                        {% elif application.status == "REJECTED" %}
+                                            {{ application.rejected_at|date:"d-m-Y h:i A" }}
+                                        {% elif application.status == "DEACTIVATED" %}
+                                            {{ application.deactivated_at|date:"d-m-Y h:i A" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-box">
+                    No recent actions found.
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade" id="approvalConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header" id="approvalModalHeader">
+                <h5 class="modal-title" id="approvalModalTitle">
+                    Confirm Action
+                </h5>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <p id="approvalModalMessage" class="mb-0"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button type="button"
+                        class="btn"
+                        id="confirmApprovalActionBtn">
+                    Confirm
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentApprovalFormId = null;
+    let currentApprovalAction = null;
+
+    function openApprovalModal(applicationId, action) {
+        currentApprovalFormId = "approvalForm" + applicationId;
+        currentApprovalAction = action;
+
+        const modalHeader = document.getElementById("approvalModalHeader");
+        const modalTitle = document.getElementById("approvalModalTitle");
+        const modalMessage = document.getElementById("approvalModalMessage");
+        const confirmBtn = document.getElementById("confirmApprovalActionBtn");
+
+        modalHeader.classList.remove("modal-header-approve", "modal-header-reject");
+
+        if (action === "approve") {
+            modalHeader.classList.add("modal-header-approve");
+            modalTitle.innerText = "Confirm Approval";
+            modalMessage.innerText = "Are you sure you want to approve this Email Relogin Application?";
+            confirmBtn.className = "btn btn-success";
+            confirmBtn.innerText = "Yes, Approve";
+        } else {
+            modalHeader.classList.add("modal-header-reject");
+            modalTitle.innerText = "Confirm Rejection";
+            modalMessage.innerText = "Are you sure you want to reject this Email Relogin Application?";
+            confirmBtn.className = "btn btn-danger";
+            confirmBtn.innerText = "Yes, Reject";
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById("approvalConfirmModal"));
+        modal.show();
+    }
+
+    document.getElementById("confirmApprovalActionBtn").addEventListener("click", function () {
+        if (!currentApprovalFormId || !currentApprovalAction) {
+            return;
+        }
+
+        const form = document.getElementById(currentApprovalFormId);
+
+        if (!form) {
+            return;
+        }
+
+        const actionField = form.querySelector('input[name="action"]');
+        actionField.value = currentApprovalAction;
+
+        form.submit();
+    });
+</script>
+
+{% endblock %}  

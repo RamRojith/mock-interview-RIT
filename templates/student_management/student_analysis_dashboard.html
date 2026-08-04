@@ -1,0 +1,1606 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+<style>
+  :root {
+    --primary-gradient: linear-gradient(135deg, var(--rit-primary), var(--rit-accent));
+  --secondary-gradient: linear-gradient(135deg, var(--rit-secondary), #f9c85a);
+  --success-gradient: linear-gradient(135deg, var(--rit-success), #34ce57);
+  --danger-gradient: linear-gradient(135deg, var(--rit-danger), #ff6b6b);
+  --warning-gradient: linear-gradient(135deg, var(--rit-warning), #ffc107);
+  --info-gradient: linear-gradient(135deg, var(--rit-info), #3dd5f3);
+  --dark-gradient: linear-gradient(135deg, var(--rit-dark), #1b5d87);
+  }
+
+  .dashboard-wrapper {
+    background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .dashboard-header {
+    background: var(--primary-gradient);
+    color: #fff;
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 12px 30px rgba(13, 110, 253, 0.18);
+    animation: slideInDown 0.5s ease;
+  }
+
+  .dashboard-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .dashboard-subtitle {
+    margin: 0;
+    opacity: 0.9;
+  }
+
+  .section-block {
+    margin-bottom: 28px;
+    animation: fadeInUp 0.5s ease;
+  }
+
+  .section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding: 0 4px;
+  }
+
+  .section-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0b3b5c;
+    margin: 0;
+  }
+
+  .section-subtitle {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-top: 2px;
+  }
+
+  .filter-card,
+  .stat-card,
+  .chart-card,
+  .table-card {
+    border: none;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+  }
+
+  .filter-card:hover,
+  .chart-card:hover,
+  .table-card:hover {
+    box-shadow: 0 12px 32px rgba(16, 24, 40, 0.12);
+  }
+
+  .filter-card .card-body,
+  .stat-card .card-body,
+  .chart-card .card-body,
+  .table-card .card-body {
+    padding: 20px;
+  }
+
+  .chart-card .card-header,
+  .table-card .card-header,
+  .filter-card .card-header {
+    background: #fff;
+    border-bottom: 1px solid #eef1f4;
+    border-radius: 18px 18px 0 0 !important;
+    padding: 16px 20px;
+  }
+
+  .chart-card .card-header h5,
+  .table-card .card-header h5,
+  .filter-card .card-header h5 {
+    margin: 0;
+    font-weight: 700;
+    color: #0b3b5c;
+  }
+
+  .stat-card {
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+    margin-bottom: 0;
+    cursor: pointer;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(16, 24, 40, 0.15);
+  }
+
+  .stat-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+
+  .stat-icon {
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #fff;
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover .stat-icon {
+    transform: scale(1.1) rotate(5deg);
+  }
+
+  .bg-blue { background: var(--primary-gradient); }
+  .bg-green { background: var(--success-gradient); }
+  .bg-pink { background: linear-gradient(135deg, #d63384, #ff66b3); }
+  .bg-orange { background: var(--warning-gradient); }
+  .bg-purple { background: linear-gradient(135deg, #6f42c1, #9b6bff); }
+  .bg-darkblue { background: var(--dark-gradient); }
+  .bg-red { background: var(--danger-gradient); }
+  .bg-info { background: linear-gradient(135deg, #0dcaf0, #3dd5f3); }
+  .bg-teal { background: linear-gradient(135deg, #20c997, #5fd7b4); }
+
+  .stat-label {
+    color: #6c757d;
+    font-size: 0.92rem;
+    margin-top: 6px;
+    margin-bottom: 4px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .stat-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #212529;
+    line-height: 1.1;
+  }
+
+  .chart-box {
+    position: relative;
+    height: 340px;
+    width: 100%;
+  }
+
+  .recent-table th {
+    background: #f8fafc;
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: #334155;
+    white-space: nowrap;
+    padding: 12px 8px;
+  }
+
+  .recent-table td {
+    vertical-align: middle;
+    font-size: 0.92rem;
+    padding: 12px 8px;
+  }
+
+  .student-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+  }
+
+  .student-avatar:hover {
+    transform: scale(1.1);
+    border-color: #0d6efd;
+  }
+
+  .avatar-placeholder {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #0d6efd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .badge-soft {
+    background: #eef4ff;
+    color: #0d6efd;
+    border-radius: 30px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .badge-success {
+    background: #d1fae5;
+    color: #065f46;
+    border-radius: 30px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .badge-warning {
+    background: #fff3cd;
+    color: #856404;
+    border-radius: 30px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+    background: #f8fafc;
+    border-radius: 12px;
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #cbd5e1;
+  }
+
+  .progress-custom {
+    height: 8px;
+    border-radius: 4px;
+    background: #e9ecef;
+    overflow: hidden;
+    margin: 10px 0;
+  }
+
+  .progress-bar-custom {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+
+  .filter-badge {
+    background: #eef4ff;
+    color: #0d6efd;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .filter-badge i {
+    cursor: pointer;
+    font-size: 0.8rem;
+  }
+
+  .filter-badge i:hover {
+    color: #dc3545;
+  }
+
+  .active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .quick-stat {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+  }
+
+  .quick-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0b3b5c;
+  }
+
+  .quick-stat-label {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 5px;
+  }
+
+  @keyframes slideInDown {
+    from {
+      transform: translateY(-30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dashboard-title {
+      font-size: 1.5rem;
+    }
+    .chart-box {
+      height: 280px;
+    }
+    .stat-value {
+      font-size: 1.8rem;
+    }
+  }
+
+  /* Loading animation */
+  .skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+
+  @keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Tooltip styles */
+  .custom-tooltip {
+    position: relative;
+    display: inline-block;
+  }
+
+  .custom-tooltip:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 1000;
+  }
+</style>
+<div class="dashboard-wrapper">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div>
+        <h1 class="dashboard-title">
+          <i class="fas fa-chart-pie me-2"></i>Student Analytical Dashboard
+        </h1>
+        <p class="dashboard-subtitle">Complete student statistics and visual analytics for your college</p>
+      </div>
+      <div class="text-md-end">
+        <div class="fw-semibold">
+          <i class="fas fa-calendar-alt me-1"></i>
+          {{ current_date|date:"l, d M Y" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Filters Display -->
+  {% comment %} {% if selected_degree or selected_department or selected_batch or selected_year or selected_semester or selected_section or selected_gender or selected_regulation %} {% endcomment %}
+  {% if selected_department or selected_batch or selected_year or selected_semester or selected_section or selected_gender or selected_regulation %}
+  <div class="mb-3">
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <i class="fas fa-filter text-primary"></i>
+      <span class="fw-semibold">Active Filters:</span>
+    </div>
+    <div class="active-filters">
+      {% if selected_department %}
+      <span class="filter-badge">
+        <i class="fas fa-building me-1"></i>Dept: {{ selected_department }}
+        <i class="fas fa-times ms-1" onclick="removeFilter('department')"></i>
+      </span>
+      {% endif %}
+      {% if selected_batch %}
+      <span class="filter-badge">
+        <i class="fas fa-calendar me-1"></i>Batch: {{ selected_batch }}
+        <i class="fas fa-times ms-1" onclick="removeFilter('batch')"></i>
+      </span>
+      {% endif %}
+      {% if selected_year %}
+      <span class="filter-badge">
+        <i class="fas fa-layer-group me-1"></i>Year: {{ selected_year }}
+        <i class="fas fa-times ms-1" onclick="removeFilter('year')"></i>
+      </span>
+      {% endif %}
+      {% if selected_semester %}
+      <span class="filter-badge">
+        <i class="fas fa-book me-1"></i>Sem: {{ selected_semester }}
+        <i class="fas fa-times ms-1" onclick="removeFilter('semester')"></i>
+      </span>
+      {% endif %}
+      {% if selected_section %}
+      <span class="filter-badge">
+        <i class="fas fa-sitemap me-1"></i>Sec: {{ selected_section }}
+        <i class="fas fa-times ms-1" onclick="removeFilter('section')"></i>
+      </span>
+      {% endif %}
+      {% if selected_gender %}
+      <span class="filter-badge">
+        <i class="fas fa-venus-mars me-1"></i>Gender: {{ selected_gender }}
+        <i class="fas fa-times ms-1" onclick="removeFilter('gender')"></i>
+      </span>
+      {% endif %}
+      {% if selected_regulation %}
+      <span class="filter-badge">
+        <i class="fas fa-scale-balanced me-1"></i>Reg: {{ selected_regulation }}
+        <i class="fas fa-times ms-1" onclick="removeFilter('regulation')"></i>
+      </span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Filters -->
+  <div class="filter-card card">
+    <div class="card-header">
+      <h5><i class="fas fa-filter me-2"></i>Filter Students</h5>
+    </div>
+    <div class="card-body">
+      <form method="get" id="filterForm">
+        <div class="row g-3">
+          <div class="col-lg-2 col-md-4">
+  <label class="form-label fw-semibold">
+    <i class="fas fa-building me-1 text-primary"></i>Department
+  </label>
+  <select name="department" class="form-select" onchange="this.form.submit()">
+    <option value="">All Departments</option>
+    {% for dept in departments %}
+      <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>
+        {{ dept.Department }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-calendar me-1 text-success"></i>Batch
+            </label>
+            <select name="batch" class="form-select" onchange="this.form.submit()">
+              <option value="">All Batches</option>
+              {% for item in batch_options %}
+                <option value="{{ item }}" {% if selected_batch == item %}selected{% endif %}>{{ item }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-layer-group me-1 text-info"></i>Year
+            </label>
+            <select name="year" class="form-select" onchange="this.form.submit()">
+              <option value="">All Years</option>
+              {% for item in year_options %}
+                <option value="{{ item }}" {% if selected_year == item %}selected{% endif %}>{{ item }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-book me-1 text-warning"></i>Semester
+            </label>
+            <select name="semester" class="form-select" onchange="this.form.submit()">
+              <option value="">All Semesters</option>
+              {% for item in semester_options %}
+                <option value="{{ item }}" {% if selected_semester == item %}selected{% endif %}>{{ item }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-sitemap me-1 text-danger"></i>Section
+            </label>
+            <select name="section" class="form-select" onchange="this.form.submit()">
+              <option value="">All Sections</option>
+              {% for item in section_options %}
+                <option value="{{ item }}" {% if selected_section == item %}selected{% endif %}>{{ item }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-venus-mars me-1 text-purple"></i>Gender
+            </label>
+            <select name="gender" class="form-select" onchange="this.form.submit()">
+              <option value="">All</option>
+              <option value="Male" {% if selected_gender == "Male" %}selected{% endif %}>Male</option>
+              <option value="Female" {% if selected_gender == "Female" %}selected{% endif %}>Female</option>
+              <option value="Other" {% if selected_gender == "Other" %}selected{% endif %}>Other</option>
+            </select>
+          </div>
+
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-scale-balanced me-1 text-secondary"></i>Regulation
+            </label>
+            <select name="regulation" class="form-select" onchange="this.form.submit()">
+              <option value="">All Regulations</option>
+              {% for item in regulation_options %}
+                <option value="{{ item }}" {% if selected_regulation == item %}selected{% endif %}>{{ item }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-lg-2 col-md-4">
+  <label class="form-label fw-semibold">
+    <i class="fas fa-calendar-day me-1 text-primary"></i>From Date
+  </label>
+  <input type="date" name="from" class="form-control" value="{{ selected_from_date }}">
+</div>
+
+<div class="col-lg-2 col-md-4">
+  <label class="form-label fw-semibold">
+    <i class="fas fa-calendar-check me-1 text-success"></i>To Date
+  </label>
+  <input type="date" name="to" class="form-control" value="{{ selected_to_date }}">
+</div>
+
+          <div class="col-12 d-flex justify-content-end gap-2">
+            {% if can_view_all_faculty_data %}
+  <a href="{% url 'student_analysis_dashboard' %}" class="btn btn-outline-secondary">
+    <i class="fas fa-rotate-left me-1"></i>Reset All Filters
+  </a>
+{% else %}
+  <a href="{% url 'student_analysis_dashboard' %}?department={{ selected_department }}" class="btn btn-outline-secondary">
+    <i class="fas fa-rotate-left me-1"></i>Reset Filters
+  </a>
+{% endif %}
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-magnifying-glass me-1"></i>Apply Filters
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Quick Stats Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-lg-3 col-md-6">
+      <div class="quick-stat">
+        <div class="quick-stat-value">{{ total_students }}</div>
+        <div class="quick-stat-label">Total Students</div>
+        <div class="progress-custom">
+          <div class="progress-bar-custom bg-primary" style="width: 100%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="quick-stat">
+        <div class="quick-stat-value">{{ ug_total }}</div>
+        <div class="quick-stat-label">UG Students</div>
+        <div class="progress-custom">
+          <div class="progress-bar-custom bg-success" style="width: {% widthratio ug_total total_students 100 %}%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="quick-stat">
+        <div class="quick-stat-value">{{ pg_total }}</div>
+        <div class="quick-stat-label">PG Students</div>
+        <div class="progress-custom">
+          <div class="progress-bar-custom bg-info" style="width: {% widthratio pg_total total_students 100 %}%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="quick-stat">
+        <div class="quick-stat-value">{{ profile_completion|floatformat:1 }}%</div>
+        <div class="quick-stat-label">Profile Completion</div>
+        <div class="progress-custom">
+          <div class="progress-bar-custom bg-warning" style="width: {{ profile_completion }}%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Group 1: Strength Overview -->
+  <div class="section-block">
+    <div class="section-heading">
+      <div>
+        <h3 class="section-title"><i class="fas fa-users me-2 text-primary"></i>Student Strength Overview</h3>
+        <div class="section-subtitle">Overall student population and gender distribution</div>
+      </div>
+      <div>
+        <span class="badge-soft">
+          <i class="fas fa-chart-line me-1"></i>Total: {{ total_students }}
+        </span>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="stat-card" onclick="showDetail('total')" data-tooltip="Click to view details">
+          <div class="card-body">
+            <div class="stat-top">
+              <div>
+                <div class="stat-label">Total Students</div>
+                <div class="stat-value">{{ total_students }}</div>
+                <small class="text-muted">100% of population</small>
+              </div>
+              <div class="stat-icon bg-blue"><i class="fas fa-user-graduate"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="stat-card" onclick="filterByGender('Male')">
+          <div class="card-body">
+            <div class="stat-top">
+              <div>
+                <div class="stat-label">Male Students</div>
+                <div class="stat-value">{{ male_count }}</div>
+                <small class="text-muted">{{ male_percentage|floatformat:1 }}% of total</small>
+              </div>
+              <div class="stat-icon bg-green"><i class="fas fa-mars"></i></div>
+            </div>
+            <div class="progress-custom mt-2">
+              <div class="progress-bar-custom bg-green" style="width: {{ male_percentage }}%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="stat-card" onclick="filterByGender('Female')">
+          <div class="card-body">
+            <div class="stat-top">
+              <div>
+                <div class="stat-label">Female Students</div>
+                <div class="stat-value">{{ female_count }}</div>
+                <small class="text-muted">{{ female_percentage|floatformat:1 }}% of total</small>
+              </div>
+              <div class="stat-icon bg-pink"><i class="fas fa-venus"></i></div>
+            </div>
+            <div class="progress-custom mt-2">
+              <div class="progress-bar-custom bg-pink" style="width: {{ female_percentage }}%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="stat-card" onclick="filterByGender('Other')">
+          <div class="card-body">
+            <div class="stat-top">
+              <div>
+                <div class="stat-label">Other Gender</div>
+                <div class="stat-value">{{ other_count }}</div>
+                <small class="text-muted">{{ other_percentage|floatformat:1 }}% of total</small>
+              </div>
+              <div class="stat-icon bg-purple"><i class="fas fa-users"></i></div>
+            </div>
+            <div class="progress-custom mt-2">
+              <div class="progress-bar-custom bg-purple" style="width: {{ other_percentage }}%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Group 5: Today's Attendance Snapshot -->
+  <div class="section-block">
+  <div class="section-heading">
+    <div>
+      <h3 class="section-title">
+        <i class="fas fa-calendar-day me-2 text-danger"></i>Attendance Snapshot
+      </h3>
+      <div class="section-subtitle">
+        Absent students summary and department-wise breakup for selected date range
+      </div>
+    </div>
+    <div>
+      <button type="button"
+              class="btn btn-sm btn-outline-primary"
+              data-bs-toggle="modal"
+              data-bs-target="#studentAttendancePdfModal">
+        <i class="fas fa-file-pdf me-1"></i>Download PDF
+      </button>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-lg-4 col-md-6">
+      <div class="stat-card">
+        <div class="card-body">
+          <div class="stat-top">
+            <div>
+              <div class="stat-label">Total Absent</div>
+              <div class="stat-value">{{ today_total_absent }}</div>
+              <small class="text-muted">
+                {{ today_absent_percentage|floatformat:1 }}% of total
+                {% if selected_from_date or selected_to_date %}
+                  ({{ selected_from_date|default:"..." }} to {{ selected_to_date|default:"..." }})
+                {% else %}
+                  (Today)
+                {% endif %}
+              </small>
+            </div>
+            <div class="stat-icon bg-red"><i class="fas fa-user-times"></i></div>
+          </div>
+          <div class="progress-custom mt-2">
+            <div class="progress-bar-custom bg-red" style="width: {{ today_absent_percentage }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6">
+      <div class="stat-card">
+        <div class="card-body">
+          <div class="stat-top">
+            <div>
+              <div class="stat-label">Absent - Male</div>
+              <div class="stat-value">{{ today_absent_male }}</div>
+              <small class="text-muted">{{ today_absent_male_percentage|floatformat:1 }}% of absent</small>
+            </div>
+            <div class="stat-icon bg-blue"><i class="fas fa-mars"></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6">
+      <div class="stat-card">
+        <div class="card-body">
+          <div class="stat-top">
+            <div>
+              <div class="stat-label">Absent - Female</div>
+              <div class="stat-value">{{ today_absent_female }}</div>
+              <small class="text-muted">{{ today_absent_female_percentage|floatformat:1 }}% of absent</small>
+            </div>
+            <div class="stat-icon bg-pink"><i class="fas fa-venus"></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="table-card card">
+        <div class="card-header">
+          <h5><i class="fas fa-building me-2"></i>Department-wise Absent Students</h5>
+        </div>
+        <div class="card-body">
+          <div class="chart-box">
+            <canvas id="todayAbsentDeptChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- All Students Table -->
+  <div class="table-card card">
+    <div class="card-header">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0"><i class="fas fa-table me-2 text-primary"></i>All Students</h5>
+        <div class="d-flex align-items-center gap-3">
+          <span class="small text-muted" id="studentsCountInfo">Loading...</span>
+          <div class="position-relative">
+            <i class="fas fa-search position-absolute text-muted" style="left: 12px; top: 50%; transform: translateY(-50%); z-index: 10;"></i>
+            <input
+              type="text"
+              id="studentSearch"
+              class="form-control form-control-sm"
+              placeholder="Search in any column..."
+              style="min-width: 250px; padding-left: 35px;"
+            />
+          </div>
+          <button class="btn btn-sm btn-outline-primary" onclick="exportToExcel()">
+            <i class="fas fa-file-excel me-1"></i>Export
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle recent-table" id="studentsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student</th>
+              <th>Register No</th>
+              <th>Department</th>
+              <th>Regulation</th>
+              <th>Batch</th>
+              <th>Year</th>
+              <th>Semester</th>
+              <th>Section</th>
+              <th>Gender</th>
+              <th>Mobile</th>
+              <th>Mentor</th>
+              <th>CA</th>
+            </tr>
+          </thead>
+          <tbody id="studentsTableBody">
+            <tr>
+              <td colspan="13" class="text-center py-5">
+                <div class="empty-state">
+                  <i class="fas fa-spinner fa-spin fa-3x mb-3"></i>
+                  <h5>Loading students...</h5>
+                  <p class="text-muted">Please wait while we fetch the data</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <small class="text-muted" id="studentsPageInfo"></small>
+        <div class="btn-group">
+          <button class="btn btn-sm btn-outline-primary" id="studentsPrevBtn" disabled>
+            <i class="fas fa-chevron-left me-1"></i>Previous
+          </button>
+          <button class="btn btn-sm btn-outline-primary" id="studentsNextBtn" disabled>
+            Next<i class="fas fa-chevron-right ms-1"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Attendance PDF Modal -->
+<div class="modal fade" id="studentAttendancePdfModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header text-white"
+           style="background: linear-gradient(135deg, #0f2f57 0%, #1a4b8c 100%);">
+        <div>
+          <h5 class="modal-title mb-1">
+            <i class="fas fa-file-pdf me-2"></i>Student Attendance PDF Report
+          </h5>
+          <div class="small opacity-75">Choose date range for attendance analysis report</div>
+        </div>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="studentPdfMsgArea"></div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-calendar-day me-1 text-primary"></i>From Date
+            </label>
+            <input type="date" class="form-control" id="student_pdf_from_date">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-calendar-check me-1 text-success"></i>To Date
+            </label>
+            <input type="date" class="form-control" id="student_pdf_to_date">
+          </div>
+        </div>
+
+        <div class="alert alert-info mt-3 mb-0 rounded-3">
+          <i class="fas fa-info-circle me-2"></i>
+          PDF order will be:
+          <strong>Overall Summary → Department Overall Summary → Department-wise Student Details</strong>.
+          If both dates are blank, today’s attendance will be used.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i>Cancel
+        </button>
+        <button type="button" class="btn btn-primary" id="openStudentAttendancePdfBtn">
+          <i class="fas fa-file-pdf me-1"></i>Generate PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detailModalTitle">Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="detailModalBody">
+        Loading...
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const chartData = {
+    departmentLabels: {{ department_labels|safe }},
+    departmentCounts: {{ department_counts|safe }},
+    yearLabels: {{ year_labels|safe }},
+    yearCounts: {{ year_counts|safe }},
+    semesterLabels: {{ semester_labels|safe }},
+    semesterCounts: {{ semester_counts|safe }},
+    batchLabels: {{ batch_labels|safe }},
+    batchCounts: {{ batch_counts|safe }},
+    sectionLabels: {{ section_labels|safe }},
+    sectionCounts: {{ section_counts|safe }},
+    regulationLabels: {{ regulation_labels|safe }},
+    regulationCounts: {{ regulation_counts|safe }},
+    genderLabels: {{ gender_labels|safe }},
+    genderCounts: {{ gender_counts|safe }},
+    profileCounts: [{{ full_profile_count }}, {{ incomplete_profile_count }}],
+    ugPgLabels: {{ ug_pg_labels|safe }},
+    ugPgCounts: {{ ug_pg_counts|safe }},
+    hostelLabels: {{ hostel_labels|safe }},
+    hostelCounts: {{ hostel_counts|safe }},
+    quotaLabels: {{ quota_labels|safe }},
+    quotaCounts: {{ quota_counts|safe }},
+    stateLabels: {{ state_labels|safe }},
+    stateCounts: {{ state_counts|safe }},
+    mentorLabels: {{ mentor_labels|safe }},
+    mentorCounts: {{ mentor_counts|safe }},
+    caLabels: {{ ca_labels|safe }},
+    caCounts: {{ ca_counts|safe }},
+    todayAbsentDeptLabels: {{ today_absent_department_labels|safe }},
+    todayAbsentDeptCounts: {{ today_absent_department_counts|safe }}
+  };
+
+  const chartConfig = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { enabled: true },
+      datalabels: {
+        color: '#fff',
+        font: { weight: 'bold', size: 11 },
+        formatter: (value) => value > 0 ? value : ''
+      }
+    }
+  };
+
+  function initCharts() {
+    if (document.getElementById('genderChart')) {
+      new Chart(document.getElementById('genderChart'), {
+        type: 'doughnut',
+        data: {
+          labels: chartData.genderLabels,
+          datasets: [{
+            data: chartData.genderCounts,
+            backgroundColor: ['#198754', '#d63384', '#6f42c1'],
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: chartConfig
+      });
+    }
+
+    if (document.getElementById('departmentChart')) {
+      new Chart(document.getElementById('departmentChart'), {
+        type: 'bar',
+        data: {
+          labels: chartData.departmentLabels,
+          datasets: [{
+            label: 'Number of Students',
+            data: chartData.departmentCounts,
+            backgroundColor: '#0d6efd',
+            borderRadius: 8,
+            barPercentage: 0.7
+          }]
+        },
+        options: {
+          ...chartConfig,
+          scales: { y: { beginAtZero: true, grid: { display: false } } }
+        }
+      });
+    }
+
+    if (document.getElementById('yearChart')) {
+      new Chart(document.getElementById('yearChart'), {
+        type: 'bar',
+        data: {
+          labels: chartData.yearLabels,
+          datasets: [{
+            label: 'Students',
+            data: chartData.yearCounts,
+            backgroundColor: '#198754',
+            borderRadius: 8
+          }]
+        },
+        options: {
+          ...chartConfig,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    if (document.getElementById('semesterChart')) {
+      new Chart(document.getElementById('semesterChart'), {
+        type: 'line',
+        data: {
+          labels: chartData.semesterLabels,
+          datasets: [{
+            label: 'Students',
+            data: chartData.semesterCounts,
+            borderColor: '#fd7e14',
+            backgroundColor: 'rgba(253, 126, 20, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#fd7e14',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7
+          }]
+        },
+        options: {
+          ...chartConfig,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    if (document.getElementById('batchChart')) {
+      new Chart(document.getElementById('batchChart'), {
+        type: 'bar',
+        data: {
+          labels: chartData.batchLabels,
+          datasets: [{
+            label: 'Students',
+            data: chartData.batchCounts,
+            backgroundColor: '#6f42c1',
+            borderRadius: 8
+          }]
+        },
+        options: {
+          ...chartConfig,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    if (document.getElementById('sectionChart')) {
+      new Chart(document.getElementById('sectionChart'), {
+        type: 'pie',
+        data: {
+          labels: chartData.sectionLabels,
+          datasets: [{
+            data: chartData.sectionCounts,
+            backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#20c997', '#fd7e14', '#d63384'],
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: chartConfig
+      });
+    }
+
+    if (document.getElementById('regulationChart')) {
+      new Chart(document.getElementById('regulationChart'), {
+        type: 'bar',
+        data: {
+          labels: chartData.regulationLabels,
+          datasets: [{
+            label: 'Students',
+            data: chartData.regulationCounts,
+            backgroundColor: '#0b3b5c',
+            borderRadius: 8
+          }]
+        },
+        options: {
+          ...chartConfig,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    if (document.getElementById('profileChart')) {
+      new Chart(document.getElementById('profileChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Complete Profile', 'Incomplete Profile'],
+          datasets: [{
+            data: chartData.profileCounts,
+            backgroundColor: ['#198754', '#dc3545'],
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: chartConfig
+      });
+    }
+
+    if (document.getElementById('ugPgChart')) {
+      new Chart(document.getElementById('ugPgChart'), {
+        type: 'doughnut',
+        data: {
+          labels: chartData.ugPgLabels,
+          datasets: [{
+            data: chartData.ugPgCounts,
+            backgroundColor: ['#0d6efd', '#6f42c1'],
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: chartConfig
+      });
+    }
+
+    if (document.getElementById('hostelChart')) {
+      new Chart(document.getElementById('hostelChart'), {
+        type: 'pie',
+        data: {
+          labels: chartData.hostelLabels,
+          datasets: [{
+            data: chartData.hostelCounts,
+            backgroundColor: ['#20c997', '#ffc107'],
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: chartConfig
+      });
+    }
+
+    if (document.getElementById('quotaChart')) {
+      new Chart(document.getElementById('quotaChart'), {
+        type: 'doughnut',
+        data: {
+          labels: chartData.quotaLabels,
+          datasets: [{
+            data: chartData.quotaCounts,
+            backgroundColor: ['#0d6efd', '#198754', '#6f42c1'],
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: chartConfig
+      });
+    }
+
+    if (document.getElementById('stateChart')) {
+      new Chart(document.getElementById('stateChart'), {
+        type: 'doughnut',
+        data: {
+          labels: chartData.stateLabels,
+          datasets: [{
+            data: chartData.stateCounts,
+            backgroundColor: ['#0d6efd', '#dc3545'],
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: chartConfig
+      });
+    }
+
+    if (document.getElementById('mentorChart')) {
+      new Chart(document.getElementById('mentorChart'), {
+        type: 'bar',
+        data: {
+          labels: chartData.mentorLabels,
+          datasets: [{
+            label: 'Students Assigned',
+            data: chartData.mentorCounts,
+            backgroundColor: '#fd7e14',
+            borderRadius: 8
+          }]
+        },
+        options: {
+          ...chartConfig,
+          scales: { y: { beginAtZero: true } },
+          indexAxis: 'y'
+        }
+      });
+    }
+
+    if (document.getElementById('caChart')) {
+      new Chart(document.getElementById('caChart'), {
+        type: 'bar',
+        data: {
+          labels: chartData.caLabels,
+          datasets: [{
+            label: 'Students Assigned',
+            data: chartData.caCounts,
+            backgroundColor: '#0b3b5c',
+            borderRadius: 8
+          }]
+        },
+        options: {
+          ...chartConfig,
+          scales: { y: { beginAtZero: true } },
+          indexAxis: 'y'
+        }
+      });
+    }
+
+    if (document.getElementById('todayAbsentDeptChart') && chartData.todayAbsentDeptLabels && chartData.todayAbsentDeptLabels.length) {
+      new Chart(document.getElementById('todayAbsentDeptChart'), {
+        type: 'bar',
+        data: {
+          labels: chartData.todayAbsentDeptLabels,
+          datasets: [{
+            label: 'Absent Students',
+            data: chartData.todayAbsentDeptCounts,
+            backgroundColor: '#dc3545',
+            borderRadius: 8,
+            barPercentage: 0.7
+          }]
+        },
+        options: {
+          ...chartConfig,
+          scales: { y: { beginAtZero: true, grid: { display: false } } }
+        }
+      });
+    }
+  }
+
+  function removeFilter(filterName) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete(filterName);
+    window.location.href = url.toString();
+  }
+
+  function filterByGender(gender) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('gender', gender);
+    window.location.href = url.toString();
+  }
+
+  function showDetail(type) {
+    const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+    const modalTitle = document.getElementById('detailModalTitle');
+    const modalBody = document.getElementById('detailModalBody');
+
+    if (type === 'total') {
+      modalTitle.innerHTML = '<i class="fas fa-users me-2"></i>Total Students Details';
+      modalBody.innerHTML = `
+        <div class="row">
+          <div class="col-md-6">
+            <h6>Gender Distribution</h6>
+            <table class="table table-sm">
+              <tr><td>Male:</td><td class="fw-bold">${chartData.genderCounts[0]}</td></tr>
+              <tr><td>Female:</td><td class="fw-bold">${chartData.genderCounts[1]}</td></tr>
+              <tr><td>Other:</td><td class="fw-bold">${chartData.genderCounts[2]}</td></tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <h6>Program Distribution</h6>
+            <table class="table table-sm">
+              <tr><td>UG:</td><td class="fw-bold">${chartData.ugPgCounts[0]}</td></tr>
+              <tr><td>PG:</td><td class="fw-bold">${chartData.ugPgCounts[1]}</td></tr>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    modal.show();
+  }
+
+  (function() {
+    const table = document.getElementById('studentsTable');
+    if (!table) return;
+
+    const tbody = document.getElementById('studentsTableBody');
+    const searchInput = document.getElementById('studentSearch');
+    const infoSpan = document.getElementById('studentsCountInfo');
+    const pageInfo = document.getElementById('studentsPageInfo');
+    const prevBtn = document.getElementById('studentsPrevBtn');
+    const nextBtn = document.getElementById('studentsNextBtn');
+
+    let currentPage = 1;
+    let totalPages = 1;
+    let totalCount = 0;
+
+    function renderRows(students) {
+      if (!students || !students.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="13">
+              <div class="empty-state">
+                <i class="fas fa-users-slash fa-3x mb-3"></i>
+                <h5>No Students Found</h5>
+                <p class="text-muted">No student records match the selected filters</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        if (infoSpan) infoSpan.textContent = '0 students';
+        if (pageInfo) pageInfo.textContent = '';
+        return;
+      }
+
+      let html = '';
+      students.forEach((stu, index) => {
+        const initial = (stu.name || 'S').charAt(0).toUpperCase();
+        const profileImg = stu.profile_img_url || '';
+
+        html += `
+          <tr>
+            <td>${((currentPage - 1) * 50) + index + 1}</td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                ${profileImg ?
+                  `<img src="${profileImg}" alt="${stu.name}" class="student-avatar" onclick="viewStudentProfile('${stu.reg_no}')" style="cursor: pointer;">` :
+                  `<div class="avatar-placeholder" onclick="viewStudentProfile('${stu.reg_no}')" style="cursor: pointer;">${initial}</div>`
+                }
+                <div>
+                  <div class="fw-semibold" onclick="viewStudentProfile('${stu.reg_no}')" style="cursor: pointer;">${stu.name || 'N/A'}</div>
+                  <small class="text-muted">${stu.email || 'No email'}</small>
+                </div>
+              </div>
+            </td>
+            <td><span class="badge-soft">${stu.reg_no || 'N/A'}</span></td>
+            <td>${stu.department || 'N/A'}</td>
+            <td>${stu.regulation || 'N/A'}</td>
+            <td>${stu.batch || 'N/A'}</td>
+            <td>${stu.year || 'N/A'}</td>
+            <td>${stu.semester || 'N/A'}</td>
+            <td>${stu.section || 'N/A'}</td>
+            <td>
+              ${stu.gender === 'Male' ? '<i class="fas fa-mars text-primary me-1"></i>' :
+                stu.gender === 'Female' ? '<i class="fas fa-venus text-danger me-1"></i>' :
+                '<i class="fas fa-genderless text-secondary me-1"></i>'}
+              ${stu.gender || 'N/A'}
+            </td>
+            <td>
+              ${stu.mobile_no ?
+                `<a href="tel:${stu.mobile_no}" class="text-decoration-none">${stu.mobile_no}</a>` :
+                '<span class="text-muted">N/A</span>'}
+            </td>
+            <td>
+              <span class="${stu.mentor_name ? 'badge-soft' : 'text-muted'}">
+                <i class="fas fa-chalkboard-teacher me-1"></i>
+                ${stu.mentor_name || 'Not Assigned'}
+              </span>
+            </td>
+            <td>
+              <span class="${stu.ca_name ? 'badge-soft' : 'text-muted'}">
+                <i class="fas fa-user-check me-1"></i>
+                ${stu.ca_name || 'Not Assigned'}
+              </span>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+
+      if (infoSpan) {
+        const start = ((currentPage - 1) * 50) + 1;
+        const end = Math.min(currentPage * 50, totalCount);
+        infoSpan.textContent = `Showing ${start}-${end} of ${totalCount} students`;
+      }
+
+      if (pageInfo) {
+        pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+      }
+
+      if (prevBtn) {
+        prevBtn.disabled = currentPage <= 1;
+      }
+      if (nextBtn) {
+        nextBtn.disabled = currentPage >= totalPages;
+      }
+    }
+
+    function applySearch() {
+      const q = searchInput ? searchInput.value.toLowerCase() : '';
+      const rows = tbody.querySelectorAll('tr');
+      let visibleCount = 0;
+
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const isVisible = !q || text.includes(q);
+        row.style.display = isVisible ? '' : 'none';
+        if (isVisible) visibleCount++;
+      });
+
+      if (infoSpan) {
+        infoSpan.textContent = `Showing ${visibleCount} of ${totalCount} students (filtered)`;
+      }
+    }
+
+    function loadStudents() {
+      const url = new URL(window.location.href);
+      url.searchParams.set('ajax', '1');
+      url.searchParams.set('page', String(currentPage));
+
+      fetch(url.toString(), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      })
+        .then(res => res.json())
+        .then(json => {
+          const students = Array.isArray(json.students) ? json.students : [];
+          currentPage = json.page || 1;
+          totalPages = json.total_pages || 1;
+          totalCount = json.total_count || 0;
+
+          renderRows(students);
+
+          if (searchInput) {
+            searchInput.removeEventListener('input', applySearch);
+            searchInput.addEventListener('input', applySearch);
+          }
+        })
+        .catch(() => {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="13">
+                <div class="empty-state">
+                  <i class="fas fa-exclamation-triangle text-danger fa-3x mb-3"></i>
+                  <h5>Failed to Load Data</h5>
+                  <p class="text-muted">Please try refreshing the page</p>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+    }
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', function() {
+        if (currentPage > 1) {
+          currentPage--;
+          loadStudents();
+        }
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function() {
+        if (currentPage < totalPages) {
+          currentPage++;
+          loadStudents();
+        }
+      });
+    }
+
+    loadStudents();
+  })();
+
+  function exportToExcel() {
+    const table = document.getElementById('studentsTable');
+    const wb = XLSX.utils.table_to_book(table, { sheet: "Students" });
+    XLSX.writeFile(wb, "students_data.xlsx");
+  }
+
+  function viewStudentProfile(regNo) {
+    if (regNo && regNo !== 'N/A') {
+      window.location.href = `/student/profile/${regNo}/`;
+    }
+  }
+
+  function showStudentPdfMsg(type, text) {
+    const msgArea = document.getElementById("studentPdfMsgArea");
+    const alertClass = type === "success" ? "alert-success"
+                     : type === "info" ? "alert-info"
+                     : type === "warning" ? "alert-warning"
+                     : "alert-danger";
+
+    msgArea.innerHTML = `<div class="alert ${alertClass} mb-3">${text}</div>`;
+  }
+
+  function clearStudentPdfMsg() {
+    const msgArea = document.getElementById("studentPdfMsgArea");
+    if (msgArea) msgArea.innerHTML = "";
+  }
+
+  function resetStudentPdfModal() {
+    const fromEl = document.getElementById("student_pdf_from_date");
+    const toEl = document.getElementById("student_pdf_to_date");
+
+    if (fromEl) fromEl.value = "";
+    if (toEl) toEl.value = "";
+    clearStudentPdfMsg();
+  }
+
+  function openStudentAttendancePdf() {
+    const fromEl = document.getElementById("student_pdf_from_date");
+    const toEl = document.getElementById("student_pdf_to_date");
+
+    const fromDate = fromEl ? fromEl.value.trim() : "";
+    const toDate = toEl ? toEl.value.trim() : "";
+
+    clearStudentPdfMsg();
+
+    if (fromDate && toDate && fromDate > toDate) {
+      showStudentPdfMsg("warning", "From Date cannot be greater than To Date.");
+      return;
+    }
+
+    const url = new URL("{% url 'student_analysis_dashboard_pdf' %}", window.location.origin);
+    const currentParams = new URLSearchParams(window.location.search);
+
+    ["department", "batch", "year", "semester", "section", "gender", "regulation"].forEach(param => {
+      const value = currentParams.get(param);
+      if (value) {
+        url.searchParams.set(param, value);
+      }
+    });
+
+    if (fromDate) {
+      url.searchParams.set("from", fromDate);
+    }
+    if (toDate) {
+      url.searchParams.set("to", toDate);
+    }
+
+    window.open(url.toString(), "_blank");
+
+    const modalEl = document.getElementById("studentAttendancePdfModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) {
+      modal.hide();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initCharts();
+
+    const openBtn = document.getElementById("openStudentAttendancePdfBtn");
+    const modalEl = document.getElementById("studentAttendancePdfModal");
+
+    if (openBtn) {
+      openBtn.addEventListener("click", openStudentAttendancePdf);
+    }
+
+    if (modalEl) {
+      modalEl.addEventListener("shown.bs.modal", function () {
+        clearStudentPdfMsg();
+      });
+
+      modalEl.addEventListener("hidden.bs.modal", function () {
+        resetStudentPdfModal();
+      });
+    }
+  });
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}
+

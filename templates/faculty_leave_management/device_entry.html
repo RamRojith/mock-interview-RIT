@@ -1,0 +1,681 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- FontAwesome CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+<!-- jQuery & DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<style>
+/* ========================================
+   DEVICE MANAGEMENT PORTAL STYLES
+   ======================================== */
+.device-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.device-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.device-portal .page-header h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.device-portal .page-header p {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+.device-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Stats Cards */
+.device-portal .stats-grid {
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.device-portal .stat-card {
+  flex: 1;
+  min-width: 140px;
+  background: white;
+  border-radius: 16px;
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0,0,0,0.03);
+  transition: all 0.3s ease;
+}
+
+.device-portal .stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.device-portal .stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.device-portal .stat-icon.total { background: #e0f2fe; color: #0284c7; }
+.device-portal .stat-icon.active { background: #d1fae5; color: #059669; }
+.device-portal .stat-icon.inactive { background: #fee2e2; color: #dc2626; }
+.device-portal .stat-icon.attendance { background: #fef3c7; color: #d97706; }
+.device-portal .stat-icon.mess { background: #f3e8ff; color: #7c3aed; }
+
+.device-portal .stat-info .stat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+.device-portal .stat-info .stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+/* Main Cards */
+.device-portal .main-card,
+.device-portal .table-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.5s ease forwards;
+  opacity: 0;
+}
+
+.device-portal .main-card { animation-delay: 0.1s; }
+.device-portal .table-card { animation-delay: 0.2s; }
+
+.device-portal .section-title {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1a4b8c;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.device-portal .section-title i {
+  font-size: 1.1rem;
+}
+
+.device-portal .editing-strip {
+  background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid #fde047;
+  color: #b45309;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.device-portal .card-body {
+  padding: 1.5rem;
+}
+
+/* Form Styling */
+.device-portal .form-label {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.device-portal .form-control {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.device-portal .form-control:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+/* Toggle Group */
+.device-portal .toggle-group {
+  display: flex;
+  gap: 1.2rem;
+  margin-top: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.device-portal .toggle-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.device-portal .toggle-item input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #1a4b8c;
+}
+
+/* Buttons */
+.device-portal .btn-save {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.device-portal .btn-save:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.device-portal .btn-cancel {
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 12px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.device-portal .btn-cancel:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+/* Table Styling */
+.device-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.device-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.device-portal .data-table td {
+  padding: 1rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.device-portal .data-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.device-portal .data-table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.03);
+  transform: translateY(-1px);
+}
+
+/* Badges */
+.device-portal .type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin: 0.15rem;
+}
+
+.device-portal .badge-attendance {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.device-portal .badge-mess {
+  background: #f3e8ff;
+  color: #6b21a5;
+}
+
+.device-portal .badge-other {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.device-portal .badge-active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.device-portal .badge-inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Action Buttons */
+.device-portal .action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.device-portal .btn-edit {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.device-portal .btn-edit:hover {
+  background: #bae6fd;
+  transform: translateY(-1px);
+}
+
+.device-portal .btn-toggle-on {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.device-portal .btn-toggle-on:hover {
+  background: #fde68a;
+}
+
+.device-portal .btn-toggle-off {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.device-portal .btn-toggle-off:hover {
+  background: #a7f3d0;
+}
+
+.device-portal .btn-delete {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.device-portal .btn-delete:hover {
+  background: #fecaca;
+}
+
+/* Empty State */
+.device-portal .empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.device-portal .empty-state i {
+  font-size: 3rem;
+  color: #cbd5e1;
+  margin-bottom: 0.5rem;
+}
+
+.device-portal .empty-state p {
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* DataTables Customization */
+.device-portal .dataTables_wrapper {
+  padding: 1rem;
+}
+
+.device-portal .dataTables_filter input {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  margin-left: 0.5rem;
+}
+
+.device-portal .dataTables_length select {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.4rem 2rem 0.4rem 0.75rem;
+}
+
+.device-portal .dataTables_info {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.device-portal .dataTables_paginate .paginate_button {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  margin: 0 0.2rem;
+  padding: 0.4rem 0.7rem !important;
+}
+
+.device-portal .dataTables_paginate .paginate_button.current {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%) !important;
+  color: white !important;
+  border: none !important;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .device-portal {
+    padding: 1rem;
+  }
+  .device-portal .page-header {
+    padding: 1rem;
+  }
+  .device-portal .page-header h2 {
+    font-size: 1.4rem;
+  }
+  .device-portal .stats-grid {
+    gap: 0.8rem;
+  }
+  .device-portal .stat-card {
+    min-width: calc(50% - 0.8rem);
+  }
+  .device-portal .toggle-group {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .device-portal .data-table th,
+  .device-portal .data-table td {
+    white-space: nowrap;
+  }
+  .device-portal .table-responsive {
+    overflow-x: auto;
+  }
+}
+</style>
+
+<div class="device-portal">
+  <div class="page-header">
+    <h2><i class="fas fa-microchip me-2"></i> Device Management</h2>
+    <p>Manage attendance and mess devices across the campus</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Statistical Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon total"><i class="fas fa-microchip"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Total Devices</div>
+          <div class="stat-value">{{ devices|length }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon active"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Active</div>
+          <div class="stat-value">{{ active_count|default:0 }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon inactive"><i class="fas fa-times-circle"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Inactive</div>
+          <div class="stat-value">{{ inactive_count|default:0 }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon attendance"><i class="fas fa-id-card"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Attendance Devices</div>
+          <div class="stat-value">{{ attendance_count|default:0 }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon mess"><i class="fas fa-utensils"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Mess Devices</div>
+          <div class="stat-value">{{ mess_count|default:0 }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add/Edit Form Card -->
+    <div class="main-card">
+      {% if edit_obj %}
+      <div class="editing-strip">
+        <i class="fas fa-pen me-2"></i> Editing device: <strong>{{ edit_obj.deviceid }}</strong>
+      </div>
+      {% endif %}
+
+      <div class="section-title">
+        <i class="fas fa-{% if edit_obj %}pen{% else %}plus-circle{% endif %} me-2"></i>
+        {% if edit_obj %}Edit Device{% else %}Add New Device{% endif %}
+      </div>
+
+      <div class="card-body">
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="id" value="{{ edit_obj.id|default:'' }}">
+
+          <div class="row g-4">
+            <div class="col-md-3">
+              <label class="form-label">Device ID <span class="text-danger">*</span></label>
+              <input type="text" name="deviceid" class="form-control"
+                     value="{{ edit_obj.deviceid|default:'' }}"
+                     placeholder="e.g. 101" required>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Device Location <span class="text-danger">*</span></label>
+              <input type="text" name="devicelocation" class="form-control"
+                     value="{{ edit_obj.devicelocation|default:'' }}"
+                     placeholder="e.g. Main Gate, Admin Block" required>
+            </div>
+
+            <div class="col-md-5">
+              <label class="form-label">Device Options</label>
+              <div class="toggle-group">
+                <label class="toggle-item">
+                  <input type="checkbox" name="is_active"
+                         {% if not edit_obj or edit_obj.is_active %}checked{% endif %}>
+                  <span><i class="fas fa-power-off me-1"></i>Active</span>
+                </label>
+                <label class="toggle-item">
+                  <input type="checkbox" name="is_attendance"
+                         {% if edit_obj and edit_obj.is_attendance %}checked{% endif %}>
+                  <span><i class="fas fa-id-card me-1"></i>Attendance</span>
+                </label>
+                <label class="toggle-item">
+                  <input type="checkbox" name="is_mess"
+                         {% if edit_obj and edit_obj.is_mess %}checked{% endif %}>
+                  <span><i class="fas fa-utensils me-1"></i>Mess</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex gap-3 mt-4">
+            <button type="submit" class="btn-save">
+              <i class="fas fa-{% if edit_obj %}save{% else %}plus{% endif %} me-2"></i>
+              {% if edit_obj %}Update Device{% else %}Add Device{% endif %}
+            </button>
+            {% if edit_obj %}
+            <a href="{% url 'device_entry' %}" class="btn-cancel">
+              <i class="fas fa-times me-2"></i> Cancel
+            </a>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Devices Table Card -->
+    <div class="table-card">
+      <div class="section-title">
+        <i class="fas fa-list me-2"></i> All Devices
+        <span class="badge bg-primary ms-2">{{ devices|length }} total</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table table w-100" id="devicesTable">
+          <thead>
+            <tr>
+              <th style="width:50px;">#</th>
+              <th>Device ID</th>
+              <th>Location</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th style="width:200px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in devices %}
+            <tr>
+              <td class="text-center text-muted fw-semibold">{{ forloop.counter }}</td>
+              <td class="fw-bold text-primary">{{ d.deviceid }}</td>
+              <td><i class="fas fa-map-marker-alt me-1 text-muted"></i>{{ d.devicelocation|default:"—" }}</td>
+              <td>
+                {% if d.is_attendance %}
+                  <span class="type-badge badge-attendance"><i class="fas fa-id-card"></i> Attendance</span>
+                {% endif %}
+                {% if d.is_mess %}
+                  <span class="type-badge badge-mess"><i class="fas fa-utensils"></i> Mess</span>
+                {% endif %}
+                {% if not d.is_attendance and not d.is_mess %}
+                  <span class="type-badge badge-other"><i class="fas fa-circle"></i> Other</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if d.is_active %}
+                  <span class="type-badge badge-active"><i class="fas fa-check-circle"></i> Active</span>
+                {% else %}
+                  <span class="type-badge badge-inactive"><i class="fas fa-times-circle"></i> Inactive</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="d-flex gap-1 flex-wrap">
+                  <a href="?edit={{ d.id }}" class="action-btn btn-edit">
+                    <i class="fas fa-pen"></i> Edit
+                  </a>
+                  <a href="?toggle={{ d.id }}" class="action-btn {% if d.is_active %}btn-toggle-on{% else %}btn-toggle-off{% endif %}">
+                    <i class="fas fa-power-off"></i>
+                    {% if d.is_active %}Deactivate{% else %}Activate{% endif %}
+                  </a>
+                  <a href="?delete={{ d.id }}" class="action-btn btn-delete"
+                     onclick="return confirm('⚠️ Are you sure you want to delete device {{ d.deviceid }}? This action cannot be undone.')">
+                    <i class="fas fa-trash"></i> Delete
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <i class="fas fa-microchip"></i>
+                  <p>No devices added yet. Click "Add Device" to get started.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Initialize DataTables
+  if (typeof $.fn.DataTable !== 'undefined' && $('#devicesTable tbody tr').length > 1) {
+    $('#devicesTable').DataTable({
+      paging: true,
+      searching: true,
+      ordering: true,
+      pageLength: 10,
+      lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+      order: [[0, 'asc']],
+      language: {
+        search: "<i class='fas fa-search'></i> Search:",
+        searchPlaceholder: "Search devices...",
+        lengthMenu: "Show _MENU_ entries",
+        info: "Showing _START_ to _END_ of _TOTAL_ devices",
+        infoEmpty: "No devices found",
+        paginate: {
+          previous: "<i class='fas fa-chevron-left'></i>",
+          next: "<i class='fas fa-chevron-right'></i>"
+        }
+      },
+      columnDefs: [
+        { orderable: false, targets: [0, 5] } // Disable sorting on # and Actions
+      ]
+    });
+  }
+});
+</script>
+
+{% endblock %}

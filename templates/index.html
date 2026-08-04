@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ramco Institute of Technology</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="website icon" type="png" href="{% static 'images/ritlogo.png' %}">
+
+    <style>
+        :root {
+            --primary: #1a4b8c;
+            --primary-light: #2c5aa0;
+            --primary-dark: #153a70;
+            --secondary: #3b82f6;
+            --accent: #10b981;
+            --light: #f8fafc;
+            --dark: #1f2937;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .institute-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .institute-logo {
+            height: 50px;
+            width: auto;
+        }
+
+        .institute-text h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .institute-text p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border-radius: 0 0 24px 24px;
+            padding: 4rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        /* Section Styles */
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 4rem 0 3rem;
+            text-align: center;
+            position: relative;
+            color: var(--primary);
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            margin: 15px auto;
+            border-radius: 3px;
+        }
+
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        /* Portal Cards */
+        .portal-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            border: 1px solid #f1f5f9;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .portal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            z-index: 2;
+        }
+
+        .portal-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+            height: 80px;
+            width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(26, 75, 140, 0.1);
+            margin: 0 auto 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .portal-card:hover .card-icon {
+            transform: scale(1.1);
+            background-color: rgba(26, 75, 140, 0.15);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .card-description {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+
+        .btn-portal {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-portal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-portal:hover::before {
+            left: 100%;
+        }
+
+        .btn-portal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+        }
+
+        /* Alert Styles */
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+        }
+
+        .custom-alert {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            animation: slideInRight 0.5s, fadeOut 0.5s 4.5s forwards;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .alert-error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        /* Footer Styles */
+        .footer {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: white;
+            margin-top: 6rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .footer-content {
+            padding: 4rem 0 2rem;
+        }
+
+        .footer-main {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 4rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .brand-logo i {
+            font-size: 2.5rem;
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+        }
+
+        .brand-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .footer-description {
+            font-size: 1rem;
+            line-height: 1.6;
+            opacity: 0.8;
+            margin: 0;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .social-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .footer-links {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .link-group-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: white;
+            position: relative;
+        }
+
+        .link-group-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+        }
+
+        .link-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .footer-link {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            position: relative;
+            padding-left: 1rem;
+        }
+
+        .footer-link::before {
+            content: '›';
+            position: absolute;
+            left: 0;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .footer-link:hover::before {
+            transform: translateX(3px);
+        }
+
+        .footer-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            margin: 2rem 0;
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 0 1rem;
+        }
+
+        .footer-copyright {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .footer-copyright p {
+            margin: 0;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        .legal-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .legal-link {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .legal-link:hover {
+            color: white;
+        }
+
+        .footer-credits {
+            text-align: right;
+        }
+
+        .footer-credits p {
+            margin: 0;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        .credit-highlight {
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .credit-highlight:hover {
+            text-decoration: underline;
+        }
+
+        /* Scroll to top button */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(26, 75, 140, 0.3);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scroll-to-top:hover {
+            background: var(--primary-light);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+        }
+
+        /* Animation for cards */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .portal-card {
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+        }
+
+        .portal-card:nth-child(1) { animation-delay: 0.1s; }
+        .portal-card:nth-child(2) { animation-delay: 0.2s; }
+        .portal-card:nth-child(3) { animation-delay: 0.3s; }
+        .portal-card:nth-child(4) { animation-delay: 0.4s; }
+        .portal-card:nth-child(5) { animation-delay: 0.5s; }
+        .portal-card:nth-child(6) { animation-delay: 0.6s; }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .footer-main {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+            
+            .footer-links {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .hero-section {
+                padding: 3rem 1rem;
+            }
+            
+            .hero-title {
+                font-size: 2.2rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .card-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .alert-container {
+                left: 10px;
+                right: 10px;
+                max-width: none;
+            }
+            
+            .footer-links {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .footer-bottom {
+                flex-direction: column;
+                gap: 1.5rem;
+                text-align: center;
+            }
+            
+            .legal-links {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .footer-credits {
+                text-align: center;
+            }
+            
+            .brand-logo {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 1.8rem;
+            }
+            
+            .section-title {
+                font-size: 1.6rem;
+            }
+            
+            .portal-card {
+                padding: 1.5rem;
+            }
+            
+            .card-icon {
+                font-size: 2.5rem;
+                height: 70px;
+                width: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="dashboard-header">
+        <div class="institute-info">
+            <img src="{% static 'images/ritlogo.png' %}" alt="RIT Logo" class="institute-logo">
+            <div class="institute-text">
+                <h1>Ramco Institute of Technology</h1>
+                <p>Enterprise Resource Planning System</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Messages/Alerts -->
+    {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+                <div class="custom-alert alert-{{ message.tags }}">
+                    <i class="fas 
+                        {% if message.tags == 'success' %}fa-check-circle 
+                        {% elif message.tags == 'error' %}fa-exclamation-circle 
+                        {% elif message.tags == 'warning' %}fa-exclamation-triangle 
+                        {% else %}fa-info-circle{% endif %}">
+                    </i>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">Welcome to RIT ERP</h1>
+                <p class="hero-subtitle">A comprehensive platform connecting students, faculty, and parents for seamless academic management</p>
+            </div>
+        </section>
+
+        <div class="container py-5">
+            <!-- User Portals Section -->
+            <h2 class="section-title">User Portals</h2>
+            <div class="card-container">
+                <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h3 class="card-title">Student Login</h3>
+                    <p class="card-description">Access all student details including academic records, course information, attendance, and student service data in one place.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='{% url 'student_login' %}'">
+                        Access Student Details <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+                
+                <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <h3 class="card-title">Employee Login</h3>
+                    <p class="card-description">Access all employee details including staff records, work information, attendance, and institutional resources from one portal.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='{% url 'login_view' %}'">
+                        Access Employee Details <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+                
+                {% comment %} <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <h3 class="card-title">Faculty Appraisal Portal Login</h3>
+                    <p class="card-description">Evaluate faculty performance, submit appraisal details, and manage yearly academic achievements.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='http://172.16.68.181:9050/login/'">
+                        Access Faculty Appraisal Portal <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div> {% endcomment %}
+                {% comment %} <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-user-friends"></i>
+                    </div>
+                    <h3 class="card-title">Parent Portal</h3>
+                    <p class="card-description">Monitor student progress, view attendance, check exam results, and stay updated with school announcements.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='#'">
+                        Access Parent Portal <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div> {% endcomment %}
+            </div>
+            <!-- Administration Section -->
+            {% comment %} <h2 class="section-title">Administration</h2>
+            <div class="card-container">
+                <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 class="card-title">E-Approval System</h3>
+                    <p class="card-description">Access the digital approval system for administrative processes and document workflows.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='http://172.16.4.249:9004'">
+                        E-Approval <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+                
+                <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-bus"></i>
+                    </div>
+                    <h3 class="card-title">Transport & Powerhouse</h3>
+                    <p class="card-description">Manage transport services, vehicle tracking, and powerhouse utility services.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='http://172.16.4.249:9010'">
+                        Transport Services <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+                
+                <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <h3 class="card-title">Mess Services</h3>
+                    <p class="card-description">Access mess facilities, meal plans, and manage dining services for students and staff.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='http://172.16.4.249:9011'">
+                        Mess Portal <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div> {% endcomment %}
+            <!-- Student Admissions Section -->
+            {% comment %} <h2 class="section-title">Student Admissions</h2>
+            <div class="card-container">
+                 <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3 class="card-title">Application Registration</h3>
+                    <p class="card-description">Apply for admission to various undergraduate and postgraduate programs offered by the institute.</p>
+                    <button class="btn btn-portal"  onclick="window.location.href='http://172.16.4.249:9000/post_index'">
+                        Enter Application Form <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>  {% endcomment %}
+
+                <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <h3 class="card-title">Quick Payment</h3>
+                    <p class="card-description">Make secure online payments for application fees, tuition fees, and other charges with multiple payment options.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='https://epayments.in.worldline.com/ritrjpm?swith=rollnumber'">
+                        Make Payment <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+                
+                {% comment %} <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <h3 class="card-title">Quick Payment</h3>
+                    <p class="card-description">Make secure online payments for application fees, tuition fees, and other charges with multiple payment options.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='https://epayments.in.worldline.com/ritrjpm?swith=rollnumber'">
+                        Make Payment <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div> {% endcomment %}
+                {% comment %} <div class="portal-card">
+                <div class="card-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <h3 class="card-title">Enter Enquiry Details</h3>
+                    <p class="card-description">Make secure online payments for application fees, tuition fees, and other charges with multiple payment options.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='http://172.16.4.249:9000/check_form'">
+                        Make Payment <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+                
+                <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-# print"></i>
+                    </div>
+                    <h3 class="card-title">Print Application Form</h3>
+                    <p class="card-description">Download and # print your completed application form for submission and record keeping.</p>
+                    <button class="btn btn-portal"  onclick="window.location.href='http://172.16.4.249:9000/pdf_check'">
+                        Print Form <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+                
+                <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <h3 class="card-title">Admission Login</h3>
+                    <p class="card-description">Access your admission portal to check application status, upload documents, and complete the admission process.</p>
+                    <button class="btn btn-portal"  onclick="window.location.href='http://172.16.4.249:9000/login'">
+                        Admission Login <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+                
+                <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3 class="card-title">Enquiry Token Login</h3>
+                    <p class="card-description">Access your admission enquiry using your token to check status and updates.</p>
+                    <button class="btn btn-portal"  onclick="window.location.href='http://172.16.4.249:9000/personal_form_login'">
+                        Enquiry Login <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+                
+                 <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h3 class="card-title">PHD Admission</h3>
+                    <p class="card-description">Apply for PhD programs and access research admission portal for doctoral studies.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='http://172.16.4.249:9006'">
+                        PHD Admission <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+                
+                <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-bed"></i>
+                    </div>
+                    <h3 class="card-title">Hostel Services</h3>
+                    <p class="card-description">Book hostel rooms, manage accommodation details, and access mess count services.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='http://172.16.4.249:9005'">
+                        Hostel Booking <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div> {% endcomment %}
+
+            <!-- Academics Section -->
+            {% comment %} <h2 class="section-title">Academics</h2>
+            <div class="card-container">
+                 <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <h3 class="card-title">Faculty Appraisal Portal Login</h3>
+                    <p class="card-description">Evaluate faculty performance, submit appraisal details, and manage yearly academic achievements.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='http://172.16.68.181:9050/login/'">
+                        Access Faculty Appraisal Portal <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div> 
+                <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="card-title">CGPA Analysis</h3>
+                    <p class="card-description">Analyze and track your academic performance with detailed CGPA reports and insights.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='http://172.16.4.249:9013'">
+                        CGPA Analysis <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+                
+                <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <h3 class="card-title">Placement Management</h3>
+                    <p class="card-description">Access placement opportunities, company details, and manage your career development.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='http://172.16.4.249:9003'">
+                        Placement Portal <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div> {% endcomment %}
+                
+                {% comment %} <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-running"></i>
+                    </div>
+                    <h3 class="card-title">Co/Extra Curricular</h3>
+                    <p class="card-description">Register for co-curricular activities, clubs, and track your participation records.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='http://172.16.4.249:9030'">
+                        Activities Portal <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div> {% endcomment %}
+                
+                {% comment %} <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-flask"></i>
+                    </div>
+                    <h3 class="card-title">Lab Apparatus Request</h3>
+                    <p class="card-description">Request laboratory equipment and apparatus for academic and research purposes.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='http://172.16.4.249:9031'">
+                        Lab Request <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+                
+                <div class="portal-card">
+                    <div class="card-icon">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                    <h3 class="card-title">Final Project Reviews</h3>
+                    <p class="card-description">Submit and track final year project reviews, evaluations, and feedback.</p>
+                    <button class="btn btn-portal" onclick="window.location.href='http://172.16.4.249:9032'">
+                        Project Reviews <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div> {% endcomment %}
+            </div>
+
+            
+        </div>
+    </main>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-content">
+      <div class="footer-main">
+        <div class="footer-brand">
+          <div class="brand-logo">
+            <i class="fas fa-graduation-cap"></i>
+            <span class="brand-name">Ramco Institute of Technology</span>
+          </div>
+          <p class="footer-description">
+            Empowering students through quality education and innovative learning experiences since 2001.
+          </p>
+          <div class="social-links">
+            <a href="https://www.facebook.com/RITRajapalayam/" target="_blank" class="social-link" aria-label="Facebook">
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="Twitter">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="LinkedIn">
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+            <a href="https://www.instagram.com/ramco_rajapalayam" class="social-link" aria-label="Instagram">
+              <i class="fab fa-instagram"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="YouTube">
+              <i class="fab fa-youtube"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="footer-links">
+          <div class="link-group">
+            <h4 class="link-group-title">Quick Links</h4>
+            <div class="link-list">
+              <a href="#" class="footer-link">Home</a>
+              <a href="#" class="footer-link">About Us</a>
+              <a href="#" class="footer-link">Academics</a>
+              <a href="#" class="footer-link">Admissions</a>
+              <a href="#" class="footer-link">Research</a>
+            </div>
+          </div>
+
+          <div class="link-group">
+            <h4 class="link-group-title">Resources</h4>
+            <div class="link-list">
+              <a href="http://172.16.68.181/student_login/" class="footer-link">Student Portal</a>
+              <a href="http://172.16.68.181:9050/login/" class="footer-link">Faculty Portal</a>
+              <a href="#" class="footer-link">Library</a>
+              <a href="#" class="footer-link">Careers</a>
+              <a href="#" class="footer-link">Campus Life</a>
+            </div>
+          </div>
+
+          <div class="link-group">
+            <h4 class="link-group-title">Support</h4>
+            <div class="link-list">
+              <a href="#" class="footer-link">Help Center</a>
+              <a href="https://www.ritrjpm.ac.in/contact.php" class="footer-link">Contact Us</a>
+              <a href="#" class="footer-link">IT Support</a>
+              <a href="#" class="footer-link">Feedback</a>
+              <a href="#" class="footer-link">Emergency</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-divider"></div>
+
+      <div class="footer-bottom">
+        <div class="footer-copyright">
+          <p>&copy; 2025 Ramco Institute of Technology. All rights reserved.</p>
+          <div class="legal-links">
+            <a href="#" class="legal-link">Privacy Policy</a>
+            <a href="#" class="legal-link">Terms of Service</a>
+            <a href="#" class="legal-link">Cookie Policy</a>
+            <a href="#" class="legal-link">Accessibility</a>
+          </div>
+        </div>
+
+        <!-- ANIMATED FOOTER -->
+        <div class="animated-footer">
+          <p>
+            Crafted by
+            <a href="https://www.ritrjpm.ac.in/departments/ai-and-ds/ai-ds-about-the-department.php"
+               class="animated-footer__link"
+               target="_blank"
+               rel="noopener noreferrer">
+              Dept of Artificial Intelligence & Data Science, RIT
+            </a>
+          </p>
+          <div class="footer-bullet"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+
+/* ===== Animated Footer ===== */
+.animated-footer {
+  text-align: center;
+  padding: 18px 15px;
+  color: inherit;
+  font-family: 'Poppins', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.animated-footer p {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 400;
+}
+
+.animated-footer__link {
+  color: #0072ff;
+  font-weight: 600;
+  text-decoration: none;
+  position: relative;
+  display: inline-block;
+}
+
+/* Letters */
+.animated-footer__link span {
+  display: inline-block;
+  position: relative;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+/* ===== Smaller Bullet ===== */
+.footer-bullet {
+  position: absolute;
+  top: 58%;
+  left: -10vmin;
+  transform: translateY(-50%);
+  width: 3.5vmin;
+  height: 1vmin;
+  background: linear-gradient(90deg, #ff0000, #ff4d4d, #ff0000);
+  border-radius: 50% 15% 15% 50%;
+  box-shadow: 0 0 12px rgba(255, 50, 50, 0.8);
+  z-index: 5;
+}
+
+/* Bullet tip */
+.footer-bullet::before {
+  content: "";
+  position: absolute;
+  right: -1vmin;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-top: 0.5vmin solid transparent;
+  border-bottom: 0.5vmin solid transparent;
+  border-left: 1vmin solid #ff4d4d;
+}
+
+/* Fire trail */
+.footer-bullet::after {
+  content: "";
+  position: absolute;
+  left: -1.5vmin;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2vmin;
+  height: 0.4vmin;
+  background: radial-gradient(circle, orange, red, transparent);
+  border-radius: 50%;
+  filter: blur(2px);
+  animation: footerFireTrail 0.25s alternate infinite;
+}
+@keyframes footerFireTrail {
+  0% { opacity: 1; width: 2vmin; }
+  100% { opacity: 0.5; width: 1vmin; }
+}
+
+/* Fire burn + Bounce Break */
+@keyframes footerBurn {
+  0% { color: #0072ff; text-shadow: none; }
+  25% { color: #ff6600; text-shadow: 0 0 8px #ff3300; }
+  50% { color: #ff3300; text-shadow: 0 0 16px #ff0000, 0 0 25px #cc0000; }
+  75% { color: #ff6600; text-shadow: 0 0 10px #ff3300; }
+  100% { color: #0072ff; text-shadow: none; }
+}
+
+/* Enhanced bounce scatter */
+@keyframes footerBreakApart {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(1.1); }
+  50% { transform: translate(calc(var(--x) * -0.3), calc(var(--y) * -0.3)) rotate(calc(var(--r) * -0.3)); }
+  80% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: none; }
+}
+
+/* Shockwave */
+.footer-shockwave {
+  position: absolute;
+  border: 2px solid rgba(255, 100, 100, 0.4);
+  border-radius: 50%;
+  transform: scale(0);
+  animation: footerShock 0.8s ease-out forwards;
+  pointer-events: none;
+  z-index: 3;
+}
+@keyframes footerShock {
+  to { transform: scale(3); opacity: 0; }
+}
+
+/* Sparks */
+.footer-spark {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: radial-gradient(circle, yellow, orange, red);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: footerSparkFly 0.6s ease-out forwards;
+  z-index: 3;
+}
+@keyframes footerSparkFly {
+  to { transform: translate(var(--sx), var(--sy)); opacity: 0; }
+}
+</style>
+
+<script>
+(function() {
+  const footerLink = document.querySelector('.animated-footer__link');
+  if (!footerLink) return;
+
+  // Split link text into spans
+  const text = footerLink.textContent.trim();
+  footerLink.textContent = '';
+  text.split('').forEach(char => {
+    const span = document.createElement('span');
+    span.textContent = char === ' ' ? '\u00A0' : char;
+    footerLink.appendChild(span);
+  });
+
+  const bullet = document.querySelector('.footer-bullet');
+  const letters = footerLink.querySelectorAll('span');
+
+  function animateBullet() {
+    const bulletWidth = bullet.offsetWidth;
+    const footerWidth = footerLink.offsetWidth + 120;
+    let pos = -bulletWidth;
+    const speed = 4.2;
+
+    const move = setInterval(() => {
+      pos += speed;
+      bullet.style.left = pos + 'px';
+
+      letters.forEach(letter => {
+        const rect1 = bullet.getBoundingClientRect();
+        const rect2 = letter.getBoundingClientRect();
+        const collide =
+          rect1.right > rect2.left &&
+          rect1.left < rect2.right &&
+          rect1.bottom > rect2.top &&
+          rect1.top < rect2.bottom;
+
+        if (collide && !letter.classList.contains('burning')) {
+          igniteLetter(letter);
+          createShockwave(rect2);
+          createSparks(rect2);
+        }
+      });
+
+      if (pos > footerWidth) {
+        clearInterval(move);
+        setTimeout(animateBullet, 2200);
+      }
+    }, 16);
+  }
+
+  function igniteLetter(letter) {
+    letter.classList.add('burning');
+    const randX = (Math.random() - 0.5) * 80 + 'px';
+    const randY = (Math.random() - 0.5) * 60 + 'px';
+    const randR = (Math.random() - 0.5) * 45 + 'deg';
+
+    letter.style.setProperty('--x', randX);
+    letter.style.setProperty('--y', randY);
+    letter.style.setProperty('--r', randR);
+    letter.style.animation = 'footerBurn 1.3s ease forwards, footerBreakApart 1.3s ease';
+
+    setTimeout(() => {
+      letter.style.animation = 'none';
+      letter.classList.remove('burning');
+    }, 1500);
+  }
+
+  function createShockwave(rect) {
+    const wave = document.createElement('div');
+    wave.classList.add('footer-shockwave');
+    wave.style.left = rect.left + rect.width / 2 + 'px';
+    wave.style.top = rect.top + rect.height / 2 + 'px';
+    document.body.appendChild(wave);
+    setTimeout(() => wave.remove(), 800);
+  }
+
+  function createSparks(rect) {
+    for (let i = 0; i < 5; i++) {
+      const spark = document.createElement('div');
+      spark.classList.add('footer-spark');
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 25 + Math.random() * 35;
+      spark.style.setProperty('--sx', `${Math.cos(angle) * distance}px`);
+      spark.style.setProperty('--sy', `${Math.sin(angle) * distance}px`);
+      spark.style.left = rect.left + rect.width / 2 + 'px';
+      spark.style.top = rect.top + rect.height / 2 + 'px';
+      document.body.appendChild(spark);
+      setTimeout(() => spark.remove(), 600);
+    }
+  }
+
+  animateBullet();
+})();
+</script>
+
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top" aria-label="Scroll to top">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        document.addEventListener("DOMContentLoaded", function () {
+            setTimeout(function () {
+                const alerts = document.querySelectorAll('.custom-alert');
+                alerts.forEach(alert => {
+                    alert.style.animation = 'fadeOut 0.5s forwards';
+                    setTimeout(() => alert.remove(), 500);
+                });
+            }, 5000);
+
+            // Scroll to top functionality
+            const scrollButton = document.querySelector('.scroll-to-top');
+            
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    scrollButton.style.display = 'flex';
+                } else {
+                    scrollButton.style.display = 'none';
+                }
+            });
+            
+            scrollButton.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

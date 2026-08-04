@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.low-stock-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.low-stock-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.low-stock-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.low-stock-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.low-stock-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.low-stock-portal .stats-grid {
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.low-stock-portal .stat-card {
+  flex: 1;
+  min-width: 220px;
+  background: white;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
+.low-stock-portal .stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.low-stock-portal .stat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.low-stock-portal .stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #dc2626;
+}
+
+.low-stock-portal .custom-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.low-stock-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a4b8c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.low-stock-portal .card-body-custom {
+  padding: 1.5rem;
+}
+
+.low-stock-portal .low-stock-search {
+  width: 260px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.65rem 1rem;
+  font-size: 0.9rem;
+}
+
+.low-stock-portal .low-stock-search:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26,75,140,0.1);
+  outline: none;
+}
+
+.low-stock-portal .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.low-stock-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.low-stock-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.low-stock-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.low-stock-portal .data-table tbody tr:hover {
+  background: rgba(220,38,38,0.04);
+}
+
+.low-stock-portal .item-code {
+  font-weight: 800;
+  color: #1a4b8c;
+}
+
+.low-stock-portal .item-name {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.low-stock-portal .current-stock {
+  color: #dc2626;
+  font-weight: 800;
+}
+
+.low-stock-portal .minimum-stock {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.low-stock-portal .badge-danger-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 40px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.low-stock-portal .empty-row {
+  text-align: center;
+  padding: 2rem !important;
+  color: #059669;
+  font-weight: 700;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .low-stock-portal {
+    padding: 1rem;
+  }
+
+  .low-stock-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .low-stock-portal .card-header-custom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .low-stock-portal .low-stock-search {
+    width: 100%;
+  }
+}
+</style>
+
+<div class="low-stock-portal">
+  <div class="page-header">
+    <h1><i class="fas fa-triangle-exclamation me-2"></i> Low Stock Dashboard</h1>
+    <p class="header-subtitle">Items where current stock is equal to or below minimum stock</p>
+  </div>
+
+  <div class="page-container">
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-boxes-stacked"></i>
+        </div>
+        <div>
+          <div class="stat-label">Low Stock Items</div>
+          <div class="stat-value">{{ low_stock_items|length }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-cart-shopping me-2"></i> Reorder Required</span>
+        <input type="text"
+               class="low-stock-search"
+               data-table="lowStockTable"
+               placeholder="Search low stock...">
+      </div>
+
+      <div class="card-body-custom">
+        <div class="table-responsive">
+          <table id="lowStockTable" class="data-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Item</th>
+                <th>Type</th>
+                <th>Current Stock</th>
+                <th>Minimum Stock</th>
+                <th>Vendor</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for item in low_stock_items %}
+              <tr>
+                <td class="item-code">{{ item.item_code }}</td>
+                <td class="item-name">{{ item.item_name }}</td>
+                <td>{{ item.item_type.type_name|default:"-" }}</td>
+                <td class="current-stock">{{ item.stock_qty }} {{ item.unit }}</td>
+                <td class="minimum-stock">{{ item.minimum_qty }} {{ item.unit }}</td>
+                <td>{{ item.vendor_name|default:"-" }}</td>
+                <td>
+                  <span class="badge-danger-custom">
+                    <i class="fas fa-circle-exclamation"></i> Reorder Required
+                  </span>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="7" class="empty-row">
+                  <i class="fas fa-circle-check me-2"></i> No low stock items.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+document.addEventListener("input", function (e) {
+  if (!e.target.matches("[data-table]")) return;
+
+  const tableId = e.target.getAttribute("data-table");
+  const table = document.getElementById(tableId);
+  const searchText = e.target.value.toLowerCase();
+
+  if (!table) return;
+
+  table.querySelectorAll("tbody tr").forEach(row => {
+    row.style.display = row.innerText.toLowerCase().includes(searchText) ? "" : "none";
+  });
+});
+</script>
+
+{% endblock %}

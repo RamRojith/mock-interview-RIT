@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0 text-primary">
+            <i class="fas fa-user-check me-2"></i>Assign Approvers
+        </h3>
+        <button class="btn btn-outline-secondary" id="helpBtn">
+            <i class="fas fa-question-circle me-1"></i>Help
+        </button>
+    </div>
+
+    <!-- ================= INFO NOTE ================= -->
+    <div class="alert alert-warning mb-4">
+        <h6>Important:</h6>
+        <ol class="mb-0">
+            <li>If approver is from another department, enable cross-department and select department.</li>
+            <li>Changes apply only to new approval workflows.</li>
+        </ol>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- =============== DOCUMENT APPROVERS ================= -->
+    <!-- ===================================================== -->
+
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Document Approvers</h5>
+        </div>
+        <div class="card-body">
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label>Select Creator Role</label>
+                    <select id="creatorRole1" class="form-select">
+                        <option value="">-- Select Role --</option>
+                        {% for role in roles %}
+                        <option value="{{role.id}}">{{role.role}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-outline-secondary" id="resetBtn1">
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-5">
+                    <h6>Available Roles <span class="badge bg-secondary" id="availableCount1">0</span></h6>
+                    <div id="availableRoles1" class="role-list"></div>
+                </div>
+
+                <div class="col-md-2 text-center">
+                    <i class="fas fa-arrow-right fa-2x text-muted mt-5"></i>
+                </div>
+
+                <div class="col-md-5">
+                    <h6>Approval Hierarchy <span class="badge bg-primary" id="hierarchyCount1">0</span></h6>
+                    <div id="roleHierarchy1" class="role-list"></div>
+                </div>
+            </div>
+
+            <div class="text-end mt-3">
+                <button id="submitRoles1" class="btn btn-success">
+                    Save Document Approvers
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- =============== GUEST WIFI APPROVERS ================ -->
+    <!-- ===================================================== -->
+
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="fas fa-wifi me-2"></i>Guest WiFi Approvers</h5>
+        </div>
+        <div class="card-body">
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label>Select Creator Role</label>
+                    <select id="creatorRole2" class="form-select">
+                        <option value="">-- Select Role --</option>
+                        {% for role in roles %}
+                        <option value="{{role.id}}">{{role.role}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-outline-secondary" id="resetBtn2">
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-5">
+                    <h6>Available Roles <span class="badge bg-secondary" id="availableCount2">0</span></h6>
+                    <div id="availableRoles2" class="role-list"></div>
+                </div>
+
+                <div class="col-md-2 text-center">
+                    <i class="fas fa-arrow-right fa-2x text-muted mt-5"></i>
+                </div>
+
+                <div class="col-md-5">
+                    <h6>Guest WiFi Approval Hierarchy <span class="badge bg-success" id="hierarchyCount2">0</span></h6>
+                    <div id="roleHierarchy2" class="role-list"></div>
+                </div>
+            </div>
+
+            <div class="text-end mt-3">
+                <button id="submitRoles2" class="btn btn-success">
+                    Save Guest WiFi Approvers
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ================= STYLE ================= -->
+<style>
+.role-list {
+    min-height: 280px;
+    border: 2px dashed #ddd;
+    padding: 10px;
+    border-radius: 6px;
+    background: #fafafa;
+}
+.role-item {
+    padding: 8px;
+    margin: 6px 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.department-select {
+    display:none;
+    width:160px;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+function initApproverUI(roleSelectId, availableId, hierarchyId, submitBtnId, availableCountId, hierarchyCountId) {
+
+    const creatorRoleSelect = document.getElementById(roleSelectId);
+    const availableRoles = document.getElementById(availableId);
+    const roleHierarchy = document.getElementById(hierarchyId);
+    const availableCount = document.getElementById(availableCountId);
+    const hierarchyCount = document.getElementById(hierarchyCountId);
+
+    function updateCounts(){
+        availableCount.innerText = availableRoles.querySelectorAll('.role-item').length;
+        hierarchyCount.innerText = roleHierarchy.querySelectorAll('.role-item').length;
+    }
+
+    function populateRoles(creatorRoleId){
+        availableRoles.innerHTML = '';
+        roleHierarchy.innerHTML = '';
+
+        {% for role in roles %}
+        availableRoles.innerHTML += `
+            <div class="role-item" data-role-id="{{role.id}}">
+                <span>{{role.role}}</span>
+                <div>
+                    <input type="checkbox" class="cross-dept"> Cross Dept
+                    <select class="department-select">
+                        <option value="">--Dept--</option>
+                        {% for dept in departments %}
+                        <option value="{{dept.id}}">{{dept.Department}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>`;
+        {% endfor %}
+
+        updateCounts();
+    }
+
+    creatorRoleSelect.addEventListener("change", ()=>{
+        populateRoles(creatorRoleSelect.value);
+    });
+
+    populateRoles("");
+
+    new Sortable(availableRoles,{ group:"shared", animation:150, onEnd:updateCounts });
+    new Sortable(roleHierarchy,{ group:"shared", animation:150, onEnd:updateCounts });
+
+    document.addEventListener("change", function(e){
+        if(e.target.classList.contains("cross-dept")){
+            let sel = e.target.closest(".role-item").querySelector(".department-select");
+            sel.style.display = e.target.checked ? "inline-block" : "none";
+        }
+    });
+
+    document.getElementById(submitBtnId).addEventListener("click", ()=>{
+
+        const creatorRole = creatorRoleSelect.value;
+        if(!creatorRole){
+            alert("Select Creator Role");
+            return;
+        }
+
+        const hierarchyData = Array.from(roleHierarchy.querySelectorAll('.role-item')).map(item=>({
+            id: item.dataset.roleId,
+            isCrossDepartment: item.querySelector(".cross-dept").checked,
+            departmentId: item.querySelector(".department-select").value || null
+        }));
+
+        fetch("{% url 'assign_approval_management' %}",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+                "X-CSRFToken":"{{csrf_token}}"
+            },
+            body: JSON.stringify({
+                creatorRole: creatorRole,
+                roleHierarchy: hierarchyData
+            })
+        })
+        .then(res=>res.json())
+        .then(data=>{
+            alert(data.message || data.error);
+        })
+        .catch(err=>alert("Error saving"));
+    });
+
+}
+
+// Initialize both sections
+initApproverUI("creatorRole1","availableRoles1","roleHierarchy1","submitRoles1","availableCount1","hierarchyCount1");
+initApproverUI("creatorRole2","availableRoles2","roleHierarchy2","submitRoles2","availableCount2","hierarchyCount2");
+</script>
+
+{% endblock %}

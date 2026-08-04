@@ -1,0 +1,693 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .network-queries {
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        min-height: 100vh;
+    }
+
+    .application-content {
+        padding: 1rem 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .application-form {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid #1a4b8c;
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+
+    .form-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1a4b8c;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        padding: 0.6rem 0.75rem;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #1a4b8c;
+        box-shadow: 0 0 0 0.2rem rgba(26, 75, 140, 0.25);
+    }
+
+    .readonly-box {
+        background: #f8fafc;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        border: none;
+        padding: 0.875rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+        width: 100%;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+        color: white;
+    }
+
+    .info-card {
+        background: #f0f9ff;
+        border: 1px solid #0ea5e9;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card h6 {
+        margin-bottom: 0.5rem;
+        color: #0c4a6e;
+        font-weight: 700;
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin: 1.5rem 0 1rem 0;
+    }
+
+    .section-header h4 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.05rem;
+    }
+
+    .query-options-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .query-option-card {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .query-option-card:hover {
+        border-color: #1a4b8c;
+        box-shadow: 0 4px 12px rgba(26, 75, 140, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .query-option-card.selected {
+        border-color: #1a4b8c;
+        background: #eff6ff;
+        box-shadow: 0 4px 12px rgba(26, 75, 140, 0.12);
+    }
+
+    .query-option-title {
+        font-weight: 700;
+        color: #1a4b8c;
+        margin-bottom: 0.35rem;
+    }
+
+    .query-option-desc {
+        color: #6b7280;
+        font-size: 0.85rem;
+        margin: 0;
+    }
+
+    .network-queries-section {
+        margin-top: 2rem;
+    }
+
+    .query-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid #1a4b8c;
+    }
+
+    .query-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .query-id {
+        font-weight: 700;
+        color: #1a4b8c;
+    }
+
+    .status-badge {
+        padding: 0.375rem 0.875rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-in_progress {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-resolved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-closed {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .badge-soft {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        background: #f8fafc;
+        color: #334155;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-right: 0.35rem;
+        margin-bottom: 0.35rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    @media (max-width: 768px) {
+        .application-content {
+            padding: 1rem;
+        }
+
+        .application-form {
+            padding: 1rem;
+        }
+
+        .form-title {
+            font-size: 1.4rem;
+        }
+
+        .query-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+    }
+</style>
+
+<div class="network-queries">
+    <main class="application-content">
+
+        <div class="info-card">
+            <h6><i class="fas fa-info-circle me-2"></i>Network Query Guidelines</h6>
+            <ul class="mb-0">
+                <li>This page supports both student and faculty users.</li>
+                <li>Your details are filled automatically based on login.</li>
+                <li>Select the correct issue type and describe it clearly.</li>
+                <li>You can track all submitted queries below.</li>
+            </ul>
+        </div>
+
+        <div class="application-form">
+            <h2 class="form-title">
+                <i class="fas fa-network-wired me-2"></i>
+                {% if is_student_user %}
+                    Query Application - Student
+                {% elif is_faculty_user %}
+                    Query Application - Faculty
+                {% else %}
+                    Query Application
+                {% endif %}
+            </h2>
+
+            <form method="post" id="networkQueryForm">
+                {% csrf_token %}
+
+                <div class="section-header">
+                    <h4>I - General Information</h4>
+                </div>
+
+                {% if is_student_user and student %}
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control readonly-box" value="{{ student.name|upper }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Register Number</label>
+                            <input type="text" class="form-control readonly-box" value="{{ student.reg_no }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control readonly-box" value="{{ student.email }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="form-label">Year</label>
+                            <input type="text" class="form-control readonly-box" value="{{ student.year }}" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <input type="text" class="form-control readonly-box" value="{{ student.department }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="form-label">Semester</label>
+                            <input type="text" class="form-control readonly-box" value="{{ student.semester }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="form-label">Section</label>
+                            <input type="text" class="form-control readonly-box" value="{{ student.section }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Admission Mode</label>
+                            <input type="text" class="form-control readonly-box" value="{{ admission_mode|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if is_faculty_user and faculty %}
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Faculty ID</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.faculty_id }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.name|upper }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.department }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Designation</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.designation }}" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">College Email</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.college_email }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Personal Email</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.personal_email }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Phone</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.phone }}" readonly>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="section-header">
+                    <h4>II - Select Query Type</h4>
+                </div>
+
+                <div class="query-options-grid">
+                    {% if is_student_user %}
+                        {% if is_hosteller %}
+                            <div class="query-option-card" data-query="hostel_wifi_slow" data-subject="Hostel WiFi Slow Speed">
+                                <div class="query-option-title">WiFi Slow Speed</div>
+                                <p class="query-option-desc">Report slow hostel WiFi connectivity.</p>
+                            </div>
+                            <div class="query-option-card" data-query="hostel_wifi_disconnection" data-subject="Hostel WiFi Frequent Disconnections">
+                                <div class="query-option-title">Frequent Disconnections</div>
+                                <p class="query-option-desc">WiFi disconnects repeatedly in hostel.</p>
+                            </div>
+                            <div class="query-option-card" data-query="hostel_wifi_no_access" data-subject="Cannot Connect to Hostel WiFi">
+                                <div class="query-option-title">Cannot Connect</div>
+                                <p class="query-option-desc">Unable to access hostel WiFi.</p>
+                            </div>
+                            <div class="query-option-card" data-query="hostel_ethernet_not_working" data-subject="Hostel Ethernet Cable Not Working">
+                                <div class="query-option-title">Ethernet Not Working</div>
+                                <p class="query-option-desc">Ethernet cable or port issue.</p>
+                            </div>
+                            <div class="query-option-card" data-query="hostel_ethernet_slow" data-subject="Hostel Ethernet Slow Speed">
+                                <div class="query-option-title">Ethernet Slow Speed</div>
+                                <p class="query-option-desc">Low ethernet speed in hostel.</p>
+                            </div>
+                            <div class="query-option-card" data-query="hostel_others" data-subject="Others">
+                                <div class="query-option-title">Others</div>
+                                <p class="query-option-desc">Describe the issue you are facing.</p>
+                            </div>
+                        {% else %}
+                            <div class="query-option-card" data-query="dayscholar_campus_wifi_slow" data-subject="Campus WiFi Slow Speed">
+                                <div class="query-option-title">Campus WiFi Slow Speed</div>
+                                <p class="query-option-desc">Report slow speed on campus WiFi.</p>
+                            </div>
+                            <div class="query-option-card" data-query="dayscholar_campus_wifi_disconnection" data-subject="Campus WiFi Frequent Disconnections">
+                                <div class="query-option-title">Frequent Disconnections</div>
+                                <p class="query-option-desc">WiFi disconnects on campus.</p>
+                            </div>
+                            <div class="query-option-card" data-query="dayscholar_campus_wifi_no_access" data-subject="Cannot Connect to Campus WiFi">
+                                <div class="query-option-title">Cannot Connect</div>
+                                <p class="query-option-desc">Unable to connect to campus WiFi.</p>
+                            </div>
+                            <div class="query-option-card" data-query="dayscholar_lab_network_issues" data-subject="Lab Network Problems">
+                                <div class="query-option-title">Lab Network Problems</div>
+                                <p class="query-option-desc">LAN or system issues in lab.</p>
+                            </div>
+                            <div class="query-option-card" data-query="dayscholar_library_wifi_issues" data-subject="Library WiFi Issues">
+                                <div class="query-option-title">Library WiFi Issues</div>
+                                <p class="query-option-desc">Problems using library WiFi.</p>
+                            </div>
+                            <div class="query-option-card" data-query="dayscholar_others" data-subject="Others">
+                                <div class="query-option-title">Others</div>
+                                <p class="query-option-desc">Describe the issue you are facing.</p>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if is_faculty_user %}
+                        <div class="query-option-card" data-query="faculty_wifi_slow" data-subject="Faculty WiFi Slow Speed">
+                            <div class="query-option-title">Faculty WiFi Slow Speed</div>
+                            <p class="query-option-desc">Slow WiFi in cabin, department, or classroom.</p>
+                        </div>
+                        <div class="query-option-card" data-query="faculty_wifi_disconnection" data-subject="Faculty WiFi Frequent Disconnections">
+                            <div class="query-option-title">Faculty WiFi Disconnections</div>
+                            <p class="query-option-desc">WiFi disconnects frequently.</p>
+                        </div>
+                        <div class="query-option-card" data-query="faculty_wifi_no_access" data-subject="Cannot Connect to Faculty WiFi">
+                            <div class="query-option-title">Cannot Connect</div>
+                            <p class="query-option-desc">Unable to connect to faculty WiFi/network.</p>
+                        </div>
+                        <div class="query-option-card" data-query="faculty_lan_issue" data-subject="Faculty LAN / Ethernet Issue">
+                            <div class="query-option-title">LAN / Ethernet Issue</div>
+                            <p class="query-option-desc">Wired network issue in office system.</p>
+                        </div>
+                        <div class="query-option-card" data-query="faculty_lab_network_issue" data-subject="Faculty Lab / Department Network Issue">
+                            <div class="query-option-title">Lab / Department Network Issue</div>
+                            <p class="query-option-desc">Problem in department or lab network.</p>
+                        </div>
+                        <div class="query-option-card" data-query="faculty_others" data-subject="Others">
+                            <div class="query-option-title">Others</div>
+                            <p class="query-option-desc">Describe the issue you are facing.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if errors.query_type %}
+                    <small class="text-danger d-block mt-2">{{ errors.query_type }}</small>
+                {% endif %}
+
+                <div id="wifi_connection_note" class="info-card mt-3" style="display:none;">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Important: MAC Address Setting</h6>
+                    <ul class="mb-0">
+                        <li>Some devices use Randomized MAC, which can block access.</li>
+                        <li>Change it to Device MAC / Phone MAC and reconnect.</li>
+                        <li>If still not working, mention your MAC address in description.</li>
+                    </ul>
+                </div>
+
+                <div class="section-header" id="issue_description_section" style="display:none;">
+                    <h4>III - Describe Your Issue</h4>
+                </div>
+
+                <div id="issue_description_fields" style="display:none;">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Priority Level <span class="text-danger">*</span></label>
+                                <select class="form-select" name="priority" id="priority">
+                                    <option value="low" {% if form_data.priority == 'low' %}selected{% endif %}>Low</option>
+                                    <option value="medium" {% if form_data.priority == 'medium' or not form_data.priority %}selected{% endif %}>Medium</option>
+                                    <option value="high" {% if form_data.priority == 'high' %}selected{% endif %}>High</option>
+                                    <option value="urgent" {% if form_data.priority == 'urgent' %}selected{% endif %}>Urgent</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Issue Description <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="issue_description" id="issue_description" rows="4"
+                                  placeholder="Explain when the issue started, where it happens, how often, and what you already tried.">{{ form_data.description|default:'' }}</textarea>
+                        {% if errors.description %}
+                            <small class="text-danger">{{ errors.description }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <input type="hidden" name="query_type" id="query_type_hidden" value="{{ form_data.query_type|default:'' }}">
+                <input type="hidden" name="subject" id="subject_hidden" value="{{ form_data.subject|default:'' }}">
+                <input type="hidden" name="description" id="description_hidden">
+                <input type="hidden" name="device_type" value="{{ form_data.device_type|default:'mobile' }}">
+                <input type="hidden" name="location_details" value="{{ form_data.location_details|default:'Not specified' }}">
+                <input type="hidden" name="connection_type" value="{{ form_data.connection_type|default:'wifi' }}">
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-paper-plane me-2"></i>Submit Query
+                </button>
+            </form>
+        </div>
+
+        <div class="network-queries-section">
+            <div class="section-header">
+                <h4><i class="fas fa-history me-2"></i>My Network Queries</h4>
+            </div>
+
+            {% if network_queries %}
+                {% for query in network_queries %}
+                <div class="query-card">
+                    <div class="query-header">
+                        <div class="query-id">
+                            <i class="fas fa-ticket-alt me-1"></i>{{ query.query_id }}
+                        </div>
+                        <span class="status-badge status-{{ query.status }}">
+                            {{ query.get_status_display }}
+                        </span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6><i class="fas fa-network-wired me-2"></i>{{ query.subject }}</h6>
+
+                            <div class="mb-2">
+                                <span class="badge-soft">
+                                    <i class="fas fa-tag me-1"></i>{{ query.get_query_type_display }}
+                                </span>
+                                <span class="badge-soft">
+                                    <i class="fas fa-signal me-1"></i>{{ query.get_connection_type_display }}
+                                </span>
+                                <span class="badge-soft">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ query.get_priority_display|title }}
+                                </span>
+                            </div>
+
+                            <p class="mb-2 text-muted">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                <strong>Location:</strong> {{ query.location_details|default:"Not specified" }}
+                            </p>
+
+                            <p class="mb-2">{{ query.description|truncatewords:25 }}</p>
+                        </div>
+
+                        <div class="col-md-4 text-md-end">
+                            <small class="text-muted d-block">
+                                <strong>Submitted:</strong> {{ query.submitted_at|date:"M d, Y H:i" }}
+                            </small>
+
+                            {% if query.updated_at and query.updated_at != query.submitted_at %}
+                            <small class="text-muted d-block">
+                                <strong>Updated:</strong> {{ query.updated_at|date:"M d, Y H:i" }}
+                            </small>
+                            {% endif %}
+
+                            <small class="text-muted d-block">
+                                <strong>User Type:</strong> {{ query.user_type|title }}
+                            </small>
+
+                            {% if query.user_type == "student" and query.student_type %}
+                            <small class="text-muted d-block">
+                                <strong>Student Type:</strong> {{ query.student_type|title }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if query.status == 'resolved' or query.status == 'closed' %}
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-success">
+                            <i class="fas fa-check-circle me-1"></i>
+                            This query has been {{ query.get_status_display|lower }}.
+                            {% if query.status == 'resolved' %}
+                                If you're still experiencing issues, please submit a new query.
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% elif query.status == 'in_progress' %}
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-info">
+                            <i class="fas fa-cog fa-spin me-1"></i>
+                            Our technical team is currently working on resolving your network issue.
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-warning">
+                            <i class="fas fa-hourglass-half me-1"></i>
+                            Your query is pending review by the Data Center Incharge.
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="query-card text-center">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">No Network Queries Submitted</h6>
+                    <p class="text-muted mb-0">You haven't submitted any queries yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const cards = document.querySelectorAll(".query-option-card");
+    const queryTypeHidden = document.getElementById("query_type_hidden");
+    const subjectHidden = document.getElementById("subject_hidden");
+    const descriptionHidden = document.getElementById("description_hidden");
+    const issueDescription = document.getElementById("issue_description");
+    const issueSection = document.getElementById("issue_description_section");
+    const issueFields = document.getElementById("issue_description_fields");
+    const wifiNote = document.getElementById("wifi_connection_note");
+    const form = document.getElementById("networkQueryForm");
+
+    function selectCardByQueryType(queryTypeValue) {
+        if (!queryTypeValue) return;
+
+        cards.forEach(card => {
+            if (card.dataset.query === queryTypeValue) {
+                card.classList.add("selected");
+                issueSection.style.display = "block";
+                issueFields.style.display = "block";
+
+                if (queryTypeValue.includes("no_access")) {
+                    wifiNote.style.display = "block";
+                } else {
+                    wifiNote.style.display = "none";
+                }
+            }
+        });
+    }
+
+    cards.forEach(card => {
+        card.addEventListener("click", function () {
+            cards.forEach(c => c.classList.remove("selected"));
+            this.classList.add("selected");
+
+            const queryType = this.dataset.query;
+            const subject = this.dataset.subject;
+
+            queryTypeHidden.value = queryType;
+            subjectHidden.value = subject;
+
+            issueSection.style.display = "block";
+            issueFields.style.display = "block";
+
+            if (queryType.includes("no_access")) {
+                wifiNote.style.display = "block";
+            } else {
+                wifiNote.style.display = "none";
+            }
+        });
+    });
+
+    selectCardByQueryType(queryTypeHidden.value);
+
+    form.addEventListener("submit", function (e) {
+        if (!queryTypeHidden.value) {
+            e.preventDefault();
+            alert("Please select a query type.");
+            return;
+        }
+
+        if (!issueDescription.value.trim()) {
+            e.preventDefault();
+            alert("Please describe your issue.");
+            return;
+        }
+
+        descriptionHidden.value = issueDescription.value.trim();
+    });
+});
+</script>
+{% endblock %}

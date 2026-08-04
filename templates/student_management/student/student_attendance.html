@@ -1,0 +1,744 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="attendance-portal">
+  <div class="page-header">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+      <div>
+        <h1 class="mb-1">
+          <i class="fas fa-chart-line me-2"></i>Attendance Dashboard
+        </h1>
+        <p class="header-subtitle mb-0">Track your academic attendance across all semesters</p>
+
+        
+      </div>
+
+      <!-- ✅ PDF DOWNLOAD BUTTON -->
+      <div class="d-flex gap-2">
+        <a href="{% url 'student_attendance_pdf' %}" class="btn btn-primary">
+          <i class="fas fa-file-pdf me-2"></i>Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-container">
+    {% if error %}
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+      </div>
+    {% endif %}
+
+    <!-- ✅ Semester Cards Grid -->
+    <div class="semester-grid">
+      {% for sem_tuple in semesters_list %}
+        {% with sem=sem_tuple.0 data=sem_tuple.1 %}
+        <div class="semester-card" data-sem="{{ sem }}">
+          <div class="semester-header">
+            <div style="display:flex;align-items:center;gap:1rem;">
+              <div class="semester-icon"><i class="fas fa-graduation-cap"></i></div>
+              <h3 class="semester-title mb-0">Semester {{ sem }}</h3>
+            </div>
+            <i class="fas fa-chevron-right semester-arrow"></i>
+          </div>
+
+          <!-- Overall Progress (Hour-wise used as overall here) -->
+          <div class="progress-container">
+            <div class="progress-label">
+              <span>Overall Progress</span>
+              <span>{{ data.hourwise.percentage|default:0 }}%</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar"
+                   style="width: {{ data.hourwise.percentage|default:0 }}%;"
+                   aria-valuenow="{{ data.hourwise.percentage|default:0 }}"
+                   aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Hour-wise</div>
+              <div class="stat-value">{{ data.hourwise.percentage|default:0 }}%</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Daily</div>
+              <div class="stat-value">{{ data.daily.percentage|default:0 }}%</div>
+            </div>
+          </div>
+        </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+
+    <!-- ✅ Details Container -->
+    <div id="attendance-container">
+      {% for sem_tuple in semesters_list %}
+        {% with sem=sem_tuple.0 data=sem_tuple.1 %}
+        <div class="d-none" id="sem-{{ sem }}">
+
+          <!-- ✅ Hour-wise Attendance -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Hour-wise Attendance - Semester {{ sem }}</h5>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>S No.</th>
+                      <th>Course Code</th>
+                      <th>Course Name</th>
+                      <th>Total Hours</th>
+                      <th>Attended</th>
+                      <th>Percentage</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if data.hourwise.courses %}
+                      {% for course in data.hourwise.courses %}
+                      <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ course.code|default:"—" }}</td>
+                        <td>{{ course.name|default:"—" }}</td>
+                        <td>{{ course.total|default:0 }}</td>
+                        <td>{{ course.attended|default:0 }}</td>
+                        <td><strong>{{ course.percentage|default:0 }}%</strong></td>
+                        <td>
+                          <span class="badge 
+                            {% if course.percentage >= 75 %}badge-good
+                            {% elif course.percentage >= 50 %}badge-moderate
+                            {% else %}badge-low{% endif %}">
+                            {% if course.percentage >= 75 %}Good
+                            {% elif course.percentage >= 50 %}Moderate
+                            {% else %}Low{% endif %}
+                          </span>
+                        </td>
+                      </tr>
+                      {% endfor %}
+
+                      <!-- ✅ Hour-wise Total Row -->
+                      <tr>
+                        <td colspan="3" class="text-end"><strong>Total</strong></td>
+                        <td><strong>{{ data.hourwise.total|default:0 }}</strong></td>
+                        <td><strong>{{ data.hourwise.attended|default:0 }}</strong></td>
+                        <td><strong>{{ data.hourwise.percentage|default:0 }}%</strong></td>
+                        <td>—</td>
+                      </tr>
+
+                    {% else %}
+                      <tr>
+                        <td colspan="7">
+                          <div class="empty-state">
+                            <i class="fas fa-book"></i>
+                            <p class="mb-0">No records</p>
+                          </div>
+                        </td>
+                      </tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ✅ Daily Attendance -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="fas fa-calendar-day me-2"></i>Daily Attendance - Semester {{ sem }}</h5>
+            </div>
+            <div class="card-body">
+              {% if data.daily.total_days > 0 %}
+              <div class="summary-card">
+                <div class="summary-grid">
+                  <div class="percentage-display">
+                    <div class="percentage-value 
+                      {% if data.daily.percentage >= 75 %}percentage-good
+                      {% elif data.daily.percentage >= 50 %}percentage-moderate
+                      {% else %}percentage-low{% endif %}">
+                      {{ data.daily.percentage|default:0 }}%
+                    </div>
+                    <div class="percentage-label">Attendance Rate</div>
+                  </div>
+
+                  <div class="stats-details">
+                    <div class="stat-line">
+                      <i class="fas fa-check-circle me-2"></i>
+                      Present: <strong>{{ data.daily.present_days }}</strong>
+                    </div>
+                    <div class="stat-line">
+                      <i class="fas fa-calendar-alt me-2"></i>
+                      Total: <strong>{{ data.daily.total_days }}</strong>
+                    </div>
+
+                    <div class="progress" style="height:12px;margin-top:16px;">
+                      <div class="progress-bar"
+                        style="width:{{ data.daily.percentage }}%;
+                        background:
+                        {% if data.daily.percentage >= 75 %}#10b981
+                        {% elif data.daily.percentage >= 50 %}#f59e0b
+                        {% else %}#ef4444{% endif %};">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% else %}
+                <div class="empty-state">
+                  <i class="fas fa-calendar-times"></i>
+                  <p class="mb-0">No records</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const cards = document.querySelectorAll(".semester-card");
+  const tables = document.querySelectorAll("#attendance-container > div");
+  let activeSem = null;
+
+  function toggleSem(sem) {
+    tables.forEach(t => t.classList.add("d-none"));
+    cards.forEach(c => c.classList.remove("active"));
+    const table = document.getElementById("sem-" + sem);
+    const card = document.querySelector(`[data-sem='${sem}']`);
+    if (activeSem === sem) { activeSem = null; return; }
+    if (table) {
+      table.classList.remove("d-none");
+      card.classList.add("active");
+      table.scrollIntoView({ behavior: "smooth", block: "start" });
+      activeSem = sem;
+    }
+  }
+
+  cards.forEach(c => c.addEventListener("click", () => toggleSem(c.dataset.sem)));
+  if (cards.length === 1) toggleSem(cards[0].dataset.sem);
+});
+</script>
+<style>
+.attendance-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.attendance-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.attendance-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.attendance-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.attendance-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.attendance-portal .card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.attendance-portal .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.attendance-portal .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+}
+
+.attendance-portal .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.attendance-portal .card-body {
+  padding: 2rem;
+}
+
+.attendance-portal .alert {
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-left: 4px solid;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.attendance-portal .alert-danger {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  color: #dc2626;
+}
+
+.attendance-portal .alert i {
+  font-size: 1.25rem;
+}
+
+.attendance-portal .semester-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.attendance-portal .semester-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.attendance-portal .semester-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+}
+
+.attendance-portal .semester-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.attendance-portal .semester-card.active {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  border: 2px solid #1a4b8c;
+  box-shadow: 0 8px 25px rgba(26, 75, 140, 0.2);
+}
+
+.attendance-portal .semester-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.attendance-portal .semester-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.attendance-portal .semester-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.attendance-portal .semester-arrow {
+  color: #1a4b8c;
+  font-size: 1.1rem;
+  transition: transform 0.3s ease;
+}
+
+.attendance-portal .semester-card.active .semester-arrow {
+  transform: rotate(90deg);
+}
+
+.attendance-portal .progress-container {
+  margin-bottom: 1.5rem;
+}
+
+.attendance-portal .progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.attendance-portal .progress {
+  height: 10px;
+  border-radius: 10px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.attendance-portal .progress-bar {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 10px;
+  transition: width 1s ease-in-out;
+}
+
+.attendance-portal .stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.attendance-portal .stat-card {
+  background: rgba(26, 75, 140, 0.05);
+  border: 1px solid rgba(26, 75, 140, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.attendance-portal .stat-card:hover {
+  background: rgba(26, 75, 140, 0.08);
+  transform: translateY(-2px);
+}
+
+.attendance-portal .stat-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.attendance-portal .stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  line-height: 1.2;
+}
+
+.attendance-portal .table-responsive {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+}
+
+.attendance-portal .table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+}
+
+.attendance-portal .table th {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.attendance-portal .table td {
+  padding: 1rem 0.75rem;
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+  color: #374151;
+  font-weight: 500;
+}
+
+.attendance-portal .table tbody tr {
+  transition: all 0.3s ease;
+}
+
+.attendance-portal .table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.03);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.attendance-portal .course-code {
+  background: rgba(26, 75, 140, 0.1);
+  color: #1a4b8c;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.attendance-portal .course-name {
+  text-align: left !important;
+  font-weight: 500;
+}
+
+.attendance-portal .badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.attendance-portal .badge-good {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.attendance-portal .badge-moderate {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.attendance-portal .badge-low {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.attendance-portal .badge-na {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.attendance-portal .summary-card {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  border: 1px solid rgba(26, 75, 140, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.attendance-portal .summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+.attendance-portal .percentage-display {
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.attendance-portal .percentage-value {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.attendance-portal .percentage-good { color: #10b981; }
+.attendance-portal .percentage-moderate { color: #f59e0b; }
+.attendance-portal .percentage-low { color: #ef4444; }
+
+.attendance-portal .percentage-label {
+  font-size: 1rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.attendance-portal .stats-details {
+  padding: 1rem;
+}
+
+.attendance-portal .stat-line {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  border: 1px solid rgba(26, 75, 140, 0.1);
+}
+
+.attendance-portal .stat-line i {
+  font-size: 1.25rem;
+  width: 24px;
+  text-align: center;
+}
+
+.attendance-portal .stat-line .fa-check-circle { color: #10b981; }
+.attendance-portal .stat-line .fa-calendar-alt { color: #1a4b8c; }
+
+.attendance-portal .stat-text {
+  flex: 1;
+  font-weight: 500;
+  color: #374151;
+}
+
+.attendance-portal .empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.attendance-portal .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+  color: #1a4b8c;
+}
+
+.attendance-portal .empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.attendance-portal .section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.attendance-portal .section-title i {
+  color: #1a4b8c;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .attendance-portal .page-header {
+    padding: 1rem;
+  }
+  
+  .attendance-portal .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .attendance-portal .card-body {
+    padding: 1.5rem;
+  }
+  
+  .attendance-portal .semester-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .attendance-portal {
+    padding: 1rem;
+  }
+  
+  .attendance-portal .page-header {
+    padding: 0.75rem;
+  }
+  
+  .attendance-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .attendance-portal .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .attendance-portal .card-body {
+    padding: 1.25rem;
+  }
+  
+  .attendance-portal .semester-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .attendance-portal .summary-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .attendance-portal .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .attendance-portal .table {
+    font-size: 0.85rem;
+  }
+  
+  .attendance-portal .percentage-value {
+    font-size: 2.5rem;
+  }
+  
+  .attendance-portal .semester-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+}
+
+/* Animation for cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.attendance-portal .semester-card,
+.attendance-portal .card {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+</style>
+{% endblock content %}

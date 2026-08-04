@@ -1,0 +1,484 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+    .exam-generator-container {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+    
+    .modal-header {
+        background-color: #4e73df;
+        color: white;
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #5a5c69;
+    }
+    
+    .form-select, .form-control {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d3e2;
+        transition: all 0.3s;
+    }
+    
+    .form-select:focus, .form-control:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    
+    .btn-warning {
+        background-color: #f6c23e;
+        border-color: #f6c23e;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .btn-warning:hover {
+        background-color: #dda20a;
+        border-color: #dda20a;
+        transform: translateY(-1px);
+    }
+    
+    .btn-success {
+        background-color: #1cc88a;
+        border-color: #1cc88a;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .btn-success:hover {
+        background-color: #17a673;
+        border-color: #17a673;
+        transform: translateY(-1px);
+    }
+    
+    .btn-danger {
+        background-color: #e74a3b;
+        border-color: #e74a3b;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .btn-danger:hover {
+        background-color: #be2617;
+        border-color: #be2617;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background-color: #858796;
+        border-color: #858796;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #6b6d7d;
+        border-color: #6b6d7d;
+        transform: translateY(-1px);
+    }
+    
+    .exam-schedule-item {
+        background-color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        border-left: 4px solid #4e73df;
+    }
+    
+    .table {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .table thead th {
+        background-color: #4e73df;
+        color: white;
+        border-color: #4e73df;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+    
+    .output-section {
+        background-color: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    @media (max-width: 768px) {
+        .btn-group-responsive {
+            flex-direction: column;
+        }
+        
+        .btn-group-responsive .btn {
+            margin-bottom: 0.5rem;
+            width: 100%;
+        }
+        
+        .exam-generator-container,
+        .output-section {
+            padding: 1rem;
+        }
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="exam-generator-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-history me-2"></i>Previously Generated Exam Schedules
+            </h1>
+            <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#prevGeneratedModal">
+                <i class="fas fa-search me-2"></i>Select Schedule
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="prevGeneratedModal" tabindex="-1" aria-labelledby="prevGeneratedModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="prevGeneratedModalLabel">
+                        <i class="fas fa-calendar-check me-2"></i>Select Previously Generated Schedule
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <form>
+                        {% csrf_token %}
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="prevProgrammeOfStudy" class="form-label">
+                                    <i class="fas fa-graduation-cap me-2"></i>Programme of Study
+                                </label>
+                                <select id="prevProgrammeOfStudy" class="form-select">
+                                    <option value="">Select Programme of Study</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="prevDept" class="form-label">
+                                    <i class="fas fa-building me-2"></i>Department
+                                </label>
+                                <select id="prevDept" class="form-select">
+                                    <option value="">Select Department</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="prevProgram" class="form-label">
+                                    <i class="fas fa-book me-2"></i>Program
+                                </label>
+                                <select id="prevProgram" class="form-select">
+                                    <option value="">Select Program</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="prevIntakeBatch" class="form-label">
+                                    <i class="fas fa-users me-2"></i>Intake-Batch
+                                </label>
+                                <select id="prevIntakeBatch" class="form-select">
+                                    <option value="">Select Intake-Batch</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label for="prevCreatedAt" class="form-label">
+                                    <i class="fas fa-calendar-plus me-2"></i>Created At
+                                </label>
+                                <select id="prevCreatedAt" class="form-select">
+                                    <option value="">Select Created At</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </button>
+                            <button type="button" id="loadPreviousScheduleBtn" class="btn btn-success">
+                                <i class="fas fa-calendar-check me-2"></i>Load Schedule
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Display Section -->
+    <div id="examOutputSection" class="output-section d-none">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">
+                <i class="fas fa-list-alt me-2"></i>Previously Generated Schedules
+            </h4>
+            <div class="btn-group-responsive">
+                <button id="clearScheduleBtn" class="btn btn-secondary me-2">
+                    <i class="fas fa-trash-alt me-2"></i>Clear
+                </button>
+                <button id="downloadPrevPdfBtn" class="btn btn-danger" style="display: none;">
+                    <i class="fas fa-file-pdf me-2"></i>Download as PDF
+                </button>
+            </div>
+        </div>
+        <div id="prevGeneratedContainer" class="mt-3"></div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(function () {
+    let selectedPrevExams = [];
+
+    const showExamSection = () => $('#examOutputSection').removeClass('d-none');
+
+    const $pos = $('#prevProgrammeOfStudy');
+    const $dept = $('#prevDept');
+    const $prog = $('#prevProgram');
+    const $intake = $('#prevIntakeBatch');
+    const $created = $('#prevCreatedAt');
+
+    $('#prevGeneratedModal').on('show.bs.modal', function () {
+        $.getJSON("{% url 'previously_generated_exam_schedule' %}", { type: 'programmes' }, function (data) {
+            $pos.html('<option value="">Select Programme of Study</option>');
+            data.options.forEach(p => $pos.append(`<option value="${p}">${p}</option>`));
+        });
+    });
+
+    $pos.change(function () {
+        const pos = $(this).val();
+        $dept.prop('disabled', true).html('<option>Loading...</option>');
+        $.getJSON("{% url 'previously_generated_exam_schedule' %}", { type: 'departments', programme_of_study: pos }, function (data) {
+            $dept.prop('disabled', false).html('<option value="">Select Department</option>');
+            data.options.forEach(d => $dept.append(`<option value="${d}">${d}</option>`));
+        });
+    });
+
+    $dept.change(function () {
+        const pos = $pos.val();
+        const dept = $(this).val();
+        $prog.prop('disabled', true).html('<option>Loading...</option>');
+        $.getJSON("{% url 'previously_generated_exam_schedule' %}", { type: 'programs', programme_of_study: pos, department: dept }, function (data) {
+            $prog.prop('disabled', false).html('<option value="">Select Program</option>');
+            data.options.forEach(p => $prog.append(`<option value="${p}">${p}</option>`));
+        });
+    });
+
+    $prog.change(function () {
+        const dept = $dept.val();
+        const prog = $(this).val();
+        $intake.prop('disabled', true).html('<option>Loading...</option>');
+        $.getJSON("{% url 'previously_generated_exam_schedule' %}", { type: 'intakes', department: dept, program: prog }, function (data) {
+            $intake.prop('disabled', false).html('<option value="">Select Intake-Batch</option>');
+            data.options.forEach(i => $intake.append(`<option value="${i}">${i}</option>`));
+        });
+    });
+
+    $intake.change(function () {
+        const dept = $dept.val();
+        const prog = $prog.val();
+        const intake = $(this).val();
+        $created.prop('disabled', true).html('<option>Loading...</option>');
+        $.getJSON("{% url 'previously_generated_exam_schedule' %}", { type: 'created_at', department: dept, program: prog, intake: intake }, function (data) {
+            $created.prop('disabled', false).html('<option value="">Select Created At</option>');
+            data.options.forEach(d => $created.append(`<option value="${d}">${d}</option>`));
+        });
+    });
+
+    $('#loadPreviousScheduleBtn').click(function () {
+        const pos = $pos.val();
+        const dept = $dept.val();
+        const prog = $prog.val();
+        const intake = $intake.val();
+        const created = $created.val();
+
+        if (!pos || !dept || !prog || !intake || !created) {
+            alert('All fields are required.');
+            return;
+        }
+
+        $.getJSON("{% url 'previously_generated_exam_schedule' %}", {
+            type: 'courses',
+            programme_of_study: pos,
+            department: dept,
+            program: prog,
+            intake: intake,
+            created_at: created
+        }, function (data) {
+            if (data.options.length) {
+                const table = `
+                    <div class="exam-schedule-item">
+                        <p><strong><i class="fas fa-graduation-cap me-2"></i>Programme of Study:</strong> ${pos}</p>
+                        <p><strong><i class="fas fa-building me-2"></i>Department:</strong> ${dept}</p>
+                        <p><strong><i class="fas fa-book me-2"></i>Program:</strong> ${prog}</p>
+                        <p><strong><i class="fas fa-users me-2"></i>Intake:</strong> ${intake}</p>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover mt-3">
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th>Semester</th>
+                                        <th>Course Code</th>
+                                        <th>Course</th>
+                                        <th>Date</th>
+                                        <th>Session</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.options.map((e, i) => ` 
+                                        <tr>
+                                            <td>${i + 1}</td>
+                                            <td>${e.semester}</td>
+                                            <td>${e.course_code}</td>
+                                            <td>${e.course}</td>
+                                            <td>${e.date}</td>
+                                            <td>${e.session}</td>
+                                        </tr>`).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>`;
+                $('#prevGeneratedContainer').append(table);
+                $('#downloadPrevPdfBtn').show();
+                showExamSection();
+
+                const newItem = {
+                    programme_of_study: pos,
+                    department_id: dept,
+                    program_code: prog,
+                    intake_range: intake,
+                    created_at: created
+                };
+                selectedPrevExams.push(newItem);
+                localStorage.setItem('prev_exam_schedules', JSON.stringify(selectedPrevExams));
+
+                $('#prevGeneratedModal').modal('hide');
+                setTimeout(() => {
+                        location.reload();
+                    }, 500);
+            } else {
+
+                alert('No schedule found for selected criteria.');
+            }
+        });
+    });
+
+    $('#clearScheduleBtn').click(function () {
+        selectedPrevExams = [];
+        $('#prevGeneratedContainer').empty();
+        $('#downloadPrevPdfBtn').hide();
+        $('#examOutputSection').addClass('d-none');
+        localStorage.removeItem('prev_exam_schedules');
+    });
+
+    $('#downloadPrevPdfBtn').click(function () {
+        if (!selectedPrevExams.length) return;
+
+        const baseUrl = "{% url 'download_previous_exam_schedule_pdf' %}";
+        let query = [];
+
+        selectedPrevExams.forEach((e, idx) => {
+            query.push(`programme_of_study_${idx}=${encodeURIComponent(e.programme_of_study)}`);
+            query.push(`department_id_${idx}=${encodeURIComponent(e.department_id)}`);
+            query.push(`program_code_${idx}=${encodeURIComponent(e.program_code)}`);
+            query.push(`intake_range_${idx}=${encodeURIComponent(e.intake_range)}`);
+            query.push(`created_at_${idx}=${encodeURIComponent(e.created_at)}`);
+        });
+
+        query.push(`download_pdf=true`);
+        window.open(baseUrl + '?' + query.join('&'), '_blank');
+    });
+
+    // Auto restore from localStorage
+    const cached = localStorage.getItem('prev_exam_schedules');
+    if (cached) {
+        selectedPrevExams = JSON.parse(cached);
+        selectedPrevExams.forEach((e) => {
+            $.getJSON("{% url 'previously_generated_exam_schedule' %}", {
+                type: 'courses',
+                programme_of_study: e.programme_of_study,
+                department: e.department_id,
+                program: e.program_code,
+                intake: e.intake_range,
+                created_at: e.created_at
+            }, function (data) {
+                if (data.options.length) {
+                    const table = `
+                        <div class="exam-schedule-item">
+                            <p><strong><i class="fas fa-graduation-cap me-2"></i>Programme of Study:</strong> ${e.programme_of_study}</p>
+                            <p><strong><i class="fas fa-building me-2"></i>Department:</strong> ${e.department_id}</p>
+                            <p><strong><i class="fas fa-book me-2"></i>Program:</strong> ${e.program_code}</p>
+                            <p><strong><i class="fas fa-users me-2"></i>Intake:</strong> ${e.intake_range}</p>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover mt-3">
+                                    <thead>
+                                        <tr>
+                                            <th>S.No</th>
+                                            <th>Semester</th>
+                                            <th>Course Code</th>
+                                            <th>Course</th>
+                                            <th>Date</th>
+                                            <th>Session</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${data.options.map((e, i) => ` 
+                                            <tr>
+                                                <td>${i + 1}</td>
+                                                <td>${e.semester}</td>
+                                                <td>${e.course_code}</td>
+                                                <td>${e.course}</td>
+                                                <td>${e.date}</td>
+                                                <td>${e.session}</td>
+                                            </tr>`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>`;
+                    $('#prevGeneratedContainer').append(table);
+                    $('#downloadPrevPdfBtn').show();
+                    showExamSection();
+                }
+            });
+        });
+    }
+});
+</script>
+
+{% endblock %}

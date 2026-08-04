@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+{% load sm_tags %}
+{% block title %}Student Overview{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* (Your same CSS kept as-is) */
+.student-overview {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.student-overview .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.student-overview .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.student-overview .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.student-overview .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.student-overview .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.student-overview .stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: transform 0.3s ease;
+  border-left: 4px solid;
+}
+
+.student-overview .stat-card:hover { transform: translateY(-2px); }
+
+.student-overview .stat-card.co-curricular { border-left-color: #1a4b8c; }
+.student-overview .stat-card.projects { border-left-color: #f59e0b; }
+.student-overview .stat-card.achievements { border-left-color: #10b981; }
+.student-overview .stat-card.publications { border-left-color: #8b5cf6; }
+
+.student-overview .stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.student-overview .co-curricular .stat-icon { background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%); }
+.student-overview .projects .stat-icon { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+.student-overview .achievements .stat-icon { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+.student-overview .publications .stat-icon { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+
+.student-overview .stat-content { flex-grow: 1; }
+
+.student-overview .stat-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1a4b8c;
+  line-height: 1;
+  display: block;
+}
+
+.student-overview .stat-label {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.student-overview .stat-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.student-overview .badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.student-overview .badge-pending { background: rgba(148,163,184,0.18); color: #64748b; }
+.student-overview .badge-approved { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.student-overview .badge-rejected { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+.student-overview .section { margin-bottom: 2rem; }
+
+.student-overview .section-title {
+  color: #1a4b8c;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.student-overview .membership-card,
+.student-overview .chart-card,
+.student-overview .empty-state {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+}
+
+.student-overview .membership-card {
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.student-overview .membership-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.student-overview .membership-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.student-overview .membership-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.student-overview .membership-title {
+  font-weight: 700;
+  color: #1a4b8c;
+  font-size: 1.25rem;
+}
+
+.student-overview .membership-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.student-overview .detail-label {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+.student-overview .detail-value {
+  font-weight: 600;
+  color: #1a4b8c;
+  font-size: 1.05rem;
+}
+
+.student-overview .empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.student-overview .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+  color: #1a4b8c;
+}
+
+.student-overview .charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.student-overview .chart-card {
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.student-overview .chart-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.student-overview .chart-title {
+  font-weight: 700;
+  color: #1a4b8c;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.student-overview .chart-container {
+  height: 240px;
+  position: relative;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .student-overview { padding: 1rem; }
+  .student-overview .stats-grid { grid-template-columns: 1fr; }
+  .student-overview .charts-grid { grid-template-columns: 1fr; }
+  .student-overview .membership-header { flex-direction: column; text-align: center; }
+}
+
+/* animation */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.student-overview .stat-card,
+.student-overview .membership-card,
+.student-overview .chart-card {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: linear-gradient(135deg, #2c5aa0 0%, #1a4b8c 100%); }
+</style>
+
+<div class="student-overview">
+  <div class="page-header">
+    <h1><i class="fas fa-chart-line me-2"></i>Student Overview</h1>
+    <p class="header-subtitle">Your academic progress at a glance</p>
+  </div>
+
+  <div class="page-container">
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+
+      <!-- Co/Extra curricular -->
+      <div class="stat-card co-curricular">
+        <div class="stat-icon"><i class="fas fa-running"></i></div>
+        <div class="stat-content">
+          <span class="stat-number">{{ coex_total|default:0 }}</span>
+          <span class="stat-label">Co/Extra-curricular</span>
+          <div class="stat-badges">
+            <span class="badge badge-pending"><i class="fas fa-clock"></i> Pending: {{ coex_pending|default:0 }}</span>
+            <span class="badge badge-approved"><i class="fas fa-check"></i> Approved: {{ coex_approved|default:0 }}</span>
+            <span class="badge badge-rejected"><i class="fas fa-times"></i> Rejected: {{ coex_rejected|default:0 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Projects (ONLY Approval status: Pending/Approved/Rejected) -->
+      <div class="stat-card projects">
+        <div class="stat-icon"><i class="fas fa-project-diagram"></i></div>
+        <div class="stat-content">
+          <span class="stat-number">{{ projects_total|default:0 }}</span>
+          <span class="stat-label">Projects</span>
+
+          <div class="stat-badges">
+            <span class="badge badge-pending"><i class="fas fa-user-check"></i> Pending: {{ projects_approval_pending|default:0 }}</span>
+            <span class="badge badge-approved"><i class="fas fa-check"></i> Approved: {{ projects_approval_approved|default:0 }}</span>
+            <span class="badge badge-rejected"><i class="fas fa-times"></i> Rejected: {{ projects_approval_rejected|default:0 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Achievements -->
+      <div class="stat-card achievements">
+        <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+        <div class="stat-content">
+          <span class="stat-number">{{ achievements_total|default:0 }}</span>
+          <span class="stat-label">Achievements</span>
+          <div class="stat-badges">
+            <span class="badge badge-pending"><i class="fas fa-clock"></i> Pending: {{ achievements_pending|default:0 }}</span>
+            <span class="badge badge-approved"><i class="fas fa-award"></i> Approved: {{ achievements_approved|default:0 }}</span>
+            <span class="badge badge-rejected"><i class="fas fa-times"></i> Rejected: {{ achievements_rejected|default:0 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Publications (ONLY Status Pending/Approved/Rejected) -->
+      <div class="stat-card publications">
+        <div class="stat-icon"><i class="fas fa-book-open"></i></div>
+        <div class="stat-content">
+          <span class="stat-number">{{ publications_total|default:0 }}</span>
+          <span class="stat-label">Publications</span>
+          <div class="stat-badges">
+            <span class="badge badge-pending"><i class="fas fa-clock"></i> Pending: {{ publications_pending|default:0 }}</span>
+            <span class="badge badge-approved"><i class="fas fa-check"></i> Approved: {{ publications_approved|default:0 }}</span>
+            <span class="badge badge-rejected"><i class="fas fa-times"></i> Rejected: {{ publications_rejected|default:0 }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Professional Membership -->
+    <div class="section">
+      <h2 class="section-title"><i class="fas fa-id-card"></i> Professional Membership</h2>
+
+      {% if latest_professional %}
+        <div class="membership-card">
+          <div class="membership-header">
+            <div class="membership-icon"><i class="fas fa-user-tie"></i></div>
+            <div>
+              <div class="membership-title">Latest Membership</div>
+              <div class="stat-badges" style="margin-top:0.5rem;">
+                {% if latest_professional.status == "Approved" %}
+                  <span class="badge badge-approved"><i class="fas fa-check"></i> Approved</span>
+                {% elif latest_professional.status == "Rejected" %}
+                  <span class="badge badge-rejected"><i class="fas fa-times"></i> Rejected</span>
+                {% else %}
+                  <span class="badge badge-pending"><i class="fas fa-clock"></i> Pending</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div class="membership-details">
+            <div>
+              <div class="detail-label">Organization</div>
+              <div class="detail-value">{{ latest_professional.bodyName }}</div>
+            </div>
+
+            <div>
+              <div class="detail-label">Validity</div>
+              <div class="detail-value">{{ latest_professional.get_validity_display }}</div>
+            </div>
+
+            <div>
+              <div class="detail-label">Academic Year</div>
+              <div class="detail-value">{{ latest_professional.academic_year|default:"-" }}</div>
+            </div>
+
+            <div>
+              <div class="detail-label">Created</div>
+              <div class="detail-value">{{ latest_professional.created_at|date:"d M Y" }}</div>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <i class="fas fa-info-circle"></i>
+          <p>No professional memberships found</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Charts -->
+    <div class="section">
+      <h2 class="section-title"><i class="fas fa-chart-pie"></i> Activity Progress</h2>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3 class="chart-title"><i class="fas fa-running"></i> Co/Extra-curricular (Status)</h3>
+          <div class="chart-container"><canvas id="coexChart"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+          <h3 class="chart-title"><i class="fas fa-project-diagram"></i> Projects (Approval Status)</h3>
+          <div class="chart-container"><canvas id="projectsChart"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+          <h3 class="chart-title"><i class="fas fa-trophy"></i> Achievements (Status)</h3>
+          <div class="chart-container"><canvas id="achievementsChart"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+          <h3 class="chart-title"><i class="fas fa-book-open"></i> Publications (Status)</h3>
+          <div class="chart-container"><canvas id="publicationsChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{{ chart_payload|json_script:"chart-payload" }}
+
+<script>
+  const payload = JSON.parse(document.getElementById("chart-payload").textContent);
+
+  // Colors: Pending=Gray, Approved=Green, Rejected=Red
+  const STATUS_COLORS = ["#94a3b8", "#10b981", "#ef4444"];
+
+  // Light outline
+  const OUTLINE_COLOR = "rgba(255,255,255,0.95)";
+  const OUTLINE_WIDTH = 2;
+
+  // Empty ring color (when no applications)
+  const EMPTY_RING_COLOR = "rgba(148,163,184,0.22)";
+
+  function makeDoughnut(canvasId, labels, values, colors) {
+    const ctx = document.getElementById(canvasId).getContext("2d");
+
+    const sum = values.reduce((a,b) => a + (Number(b) || 0), 0);
+    const isEmpty = sum === 0;
+
+    const chartData = isEmpty ? [1] : values;
+    const chartLabels = isEmpty ? ["No Data"] : labels;
+    const chartColors = isEmpty ? [EMPTY_RING_COLOR] : colors;
+
+    new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: chartLabels,
+        datasets: [{
+          data: chartData,
+          backgroundColor: chartColors,
+          borderColor: OUTLINE_COLOR,
+          borderWidth: OUTLINE_WIDTH,
+          hoverBorderWidth: OUTLINE_WIDTH,
+          hoverOffset: isEmpty ? 0 : 8
+        }]
+      },
+      options: {
+        cutout: "72%",
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: {
+              filter: function(item) {
+                return !isEmpty;
+              }
+            }
+          },
+          tooltip: { enabled: !isEmpty }
+        }
+      }
+    });
+  }
+
+  // Co/Ex curricular
+  makeDoughnut(
+    "coexChart",
+    ["Pending", "Approved", "Rejected"],
+    [payload.coex?.pending || 0, payload.coex?.approved || 0, payload.coex?.rejected || 0],
+    STATUS_COLORS
+  );
+
+  // Projects (Approval Status) ✅ expects pending/approved/rejected in backend payload.projects
+  makeDoughnut(
+    "projectsChart",
+    ["Pending", "Approved", "Rejected"],
+    [payload.projects?.pending || 0, payload.projects?.approved || 0, payload.projects?.rejected || 0],
+    STATUS_COLORS
+  );
+
+  // Achievements
+  makeDoughnut(
+    "achievementsChart",
+    ["Pending", "Approved", "Rejected"],
+    [payload.achievements?.pending || 0, payload.achievements?.approved || 0, payload.achievements?.rejected || 0],
+    STATUS_COLORS
+  );
+
+  // Publications
+  makeDoughnut(
+    "publicationsChart",
+    ["Pending", "Approved", "Rejected"],
+    [payload.publications?.pending || 0, payload.publications?.approved || 0, payload.publications?.rejected || 0],
+    STATUS_COLORS
+  );
+
+  // load animations
+  document.addEventListener("DOMContentLoaded", function() {
+    const cards = document.querySelectorAll(".stat-card, .membership-card, .chart-card");
+    cards.forEach((card, idx) => card.style.animationDelay = `${idx * 0.08}s`);
+  });
+</script>
+{% endblock content %}

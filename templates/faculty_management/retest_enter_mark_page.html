@@ -1,0 +1,1095 @@
+{% extends 'base.html' %}
+{% load sm_tags %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+<style>
+  .retest-marks-page .card { border: none; border-radius: 10px; }
+  .retest-marks-page .card-header { border-radius: 10px 10px 0 0 !important; }
+  .retest-marks-page .btn { border-radius: 8px; }
+  .retest-marks-page .badge { font-size: 0.75rem; }
+
+  .retest-marks-page .mini-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .retest-marks-page .mini-box{
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 6px 16px rgba(17,24,39,.06);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 10px;
+    min-height: 64px;
+  }
+  .retest-marks-page .mini-q{ display:flex; flex-direction:column; line-height:1.1; }
+  .retest-marks-page .mini-qno{ font-weight:900; font-size:14px; color:#111827; white-space:nowrap; }
+  .retest-marks-page .mini-max{ font-size:12px; color:#6b7280; font-weight:700; }
+  .retest-marks-page .mini-input{
+    width: 62px;
+    height: 40px;
+    padding: 0;
+    text-align:center;
+    font-weight:900;
+    border-radius:10px;
+  }
+
+  .retest-marks-page .question-card-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+  }
+
+  .retest-marks-page .question-card{
+    border: 1px solid #dbeafe;
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 6px 16px rgba(17,24,39,.06);
+  }
+
+  .retest-marks-page .question-card-title{
+    font-weight: 900;
+    font-size: 15px;
+    color: #0f172a;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .retest-marks-page .option-pair-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+  }
+
+  .retest-marks-page .option-pair-box{
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f8fafc;
+    padding: 10px;
+  }
+
+  .retest-marks-page .option-pair-title{
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f172a;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .retest-marks-page .subpair-row{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .retest-marks-page .subpair-col{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .retest-marks-page .subpair-label{
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    text-align: center;
+  }
+
+  .retest-marks-page .subpair-input{
+    width: 100%;
+    height: 38px;
+    text-align: center;
+    font-weight: 900;
+    border-radius: 10px;
+  }
+
+  .retest-marks-page .add-subpart-btn{
+    border-radius: 8px;
+    font-weight: 700;
+  }
+
+  .retest-marks-page .remove-subpart-btn{
+    border-radius: 8px;
+    font-weight: 700;
+    padding: 2px 8px;
+    line-height: 1.2;
+  }
+
+  .retest-marks-page .subpart-config-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+
+  .retest-marks-page .dynamic-student-subparts{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
+  }
+
+  .retest-marks-page .student-total-box{
+    min-width: 140px;
+    text-align: center;
+    border: 1px solid #dbeafe;
+    background: #eff6ff;
+    border-radius: 10px;
+    padding: 6px 12px;
+  }
+  .retest-marks-page .student-total-label{
+    font-size: 11px;
+    color: #475569;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+  .retest-marks-page .student-total{
+    font-size: 22px;
+    line-height: 1.1;
+    font-weight: 900;
+    color: #15803d;
+  }
+</style>
+
+<div class="retest-marks-page container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Retest Marks Entry</h2>
+    <a href="{% url 'retest_internalmark' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Back
+    </a>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Selected Details</h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-md-6">
+          <p class="mb-1"><strong>Register No:</strong> {{ reg_no }}</p>
+          <p class="mb-1"><strong>Student Name:</strong> {{ student_name }}</p>
+          <p class="mb-1"><strong>Department:</strong> {{ department_code }} - {{ department_name }}</p>
+          <p class="mb-1"><strong>Course:</strong> {{ course_code }} - {{ course_title }}</p>
+        </div>
+        <div class="col-md-6">
+          {% if batch %}<p class="mb-1"><strong>Batch:</strong> {{ batch }}</p>{% endif %}
+          {% if section %}<p class="mb-1"><strong>Section:</strong> {{ section }}</p>{% endif %}
+          {% if exam_name %}<p class="mb-1"><strong>Exam:</strong> {{ exam_name }}</p>{% endif %}
+          {% if selected_regulation %}<p class="mb-1"><strong>Regulation:</strong> {{ selected_regulation }}</p>{% endif %}
+          {% if selected_degree %}<p class="mb-1"><strong>Degree:</strong> {{ selected_degree }}</p>{% endif %}
+          {% if selected_year %}<p class="mb-1"><strong>Year:</strong> {{ selected_year }}</p>{% endif %}
+          {% if selected_semester %}<p class="mb-1"><strong>Semester:</strong> {{ selected_semester }}</p>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Exam Pattern</h5>
+      {% if pattern_selected %}
+        <span class="badge bg-success">Pattern loaded</span>
+      {% elif pattern_options and pattern_options|length %}
+        <span class="badge bg-warning text-dark">Select a pattern</span>
+      {% else %}
+        <span class="badge bg-danger">No Patterns Found</span>
+      {% endif %}
+    </div>
+
+    <div class="card-body">
+      <form method="get" class="row g-2 align-items-end">
+        <input type="hidden" name="reg_no" value="{{ reg_no }}">
+        <input type="hidden" name="student_name" value="{{ student_name }}">
+        <input type="hidden" name="course_id" value="{{ course_id }}">
+        <input type="hidden" name="course_code" value="{{ course_code }}">
+        <input type="hidden" name="course_title" value="{{ course_title }}">
+        <input type="hidden" name="batch" value="{{ batch }}">
+        <input type="hidden" name="section" value="{{ section }}">
+        <input type="hidden" name="exam_name" value="{{ exam_name }}">
+        <input type="hidden" name="department_name" value="{{ department_name }}">
+        <input type="hidden" name="department_code" value="{{ department_code }}">
+        <input type="hidden" name="department_id" value="{{ department_id }}">
+        <input type="hidden" name="degree_id" value="{{ degree_id }}">
+        <input type="hidden" name="degree_code" value="{{ degree_code }}">
+        <input type="hidden" name="degree_name" value="{{ degree_name }}">
+
+        <div class="col-md-8">
+          <label class="form-label">Select Pattern</label>
+          <select class="form-select" name="pattern_id" onchange="this.form.submit()">
+            <option value="">— Choose pattern —</option>
+            {% for p in pattern_options %}
+              <option value="{{ p.id }}" {% if p.id == selected_pattern_id %}selected{% endif %}>
+                {{ p.pattern }} (ID: {{ p.id }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <button type="submit" class="btn btn-primary w-100">Load Pattern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if pattern_selected and exam_pattern_obj %}
+  <form id="retestMarksForm" method="POST" action="{% url 'save_retest_marks' %}">
+    {% csrf_token %}
+
+    <input type="hidden" name="reg_no" value="{{ reg_no }}">
+    <input type="hidden" name="single_student_mode" value="1">
+    <input type="hidden" name="exam_pattern_id" value="{{ exam_pattern_id }}">
+    <input type="hidden" name="pattern_id" value="{{ exam_pattern_id }}">
+    <input type="hidden" name="course_code" value="{{ course_code }}">
+    <input type="hidden" name="course_title" value="{{ course_title }}">
+    <input type="hidden" name="batch" value="{{ batch }}">
+    <input type="hidden" name="section" value="{{ section }}">
+    <input type="hidden" name="iat" value="{{ exam_name }}">
+    <input type="hidden" name="exam_name" value="{{ exam_name }}">
+    <input type="hidden" name="department_code" value="{{ department_code }}">
+    <input type="hidden" name="department_name" value="{{ department_name }}">
+    <input type="hidden" name="department_id" value="{{ department_id }}">
+    <input type="hidden" name="students[]" value="{{ reg_no }}">
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-info text-white">
+        <h5 class="mb-0">Course Outcome & Bloom Level Mapping</h5>
+      </div>
+
+      <div class="card-body">
+        <table class="table table-bordered table-sm">
+          <thead class="table-light">
+            <tr>
+              <th>Question</th>
+              <th>CO</th>
+              <th>Bloom Level</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for part in exam_pattern_obj.parts.all %}
+              {% if part.name|lower == "a" %}
+                {% for q in part.total_questions|to %}
+                <tr>
+                  <td><strong>A{{ q }}</strong></td>
+                  <td>
+                    {% with key="co_A_"|add_str:q %}
+                    <div class="d-flex flex-wrap gap-3">
+                      {% for co in course_outcomes %}
+                      <div class="form-check form-check-inline">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               name="co_map_A_{{ q }}[]"
+                               value="{{ co.id }}"
+                               id="co_A_{{ q }}_{{ co.id }}"
+                               {% if prefilled_co|get_item:key == co.id|stringformat:"s" %}checked{% endif %}>
+                        <label class="form-check-label" for="co_A_{{ q }}_{{ co.id }}">
+                          {{ co.co_code }}
+                        </label>
+                      </div>
+                      {% endfor %}
+                    </div>
+                    {% endwith %}
+                  </td>
+                  <td>
+                    {% with key="blooms_A_"|add_str:q %}
+                    <div class="d-flex flex-wrap gap-3">
+                      {% for b in blooms_levels %}
+                      <div class="form-check form-check-inline">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               name="blooms_map_A_{{ q }}[]"
+                               value="{{ b.id }}"
+                               id="blooms_A_{{ q }}_{{ b.id }}"
+                               {% if prefilled_blooms|get_item:key == b.id|stringformat:"s" %}checked{% endif %}>
+                        <label class="form-check-label" for="blooms_A_{{ q }}_{{ b.id }}">
+                          {{ b.level_code }}
+                        </label>
+                      </div>
+                      {% endfor %}
+                    </div>
+                    {% endwith %}
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                {% for question in part.questions.all %}
+                  {% if question.options.exists %}
+                    {% for option in question.options.all %}
+
+                    <tr>
+                      <td><strong>{{ part.name }}{{ question.number }}{{ option.option_letter }}-I</strong></td>
+                      <td>
+                        {% with key="co_"|add_str:part.name|add_str:"_"|add_str:question.number|add_str:"_i_"|add_str:option.option_letter %}
+                        <div class="d-flex flex-wrap gap-3">
+                          {% for co in course_outcomes %}
+                          <div class="form-check form-check-inline">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="co_map_{{ part.name }}_{{ question.number }}_i_{{ option.option_letter }}[]"
+                                   value="{{ co.id }}"
+                                   id="co_{{ part.name }}_{{ question.number }}_i_{{ option.option_letter }}_{{ co.id }}"
+                                   {% if prefilled_co|get_item:key == co.id|stringformat:"s" %}checked{% endif %}>
+                            <label class="form-check-label"
+                                   for="co_{{ part.name }}_{{ question.number }}_i_{{ option.option_letter }}_{{ co.id }}">
+                              {{ co.co_code }}
+                            </label>
+                          </div>
+                          {% endfor %}
+                        </div>
+                        {% endwith %}
+                      </td>
+                      <td>
+                        {% with key="blooms_"|add_str:part.name|add_str:"_"|add_str:question.number|add_str:"_i_"|add_str:option.option_letter %}
+                        <div class="d-flex flex-wrap gap-3">
+                          {% for b in blooms_levels %}
+                          <div class="form-check form-check-inline">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="blooms_map_{{ part.name }}_{{ question.number }}_i_{{ option.option_letter }}[]"
+                                   value="{{ b.id }}"
+                                   id="blooms_{{ part.name }}_{{ question.number }}_i_{{ option.option_letter }}_{{ b.id }}"
+                                   {% if prefilled_blooms|get_item:key == b.id|stringformat:"s" %}checked{% endif %}>
+                            <label class="form-check-label"
+                                   for="blooms_{{ part.name }}_{{ question.number }}_i_{{ option.option_letter }}_{{ b.id }}">
+                              {{ b.level_code }}
+                            </label>
+                          </div>
+                          {% endfor %}
+                        </div>
+                        {% endwith %}
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td><strong>{{ part.name }}{{ question.number }}{{ option.option_letter }}-II</strong></td>
+                      <td>
+                        {% with key="co_"|add_str:part.name|add_str:"_"|add_str:question.number|add_str:"_ii_"|add_str:option.option_letter %}
+                        <div class="d-flex flex-wrap gap-3">
+                          {% for co in course_outcomes %}
+                          <div class="form-check form-check-inline">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="co_map_{{ part.name }}_{{ question.number }}_ii_{{ option.option_letter }}[]"
+                                   value="{{ co.id }}"
+                                   id="co_{{ part.name }}_{{ question.number }}_ii_{{ option.option_letter }}_{{ co.id }}"
+                                   {% if prefilled_co|get_item:key == co.id|stringformat:"s" %}checked{% endif %}>
+                            <label class="form-check-label"
+                                   for="co_{{ part.name }}_{{ question.number }}_ii_{{ option.option_letter }}_{{ co.id }}">
+                              {{ co.co_code }}
+                            </label>
+                          </div>
+                          {% endfor %}
+                        </div>
+                        {% endwith %}
+                      </td>
+                      <td>
+                        {% with key="blooms_"|add_str:part.name|add_str:"_"|add_str:question.number|add_str:"_ii_"|add_str:option.option_letter %}
+                        <div class="d-flex flex-wrap gap-3">
+                          {% for b in blooms_levels %}
+                          <div class="form-check form-check-inline">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="blooms_map_{{ part.name }}_{{ question.number }}_ii_{{ option.option_letter }}[]"
+                                   value="{{ b.id }}"
+                                   id="blooms_{{ part.name }}_{{ question.number }}_ii_{{ option.option_letter }}_{{ b.id }}"
+                                   {% if prefilled_blooms|get_item:key == b.id|stringformat:"s" %}checked{% endif %}>
+                            <label class="form-check-label"
+                                   for="blooms_{{ part.name }}_{{ question.number }}_ii_{{ option.option_letter }}_{{ b.id }}">
+                              {{ b.level_code }}
+                            </label>
+                          </div>
+                          {% endfor %}
+                        </div>
+                        {% endwith %}
+                      </td>
+                    </tr>
+
+                    {% with group_key=part.name|add_str:"__"|add_str:question.number|add_str:"__"|add_str:option.option_letter %}
+                      {% with extra_subparts=prefilled_existing_subparts|get_item:group_key %}
+                        {% if extra_subparts %}
+                          {% for subq in extra_subparts %}
+                            {% if subq != "i" and subq != "ii" %}
+                            <tr data-dynamic-subq="{{ subq }}"
+                                data-dynamic-group="{{ part.name }}__{{ question.number }}__{{ option.option_letter }}">
+                              <td>
+                                <strong>{{ part.name }}{{ question.number }}{{ option.option_letter }}-{{ subq|upper }}</strong>
+                              </td>
+                              <td>
+                                {% with key="co_"|add_str:part.name|add_str:"_"|add_str:question.number|add_str:"_"|add_str:subq|add_str:"_"|add_str:option.option_letter %}
+                                <div class="d-flex flex-wrap gap-3">
+                                  {% for co in course_outcomes %}
+                                  <div class="form-check form-check-inline">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="co_map_{{ part.name }}_{{ question.number }}_{{ subq }}_{{ option.option_letter }}[]"
+                                           value="{{ co.id }}"
+                                           id="co_{{ part.name }}_{{ question.number }}_{{ subq }}_{{ option.option_letter }}_{{ co.id }}"
+                                           {% if prefilled_co|get_item:key == co.id|stringformat:"s" %}checked{% endif %}>
+                                    <label class="form-check-label"
+                                           for="co_{{ part.name }}_{{ question.number }}_{{ subq }}_{{ option.option_letter }}_{{ co.id }}">
+                                      {{ co.co_code }}
+                                    </label>
+                                  </div>
+                                  {% endfor %}
+                                </div>
+                                {% endwith %}
+                              </td>
+                              <td>
+                                {% with key="blooms_"|add_str:part.name|add_str:"_"|add_str:question.number|add_str:"_"|add_str:subq|add_str:"_"|add_str:option.option_letter %}
+                                <div class="d-flex flex-wrap gap-3">
+                                  {% for b in blooms_levels %}
+                                  <div class="form-check form-check-inline">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="blooms_map_{{ part.name }}_{{ question.number }}_{{ subq }}_{{ option.option_letter }}[]"
+                                           value="{{ b.id }}"
+                                           id="blooms_{{ part.name }}_{{ question.number }}_{{ subq }}_{{ option.option_letter }}_{{ b.id }}"
+                                           {% if prefilled_blooms|get_item:key == b.id|stringformat:"s" %}checked{% endif %}>
+                                    <label class="form-check-label"
+                                           for="blooms_{{ part.name }}_{{ question.number }}_{{ subq }}_{{ option.option_letter }}_{{ b.id }}">
+                                      {{ b.level_code }}
+                                    </label>
+                                  </div>
+                                  {% endfor %}
+                                </div>
+                                {% endwith %}
+                              </td>
+                            </tr>
+                            {% endif %}
+                          {% endfor %}
+                        {% endif %}
+                      {% endwith %}
+                    {% endwith %}
+
+                    <tr class="dynamic-co-blooms-anchor"
+                        data-co-group="{{ part.name }}__{{ question.number }}__{{ option.option_letter }}"
+                        style="display:none;">
+                      <td colspan="3"></td>
+                    </tr>
+
+                    {% endfor %}
+                  {% else %}
+                  <tr>
+                    <td><strong>{{ part.name }}{{ question.number }}</strong></td>
+                    <td>
+                      <select class="form-select" name="co_map_{{ part.name }}_{{ question.number }}">
+                        <option value="">Select CO</option>
+                        {% for co in course_outcomes %}
+                        <option value="{{ co.id }}">{{ co.co_code }}</option>
+                        {% endfor %}
+                      </select>
+                    </td>
+                    <td>
+                      <select class="form-select" name="blooms_map_{{ part.name }}_{{ question.number }}">
+                        <option value="">Select Level</option>
+                        {% for b in blooms_levels %}
+                        <option value="{{ b.id }}">{{ b.level_code }}</option>
+                        {% endfor %}
+                      </select>
+                    </td>
+                  </tr>
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">Sub-part Maximum Marks Configuration</h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          {% for part in exam_pattern_obj.parts.all %}
+            {% if part.name|lower != "a" %}
+              {% for question in part.questions.all %}
+                {% if question.options.exists %}
+                  {% for option in question.options.all %}
+                    <div class="col-md-6 col-lg-4">
+                      <div class="border rounded p-3 bg-light h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <div class="fw-bold">
+                            {{ part.name }}{{ question.number }}{{ option.option_letter }}
+                            {% if question.total_marks %}
+                              <span class="text-muted small">(Question Max: {{ question.total_marks }})</span>
+                            {% endif %}
+                          </div>
+
+                          <button type="button"
+                                  class="btn btn-sm btn-outline-primary add-subpart-btn"
+                                  data-part="{{ part.name }}"
+                                  data-question="{{ question.number }}"
+                                  data-option="{{ option.option_letter }}"
+                                  data-question-total="{{ question.total_marks|default:part.max_marks }}">
+                            <i class="bi bi-plus-lg"></i>
+                          </button>
+                        </div>
+
+                        <div class="row g-2 subpart-config-list"
+                             data-config-group="{{ part.name }}__{{ question.number }}__{{ option.option_letter }}">
+
+                          <div class="col-6">
+                            <label class="form-label small mb-1">Sub I Max</label>
+                            {% with spkey=part.name|add_str:"__"|add_str:question.number|add_str:"__"|add_str:option.option_letter|add_str:"__i" %}
+                            <input type="number"
+                                   class="form-control subpart-config"
+                                   min="0"
+                                   max="{{ question.total_marks|default:part.max_marks }}"
+                                   step="1"
+                                   name="subpart_max__{{ part.name }}__{{ question.number }}__{{ option.option_letter }}__i"
+                                   data-subpart-key="{{ part.name }}__{{ question.number }}__{{ option.option_letter }}__i"
+                                   data-question-key="{{ part.name }}__{{ question.number }}"
+                                   data-question-total="{{ question.total_marks|default:part.max_marks }}"
+                                   value="{{ prefilled_subpart_max|get_item:spkey|default:'' }}">
+                            {% endwith %}
+                          </div>
+
+                          <div class="col-6">
+                            <label class="form-label small mb-1">Sub II Max</label>
+                            {% with spkey=part.name|add_str:"__"|add_str:question.number|add_str:"__"|add_str:option.option_letter|add_str:"__ii" %}
+                            <input type="number"
+                                   class="form-control subpart-config"
+                                   min="0"
+                                   max="{{ question.total_marks|default:part.max_marks }}"
+                                   step="1"
+                                   name="subpart_max__{{ part.name }}__{{ question.number }}__{{ option.option_letter }}__ii"
+                                   data-subpart-key="{{ part.name }}__{{ question.number }}__{{ option.option_letter }}__ii"
+                                   data-question-key="{{ part.name }}__{{ question.number }}"
+                                   data-question-total="{{ question.total_marks|default:part.max_marks }}"
+                                   value="{{ prefilled_subpart_max|get_item:spkey|default:'' }}">
+                            {% endwith %}
+                          </div>
+
+                          {% with group_key=part.name|add_str:"__"|add_str:question.number|add_str:"__"|add_str:option.option_letter %}
+                            {% with extra_subparts=prefilled_existing_subparts|get_item:group_key %}
+                              {% if extra_subparts %}
+                                {% for subq in extra_subparts %}
+                                  {% if subq != "i" and subq != "ii" %}
+                                    {% with spkey=part.name|add_str:"__"|add_str:question.number|add_str:"__"|add_str:option.option_letter|add_str:"__"|add_str:subq %}
+                                    <div class="col-6" data-subq="{{ subq }}">
+                                      <div class="subpart-config-head">
+                                        <label class="form-label small mb-1">Sub {{ subq|upper }} Max</label>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger remove-subpart-btn"
+                                                data-remove-subpart="1"
+                                                data-part="{{ part.name }}"
+                                                data-question="{{ question.number }}"
+                                                data-option="{{ option.option_letter }}"
+                                                data-subq="{{ subq }}">
+                                          <i class="bi bi-dash-lg"></i>
+                                        </button>
+                                      </div>
+                                      <input type="number"
+                                             class="form-control subpart-config"
+                                             min="0"
+                                             max="{{ question.total_marks|default:part.max_marks }}"
+                                             step="1"
+                                             name="subpart_max__{{ part.name }}__{{ question.number }}__{{ option.option_letter }}__{{ subq }}"
+                                             data-subpart-key="{{ part.name }}__{{ question.number }}__{{ option.option_letter }}__{{ subq }}"
+                                             data-question-key="{{ part.name }}__{{ question.number }}"
+                                             data-question-total="{{ question.total_marks|default:part.max_marks }}"
+                                             value="{{ prefilled_subpart_max|get_item:spkey|default:'' }}">
+                                    </div>
+                                    {% endwith %}
+                                  {% endif %}
+                                {% endfor %}
+                              {% endif %}
+                            {% endwith %}
+                          {% endwith %}
+                        </div>
+
+                        <div class="form-text mt-2">
+                          Set max marks for all sub-parts. Total for a question cannot exceed its question max.
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ reg_no }} - {{ student_name }}</h5>
+        <div class="student-total-box">
+          <div class="student-total-label">Total</div>
+          <div class="student-total" data-student="{{ reg_no }}">0 / 0</div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        {% for part in exam_pattern_obj.parts.all %}
+          <div class="card mb-3">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+              <strong>
+                Part {{ part.name }}
+                {% if part_marks_summary|get_item:part.name %}
+                  ({{ part_marks_summary|get_item:part.name }})
+                {% else %}
+                  ({{ part.max_marks }} Marks)
+                {% endif %}
+              </strong>
+            </div>
+
+            <div class="card-body">
+              {% if part.name|lower == "a" %}
+                <div class="mini-grid">
+                  {% for q in part.total_questions|to %}
+                    {% with suffix=part.name|add_str:"_"|add_str:q %}
+                      {% with key="marks_"|add_str:suffix %}
+                        <div class="mini-box">
+                          <div class="mini-q">
+                            <span class="mini-qno">A{{ q }}</span>
+                            <span class="mini-max">{{ part.max_marks }} max</span>
+                          </div>
+
+                          <input class="form-control mini-input mark-input"
+                                 type="number"
+                                 step="1"
+                                 min="0"
+                                 max="{{ part.max_marks }}"
+                                 data-student-reg="{{ reg_no }}"
+                                 data-max-value="{{ part.max_marks }}"
+                                 data-question-key="A__{{ q }}"
+                                 data-question-total="{{ part.max_marks }}"
+                                 name="m__{{ reg_no }}__marks_{{ suffix }}"
+                                value="{% if prefilled_marks|get_item:key != None %}{{ prefilled_marks|get_item:key }}{% endif %}">
+                          <input type="hidden"
+                                 class="question-max-field"
+                                 name="m__{{ reg_no }}__max_{{ suffix }}"
+                                 value="{{ part.max_marks }}">
+                        </div>
+                      {% endwith %}
+                    {% endwith %}
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="question-card-grid">
+                  {% for question in part.questions.all %}
+                    {% if question.options.exists %}
+                      <div class="question-card">
+                        <div class="question-card-title">
+                          {{ part.name }}{{ question.number }}
+                        </div>
+
+                        <div class="option-pair-grid">
+                          {% for option in question.options.all %}
+                            <div class="option-pair-box">
+                              <div class="option-pair-title">
+                                {{ part.name }}{{ question.number }}{{ option.option_letter }}
+                              </div>
+
+                              <div class="subpair-row">
+                                {% with suffix=part.name|add_str:"_"|add_str:question.number|add_str:"_i_"|add_str:option.option_letter %}
+                                  {% with key="marks_"|add_str:suffix %}
+                                  <div class="subpair-col">
+                                    <div class="subpair-label">I</div>
+                                    <input class="form-control subpair-input pair-mark mark-input"
+                                           type="number"
+                                           step="1"
+                                           min="0"
+                                           max="{{ question.total_marks|default:part.max_marks }}"
+                                           data-student-reg="{{ reg_no }}"
+                                           data-max-value="{{ question.total_marks|default:part.max_marks }}"
+                                           data-question-key="{{ part.name }}__{{ question.number }}"
+                                           data-question-total="{{ question.total_marks|default:part.max_marks }}"
+                                           data-pair-group="{{ reg_no }}__{{ part.name }}__{{ question.number }}__{{ option.option_letter }}"
+                                           data-pair-side="i"
+                                           data-pair-max="{{ question.total_marks|default:part.max_marks }}"
+                                           data-subpart-key="{{ part.name }}__{{ question.number }}__{{ option.option_letter }}__i"
+                                           name="m__{{ reg_no }}__marks_{{ suffix }}"
+                                           value="{% if prefilled_marks|get_item:key != None and prefilled_marks|get_item:key != '' %}{{ prefilled_marks|get_item:key }}{% endif %}">
+                                    <input type="hidden"
+                                           class="dynamic-subpart-max question-max-field"
+                                           name="m__{{ reg_no }}__max_{{ suffix }}"
+                                           value="{{ question.total_marks|default:part.max_marks }}">
+                                  </div>
+                                  {% endwith %}
+                                {% endwith %}
+
+                                {% with suffix=part.name|add_str:"_"|add_str:question.number|add_str:"_ii_"|add_str:option.option_letter %}
+                                  {% with key="marks_"|add_str:suffix %}
+                                  <div class="subpair-col">
+                                    <div class="subpair-label">II</div>
+                                    <input class="form-control subpair-input pair-mark mark-input"
+                                           type="number"
+                                           step="1"
+                                           min="0"
+                                           max="{{ question.total_marks|default:part.max_marks }}"
+                                           data-student-reg="{{ reg_no }}"
+                                           data-max-value="{{ question.total_marks|default:part.max_marks }}"
+                                           data-question-key="{{ part.name }}__{{ question.number }}"
+                                           data-question-total="{{ question.total_marks|default:part.max_marks }}"
+                                           data-pair-group="{{ reg_no }}__{{ part.name }}__{{ question.number }}__{{ option.option_letter }}"
+                                           data-pair-side="ii"
+                                           data-pair-max="{{ question.total_marks|default:part.max_marks }}"
+                                           data-subpart-key="{{ part.name }}__{{ question.number }}__{{ option.option_letter }}__ii"
+                                           name="m__{{ reg_no }}__marks_{{ suffix }}"
+                                           value="{% if prefilled_marks|get_item:key != None and prefilled_marks|get_item:key != '' %}{{ prefilled_marks|get_item:key }}{% endif %}">
+                                    <input type="hidden"
+                                           class="dynamic-subpart-max question-max-field"
+                                           name="m__{{ reg_no }}__max_{{ suffix }}"
+                                           value="{{ question.total_marks|default:part.max_marks }}">
+                                  </div>
+                                  {% endwith %}
+                                {% endwith %}
+                              </div>
+
+                              <div class="subpair-row mt-2 dynamic-student-subparts"
+                                   data-student-mark-group="{{ reg_no }}__{{ part.name }}__{{ question.number }}__{{ option.option_letter }}">
+                                {% with group_key=part.name|add_str:"__"|add_str:question.number|add_str:"__"|add_str:option.option_letter %}
+                                  {% with extra_subparts=prefilled_existing_subparts|get_item:group_key %}
+                                    {% if extra_subparts %}
+                                      {% for subq in extra_subparts %}
+                                        {% if subq != "i" and subq != "ii" %}
+                                          {% with suffix=part.name|add_str:"_"|add_str:question.number|add_str:"_"|add_str:subq|add_str:"_"|add_str:option.option_letter %}
+                                            {% with key="marks_"|add_str:suffix %}
+                                            <div class="subpair-col" data-subq="{{ subq }}">
+                                              <div class="subpair-label">{{ subq|upper }}</div>
+                                              <input class="form-control subpair-input pair-mark mark-input"
+                                                     type="number"
+                                                     step="1"
+                                                     min="0"
+                                                     max="{{ question.total_marks|default:part.max_marks }}"
+                                                     data-student-reg="{{ reg_no }}"
+                                                     data-max-value="{{ question.total_marks|default:part.max_marks }}"
+                                                     data-question-key="{{ part.name }}__{{ question.number }}"
+                                                     data-question-total="{{ question.total_marks|default:part.max_marks }}"
+                                                     data-pair-group="{{ reg_no }}__{{ part.name }}__{{ question.number }}__{{ option.option_letter }}"
+                                                     data-pair-side="{{ subq }}"
+                                                     data-pair-max="{{ question.total_marks|default:part.max_marks }}"
+                                                     data-subpart-key="{{ part.name }}__{{ question.number }}__{{ option.option_letter }}__{{ subq }}"
+                                                     name="m__{{ reg_no }}__marks_{{ suffix }}"
+                                                     value="{% if prefilled_marks|get_item:key != None and prefilled_marks|get_item:key != '' %}{{ prefilled_marks|get_item:key }}{% endif %}">
+                                              <input type="hidden"
+                                                     class="dynamic-subpart-max question-max-field"
+                                                     name="m__{{ reg_no }}__max_{{ suffix }}"
+                                                     value="{{ question.total_marks|default:part.max_marks }}">
+                                            </div>
+                                            {% endwith %}
+                                          {% endwith %}
+                                        {% endif %}
+                                      {% endfor %}
+                                    {% endif %}
+                                  {% endwith %}
+                                {% endwith %}
+                              </div>
+                            </div>
+                          {% endfor %}
+                        </div>
+                      </div>
+                    {% else %}
+                      {% with suffix=part.name|add_str:"_"|add_str:question.number %}
+                        {% with key="marks_"|add_str:suffix %}
+                        <div class="question-card">
+                          <div class="question-card-title">{{ part.name }}{{ question.number }}</div>
+                          <div class="subpair-col">
+                            <div class="subpair-label">Marks</div>
+                            <input class="form-control subpair-input mark-input"
+                                   type="number"
+                                   step="1"
+                                   min="0"
+                                   max="{{ question.total_marks }}"
+                                   data-student-reg="{{ reg_no }}"
+                                   data-max-value="{{ question.total_marks }}"
+                                   data-question-key="{{ part.name }}__{{ question.number }}"
+                                   data-question-total="{{ question.total_marks }}"
+                                   name="m__{{ reg_no }}__marks_{{ suffix }}"
+                                   value="{% if prefilled_marks|get_item:key != None and prefilled_marks|get_item:key != '' %}{{ prefilled_marks|get_item:key }}{% endif %}">
+                            <input type="hidden"
+                                   class="question-max-field"
+                                   name="m__{{ reg_no }}__max_{{ suffix }}"
+                                   value="{{ question.total_marks }}">
+                          </div>
+                        </div>
+                        {% endwith %}
+                      {% endwith %}
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+
+        <div class="mt-4 text-center">
+          <button type="submit" class="btn btn-success btn-lg">
+            <i class="bi bi-save"></i> Save Retest Marks
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+  {% endif %}
+</div>
+
+<script>
+(function () {
+  const ROMAN_SEQUENCE = ["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"];
+
+  function romanDisplay(subq) {
+    return String(subq || "").toUpperCase();
+  }
+
+  function sanitizeInteger(input) {
+    let value = (input.value || "").trim();
+    if (value === "") return true;
+
+    if (value.includes(".")) {
+      value = String(Math.floor(parseFloat(value)));
+      input.value = value;
+    }
+
+    let num = parseInt(value, 10);
+    if (isNaN(num)) {
+      input.value = "";
+      return false;
+    }
+
+    const min = parseInt(input.getAttribute("min") || "0", 10);
+    const max = parseInt(input.getAttribute("max") || "0", 10);
+
+    if (num < min) {
+      alert("Minimum mark is " + min);
+      input.value = min;
+      return false;
+    }
+
+    if (num > max) {
+      alert("Maximum allowed mark is " + max);
+      input.value = max;
+      return false;
+    }
+
+    input.value = num;
+    return true;
+  }
+
+  function getConfiguredSubpartMax(input) {
+    const key = input.dataset.subpartKey;
+    if (!key) {
+      return parseInt(input.getAttribute("max") || "0", 10);
+    }
+
+    const configInput = document.querySelector('.subpart-config[data-subpart-key="' + key + '"]');
+    if (!configInput) {
+      return parseInt(input.getAttribute("max") || "0", 10);
+    }
+
+    const val = parseInt((configInput.value || "").trim(), 10);
+    if (isNaN(val)) {
+      return parseInt(input.getAttribute("max") || "0", 10);
+    }
+    return val;
+  }
+
+  function getQuestionTotalForInput(input) {
+    const questionTotal = parseInt(input.dataset.questionTotal || "0", 10);
+    if (!isNaN(questionTotal) && questionTotal > 0) {
+      return questionTotal;
+    }
+    const fallback = parseInt(input.getAttribute("max") || "0", 10);
+    return isNaN(fallback) ? 0 : fallback;
+  }
+
+  function syncConfiguredSubpartMax() {
+    const pairInputs = document.querySelectorAll(".retest-marks-page .pair-mark");
+    pairInputs.forEach(function(input) {
+      const configuredMax = getConfiguredSubpartMax(input);
+      const questionTotal = getQuestionTotalForInput(input);
+      const effectiveMax = Math.min(configuredMax, questionTotal);
+
+      input.setAttribute("max", effectiveMax);
+      input.dataset.maxValue = effectiveMax;
+
+      const hiddenMax = input.parentElement.querySelector(".dynamic-subpart-max");
+      if (hiddenMax) {
+        hiddenMax.value = effectiveMax;
+      }
+
+      const currentVal = parseInt((input.value || "").trim(), 10);
+      if (!isNaN(currentVal) && currentVal > effectiveMax) {
+        input.value = effectiveMax;
+      }
+    });
+  }
+
+  function getInputsForQuestion(studentReg, questionKey) {
+    return document.querySelectorAll(
+      '.retest-marks-page .mark-input[data-student-reg="' + studentReg + '"][data-question-key="' + questionKey + '"]'
+    );
+  }
+
+  function validateQuestionTotalLimit(studentReg, questionKey, changedInput) {
+    if (!studentReg || !questionKey) return true;
+
+    const questionInputs = getInputsForQuestion(studentReg, questionKey);
+    if (!questionInputs.length) return true;
+
+    const questionTotal = getQuestionTotalForInput(questionInputs[0]);
+    if (!questionTotal) return true;
+
+    let total = 0;
+    questionInputs.forEach(function(input) {
+      const val = parseInt((input.value || "").trim(), 10);
+      if (!isNaN(val)) total += val;
+    });
+
+    if (total > questionTotal) {
+      alert("Total marks for this question cannot exceed " + questionTotal + ".");
+      changedInput.value = "";
+      changedInput.focus();
+      return false;
+    }
+
+    return true;
+  }
+
+  function validateOptionChoice(input) {
+    const group = input.dataset.pairGroup;
+    if (!group) return true;
+
+    const parts = group.split("__");
+    if (parts.length < 4) return true;
+
+    const studentReg = parts[0];
+    const partName = parts[1];
+    const questionNo = parts[2];
+    const currentOption = parts[3];
+
+    const relatedInputs = document.querySelectorAll(
+      '.retest-marks-page input[data-pair-group^="' + studentReg + '__' + partName + '__' + questionNo + '__"]'
+    );
+
+    let currentOptionHasMarks = false;
+    let otherOptionHasMarks = false;
+
+    relatedInputs.forEach(function(el) {
+      const val = parseInt((el.value || "").trim(), 10);
+      if (isNaN(val) || val <= 0) return;
+
+      const elParts = (el.dataset.pairGroup || "").split("__");
+      const elOption = elParts[3] || "";
+
+      if (elOption === currentOption) currentOptionHasMarks = true;
+      else otherOptionHasMarks = true;
+    });
+
+    if (currentOptionHasMarks && otherOptionHasMarks) {
+      alert("Only one option (A or B) can have marks for this question.");
+      input.value = "";
+      return false;
+    }
+
+    return true;
+  }
+
+  function calculateStudentTotal(regNo) {
+    const inputs = document.querySelectorAll('.retest-marks-page .mark-input[data-student-reg="' + regNo + '"]');
+    let obtainedTotal = 0;
+    let maxTotal = 0;
+    const countedQuestionKeys = new Set();
+
+    inputs.forEach(function(input) {
+      const val = parseInt((input.value || "").trim(), 10);
+      if (!isNaN(val)) obtainedTotal += val;
+
+      const qKey = input.dataset.questionKey || "";
+      const qTotal = parseInt(input.dataset.questionTotal || "0", 10);
+
+      if (!qKey || isNaN(qTotal)) return;
+      if (!countedQuestionKeys.has(qKey)) {
+        countedQuestionKeys.add(qKey);
+        maxTotal += qTotal;
+      }
+    });
+
+    const totalEl = document.querySelector('.student-total[data-student="{{ reg_no }}"]');
+    if (totalEl) totalEl.textContent = obtainedTotal + " / " + maxTotal;
+  }
+
+  function bindMarkInput(input) {
+    ["input", "change", "blur"].forEach(function(evt) {
+      input.addEventListener(evt, function() {
+        sanitizeInteger(input);
+
+        if (input.classList.contains("pair-mark")) {
+          syncConfiguredSubpartMax();
+
+          if (!validateOptionChoice(input)) {
+            calculateStudentTotal("{{ reg_no }}");
+            return;
+          }
+
+          const studentReg = input.dataset.studentReg;
+          const questionKey = input.dataset.questionKey;
+          if (studentReg && questionKey) {
+            if (!validateQuestionTotalLimit(studentReg, questionKey, input)) {
+              calculateStudentTotal(studentReg);
+              return;
+            }
+          }
+        }
+
+        calculateStudentTotal(input.dataset.studentReg);
+      });
+    });
+  }
+
+  function bindSubpartConfigInput(input) {
+    ["input", "change", "blur"].forEach(function(evt) {
+      input.addEventListener(evt, function() {
+        sanitizeInteger(input);
+        syncConfiguredSubpartMax();
+        calculateStudentTotal("{{ reg_no }}");
+      });
+    });
+  }
+
+  function initRetestPage() {
+    document.querySelectorAll(".subpart-config").forEach(bindSubpartConfigInput);
+    document.querySelectorAll(".mark-input").forEach(bindMarkInput);
+
+    const form = document.getElementById("retestMarksForm");
+    if (form) {
+      form.addEventListener("submit", function(e) {
+        const inputs = document.querySelectorAll(".retest-marks-page input[type='number']");
+        for (let i = 0; i < inputs.length; i++) {
+          if (!sanitizeInteger(inputs[i])) {
+            e.preventDefault();
+            inputs[i].focus();
+            return false;
+          }
+        }
+      });
+    }
+
+    syncConfiguredSubpartMax();
+    calculateStudentTotal("{{ reg_no }}");
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initRetestPage);
+  } else {
+    initRetestPage();
+  }
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <h3 class="text-center mb-4">Guest WiFi Approval</h3>
+
+    <!-- ===================== PENDING REQUESTS ===================== -->
+    <h5>Pending Requests</h5>
+    <table class="table table-bordered mt-2">
+        <thead>
+            <tr>
+                <th>Faculty</th>
+                <th>Department</th>
+                <th>Guest Name</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Purpose / Address</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for flow in pending_flows %}
+            <tr>
+                <td>{{ flow.application.faculty.name }}</td>
+                <td>{{ flow.application.faculty.department }}</td>
+                <td>{{ flow.application.guest_name }}</td>
+                <td>{{ flow.application.from_date }}</td>
+                <td>{{ flow.application.to_date }}</td>
+                <td>{{ flow.application.address }}</td>
+                <td>
+                    <textarea id="remarks_{{flow.id}}" class="form-control mb-2" placeholder="Enter remarks..."></textarea>
+
+                    <button class="btn btn-success btn-sm"
+                            onclick="submitApproval('{{flow.application.id}}','approve','{{flow.id}}')">
+                        Approve
+                    </button>
+
+                    <button class="btn btn-danger btn-sm"
+                            onclick="submitApproval('{{flow.application.id}}','reject','{{flow.id}}')">
+                        Reject
+                    </button>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">No Pending Requests</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- ===================== PAST REQUESTS ===================== -->
+    <h5 class="mt-4">Past Actions</h5>
+    <table class="table table-bordered mt-2">
+        <thead>
+            <tr>
+                <th>Faculty</th>
+                <th>Guest</th>
+                <th>Status</th>
+                <th>Remarks</th>
+                <th>Acted On</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for flow in past_flows %}
+            <tr>
+                <td>{{ flow.application.faculty.name }}</td>
+                <td>{{ flow.application.guest_name }}</td>
+                <td>{{ flow.status }}</td>
+                <td>{{ flow.remarks|default:"-" }}</td>
+                <td>{{ flow.acted_on }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No Past Records</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- ===================== AJAX SCRIPT ===================== -->
+<script>
+function submitApproval(appId, action, flowId){
+    let remarks = document.getElementById("remarks_" + flowId).value;
+
+    fetch("{% url 'guest_wifi_approve' %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+            "application_id": appId,
+            "action": action,
+            "remarks": remarks
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message || data.error);
+        location.reload();
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Something went wrong");
+    });
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,431 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .resolve-page {
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        min-height: 100vh;
+        padding: 1.5rem 2rem;
+    }
+
+    .resolve-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1a4b8c;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .card-box {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid #1a4b8c;
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.25rem;
+        font-size: 1.05rem;
+        font-weight: 600;
+    }
+
+    .request-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid #1a4b8c;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .request-card:hover {
+        box-shadow: 0 4px 12px rgba(26, 75, 140, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .label-text {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.35rem;
+        font-size: 0.9rem;
+    }
+
+    .value-text {
+        font-size: 0.95rem;
+        color: #111827;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        word-break: break-word;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.375rem 0.875rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .progress-badge {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .resolved-badge {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .closed-badge {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .pending-badge {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .rejected-badge {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .register-search {
+        max-width: 360px;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+        padding: 0.6rem 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .btn-resolve {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+    }
+
+    .btn-resolve:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(22, 163, 74, 0.35);
+        color: white;
+    }
+
+    .btn-close-query {
+        background: linear-gradient(135deg, #475569 0%, #334155 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(71, 85, 105, 0.25);
+    }
+
+    .btn-close-query:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(71, 85, 105, 0.35);
+        color: white;
+    }
+
+    .remarks-box {
+        min-height: 100px;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .remarks-box:focus {
+        border-color: #1a4b8c;
+        box-shadow: 0 0 0 0.2rem rgba(26, 75, 140, 0.25);
+    }
+
+    .history-table {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .history-table thead th {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        vertical-align: middle;
+        border-color: #1a4b8c;
+        padding: 0.9rem;
+    }
+
+    .history-table tbody td {
+        vertical-align: middle;
+        font-size: 0.92rem;
+        padding: 0.85rem;
+    }
+
+    .empty-box {
+        padding: 1rem;
+        border: 1px dashed #cbd5e1;
+        border-radius: 12px;
+        background: #f8fafc;
+        color: #475569;
+        text-align: center;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .resolve-page {
+            padding: 1rem;
+        }
+
+        .card-box {
+            padding: 1rem;
+        }
+
+        .page-title {
+            font-size: 1.4rem;
+        }
+    }
+</style>
+
+<div class="resolve-page">
+    <div class="resolve-container">
+        <h2 class="page-title">
+            <i class="fas fa-wrench me-2"></i>Queries Resolution
+        </h2>
+
+        <div class="card-box">
+            <div class="section-title">Queries In Processing</div>
+
+            {% if active_queries %}
+                {% for query in active_queries %}
+                    <div class="request-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="mb-0">Query #{{ query.query_id }}</h5>
+                            <span class="status-badge progress-badge">In Progress</span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="label-text">Applicant</div>
+                                <div class="value-text">
+                                    {% if query.student %}{{ query.student.name }}{% elif query.faculty %}{{ query.faculty.name }}{% else %}-{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="label-text">User Type</div>
+                                <div class="value-text">{{ query.user_type|title }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="label-text">Subject</div>
+                                <div class="value-text">{{ query.subject }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="label-text">Assigned Approver</div>
+                                <div class="value-text">{{ query.assigned_approver.name|default:"-" }}</div>
+                            </div>
+                        </div>
+
+                        <div class="label-text">Description</div>
+                        <div class="value-text">{{ query.description }}</div>
+
+                        <form method="post" class="mt-3">
+                            {% csrf_token %}
+                            <input type="hidden" name="query_id" value="{{ query.id }}">
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Solution / Closing Notes</label>
+                                <textarea name="solution_notes" class="form-control remarks-box" placeholder="Enter what was fixed, steps taken, or why this query is being closed..."></textarea>
+                            </div>
+
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="submit" name="action" value="resolve" class="btn btn-resolve">
+                                    <i class="fas fa-check me-1"></i> Mark as Resolved
+                                </button>
+                                <button type="submit" name="action" value="close" class="btn btn-close-query">
+                                    <i class="fas fa-lock me-1"></i> Close Query
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-box">No in-progress queries available.</div>
+            {% endif %}
+        </div>
+
+        <div class="card-box">
+            <div class="section-title">Recently Solved / Closed</div>
+
+            {% if completed_queries %}
+                <div class="table-responsive">
+                    <table class="table table-bordered history-table">
+                        <thead>
+                            <tr>
+                                <th>Query ID</th>
+                                <th>Applicant</th>
+                                <th>Subject</th>
+                                <th>Final Status</th>
+                                <th>Notes</th>
+                                <th>Completed On</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for query in completed_queries %}
+                                <tr>
+                                    <td>{{ query.query_id }}</td>
+                                    <td>
+                                        {% if query.student %}{{ query.student.name }}{% elif query.faculty %}{{ query.faculty.name }}{% else %}-{% endif %}
+                                    </td>
+                                    <td>{{ query.subject }}</td>
+                                    <td>
+                                        {% if query.status == "resolved" %}
+                                            <span class="status-badge resolved-badge">Resolved</span>
+                                        {% elif query.status == "closed" %}
+                                            <span class="status-badge closed-badge">Closed</span>
+                                        {% else %}
+                                            <span class="status-badge">{{ query.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if query.solution_notes %}
+                                            {{ query.solution_notes }}
+                                        {% elif query.closing_notes %}
+                                            {{ query.closing_notes }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if query.solved_at %}
+                                            {{ query.solved_at|date:"d-m-Y h:i A" }}
+                                        {% elif query.closed_at %}
+                                            {{ query.closed_at|date:"d-m-Y h:i A" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-box">No solved or closed queries yet.</div>
+            {% endif %}
+        </div>
+
+        <div class="card-box">
+            <div class="section-title">Query Register &mdash; All Queries</div>
+
+            <input type="text" id="queryRegisterSearch" class="form-control register-search" placeholder="Search by Query ID, name, register no, email, or subject...">
+
+            {% if all_queries %}
+                <div class="table-responsive">
+                    <table class="table table-bordered history-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Query ID</th>
+                                <th>Applicant</th>
+                                <th>Reg / Roll No</th>
+                                <th>College Email</th>
+                                <th>User Type</th>
+                                <th>Subject</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Submitted On</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queryRegisterBody">
+                            {% for query in all_queries %}
+                                <tr class="register-row">
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ query.query_id }}</td>
+                                    <td>
+                                        {% if query.student %}{{ query.student.name }}{% elif query.faculty %}{{ query.faculty.name }}{% else %}-{% endif %}
+                                    </td>
+                                    <td>
+                                        {% if query.student %}{{ query.student.reg_no }}{% elif query.faculty %}{{ query.faculty.faculty_id }}{% else %}-{% endif %}
+                                    </td>
+                                    <td>
+                                        {% if query.student %}{{ query.student.email|default:"-" }}{% elif query.faculty %}{{ query.faculty.college_email|default:"-" }}{% else %}-{% endif %}
+                                    </td>
+                                    <td>{{ query.user_type|title }}</td>
+                                    <td>{{ query.subject }}</td>
+                                    <td>{{ query.get_priority_display }}</td>
+                                    <td>
+                                        {% if query.status == "pending" %}
+                                            <span class="status-badge pending-badge">{{ query.get_status_display }}</span>
+                                        {% elif query.status == "in_progress" %}
+                                            <span class="status-badge progress-badge">{{ query.get_status_display }}</span>
+                                        {% elif query.status == "resolved" %}
+                                            <span class="status-badge resolved-badge">{{ query.get_status_display }}</span>
+                                        {% elif query.status == "closed" %}
+                                            <span class="status-badge closed-badge">{{ query.get_status_display }}</span>
+                                        {% elif query.status == "rejected" %}
+                                            <span class="status-badge rejected-badge">{{ query.get_status_display }}</span>
+                                        {% else %}
+                                            <span class="status-badge">{{ query.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ query.submitted_at|date:"d-m-Y h:i A" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-box">No queries found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var searchInput = document.getElementById("queryRegisterSearch");
+        if (!searchInput) {
+            return;
+        }
+        searchInput.addEventListener("input", function () {
+            var term = this.value.toLowerCase();
+            var rows = document.querySelectorAll(".register-row");
+            rows.forEach(function (row) {
+                var match = row.textContent.toLowerCase().indexOf(term) !== -1;
+                row.style.display = match ? "" : "none";
+            });
+        });
+    });
+</script>
+{% endblock %}

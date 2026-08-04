@@ -1,0 +1,873 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container-fluid py-4">
+
+  <form style="display:none;">
+    {% csrf_token %}
+  </form>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">Overall Consolidate</h2>
+      <p class="text-muted mb-2 mb-md-0">Select a course to choose an IAT, then include assessments and model labs</p>
+    </div>
+    <div class="d-flex align-items-center">
+      <span class="badge bg-primary fs-6">{{ assigned_subjects|length }} Subjects</span>
+    </div>
+  </div>
+
+  {% if assigned_subjects %}
+  <div class="row g-4">
+    {% for subject in assigned_subjects %}
+    <div class="col-xl-4 col-lg-6 col-md-6">
+      <div class="card subject-card h-100 shadow-sm border-0 hover-lift"
+           data-course-id="{{ subject.course.id }}"
+           data-course-code="{{ subject.course.course_code }}"
+           data-course-title="{{ subject.course.title }}"
+           data-department="{{ subject.department_code }} {{ subject.department_name }}"
+           data-department-id="{{ subject.department.id }}"
+           data-batch="{{ subject.batch }}"
+           data-section="{{ subject.section }}"
+           data-degree-id="{{ subject.degree_id }}"
+           data-degree-code="{{ subject.degree_code }}"
+           data-degree-name="{{ subject.degree_name }}"
+           data-has-theory="{{ subject.has_theory|yesno:'1,0' }}"
+           data-has-lab="{{ subject.has_lab|yesno:'1,0' }}">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="course-badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-3">
+              <h5 class="mb-0 fw-bold">{{ subject.course.course_code }}</h5>
+            </div>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary border-0 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-three-dots-vertical"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#" data-action="view-details">View Details</a></li>
+                <li><a class="dropdown-item" href="#" data-action="student-list">Student List</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <h6 class="card-title mb-3 text-dark">{{ subject.course.title }}</h6>
+
+          <div class="subject-meta mb-3">
+            <div class="d-flex align-items-center text-muted mb-2">
+              <i class="bi bi-building me-2"></i>
+              <small>{{ subject.department_code }} - {{ subject.department_name }}</small>
+            </div>
+
+            {% if subject.degree_code or subject.degree_name %}
+            <div class="d-flex align-items-center text-muted mb-2">
+              <i class="bi bi-mortarboard me-2"></i>
+              <small>{{ subject.degree_code }}{% if subject.degree_code and subject.degree_name %} — {% endif %}{{ subject.degree_name }}</small>
+            </div>
+            {% endif %}
+
+            {% if subject.batch or subject.section %}
+            <div class="d-flex gap-2 flex-wrap">
+              {% if subject.batch %}
+              <span class="badge bg-success"><i class="bi bi-people me-1"></i>Batch {{ subject.batch }}</span>
+              {% endif %}
+              {% if subject.section %}
+              <span class="badge bg-info text-dark"><i class="bi bi-layout-split me-1"></i>Section {{ subject.section }}</span>
+              {% endif %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="text-center mt-3 d-flex justify-content-center gap-2 flex-wrap">
+            <button type="button" class="btn btn-primary px-4 open-consolidate-btn">
+              <i class="bi bi-collection me-2"></i>Open Consolidate
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <div class="empty-state-icon mb-4">
+      <i class="bi bi-journal-x display-1 text-muted"></i>
+    </div>
+    <h4 class="text-muted mb-3">No Subjects Assigned</h4>
+    <p class="text-muted mb-4">You don't have any subjects assigned to you at the moment.</p>
+    <button class="btn btn-outline-primary">
+      <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+    </button>
+  </div>
+  {% endif %}
+</div>
+
+<script id="assessments-json" type="application/json">
+  {{ assessments_by_degree_json|default:"{}"|safe }}
+</script>
+
+<script id="am-json" type="application/json">
+  {{ am_master_json|default:"[]"|safe }}
+</script>
+
+<script>
+  window.CURRENT_FACULTY_ID = "{{ current_faculty_id|default:'' }}";
+</script>
+
+<div class="modal fade" id="consolidateModal" tabindex="-1" aria-labelledby="consolidateModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="consolidateModalLabel">Overall Consolidate</h5>
+          <div class="small text-muted" id="consolidateSubTitle"></div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="courseBadges" class="d-flex flex-wrap gap-2 mb-3"></div>
+
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-body">
+            <h6 class="fw-semibold mb-2">Internal Assessments (IAT)</h6>
+            <div id="iatOptions" class="row g-2"></div>
+            <div id="iatHelp" class="form-text mt-2">Pick an IAT to continue.</div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="fw-semibold mb-2">Assessments (matched to selected IAT)</h6>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="toggleAllAssess">
+                <label for="toggleAllAssess" class="form-check-label small">Select all</label>
+              </div>
+            </div>
+            <div id="assessmentCheckboxes" class="row g-2"></div>
+            <div id="assessmentHelp" class="form-text mt-2"></div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="fw-semibold mb-2">Model Labs</h6>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="toggleAllLabs">
+                <label for="toggleAllLabs" class="form-check-label small">Select all</label>
+              </div>
+            </div>
+            <div id="modelLabCheckboxes" class="row g-2"></div>
+            <div id="modelLabHelp" class="form-text mt-2"></div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-3">
+          <div class="card-body">
+            <h6 class="fw-semibold mb-2">Practical</h6>
+            <div class="form-check border rounded p-2">
+              <input class="form-check-input" type="checkbox" id="practicalCb">
+              <label class="form-check-label" for="practicalCb">Include Practical</label>
+            </div>
+            <div class="form-text mt-2">This option is available for all courses.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer flex-wrap gap-2">
+        <div class="me-auto small text-muted" id="selectionCount"></div>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" id="btnGenerate" class="btn btn-primary">
+          <i class="bi bi-collection me-1"></i> Generate Consolidate
+        </button>
+        <button type="button" id="btnPdf" class="btn btn-outline-primary">
+          <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const cards = document.querySelectorAll('.subject-card');
+  const modalEl = document.getElementById('consolidateModal');
+  const modal = new bootstrap.Modal(modalEl);
+  const subTitle = document.getElementById('consolidateSubTitle');
+  const badgesEl = document.getElementById('courseBadges');
+
+  const iatWrap = document.getElementById('iatOptions');
+  const iatHelp = document.getElementById('iatHelp');
+
+  const boxesWrap = document.getElementById('assessmentCheckboxes');
+  const helpEl = document.getElementById('assessmentHelp');
+  const toggleAllAssessEl = document.getElementById('toggleAllAssess');
+
+  const mlabWrap = document.getElementById('modelLabCheckboxes');
+  const mlabHelp = document.getElementById('modelLabHelp');
+  const toggleAllLabsEl = document.getElementById('toggleAllLabs');
+
+  const practicalCb = document.getElementById('practicalCb');
+  const selectionCount = document.getElementById('selectionCount');
+
+  const iatCard = iatWrap.closest('.card');
+  const assessmentCard = boxesWrap.closest('.card');
+  const modelLabCard = mlabWrap.closest('.card');
+  const practicalCard = practicalCb.closest('.card');
+
+  const DEG_PAYLOAD = JSON.parse((document.getElementById('assessments-json')?.textContent || '{}'));
+  const AM_LIST = JSON.parse((document.getElementById('am-json')?.textContent || '[]'));
+  const CURRENT_FACULTY_ID = (window.CURRENT_FACULTY_ID || '').toString();
+
+  let selected = {
+    course_id: '',
+    course_code: '',
+    course_title: '',
+    department: '',
+    department_id: '',
+    batch: '',
+    section: '',
+    degree_id: '',
+    degree_code: '',
+    degree_name: '',
+    iat: '',
+    iat_mode: 'single',
+    has_theory: false,
+    has_lab: false
+  };
+
+  function normalizeIATText(v) {
+    return String(v || '').toLowerCase().replace(/\s+/g, '');
+  }
+
+  function getCsrfToken() {
+    const input = document.querySelector('[name=csrfmiddlewaretoken]');
+    return input ? input.value : '';
+  }
+
+  function captureCardData(card) {
+    selected = {
+      course_id: card.dataset.courseId || '',
+      course_code: card.dataset.courseCode || '',
+      course_title: card.dataset.courseTitle || '',
+      department: card.dataset.department || '',
+      department_id: card.dataset.departmentId || '',
+      batch: card.dataset.batch || '',
+      section: card.dataset.section || '',
+      degree_id: card.dataset.degreeId || '',
+      degree_code: card.dataset.degreeCode || '',
+      degree_name: card.dataset.degreeName || '',
+      iat: '',
+      iat_mode: 'single',
+      has_theory: card.dataset.hasTheory === '1',
+      has_lab: card.dataset.hasLab === '1'
+    };
+  }
+
+  function buildBadges() {
+    badgesEl.innerHTML = '';
+    const items = [
+      {icon:'bi-journals', text:`${selected.course_code} — ${selected.course_title}`},
+      {icon:'bi-mortarboard', text:`${selected.degree_code}${selected.degree_code && selected.degree_name ? ' — ' : ''}${selected.degree_name}`},
+      {icon:'bi-building', text:selected.department},
+      {icon:'bi-people', text:selected.batch ? `Batch ${selected.batch}` : ''},
+      {icon:'bi-layout-split', text:selected.section ? `Section ${selected.section}` : ''},
+      {icon:'bi-flag', text: selected.iat_mode === 'all' ? 'IAT: ALL' : (selected.iat ? `IAT: ${selected.iat}` : '')},
+    ].filter(i => i.text);
+
+    items.forEach(i => {
+      const span = document.createElement('span');
+      span.className = 'badge rounded-pill text-bg-light border';
+      span.innerHTML = `<i class="bi ${i.icon} me-1"></i>${i.text}`;
+      badgesEl.appendChild(span);
+    });
+  }
+
+  function updateSelectionCount() {
+    const assess = boxesWrap.querySelectorAll('input[type="checkbox"].assess-cb:checked').length;
+    const labs = mlabWrap.querySelectorAll('input[type="checkbox"].mlab-cb:checked').length;
+    const prac = practicalCb.checked ? 1 : 0;
+    selectionCount.textContent = `Selected: ${assess} assessment(s), ${labs} model lab(s), Practical ${prac ? '✓' : '✗'}`;
+  }
+
+  function getIATAssessments({ degree_id, department_id, course_id, iat, iat_mode }) {
+    const out = [];
+    const seen = new Set();
+
+    AM_LIST.forEach(row => {
+      const matchesIATCondition = iat_mode === 'all'
+        ? true
+        : (String(row.iat || '').toLowerCase() === String(iat || '').toLowerCase());
+
+      if (
+        String(row.degree_id || '') === String(degree_id || '') &&
+        String(row.department_id || '') === String(department_id || '') &&
+        String(row.course_id || '') === String(course_id || '') &&
+        String(row.faculty_id || '') === String(CURRENT_FACULTY_ID || '') &&
+        matchesIATCondition
+      ) {
+        const amRowId = row.id;
+        if (seen.has(amRowId)) return;
+        seen.add(amRowId);
+
+        const displayName = (row.display_name || row.assessment_name || row.customAssessmentname || row.Assessmentname || '').toString().trim();
+        if (!displayName) return;
+
+        const display_source = (row.display_source || '').toString();
+        const assessment_fk = row.assessment_id;
+        let src = '';
+        let value = '';
+
+        if (display_source === 'customAssessmentname') {
+          src = 'am';
+          value = `am-${amRowId}`;
+        } else if (assessment_fk !== null && assessment_fk !== undefined && assessment_fk !== '') {
+          src = 'std';
+          value = String(assessment_fk);
+        } else {
+          src = 'am';
+          value = `am-${amRowId}`;
+        }
+
+        const qp = !!row.qp;
+        const is_custom_display = !!row.is_custom_display;
+
+        out.push({
+          am_row_id: amRowId,
+          id: value,
+          name: displayName,
+          qp: qp,
+          src: src,
+          is_custom_display: is_custom_display,
+          iat: row.iat || ''
+        });
+      }
+    });
+
+    return out;
+  }
+
+  function appendIATGroupCheckbox(iatName) {
+    const clean = String(iatName || '').trim();
+    if (!clean) return;
+
+    const safeId = `assess-iat-${clean.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+    const safeName = clean.replace(/"/g, '&quot;');
+
+    const col = document.createElement('div');
+    col.className = 'col-sm-6 col-lg-4';
+
+    col.innerHTML = `
+      <div class="form-check border rounded p-2 h-100 bg-light">
+        <input class="form-check-input assess-cb"
+               type="checkbox"
+               value="${safeName}"
+               data-kind="iat-group"
+               data-name="${safeName}"
+               data-iat="${safeName}"
+               id="${safeId}">
+        <label class="form-check-label fw-semibold" for="${safeId}">
+          ${clean}
+          <span class="badge bg-primary ms-1">IAT</span>
+        </label>
+      </div>
+    `;
+    boxesWrap.appendChild(col);
+  }
+
+  function populateAssessmentCheckboxes() {
+    boxesWrap.innerHTML = '';
+    helpEl.textContent = '';
+
+    if (selected.iat_mode !== 'all' && !selected.iat) {
+      helpEl.textContent = 'Choose an IAT first.';
+      toggleAllAssessEl.checked = false;
+      toggleAllAssessEl.disabled = true;
+      return;
+    }
+
+    const list = getIATAssessments({
+      degree_id: selected.degree_id,
+      department_id: selected.department_id,
+      course_id: selected.course_id,
+      iat: selected.iat,
+      iat_mode: selected.iat_mode
+    });
+
+    const groupedByIAT = {};
+    list.forEach(a => {
+      const iatKey = a.iat || 'Unknown';
+      if (!groupedByIAT[iatKey]) groupedByIAT[iatKey] = [];
+      groupedByIAT[iatKey].push(a);
+    });
+
+    if (selected.iat_mode !== 'all') {
+      appendIATGroupCheckbox(selected.iat);
+
+      if (list.length) {
+        list.forEach(a => {
+          const col = document.createElement('div');
+          col.className = 'col-sm-6 col-lg-4';
+          const id = `assess-${a.am_row_id}`;
+          const displayName = (a.name || '').toString().trim();
+          const safeName = displayName.replace(/"/g, '&quot;');
+
+          col.innerHTML = `
+            <div class="form-check border rounded p-2 h-100">
+              <input class="form-check-input assess-cb"
+                     type="checkbox"
+                     value="${a.id}"
+                     data-kind="assessment"
+                     data-src="${a.src}"
+                     data-name="${safeName}"
+                     data-qp="${a.qp ? '1' : '0'}"
+                     data-iat="${a.iat}"
+                     id="${id}">
+              <label class="form-check-label" for="${id}">
+                ${displayName}
+                ${a.qp ? '<span class="badge bg-primary ms-1">QP</span>' : ''}
+                ${a.is_custom_display ? '<span class="badge bg-secondary ms-1">Custom</span>' : ''}
+              </label>
+            </div>
+          `;
+          boxesWrap.appendChild(col);
+        });
+      }
+
+      toggleAllAssessEl.disabled = false;
+      helpEl.textContent = 'Select the IAT checkbox and/or one or more assessments to include.';
+      return;
+    }
+
+    const allIATs = Object.keys(groupedByIAT).sort();
+    if (!allIATs.length) {
+      helpEl.textContent = 'No assessments found for any IAT.';
+      toggleAllAssessEl.checked = false;
+      toggleAllAssessEl.disabled = true;
+      return;
+    }
+
+    allIATs.forEach(iatKey => {
+      const header = document.createElement('div');
+      header.className = 'col-12 mt-2';
+      header.innerHTML = `<div class="small fw-bold text-primary"><i class="bi bi-flag me-1"></i>${iatKey}</div>`;
+      boxesWrap.appendChild(header);
+
+      appendIATGroupCheckbox(iatKey);
+
+      groupedByIAT[iatKey].forEach(a => {
+        const col = document.createElement('div');
+        col.className = 'col-sm-6 col-lg-4';
+        const id = `assess-${a.am_row_id}`;
+        const displayName = (a.name || '').toString().trim();
+        const safeName = displayName.replace(/"/g, '&quot;');
+
+        col.innerHTML = `
+          <div class="form-check border rounded p-2 h-100">
+            <input class="form-check-input assess-cb"
+                   type="checkbox"
+                   value="${a.id}"
+                   data-kind="assessment"
+                   data-src="${a.src}"
+                   data-name="${safeName}"
+                   data-qp="${a.qp ? '1' : '0'}"
+                   data-iat="${a.iat}"
+                   id="${id}">
+            <label class="form-check-label" for="${id}">
+              ${displayName}
+              ${a.qp ? '<span class="badge bg-primary ms-1">QP</span>' : ''}
+              ${a.is_custom_display ? '<span class="badge bg-secondary ms-1">Custom</span>' : ''}
+            </label>
+          </div>
+        `;
+        boxesWrap.appendChild(col);
+      });
+    });
+
+    toggleAllAssessEl.disabled = false;
+    helpEl.textContent = 'Select IAT checkbox(es) and/or assessments from all IATs to include.';
+  }
+
+  function populateModelLabCheckboxes() {
+    mlabWrap.innerHTML = '';
+    mlabHelp.textContent = '';
+
+    const payload = DEG_PAYLOAD[String(selected.degree_id)] || {model_labs: [], model_labs_iat: {}, iats: []};
+    let labs = [];
+
+    if (selected.iat_mode === 'all') {
+      const allIATLabs = new Set();
+      if (payload.model_labs_iat) {
+        Object.values(payload.model_labs_iat).forEach(iatLabs => {
+          iatLabs.forEach(lab => allIATLabs.add(lab));
+        });
+      }
+      if (payload.model_labs) {
+        payload.model_labs.forEach(lab => allIATLabs.add(lab));
+      }
+      labs = Array.from(allIATLabs);
+    } else if (selected.iat && payload.model_labs_iat && payload.model_labs_iat[selected.iat]) {
+      labs = payload.model_labs_iat[selected.iat] || [];
+    } else if (payload.model_labs) {
+      labs = payload.model_labs || [];
+    }
+
+    const unique = Array.from(new Set((labs || []).map(x => (x || '').toString().trim()).filter(Boolean)))
+      .sort((a,b) => a.localeCompare(b));
+
+    if (!unique.length) {
+      mlabHelp.textContent = selected.iat_mode === 'all'
+        ? 'No model labs configured for any IAT.'
+        : (!selected.iat ? 'Choose an IAT first.' : 'No model labs configured for this IAT.');
+      toggleAllLabsEl.checked = false;
+      toggleAllLabsEl.disabled = true;
+      return;
+    }
+
+    unique.forEach((name, idx) => {
+      const col = document.createElement('div');
+      col.className = 'col-sm-6 col-lg-4';
+      const id = `mlab-${idx}`;
+      col.innerHTML = `
+        <div class="form-check border rounded p-2 h-100">
+          <input class="form-check-input mlab-cb" type="checkbox" value="${name}" id="${id}">
+          <label class="form-check-label" for="${id}">${name}</label>
+        </div>
+      `;
+      mlabWrap.appendChild(col);
+    });
+
+    toggleAllLabsEl.disabled = false;
+    mlabHelp.textContent = selected.iat_mode === 'all'
+      ? 'Model labs from all IATs.'
+      : 'Optionally include one or more model labs.';
+  }
+
+  function selectedAssessmentCheckboxes() {
+    return Array.from(boxesWrap.querySelectorAll('input.assess-cb:checked'));
+  }
+
+  function selectedModelLabs() {
+    return Array.from(mlabWrap.querySelectorAll('input.mlab-cb:checked')).map(cb => cb.value);
+  }
+
+  toggleAllAssessEl.addEventListener('change', function() {
+    const cbs = boxesWrap.querySelectorAll('input.assess-cb');
+    cbs.forEach(cb => cb.checked = toggleAllAssessEl.checked);
+    updateSelectionCount();
+  });
+
+  toggleAllLabsEl.addEventListener('change', function() {
+    const cbs = mlabWrap.querySelectorAll('input.mlab-cb');
+    cbs.forEach(cb => cb.checked = toggleAllLabsEl.checked);
+    updateSelectionCount();
+  });
+
+  boxesWrap.addEventListener('change', updateSelectionCount);
+  mlabWrap.addEventListener('change', updateSelectionCount);
+  practicalCb.addEventListener('change', updateSelectionCount);
+
+  function populateIATOptions() {
+    iatWrap.innerHTML = '';
+    iatHelp.textContent = '';
+
+    const payload = DEG_PAYLOAD[String(selected.degree_id)] || { iats: [] };
+    const iats = Array.from(new Set((payload.iats || []).map(x => (x || '').trim()).filter(Boolean)));
+
+    if (!iats.length) {
+      iatHelp.textContent = 'No IATs configured for this degree.';
+      selected.iat = '';
+      selected.iat_mode = 'single';
+      lockAssessments(true);
+      return;
+    }
+
+    if (iats.length >= 1) {
+      const allCol = document.createElement('div');
+      allCol.className = 'col-sm-6 col-lg-4';
+      allCol.innerHTML = `
+        <div class="form-check border rounded p-2 h-100 bg-primary bg-opacity-10 border-primary">
+          <input class="form-check-input iat-radio" type="radio" name="iat" value="ALL" id="iat-all">
+          <label class="form-check-label fw-semibold text-primary" for="iat-all">
+            <i class="bi bi-collection-play me-1"></i> Select All IATs
+          </label>
+        </div>
+      `;
+      iatWrap.appendChild(allCol);
+    }
+
+    iats.forEach((name, idx) => {
+      const col = document.createElement('div');
+      col.className = 'col-sm-6 col-lg-4';
+      const id = `iat-${idx}`;
+      col.innerHTML = `
+        <div class="form-check border rounded p-2 h-100">
+          <input class="form-check-input iat-radio" type="radio" name="iat" value="${name}" id="${id}">
+          <label class="form-check-label" for="${id}">${name}</label>
+        </div>
+      `;
+      iatWrap.appendChild(col);
+    });
+
+    selected.iat = '';
+    selected.iat_mode = 'single';
+    lockAssessments(true);
+
+    iatHelp.textContent = iats.length > 1
+      ? 'Pick a single IAT or choose "Select All IATs" to include every IAT.'
+      : 'Pick an IAT to continue.';
+  }
+
+  function lockAssessments(lock) {
+    [boxesWrap, mlabWrap].forEach(wrap => {
+      wrap.closest('.card').style.opacity = lock ? '0.6' : '1';
+      wrap.closest('.card').style.pointerEvents = lock ? 'none' : 'auto';
+    });
+    toggleAllAssessEl.disabled = lock;
+    toggleAllLabsEl.disabled = lock;
+  }
+
+  iatWrap.addEventListener('change', (e) => {
+    if (e.target && e.target.classList.contains('iat-radio')) {
+      const val = e.target.value;
+      if (val === 'ALL') {
+        selected.iat = '';
+        selected.iat_mode = 'all';
+      } else {
+        selected.iat = val;
+        selected.iat_mode = 'single';
+      }
+      buildBadges();
+      populateAssessmentCheckboxes();
+      populateModelLabCheckboxes();
+      lockAssessments(false);
+      updateSelectionCount();
+    }
+  });
+
+  function applyCourseHourVisibility() {
+    if (selected.has_theory || selected.has_lab) {
+      iatCard.style.display = '';
+    } else {
+      iatCard.style.display = 'none';
+    }
+
+    if (selected.has_theory) {
+      assessmentCard.style.display = '';
+    } else {
+      assessmentCard.style.display = 'none';
+    }
+
+    if (selected.has_lab) {
+      modelLabCard.style.display = '';
+      practicalCard.style.display = '';
+    } else {
+      modelLabCard.style.display = 'none';
+      practicalCard.style.display = 'none';
+    }
+  }
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      cards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+    });
+
+    const openBtn = card.querySelector('.open-consolidate-btn');
+    openBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+
+      captureCardData(card);
+
+      practicalCb.checked = false;
+      toggleAllAssessEl.checked = false;
+      toggleAllLabsEl.checked = false;
+
+      applyCourseHourVisibility();
+      subTitle.textContent = selected.course_title;
+      buildBadges();
+      populateIATOptions();
+      populateAssessmentCheckboxes();
+      populateModelLabCheckboxes();
+      lockAssessments(true);
+      updateSelectionCount();
+
+      modal.show();
+    });
+  });
+
+  function buildParams() {
+    const checked = selectedAssessmentCheckboxes();
+    const labs = selectedModelLabs();
+    const includePractical = practicalCb.checked ? "1" : "";
+
+    const params = new URLSearchParams({
+      course_id: selected.course_id,
+      course_code: selected.course_code,
+      course_title: selected.course_title,
+      department: selected.department,
+      department_id: selected.department_id,
+      batch: selected.batch,
+      section: selected.section,
+      degree_id: selected.degree_id,
+      degree_code: selected.degree_code,
+      degree_name: selected.degree_name,
+      iat: selected.iat_mode === 'all' ? 'ALL' : selected.iat || ''
+    });
+
+    checked.forEach(cb => {
+      const kind = cb.dataset.kind || 'assessment';
+
+      if (kind === 'iat-group') {
+        if (cb.dataset.iat) {
+          params.append('selected_iat_groups', cb.dataset.iat);
+        }
+        return;
+      }
+
+      const src = (cb.dataset.src || '');
+      params.append('assessment_ids', cb.value);
+
+      if (src === 'am' && cb.dataset.name) {
+        params.append('custom_assessment_names', cb.dataset.name);
+      }
+
+      if (src === 'am' && String(cb.value).startsWith('am-')) {
+        const num = String(cb.value).slice(3);
+        if (/^\d+$/.test(num)) {
+          params.append('custom_assessment_row_ids', num);
+        }
+      }
+
+      if (src === 'std' && cb.dataset.qp === '1') {
+        params.append('qp_assessment_ids', cb.value);
+      }
+
+      if (src === 'std') {
+        params.append('standard_assessment_ids', cb.value);
+      }
+
+      const iat = cb.dataset.iat || '';
+      if (iat) {
+        params.append('assessment_iats', iat);
+      }
+    });
+
+    labs.forEach(name => params.append('model_labs', name));
+    if (includePractical) params.append('include_practical', includePractical);
+
+    return params;
+  }
+
+  document.getElementById('btnGenerate').addEventListener('click', function() {
+    if (selected.iat_mode !== 'all' && !selected.iat) {
+      iatHelp.textContent = 'Pick an IAT to generate.';
+      return;
+    }
+
+    if (selected.has_theory) {
+      const checked = selectedAssessmentCheckboxes();
+      if (!checked.length) {
+        helpEl.textContent = 'Pick at least one assessment to generate.';
+        return;
+      }
+    }
+
+    const params = buildParams();
+    const formData = new FormData();
+
+    for (const [key, value] of params.entries()) {
+      formData.append(key, value);
+    }
+
+    fetch("{% url 'save_overall_consolidate_record' %}", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": getCsrfToken()
+      },
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === "success") {
+        alert(data.message);
+        modal.hide();
+      } else {
+        alert(data.message || "Failed to save consolidate selection.");
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      alert("Error while saving consolidate selection.");
+    });
+  });
+
+  document.getElementById('btnPdf').addEventListener('click', function() {
+    if (selected.iat_mode !== 'all' && !selected.iat) {
+      iatHelp.textContent = 'Pick an IAT to download.';
+      return;
+    }
+
+    if (selected.has_theory) {
+      const checked = selectedAssessmentCheckboxes();
+      if (!checked.length) {
+        helpEl.textContent = 'Pick at least one assessment to download.';
+        return;
+      }
+    }
+
+    const params = buildParams();
+    window.open("{% url 'overall_consolidate_pdf' %}?" + params.toString(), '_blank');
+  });
+});
+</script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+:root {
+  --primary-color:#4361ee;
+  --secondary-color:#6c757d;
+  --success-color:#28a745;
+  --info-color:#17a2b8;
+  --warning-color:#ffc107;
+  --danger-color:#dc3545;
+  --light-bg:#f8f9fa;
+  --border-radius:12px;
+}
+.subject-card {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+.subject-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+  border-color: var(--primary-color);
+}
+.subject-card.active {
+  border-color: var(--primary-color);
+  background-color: rgba(67, 97, 238, 0.05);
+}
+.hover-lift:hover { transform: translateY(-3px); }
+.course-badge { font-size: .9rem; }
+.card { border-radius: var(--border-radius); }
+.badge { font-weight: 500; }
+.btn { border-radius: 8px; font-weight: 500; transition: all .2s ease; }
+#assessmentCheckboxes .form-check,
+#modelLabCheckboxes .form-check,
+#iatOptions .form-check { background:#f8fafc; }
+#assessmentCheckboxes .form-check:hover,
+#modelLabCheckboxes .form-check:hover,
+#iatOptions .form-check:hover { background:#f1f5f9; }
+#iatOptions .form-check.bg-primary { background: rgba(67, 97, 238, 0.1) !important; }
+#iatOptions .form-check.bg-primary:hover { background: rgba(67, 97, 238, 0.15) !important; }
+@media (max-width:768px){
+  .container-fluid{padding-left:15px; padding-right:15px;}
+  .card-body{padding:1.5rem !important;}
+}
+</style>
+{% endblock %}

@@ -1,0 +1,1084 @@
+{% extends "base.html" %}
+ <!DOCTYPE html>
+{% load static %}
+<html>
+    {% block content %}
+<head>
+
+
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Main Container Styling */
+        .table_container{
+            position: relative;
+            width: 100%;
+            border-radius: 6px;
+            padding: 30px;
+            /* margin: 0 15px; */
+            background-color: #fff;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            max-width: 95vw;
+        }
+        .container{
+            position: relative;
+            width: 100%;
+            border-radius: 6px;
+            padding: 30px;
+            /* margin: 0 15px; */
+            background-color: #fff;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+        .container header{
+            position: relative;
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+        .container header::before{
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -2px;
+            height: 3px;
+            width: 27px;
+            border-radius: 8px;
+            background-color: #4070f4;
+        }
+        .container form,.show_details{
+            position: relative;
+            margin-top: 16px;
+            /* min-height: 510px; */
+            background-color: #fff;
+            overflow: hidden;
+        }
+        .container form .form{
+            /* position: absolute; */
+            background-color: #fff;
+            transition: 0.3s ease;
+        }
+        .container form .form.second{
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(100%);
+        }
+        form.secActive .form.second{
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0);
+        }
+        form.secActive .form.first{
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-100%);
+        }
+        .container form .title{
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            margin: 6px 0;
+            color: #333;
+        }
+        .container form .fields{
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+        form .fields .input-field,form .fields .availability-input-field{
+            display: flex;
+            flex-direction: column;
+            margin: 4px 0;
+        }
+        form .fields .availability-input-field{
+            width: calc(100% / 4 - 15px);
+        }
+        form .fields .input-field{
+            width: calc(100% / 3 - 15px);
+        }
+        .input-field label,.availability-input-field label{
+            /* font-size: 1rem; */
+            /* font-weight: 500; */
+            color: #2e2e2e;
+            margin-left: 8.5px;
+        }
+        .input-field input,
+        .input-field select,
+        .availability-input-field select,
+        .availability-input-field input {
+            /* Styles shared by input and select elements within .input-field and .availability-input-field */
+            outline: none;
+            font-size: 14px;
+            font-weight: 400;
+            color: #333;
+            border-radius: 5px;
+            border: 1px solid #aaa;
+            padding: 0 15px;
+            height: 42px;
+            margin: 8px;
+            width: 95%;
+        }
+        
+        .input-field input :focus,
+        .input-field select:focus,.availability-input-field input :focus,
+        .availability-input-field select:focus
+        {
+            box-shadow: 0 3px 6px rgba(0,0,0,0.13);
+        }
+        .input-field select,
+        .input-field input[type="date"],
+        .availability-input-field select,
+        .availability-input-field input[type="date"]{
+            color: #707070;
+        }
+        .input-field input[type="date"]:valid,.availability-input-field input[type="date"]:valid{
+            color: #333;
+        }
+        .container form button, .backBtn{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 45px;
+            max-width: 200px;
+            width: 100%;
+            border: none;
+            outline: none;
+            color: #fff;
+            border-radius: 5px;
+            margin: 25px 0;
+            
+            transition: all 0.3s linear;
+            cursor: pointer;
+        }
+        .container form .btnText{
+            font-size: 14px;
+            font-weight: 400;
+        }
+        form button:hover{
+            background-color: #265df2;
+        }
+        form button i,
+        form .backBtn i{
+            margin: 0 6px;
+        }
+        form .backBtn i{
+            transform: rotate(180deg);
+        }
+        form .buttons{
+            display: flex;
+            align-items: center;
+        }
+        form .buttons button , .backBtn{
+            margin-right: 14px;
+        }
+        
+        @media (max-width: 750px) {
+            .container form{
+                overflow-y: scroll;
+            }
+            .container form::-webkit-scrollbar{
+               display: none;
+            }
+            form .fields .input-field,.availability-input-field{
+                width: calc(100% / 2 - 15px);
+            }
+        }
+        
+        @media (max-width: 550px) {
+            form .fields .input-field,.availability-input-field{
+                width: 100%;
+            }
+        }
+        
+        .file_upload input{
+            display: none;
+        }
+        .file_upload .Upload-lable{
+            width: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            border-radius: 6px;
+            border: 1px dashed #999;
+        }
+        .file_upload .Upload-lable:hover{
+            color: rgb(23, 184, 23);
+            border: 1px dashed rgb(23, 184, 23);
+        }
+        .file_upload label span{
+            color: #265df2;
+            
+        } 
+        .availability_details .fields .input-field label span {
+            color: #265df2;
+        }
+        /* Ensure the select box dropdown appears above other elements */
+        .input-field {
+            position: relative; /* Establish a stacking context */
+        }
+        
+        .input-field select {
+            z-index: 10; /* Ensure the select box itself has a lower z-index than the dropdown */
+            position: relative; /* Ensure the select box is positioned relative to its parent */
+        }
+        
+        /* Target the multiselect dropdown container */
+        .multiselect-dropdown {
+            z-index: 1000; /* Ensure the dropdown has a high z-index */
+            position: absolute; /* Position the dropdown absolutely */
+        }
+        
+        /* Table Styling */
+        @media # print {
+            .table, .table__body {
+             overflow:visible;
+             height: auto !important;
+             width: auto !important;
+            }
+           }
+           
+           /*@page {
+               size: landscape;
+               margin: 0; 
+           }*/
+           main{
+               height: 80%;
+           }
+           
+           main.table {
+               width: 100%;
+               height: fit-content;
+               max-height: 90vh;
+               background-color: #fff5;
+               backdrop-filter: blur(7px);
+               box-shadow: 0 .4rem .8rem #0005;
+               border-radius: .8rem;
+               overflow: hidden; /* Prevents the table from overflowing its container */
+           }
+           main.table .table__body  {
+               max-height: 90vh; /* Ensure that the body of the table also respects the max-height */
+               overflow-y: auto;
+               overflow-x: auto; /* Adds vertical scroll when content exceeds max-height */
+           }
+           /* Optional: Hide empty rows */
+           main.table tbody tr.empty-row {
+               display: none;
+           }
+           .table__header {
+               width: 100%;
+               height: 70px;
+               background-color: #fff4;
+               padding: .8rem 1rem;
+           
+               display: flex;
+               justify-content: space-between;
+               align-items: center;
+           }
+           
+           .table__header .input-group {
+               width: 25%;
+               height: 100%;
+               background-color: #fff5;
+               padding: 0 .8rem;
+               border-radius: 2rem;
+           
+               display: flex;
+               justify-content: center;
+               align-items: center;
+           
+               transition: .2s;
+           }
+           .input-group{
+               border: 2px solid rgba(88, 88, 88, 0.533);
+           }
+           .table__header .input-group:hover {
+               width: 30%;
+               background-color: #fff8;
+               box-shadow: 0 .1rem .4rem #0002;
+               border: 2px solid #6c00bd;
+           }
+           
+           .table__header .input-group img {
+               width: 1.2rem;
+               height: 1.2rem;
+           }
+           
+           .table__header .input-group input {
+               width: 50%;
+               padding: 0 .5rem 0 .3rem;
+               background-color: transparent;
+               border: none;
+               outline: none;
+           }
+           
+           .table__body {
+               width: 95%;
+               /* height: fit-content; */
+               max-height: calc(89% - 1.6rem);
+               background-color: #fffb;
+               margin: .8rem auto;
+               border-radius: .6rem;
+               overflow: auto;
+               overflow: overlay;
+           }
+           
+           
+           .table__body::-webkit-scrollbar{
+               width: 0.5rem;
+               height: 0.5rem;
+           }
+           
+           .table__body::-webkit-scrollbar-thumb{
+               border-radius: .5rem;
+               background-color: #0004;
+               visibility: hidden;
+           }
+           
+           .table__body:hover::-webkit-scrollbar-thumb{ 
+               visibility: visible;
+           }
+           
+           
+           table {
+               width: 100%;
+           }
+           
+           td img {
+               width: 36px;
+               height: 36px;
+               margin-right: .5rem;
+               border-radius: 50%;
+           
+               vertical-align: middle;
+           }
+           
+           table, th, td {
+               border-collapse: collapse;
+               padding: 1rem;
+               text-align: left;
+           }
+           
+           thead th {
+               position: sticky;
+               top: 0;
+               left: 0;
+               background-color: #d5d1defe;
+               cursor: pointer;
+               text-transform: capitalize;
+           }
+           
+           tbody tr:nth-child(even) {
+               background-color: #0000000b;
+           }
+           
+           tbody tr {
+               --delay: .1s;
+               transition: .5s ease-in-out var(--delay), background-color 0s;
+           }
+           
+           tbody tr.hide {
+               opacity: 0;
+               transform: translateX(100%);
+           }
+           
+           tbody tr:hover {
+               background-color: #fff6 !important;
+           }
+           
+           tbody tr td,
+           tbody tr td p,
+           tbody tr td img {
+               transition: .2s ease-in-out;
+           }
+           
+           tbody tr.hide td,
+           tbody tr.hide td p {
+               padding: 0;
+               font: 0 / 0 sans-serif;
+               transition: .2s ease-in-out .5s;
+           }
+           
+           tbody tr.hide td img {
+               width: 0;
+               height: 0;
+               transition: .2s ease-in-out .5s;
+           }
+           
+           .status {
+               padding: .4rem 0;
+               border-radius: 2rem;
+               text-align: center;
+           }
+           
+           .status.delivered {
+               background-color: #86e49d;
+               color: #006b21;
+           }
+           
+           .status.cancelled {
+               background-color: #d893a3;
+               color: #b30021;
+           }
+           
+           .status.pending {
+               background-color: #ebc474;
+           }
+           
+           .status.shipped {
+               background-color: #6fcaea;
+           }
+           
+           
+           @media (max-width: 1000px) {
+               td:not(:first-of-type) {
+                   min-width: 12.1rem;
+               }
+           }
+           
+           thead th span.icon-arrow {
+               display: inline-block;
+               width: 1.3rem;
+               height: 1.3rem;
+               border-radius: 50%;
+               border: 1.4px solid transparent;
+               
+               text-align: center;
+               font-size: 1rem;
+               
+               margin-left: .5rem;
+               transition: .2s ease-in-out;
+           }
+           
+           thead th:hover span.icon-arrow{
+               border: 1.4px solid #6c00bd;
+           }
+           
+           thead th:hover {
+               color: #6c00bd;
+           }
+           
+           thead th.active span.icon-arrow{
+               background-color: #6c00bd;
+               color: #fff;
+           }
+           
+           thead th.asc span.icon-arrow{
+               transform: rotate(180deg);
+           }
+           
+           thead th.active,tbody td.active {
+               color: #6c00bd;
+           }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .row {
+                flex-direction: column;
+            }
+        }
+
+        .export__file {
+            position: relative;
+        
+        
+        }
+        .export__file-btn{
+            background-color: #6c00bd;
+        }
+        .export__file .export__file-btn {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            background: #fff6 url(/static/images/export.png) center / 80% no-repeat;
+            border-radius: 50%;
+            transition: .2s ease-in-out;
+        }
+        
+        .export__file .export__file-btn:hover { 
+            background-color: #a152ddd2;
+            transform: scale(1.15);
+            cursor: pointer;
+            color: white;
+        }
+        
+        .export__file input {
+            display: none;
+        }
+        
+        .export__file .export__file-options {
+            position: absolute;
+            right: 0;
+            width: 12rem;
+            border-radius: .5rem;
+            overflow: hidden;
+            text-align: center;
+            opacity: 0;
+            transform: scale(.8);
+            transform-origin: top right;
+            box-shadow: 0 .2rem .5rem #0004;
+            transition: .2s;
+            display: none;
+        }
+        
+        .export__file input:checked + .export__file-options {
+            display : block;
+            opacity: 1;
+            transform: scale(1);
+            z-index: 100;
+        }
+        
+        .export__file .export__file-options label{
+            display: block;
+            width: 100%;
+            padding: .6rem 0;
+            background-color: #f2f2f2;
+            
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        
+            transition: .2s ease-in-out;
+        }
+        
+        .export__file .export__file-options label:first-of-type{
+            padding: 1rem 0;
+            background-color: #86e49d !important;
+        }
+        
+        .export__file .export__file-options label:hover{
+            transform: scale(1.05);
+            background-color: #fff;
+            cursor: pointer;
+        }
+        
+        .export__file .export__file-options img{
+            width: 2rem;
+            height: auto;
+        }
+    </style>
+    </head>
+      <body>
+
+<div class="container mt-5" id="main-content">
+
+    <div class="row">
+
+            <header>Filter Form</header>
+            <form method="POST" autocomplete="off" enctype="multipart/form-data" id="filter">
+                {% csrf_token %}
+                <div class="form first">
+                    <div class="details personal">
+
+                        <div class="row">
+                            <div class="col-md-3 my-2">
+                                <div class="card text-center">
+                                    <div class="card-header bg-warning text-dark">
+                                        Total Enquiries
+                                    </div>
+                                    <div class="card-body">
+                                        <span class="count-value">{{ total_student }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                    
+                            <!-- Program of Study Cards -->
+                            {% for item in program_of_study_counts %}
+                            <div class="col-md-3 my-2">
+                                <div class="card text-center">
+                                    <div class="card-header bg-info text-white">
+                                        {{ item.programme_of_study }}
+                                    </div>
+                                    <div class="card-body">
+                                        <span class="count-value">{{ item.count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                    
+                            <!-- Mode Cards -->
+                            {% for item in mode_counts %}
+                            <div class="col-md-3 my-2">
+                                <div class="card text-center">
+                                    <div class="card-header bg-success text-white">
+                                        {{ item.mode_of_study }}
+                                    </div>
+                                    <div class="card-body">
+                                        <span class="count-value">{{ item.count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="fields">
+                            <div class="availability-input-field">
+                                <label for="first_choice">Program</label>
+                                <select name="second_choice" class="form-control"  required>
+                                    <option  value="" disabled hidden selected>Select Program</option>
+                                {% Program_data as program %}
+                                  {% for dept in program %}
+                                  <option value="{{ dept.program_code }}">{{ dept.program_name }}</option>
+                                  {% endfor %}   
+                                  
+                                </select>
+                            </div>
+                            <div class="availability-input-field">
+                                <label for="programme_of_study">Programme of Study</label>
+                                <select name="programme_of_study" id="programme_of_study" class="form-select" >
+                                    <option value="" disabled selected>Select Programme</option>
+                                    <option value="Certificate">Certificate</option>
+                                    <option value="Diploma">Diploma</option>
+                                    <option value="Advanced Diploma">Advanced Diploma</option>
+                                    <option value="Bachelor Degree">Bachelor Degree</option>
+                                    <option value="Postgraduate Diploma">Postgraduate Diploma</option>
+                                    <option value="Master Degree">Master Degree</option>
+                                </select>
+                            </div>
+                            <div class="availability-input-field">
+                                <label for="mode_of_study">Mode of Study</label>
+                                <select name="mode_of_study" id="mode_of_study" class="form-select" >
+                                    <option value="" disabled selected>Select Mode of Study</option>
+                                    <option value="Regular">Regular</option>
+                                    <option value="Evening">Evening</option>
+                                    <option value="Weekend">Weekend</option>
+                                    <option value="Term">Term</option>
+                                    <option value="Blended/E-Learning">Blended/E-Learning</option>
+                                    <option value="ODeL">ODeL</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="present_designation" class="form-label fw-semibold">Year</label>
+                                    <select name="year" id="year" class="form-select" required>
+                                <option value="" disabled selected>Select Year</option>
+                                <option value="1">Year I</option>
+                                <option value="2">Year II</option>
+                                <option value="3">Year III</option>
+                                <option value="4">Year IV</option>
+                                
+                            </select>
+                                </div>
+                            </div>
+            
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="intake" class="form-label fw-semibold">Semester</label>
+                                    <select name="semester" id="semester" class="form-select" required>
+                                        <option value="" disabled selected>Select Semester</option>
+                                        <option value="January">Semester I</option>
+                                        <option value="April">Semester II</option>
+                                        <option value="July">Semester III</option>
+                                        <option value="October">Semester IV</option>
+                                        <option value="October">Semester V</option>
+                                        <option value="October">Semester VI</option>
+                                        <option value="October">Semester VII</option>
+                                        <option value="October">Semester VIII</option>
+                                    </select>
+                                </div>
+                            </div>
+                        
+
+                            <div class="availability-input-field">
+                                <label>Column</label>
+                                <select name="Column_type" id="columnType" class="form-control">
+                                    <option value="" hidden>Select Column Type</option>
+                                    <option value="all">All Columns</option>
+                                    <option value="customised_Column">Customised Columns</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                            <!-- Customised Columns Selection -->
+                            <div id="customised_Column" style="display:none; margin-top: 20px;">
+                                <div id="Column_container">
+                                    <h3>
+                                        Select Columns:
+                                        <input type="checkbox" id="select-all"> Select All
+                                    </h3>
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Column Name</th>
+                                                <th>Select</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for col in columns %}
+                                            <tr>
+                                                <td>{{ col }}</td>
+                                                <td>
+                                                    <input type="checkbox" class="custom-column-checkbox" name="custom_columns" value="{{ col }}"
+                                                    {% if col in selected_columns %}checked{% endif %}>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Display the Data Table -->
+                            
+                            
+                            <script>
+                            document.getElementById("columnType").addEventListener("change", function () {
+                                let selection = this.value;
+                                let customColumnsDiv = document.getElementById("customised_Column");
+                            
+                                if (selection === "customised_Column") {
+                                    customColumnsDiv.style.display = "block";
+                                } else {
+                                    customColumnsDiv.style.display = "none";
+                                }
+                            });
+                            
+                            document.getElementById("select-all").addEventListener("click", function () {
+                                let checkboxes = document.querySelectorAll(".custom-column-checkbox");
+                                checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+                            });
+                            </script>
+                            
+                            <button type="submit" class="btn btn-sm btn-success" id="filterButton">
+                                <span class="btn btn-sm btn-success">Filter</span>
+                                <i class="uil uil-navigator"></i>
+                            </button> 
+                        
+                    </div>
+                </div>
+                {% comment %} <button type="submit">Submit</button> {% endcomment %}
+            </form>
+            {% comment %} <label for="chartField">Select Field for Chart:</label>
+                <select id="chartField">
+                    <option value="program">Program</option>
+                    <option value="program_of_study">Program of Study</option>
+                    <option value="mode">Mode</option>
+                </select>
+            <!-- Donut Chart -->
+            <div>
+                <canvas id="donutChart"></canvas>
+            </div> {% endcomment %}
+            
+    
+
+            <div class="table-responsive scrollable-table">
+                <table class="table table-bordered">
+                    <main class="table" id="customers_table">
+                        <section class="table__header">
+                            <div class="input-group">
+                                <input type="text" placeholder="Search Data...">
+                                <img src="{% static 'images/search.png' %}" alt="">
+                            </div>
+                            <div class="export__file" style="display: flex;">
+                                <P>Export   </P>
+                            <div class="">
+                                <label for="export-file" class="export__file-btn" title="Export File"><img src="{% static 'images/export.png' %}" alt=""></label>
+                                <input type="checkbox" id="export-file">
+                                
+                                <div class="export__file-options" style="z-index: 2000;">
+                                    <label>Export As &nbsp; &#10140;</label>
+                                    <label for="export-file" class="btn btn-primary" style="color: black;" id="exportExcel">EXCEL <img src="{% static 'images/excel.png' %}" alt=""></label>
+                                    {% comment %} <label for="export-file" class="btn btn-primary" style="color: black;" id="exportPdf">PDF <img src="{% static 'images/pdf.png' %}" alt=""></label> {% endcomment %}
+                                
+                                </div>
+                            </div>
+                            </div>
+                        </section>
+                {% comment %} <section class="table__body">
+                    <table id="example">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>E-Mail</th>
+                                <th>Phone Number</th>
+                                <th>Program</th>
+                                <th>Program of Study</th>
+                                <th>Mode</th>
+                                <th>Approve</th>
+                            
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for value in data %}
+                            <tr>
+                                <td>{{ value.first_name }}</td>
+                                <td>{{ value.email_address }}</td>
+                                <td>{{ value.mobile_number }}</td>
+                                <td>{{ value.first_choice }}</td>
+                                <td>{{ value.programme_of_study }}</td>
+                                <td>{{ value.mode_of_study }}</td>
+                                
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </section> {% endcomment %}
+                        <div class="table-responsive scrollable-table">
+                            <table class="table table-bordered">
+                                <section class="table__body">
+                                    <table id="example" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                {% if data and data|length > 0 %}
+                                                    {% for key in data.0.keys %}
+                                                        <th>{{ key }}</th>
+                                                    {% endfor %}
+                                                    <th>PDF</th>
+                                                    <th>Approval</th>  <!-- New Column -->
+                                                {% endif %}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in data %}
+                                                <tr data-id="{{ row.id }}">  <!-- Store row ID -->
+                                                    {% for value in row.values %}
+                                                        <td>{{ value }}</td>
+                                                    {% endfor %}
+                                                    <td>
+                                                        <a href="{% url 'generate_student_pdf' row.id %}" class="btn btn-primary">PDF</a>
+                                                    </td>
+                                                    <td>
+                                                    {% if row.approve is None %} 
+                                                        <button class="btn btn-sm btn-success approve-btn" data-value="OK">APPROVE</button>
+                                                        <button class="btn btn-sm btn-danger approve-btn" data-value="No">NOT APPROVE</button>
+                                                    {% endif %}
+                                                    <span class="approval-status">{{ row.approve }}</span>
+                                                </td>
+                                                </tr>
+                                            {% endfor %}
+
+                                            <script>
+                                                document.addEventListener("DOMContentLoaded", function () {
+                                                    document.querySelectorAll(".approve-btn").forEach(button => {
+                                                        button.addEventListener("click", function () {
+                                                            let row = this.closest("tr");
+                                                            let studentId = row.getAttribute("data-id");
+                                                            let approvalStatus = this.getAttribute("data-value");
+                                                
+                                                            fetch(window.location.pathname, {
+                                                                method: "POST",
+                                                                headers: {
+                                                                    "X-Requested-With": "XMLHttpRequest",
+                                                                    "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                                                                },
+                                                                body: new URLSearchParams({
+                                                                    "student_id": studentId,
+                                                                    "approval_status": approvalStatus
+                                                                })
+                                                            })
+                                                            .then(response => response.json())
+                                                            .then(data => {
+                                                                if (data.status === "success") {
+                                                                    row.querySelector(".approval-status").textContent = approvalStatus;
+                                                                    row.querySelectorAll(".approve-btn").forEach(btn => btn.remove()); // Hide buttons after approval
+                                                                }
+                                                            });
+                                                        });
+                                                    });
+                                                });
+                                                
+                                                </script>
+                                        </tbody>
+                                    </table>
+                                </section>
+                            </table>
+                        </div>
+                
+                
+                
+                    </main>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Place at the end of the <body> for better page load performance -->
+<!-- jQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<!-- jQuery UI -->
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+<!-- XLSX for Excel export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+
+<!-- jsPDF for PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
+
+
+<!-- Your Custom JS -->
+<script src="{% static '53_js/multiselect-dropdown.js' %}"></script>
+
+ <script>
+ document.querySelectorAll('input, select').forEach(input => {
+    input.addEventListener('change', () => {
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        const program = document.getElementById('program').value;
+
+        if (startDate && endDate && program) {
+            document.getElementById('filterButton').disabled = false;
+        } else {
+            document.getElementById('filterButton').disabled = true;
+        }
+    });
+});
+
+document.querySelector('.input-group input').addEventListener('keyup', function () {
+    const filter = this.value.toUpperCase();
+    const rows = document.querySelectorAll('#customers_table table tbody tr');
+
+    rows.forEach(row => {
+        const text = row.innerText.toUpperCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+    });
+});
+
+
+document.getElementById('exportExcel').addEventListener('click', function () {
+    const table = document.getElementById('example');
+    const workbook = XLSX.utils.table_to_book(table);
+    XLSX.writeFile(workbook, 'data.xlsx');
+});
+
+
+document.getElementById('exportPdf').addEventListener('click', function () {
+    const doc = new jsPDF();
+    doc.autoTable({ html: '#example' });
+    doc.save('data.pdf');
+});
+</script>
+
+<script>
+    // Parse the field_counts data passed from Django
+    const fieldCounts = JSON.parse('{{ field_counts|safe }}');
+
+    // Function to update the displayed value dynamically
+    function updateFieldCount(selectedField) {
+        const counts = fieldCounts[selectedField]; // Get counts for the selected field
+        const totalCount = counts.reduce((sum, item) => sum + item.count, 0); // Calculate total count
+
+        // Update the displayed value in the frontend
+        const countDisplayElement = document.getElementById('countDisplay');
+        countDisplayElement.innerText = `Total Count for ${selectedField}: ${totalCount}`;
+    }
+
+    // Initial display of total count for 'program'
+    updateFieldCount('program');
+
+    // Update display when the dropdown changes
+    document.getElementById('chartField').addEventListener('change', function () {
+        const selectedField = this.value;
+        updateFieldCount(selectedField);
+    });
+</script>
+
+{% comment %} <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                <script>
+                $(document).ready(function() {
+                    $(".approve-btn").click(function() {
+                        var button = $(this);
+                        var row = button.closest("tr");
+                        var studentId = row.data("id");  // Get row ID
+                        var value = button.data("value");
+                
+                        $.ajax({
+                            url: "{% url 'faculty/update_approval' %}",  // Django URL name
+                            type: "POST",
+                            data: {
+                                'id': studentId,
+                                'approve': value,
+                                'csrfmiddlewaretoken': '{{ csrf_token }}'
+                            },
+                            success: function(response) {
+                                if (response.status === "success") {
+                                    row.find(".approval-status").text(value);
+                                } else {
+                                    alert("Error updating approval status.");
+                                }
+                            }
+                        });
+                    });
+                });
+                </script> {% endcomment %}
+
+{% comment %} <script>
+    // Parse the field_counts data passed from Django
+    const fieldCounts = JSON.parse('{{ field_counts|safe }}');
+
+    // Function to update the donut chart dynamically
+    function updateDonutChart(selectedField) {
+        const counts = fieldCounts[selectedField]; // Get counts for the selected field
+        const labels = counts.map(item => item[selectedField]);  // Extract field names
+        const data = counts.map(item => item.count);             // Extract count values
+
+        // Destroy the old chart instance if it exists
+        if (window.donutChartInstance) {
+            window.donutChartInstance.destroy();
+        }
+
+        // Create a new donut chart
+        const ctx = document.getElementById('donutChart').getContext('2d');
+        window.donutChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: `Count of ${selectedField}`,
+                    data: data,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(153, 102, 255, 0.6)',
+                        'rgba(255, 159, 64, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                }
+            }
+        });
+    }
+
+    // Initial chart render
+    updateDonutChart('program');
+
+    // Update chart when the dropdown changes
+     document.getElementById('chartField').addEventListener('change', function () {
+        const selectedField = this.value;
+        updateDonutChart(selectedField);
+    }); 
+</script> {% endcomment %}
+
+{% endblock content %}
+</body>
+</html>

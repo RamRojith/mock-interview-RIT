@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+<style>
+body {
+  background-color: #f8f9fc;
+}
+
+.card {
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.card-header {
+  background: linear-gradient(90deg, #b02a37, #dc3545);
+  color: white;
+  font-weight: 600;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.btn-danger,
+.btn-primary {
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.btn-primary {
+  background-color: #dc3545;
+}
+
+.btn-primary:hover {
+  background-color: #bb2d3b;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+}
+
+.btn-danger:hover {
+  background-color: #bb2d3b;
+}
+</style>
+
+<div class="container mt-5">
+  <div class="card shadow-lg border-0">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">
+        <i class="bi bi-file-earmark-x me-2"></i>
+        Discontinued Transfer Certificate Generator
+      </h4>
+
+      <div class="d-flex align-items-center gap-2">
+        <span class="me-2">
+          <strong>{{ students.count }}</strong> Students
+        </span>
+
+        {% comment %} <a href="{% url 'generate_bulk_discontinue_transfer_certificate' %}?department={{ selected_department }}&batch={{ selected_batch }}&date_entry={{ date_entry }}"
+           class="btn btn-light btn-sm shadow-sm"
+           target="_blank">
+          <i class="bi bi-filetype-pdf me-1"></i> Bulk PDF
+        </a> {% endcomment %}
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form method="get" class="row g-3 mb-4">
+        <div class="col-md-4">
+          <label class="form-label">Department</label>
+          <select name="department" class="form-select">
+            <option value="">All</option>
+            {% for dept in departments %}
+              <option value="{{ dept.id }}" {% if dept.id|stringformat:"s" == selected_department %}selected{% endif %}>
+                {{ dept.Department }} - {{ dept.Department_code }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Batch</label>
+          <select name="batch" class="form-select">
+            <option value="">All</option>
+            {% for b in batches %}
+              <option value="{{ b }}" {% if b|stringformat:"s" == selected_batch %}selected{% endif %}>
+                {{ b }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Date</label>
+          <input type="date" name="date_entry" class="form-control" value="{{ date_entry|date:'Y-m-d' }}">
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-funnel-fill me-1"></i> Filter
+          </button>
+        </div>
+      </form>
+
+      <div class="table-responsive">
+        <table id="studentsTable" class="table table-striped table-hover align-middle border">
+          <thead class="table-danger">
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Reg. No</th>
+              <th>Department</th>
+              <th>Batch</th>
+              <th>Discontinued Date</th>
+              <th>Year</th>
+              <th>TC Issued</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for student in students %}
+              <tr id="row-{{ student.id }}">
+                <td>{{ forloop.counter }}</td>
+                <td>{{ student.student.name }}</td>
+                <td>{{ student.student.reg_no }}</td>
+                <td>{{ student.department.degree_department }}</td>
+                <td>{{ student.student.batch }}</td>
+                <td>{{ student.discontinued_date|date:"d-m-Y" }}</td>
+                <td>{{ student.year_of_discontinuation }}</td>
+                <td>
+                  {% if student.tc_issued == "Yes" %}
+                    <span class="badge bg-success">Yes</span>
+                  {% else %}
+                    <span class="badge bg-danger">No</span>
+                  {% endif %}
+                </td>
+
+                <td class="text-center">
+                  <button type="button"
+                          class="btn btn-danger btn-sm me-1"
+                          data-bs-toggle="modal"
+                          data-bs-target="#tcModal"
+                          data-id="{{ student.id }}"
+                          data-name="{{ student.student.name }}"
+                          data-reg="{{ student.student.reg_no }}"
+                          data-requested-date="{{ student.tc_requested_date|date:'Y-m-d'|default:'' }}"
+                          data-tc-issued="{{ student.tc_issued|default:'No' }}"
+                          data-conduct="{{ student.conduct|default:'' }}"
+                          data-remarks="{{ student.remarks|default:'' }}">
+                    <i class="bi bi-pencil-square me-1"></i>
+                    {% if student.tc_requested_date and student.tc_issued and student.conduct %}
+                      Edit
+                    {% else %}
+                      Enter
+                    {% endif %}
+                  </button>
+
+                  {% if student.tc_requested_date and student.tc_issued == "Yes" and student.conduct %}
+                    <a href="{% url 'generate_discontinue_transfer_certificate_pdf' student.id %}?date_entry={{ date_entry }}"
+                       class="btn btn-primary btn-sm"
+                       target="_blank">
+                      <i class="bi bi-filetype-pdf me-1"></i> PDF
+                    </a>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="9" class="text-center text-muted py-3">
+                  No discontinued students found.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="tcModal" tabindex="-1" aria-labelledby="tcModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="tcModalLabel">
+          <i class="bi bi-file-earmark-x me-2"></i>
+          Discontinued Transfer Certificate Details
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="tcForm">
+          <input type="hidden" id="student_id" name="student_id">
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Student Name</label>
+              <input type="text" id="student_name" class="form-control" readonly>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Register No</label>
+              <input type="text" id="student_reg" class="form-control" readonly>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">TC Requested Date</label>
+              <input type="date"
+                     id="tc_requested_date"
+                     name="tc_requested_date"
+                     class="form-control"
+                     required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">TC Issued</label>
+              <select id="tc_issued"
+                      name="tc_issued"
+                      class="form-select"
+                      required>
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Character and Conduct</label>
+              <select id="conduct"
+                      name="conduct"
+                      class="form-select"
+                      required>
+                <option value="">Select</option>
+                <option value="Good">Good</option>
+                <option value="Average">Average</option>
+                <option value="Bad">Bad</option>
+              </select>
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label">Remarks</label>
+              <textarea id="remarks"
+                        name="remarks"
+                        class="form-control"
+                        rows="3"
+                        placeholder="Enter remarks if any"></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer d-flex justify-content-between">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+
+        <button type="button" class="btn btn-danger" id="saveTcBtn">
+          <i class="bi bi-save me-1"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+$(document).ready(function() {
+  $('#studentsTable').DataTable({
+    language: {
+      emptyTable: "No discontinued students available",
+      zeroRecords: "No matching records found"
+    },
+    ordering: true,
+    pageLength: 25,
+    responsive: true,
+    pagingType: "simple_numbers"
+  });
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  $('#tcModal').on('show.bs.modal', function(event) {
+    const button = $(event.relatedTarget);
+
+    const studentId = button.data('id');
+    const studentName = button.data('name');
+    const studentReg = button.data('reg');
+    const requestedDate = button.data('requested-date');
+    const tcIssued = button.data('tc-issued');
+    const conduct = button.data('conduct');
+    const remarks = button.data('remarks');
+
+    $('#student_id').val(studentId);
+    $('#student_name').val(studentName);
+    $('#student_reg').val(studentReg);
+
+    $('#tc_requested_date').val(requestedDate || todayStr);
+    $('#tc_issued').val(tcIssued || 'No');
+    $('#conduct').val(conduct || '');
+    $('#remarks').val(remarks || '');
+  });
+
+  $('#saveTcBtn').click(function() {
+    const studentId = $('#student_id').val();
+
+    if (!studentId) {
+      alert('Student ID missing.');
+      return;
+    }
+
+    if (!$('#tc_requested_date').val()) {
+      alert('TC Requested Date is required.');
+      return;
+    }
+
+    if (!$('#tc_issued').val()) {
+      alert('Please select TC Issued.');
+      return;
+    }
+
+    if (!$('#conduct').val()) {
+      alert('Please select Character and Conduct.');
+      return;
+    }
+
+    const saveBtn = $(this);
+    saveBtn.prop('disabled', true).html('<i class="bi bi-hourglass-split me-1"></i> Saving...');
+
+    const saveUrlTemplate = "{% url 'save_discontinue_tc_details' 0 %}";
+    const ajaxUrl = saveUrlTemplate.replace('0', studentId);
+
+    $.ajax({
+      url: ajaxUrl,
+      method: 'POST',
+      data: $('#tcForm').serialize(),
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      success: function(res) {
+        window.location.reload();
+      },
+      error: function(xhr) {
+        window.location.reload();
+      },
+      complete: function() {
+        saveBtn.prop('disabled', false).html('<i class="bi bi-save me-1"></i> Save');
+        $('#tcModal').modal('hide');
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open');
+      }
+    });
+  });
+});
+</script>
+
+{% endblock %}

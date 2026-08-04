@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Booking Details - {{ application.booking_id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-file-alt me-3"></i>Booking Details
+                </h1>
+                <p class="page-subtitle">{{ application.booking_id }}</p>
+            </div>
+            <div>
+                <a href="{% url 'shb_applications' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Applications
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Application Details -->
+        <div class="col-lg-8">
+            <!-- Status Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Application Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> 
+                                {% if application.status == 'pending' %}
+                                <span class="badge bg-warning">Pending Approval</span>
+                                {% elif application.status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                                {% elif application.status == 'rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Submitted:</strong> {{ application.created_at|date:"d M Y, g:i A" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            {% if application.approved_by %}
+                            <p><strong>Approved By:</strong> {{ application.approved_by.username }}</p>
+                            <p><strong>Approval Date:</strong> {{ application.approval_date|date:"d M Y, g:i A" }}</p>
+                            {% endif %}
+                            {% if application.rejection_reason %}
+                            <p><strong>Rejection Reason:</strong> {{ application.rejection_reason }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Faculty Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Faculty Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> {{ application.faculty_name }}</p>
+                            <p><strong>Email:</strong> {{ application.faculty_email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Phone:</strong> {{ application.faculty_phone }}</p>
+                            <p><strong>Department:</strong> {{ application.department.Department }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>Event Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Event Name:</strong> {{ application.event_name }}</p>
+                            <p><strong>Event Type:</strong> {{ application.get_event_type_display }}</p>
+                            <p><strong>Target Audience:</strong> {{ application.target_audience|default:"Not specified" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Date:</strong> {{ application.booking_date|date:"d M Y" }}</p>
+                            <p><strong>Time:</strong> {{ application.start_time|time:"g:i A" }} - {{ application.end_time|time:"g:i A" }}</p>
+                            <p><strong>Expected Attendees:</strong> {{ application.expected_attendees }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <p><strong>Description/Purpose:</strong></p>
+                        <p class="text-muted">{{ application.event_description }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guest Information -->
+            {% if application.has_guest_speaker %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-tie me-2"></i>Guest Speaker / Chief Guest
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> {{ application.guest_name }}</p>
+                            <p><strong>Designation:</strong> {{ application.guest_designation }}</p>
+                            <p><strong>Organization:</strong> {{ application.guest_organization }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Email:</strong> {{ application.guest_email|default:"Not provided" }}</p>
+                            <p><strong>Phone:</strong> {{ application.guest_phone|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Hall & Requirements -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-door-open me-2"></i>Hall & Requirements
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Preferred Hall:</strong> {{ application.get_preferred_hall_display }}</p>
+                    
+                    <p><strong>Technical Requirements:</strong></p>
+                    <div class="mb-3">
+                        {% if application.needs_projector %}<span class="badge bg-info me-1">Projector</span>{% endif %}
+                        {% if application.needs_microphone %}<span class="badge bg-info me-1">Microphone</span>{% endif %}
+                        {% if application.needs_sound_system %}<span class="badge bg-info me-1">Sound System</span>{% endif %}
+                        {% if application.needs_video_conferencing %}<span class="badge bg-info me-1">Video Conferencing</span>{% endif %}
+                        {% if not application.needs_projector and not application.needs_microphone and not application.needs_sound_system and not application.needs_video_conferencing %}
+                        <span class="text-muted">None</span>
+                        {% endif %}
+                    </div>
+
+                    {% if application.needs_refreshments %}
+                    <p><strong>Refreshments:</strong></p>
+                    <p class="text-muted">{{ application.refreshment_details|default:"Required" }}</p>
+                    {% endif %}
+
+                    {% if application.special_requirements %}
+                    <p><strong>Special Requirements:</strong></p>
+                    <p class="text-muted">{{ application.special_requirements }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval Sidebar -->
+        <div class="col-lg-4">
+            <!-- Approval Actions -->
+            {% if application.status == 'pending' %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-check-circle me-2"></i>Approval Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{% url 'approve_shb_application' application.booking_id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Comments (Optional)</label>
+                            <textarea name="comments" class="form-control" rows="3" placeholder="Add your comments..."></textarea>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" name="action" value="approve" class="btn btn-success">
+                                <i class="fas fa-check me-2"></i>Approve
+                            </button>
+                            <button type="submit" name="action" value="reject" class="btn btn-danger">
+                                <i class="fas fa-times me-2"></i>Reject
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Approval History -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Approval History
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="approval-timeline">
+                        {% for approval in approvals %}
+                        <div class="timeline-item {% if approval.status == 'approved' %}approved{% elif approval.status == 'rejected' %}rejected{% else %}pending{% endif %}">
+                            <div class="timeline-marker">
+                                {% if approval.status == 'approved' %}
+                                <i class="fas fa-check"></i>
+                                {% elif approval.status == 'rejected' %}
+                                <i class="fas fa-times"></i>
+                                {% else %}
+                                <i class="fas fa-clock"></i>
+                                {% endif %}
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-header">
+                                    <strong>Level {{ approval.approval_step.approval_level }}</strong>
+                                    <span class="badge 
+                                        {% if approval.status == 'approved' %}bg-success
+                                        {% elif approval.status == 'rejected' %}bg-danger
+                                        {% else %}bg-warning{% endif %}">
+                                        {{ approval.get_status_display }}
+                                    </span>
+                                </div>
+                                <div class="timeline-role">
+                                    {{ approval.approval_step.get_approver_role_name }}
+                                </div>
+                                {% if approval.approver %}
+                                <div class="timeline-approver">
+                                    <i class="fas fa-user me-1"></i>{{ approval.approver.username }}
+                                </div>
+                                {% endif %}
+                                {% if approval.approved_at %}
+                                <div class="timeline-date">
+                                    <i class="fas fa-calendar me-1"></i>{{ approval.approved_at|date:"d M Y, g:i A" }}
+                                </div>
+                                {% endif %}
+                                {% if approval.comments %}
+                                <div class="timeline-comments">
+                                    <i class="fas fa-comment me-1"></i>{{ approval.comments }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-3 text-muted">
+                            <i class="fas fa-info-circle me-2"></i>No approval workflow configured
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.page-subtitle {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 12px;
+}
+
+.approval-timeline {
+    padding: 1rem;
+}
+
+.timeline-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border-left: 3px solid #e2e8f0;
+    margin-left: 1rem;
+    position: relative;
+}
+
+.timeline-item.approved {
+    border-left-color: #10b981;
+}
+
+.timeline-item.rejected {
+    border-left-color: #ef4444;
+}
+
+.timeline-item.pending {
+    border-left-color: #f59e0b;
+}
+
+.timeline-marker {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 3px solid #e2e8f0;
+    position: absolute;
+    left: -18px;
+    top: 1rem;
+}
+
+.timeline-item.approved .timeline-marker {
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+
+.timeline-item.rejected .timeline-marker {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
+}
+
+.timeline-item.pending .timeline-marker {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
+}
+
+.timeline-content {
+    flex: 1;
+    padding-left: 2rem;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-role {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.timeline-approver, .timeline-date, .timeline-comments {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+}
+
+.timeline-comments {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: #f8fafc;
+    border-radius: 6px;
+    color: #475569;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,750 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<style>
+  .college-data-page {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .college-data-shell {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .report-header {
+    max-width: 1400px;
+    margin: 0 auto 2rem auto;
+    text-align: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    border-radius: 16px;
+    color: white;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .report-title {
+    flex: 1;
+  }
+
+  .report-title h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.5px;
+    color: white;
+  }
+
+  .report-title p {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0;
+    color: white;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .print-btn {
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 12px;
+    padding: 0.65rem 1rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 42px;
+    transition: all 0.2s ease;
+  }
+
+  .print-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+  }
+
+  .export-menu {
+    position: relative;
+  }
+
+  .export-dropdown {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    right: 0;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+    border: 1px solid #e2e8f0;
+    padding: 0.35rem;
+    min-width: 190px;
+    display: none;
+    z-index: 20;
+  }
+
+  .export-dropdown.open {
+    display: block;
+  }
+
+  .export-dropdown button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.75rem;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease;
+  }
+
+  .export-dropdown button:hover {
+    background: #f1f5f9;
+  }
+
+  .filter-panel {
+    background: white;
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f1f5f9;
+  }
+
+  .filter-grid {
+    display: grid;
+    grid-template-columns: minmax(240px, 1.3fr) repeat(2, minmax(160px, 0.7fr)) auto;
+    gap: 0.85rem;
+    align-items: end;
+  }
+
+  .filter-field label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .filter-field select {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    min-height: 44px;
+    color: #1e293b;
+    background: #fff;
+    transition: all 0.3s ease;
+  }
+
+  .filter-field select:focus {
+    border-color: #1a4b8c;
+    box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+    outline: none;
+  }
+
+  .filter-actions {
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .filter-btn,
+  .reset-btn {
+    min-height: 44px;
+    border-radius: 12px;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    white-space: nowrap;
+  }
+
+  .filter-btn {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+  }
+
+  .filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+  }
+
+  .reset-btn {
+    background: #f1f5f9;
+    color: #475569;
+    border: none;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .reset-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+  }
+
+  .summary-strip {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .summary-item {
+    flex: 1;
+    min-width: 170px;
+    background: white;
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f1f5f9;
+    transition: all 0.3s ease;
+  }
+
+  .summary-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  .summary-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex: 0 0 auto;
+  }
+
+  .summary-icon.students { background: #dbeafe; color: #1d4ed8; }
+  .summary-icon.teaching { background: #d1fae5; color: #059669; }
+  .summary-icon.staff { background: #fef3c7; color: #d97706; }
+  .summary-icon.other { background: #f1f5f9; color: #475569; }
+
+  .summary-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #64748b;
+  }
+
+  .summary-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1;
+    margin-top: 0.35rem;
+  }
+
+  .data-section {
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+  }
+
+  .section-heading {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .section-heading h2 {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #1a4b8c;
+    margin: 0;
+  }
+
+  .section-count {
+    color: #64748b;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    background: #fff;
+  }
+
+  .report-table {
+    width: 100%;
+    min-width: 980px;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+  }
+
+  .staff-table {
+    min-width: 620px;
+  }
+
+  .report-table th {
+    background: #f8fafc;
+    color: #1a4b8c;
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.85rem 0.65rem;
+    border-bottom: 2px solid #e2e8f0;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .report-table td {
+    padding: 0.75rem 0.65rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    color: #374151;
+    font-size: 0.84rem;
+    text-align: center;
+  }
+
+  .report-table tbody tr {
+    transition: all 0.2s ease;
+  }
+
+  .report-table tbody tr:hover {
+    background: rgba(26, 75, 140, 0.03);
+  }
+
+  .report-table .dept-cell {
+    font-weight: 700;
+    color: #1e293b;
+    text-align: left;
+    white-space: nowrap;
+    min-width: 210px;
+  }
+
+  .report-table .total-row td,
+  .report-table .total-row th {
+    font-weight: 800;
+    background: #f8fafc;
+    color: #1e293b;
+  }
+
+  .report-table .grand-row td,
+  .report-table .grand-row th {
+    font-weight: 900;
+    background: #eaf2fb;
+    color: #0f172a;
+  }
+
+  .empty-state {
+    padding: 1.25rem 1.5rem;
+    color: #64748b;
+    background: white;
+  }
+
+  @media (max-width: 900px) {
+    .college-data-page {
+      padding: 1rem;
+    }
+
+    .report-header {
+      flex-direction: column;
+    }
+
+    .filter-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .filter-actions {
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .summary-item {
+      min-width: 100%;
+    }
+
+    .report-title h1 {
+      font-size: 1.35rem;
+    }
+  }
+
+  @media print {
+    .main-header,
+    .sidebar,
+    .header-actions,
+    .filter-panel,
+    .footer {
+      display: none !important;
+    }
+
+    .college-data-page {
+      background: #fff;
+      padding: 0;
+    }
+
+    .college-data-shell {
+      max-width: none;
+    }
+
+    .data-section {
+      box-shadow: none;
+      border: 0;
+    }
+
+    .table-wrap {
+      overflow: visible;
+    }
+
+    .report-table {
+      min-width: 0;
+      border-collapse: collapse;
+      page-break-inside: avoid;
+    }
+
+    .report-table th,
+    .report-table td {
+      border: 1px solid #111827;
+      font-size: 8pt;
+      padding: 0.22rem;
+    }
+  }
+</style>
+
+<div class="college-data-page">
+  <div class="college-data-shell">
+    <header class="report-header">
+      <div class="report-title">
+        <h1>College Data Report</h1>
+        <p>Current students, teaching faculty, and staff strength from database records. Generated on {{ generated_at|date:"d M Y, h:i A" }}.</p>
+      </div>
+      <div class="header-actions">
+        <div class="export-menu">
+          <button type="button" class="print-btn" id="exportToggle" aria-haspopup="true" aria-expanded="false">
+            <i class="fa-solid fa-file-export"></i>
+            Export
+            <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem;"></i>
+          </button>
+          <div class="export-dropdown" id="exportDropdown" role="menu">
+            <button type="button" role="menuitem" onclick="exportCollegeData('excel')">
+              <i class="fa-solid fa-file-excel" style="color:#1d7d46;"></i>
+              Export to Excel
+            </button>
+            <button type="button" role="menuitem" onclick="exportCollegeData('pdf')">
+              <i class="fa-solid fa-file-pdf" style="color:#c0392b;"></i>
+              Export to PDF
+            </button>
+          </div>
+        </div>
+        <button type="button" class="print-btn" onclick="window.print()">
+          <i class="fa-solid fa-print"></i>
+          Print
+        </button>
+      </div>
+    </header>
+
+    <form method="get" class="filter-panel">
+      <div class="filter-grid">
+        <div class="filter-field">
+          <label for="department">Department</label>
+          <select name="department" id="department">
+            <option value="">All Departments</option>
+            {% for department in filter_departments %}
+              {% with department_id=department.id|stringformat:"s" %}
+                <option value="{{ department.id }}" {% if filters.department == department_id %}selected{% endif %}>
+                  {{ department.Department }}
+                </option>
+              {% endwith %}
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label for="year">Student Year</label>
+          <select name="year" id="year">
+            <option value="">All Years</option>
+            {% for year, label in year_headers %}
+              <option value="{{ year }}" {% if filters.year == year %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label for="gender">Gender</label>
+          <select name="gender" id="gender">
+            <option value="">All Genders</option>
+            <option value="male" {% if filters.gender == "male" %}selected{% endif %}>Male</option>
+            <option value="female" {% if filters.gender == "female" %}selected{% endif %}>Female</option>
+            <option value="other" {% if filters.gender == "other" %}selected{% endif %}>Other / Not Set</option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button type="submit" class="filter-btn">
+            <i class="fa-solid fa-filter"></i>
+            Apply
+          </button>
+          <a href="?" class="reset-btn">
+            <i class="fa-solid fa-rotate-left"></i>
+            Reset
+          </a>
+        </div>
+      </div>
+    </form>
+
+    <section class="summary-strip" aria-label="College strength summary">
+      <div class="summary-item">
+        <div class="summary-icon students"><i class="fa-solid fa-user-graduate"></i></div>
+        <div>
+          <div class="summary-label">Current Students</div>
+          <div class="summary-value">{{ student_total }}</div>
+        </div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-icon teaching"><i class="fa-solid fa-chalkboard-user"></i></div>
+        <div>
+          <div class="summary-label">Teaching Faculty</div>
+          <div class="summary-value">{{ teaching_total }}</div>
+        </div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-icon staff"><i class="fa-solid fa-users-gear"></i></div>
+        <div>
+          <div class="summary-label">Staff</div>
+          <div class="summary-value">{{ staff_total }}</div>
+        </div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-icon other"><i class="fa-solid fa-circle-question"></i></div>
+        <div>
+          <div class="summary-label">Other / Not Set Gender</div>
+          <div class="summary-value">{{ other_gender_total }}</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="data-section">
+      <div class="section-heading">
+        <h2>Current Student Strength</h2>
+        <div class="section-count">Total {{ student_total }}</div>
+      </div>
+
+      {% if student_rows %}
+        <div class="table-wrap">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th rowspan="2">Department</th>
+                {% for year, label in year_headers %}
+                  <th colspan="2">{{ label }}</th>
+                {% endfor %}
+                <th rowspan="2">Total</th>
+                <th rowspan="2">Total Male</th>
+                <th rowspan="2">Total Female</th>
+              </tr>
+              <tr>
+                {% for year, label in year_headers %}
+                  <th>Male</th>
+                  <th>Female</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in student_rows %}
+                <tr>
+                  <td class="dept-cell">{{ row.department }}</td>
+                  {% for year in row.years %}
+                    <td>{{ year.male }}</td>
+                    <td>{{ year.female }}</td>
+                  {% endfor %}
+                  <td>{{ row.total.total }}</td>
+                  <td>{{ row.total.male }}</td>
+                  <td>{{ row.total.female }}</td>
+                </tr>
+              {% endfor %}
+              <tr class="total-row">
+                <th class="dept-cell">Sub Total</th>
+                {% for year in student_year_totals %}
+                  <td>{{ year.male }}</td>
+                  <td>{{ year.female }}</td>
+                {% endfor %}
+                <td>{{ student_grand_total.total }}</td>
+                <td>{{ student_grand_total.male }}</td>
+                <td>{{ student_grand_total.female }}</td>
+              </tr>
+              <tr class="grand-row">
+                <th class="dept-cell">Total</th>
+                {% for year in student_year_totals %}
+                  <td colspan="2">{{ year.total }}</td>
+                {% endfor %}
+                <td>{{ student_grand_total.total }}</td>
+                <td colspan="2">{{ student_grand_total.total }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">No active student records found.</div>
+      {% endif %}
+    </section>
+
+    <section class="data-section">
+      <div class="section-heading">
+        <h2>Teaching Faculty Strength</h2>
+        <div class="section-count">Total {{ teaching_total }}</div>
+      </div>
+
+      {% if teaching_rows %}
+        <div class="table-wrap">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th rowspan="2">Department</th>
+                {% for designation in teaching_designations %}
+                  <th colspan="2">{{ designation }}</th>
+                {% endfor %}
+                <th colspan="2">Department</th>
+                <th rowspan="2">Total</th>
+              </tr>
+              <tr>
+                {% for designation in teaching_designations %}
+                  <th>Male</th>
+                  <th>Female</th>
+                {% endfor %}
+                <th>Male</th>
+                <th>Female</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in teaching_rows %}
+                <tr>
+                  <td class="dept-cell">{{ row.department }}</td>
+                  {% for designation in row.designations %}
+                    <td>{{ designation.male }}</td>
+                    <td>{{ designation.female }}</td>
+                  {% endfor %}
+                  <td>{{ row.total.male }}</td>
+                  <td>{{ row.total.female }}</td>
+                  <td>{{ row.total.total }}</td>
+                </tr>
+              {% endfor %}
+              <tr class="grand-row">
+                <th class="dept-cell">Total</th>
+                {% for designation in teaching_total_row.designations %}
+                  <td>{{ designation.male }}</td>
+                  <td>{{ designation.female }}</td>
+                {% endfor %}
+                <td>{{ teaching_total_row.total.male }}</td>
+                <td>{{ teaching_total_row.total.female }}</td>
+                <td>{{ teaching_total_row.total.total }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">No teaching faculty records found.</div>
+      {% endif %}
+    </section>
+
+    <section class="data-section">
+      <div class="section-heading">
+        <h2>Staff Strength</h2>
+        <div class="section-count">Total {{ staff_total }}</div>
+      </div>
+
+      {% if staff_rows %}
+        <div class="table-wrap">
+          <table class="report-table staff-table">
+            <thead>
+              <tr>
+                <th>Staff Category</th>
+                <th>Male</th>
+                <th>Female</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in staff_rows %}
+                <tr>
+                  <td class="dept-cell">{{ row.department }}</td>
+                  <td>{{ row.male }}</td>
+                  <td>{{ row.female }}</td>
+                  <td>{{ row.total }}</td>
+                </tr>
+              {% endfor %}
+              <tr class="grand-row">
+                <th class="dept-cell">Total</th>
+                <td>{{ staff_grand_total.male }}</td>
+                <td>{{ staff_grand_total.female }}</td>
+                <td>{{ staff_grand_total.total }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">No staff records found.</div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var toggle = document.getElementById("exportToggle");
+    var dropdown = document.getElementById("exportDropdown");
+    if (!toggle || !dropdown) return;
+
+    toggle.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var open = dropdown.classList.toggle("open");
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+
+    document.addEventListener("click", function (e) {
+      if (!dropdown.contains(e.target) && e.target !== toggle) {
+        dropdown.classList.remove("open");
+        toggle.setAttribute("aria-expanded", "false");
+      }
+    });
+  })();
+
+  function exportCollegeData(format) {
+    var params = new URLSearchParams(window.location.search);
+    params.set("export", format);
+    window.location.href = window.location.pathname + "?" + params.toString();
+  }
+</script>
+
+{% endblock %}

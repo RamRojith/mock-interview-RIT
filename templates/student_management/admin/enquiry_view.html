@@ -1,0 +1,623 @@
+{% extends "base.html" %}
+{% load authorizer_tags %}
+
+<!DOCTYPE html>
+{% load static %}
+<html>
+    {% block content %}
+<head>
+
+    <title>Enquiry Dashboard</title>
+
+
+
+
+    <style>
+        /* Modern Dashboard Styling */
+        #main-content {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            padding: 2rem;
+            background-color: #f8f9fa;
+        }
+        
+        /* Header Styling */
+        header {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        /* Card Styling */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-header {
+            font-weight: 600;
+            border-radius: 10px 10px 0 0 !important;
+            padding: 1rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .count-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .bg-warning {
+            background-color: #ffc107 !important;
+        }
+        
+        .bg-info {
+            background-color: #17a2b8 !important;
+        }
+        
+        .bg-success {
+            background-color: #28a745 !important;
+        }
+        
+        /* Form Styling */
+        .fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .availability-input-field {
+            margin-bottom: 1rem;
+        }
+        
+        .availability-input-field label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .form-control, .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        
+        /* Custom Columns Section */
+        #customised_Column {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin: 2rem 0;
+        }
+        
+        #customised_Column h3 {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        #customised_Column table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        #customised_Column th, #customised_Column td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        #customised_Column th {
+            font-weight: 600;
+            background-color: #f8f9fa;
+        }
+        
+        /* Filter Button */
+        #filterButton {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        #filterButton:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Table Styling */
+        .table-responsive {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .table__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .input-group {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+        }
+        
+        .input-group img {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 18px;
+            opacity: 0.7;
+        }
+        
+        .export__file {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .export__file a {
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        /* Main Table Styling */
+        #example {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        #example thead th {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+        }
+        
+        #example tbody td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle;
+        }
+        
+        #example tbody tr:hover {
+            background-color: rgba(44, 62, 80, 0.03);
+        }
+        
+        /* Editable Elements */
+        .editable-select, .editable-input {
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .editable-select:hover, .editable-input:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .update-select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        
+        /* Button Styling */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
+        .btn-sm {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.85rem;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0069d9;
+            transform: translateY(-2px);
+        }
+        
+        /* Approval Status */
+        .approval-status {
+            font-weight: 500;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .fields {
+                grid-template-columns: 1fr;
+            }
+            
+            .table__header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .input-group {
+                width: 100%;
+            }
+        }
+        </style>
+    </head>
+      <body>
+
+<div class="container mt-5" id="main-content">
+
+    <div class="row">
+
+            <header>Filter Form</header>
+            <form method="POST" autocomplete="off" enctype="multipart/form-data" id="filter">
+                {% csrf_token %}
+                <div class="form first">
+                    <div class="details personal">
+
+                        <div class="row">
+                            <div class="col-md-3 my-2">
+                                <div class="card text-center">
+                                    <div class="card-header bg-warning text-dark">
+                                        Total Enquiries
+                                    </div>
+                                    <div class="card-body">
+                                        <span class="count-value">{{ total_enquiry }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                    
+                            <!-- Program of Study Cards -->
+                            {% for item in program_of_study_counts %}
+                            <div class="col-md-3 my-2">
+                                <div class="card text-center">
+                                    <div class="card-header bg-info text-white">
+                                        {{ item.program_of_study }}
+                                    </div>
+                                    <div class="card-body">
+                                        <span class="count-value">{{ item.count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                    
+                            <!-- Mode Cards -->
+                            {% for item in mode_counts %}
+                            <div class="col-md-3 my-2">
+                                <div class="card text-center">
+                                    <div class="card-header bg-success text-white">
+                                        {{ item.mode }}
+                                    </div>
+                                    <div class="card-body">
+                                        <span class="count-value">{{ item.count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="fields">
+                            <div class="availability-input-field">
+                                <label for="start_date">Start Date:</label>
+                                <input type="date" name="start_date" class="form-control">
+                            </div>  
+                            <div class="availability-input-field">
+                                <label for="end_date">End Date:</label>
+                                <input type="date" name="end_date" class="form-control">
+                            </div>
+                            <div class="availability-input-field">
+                                <label for="program">Program</label>
+                                <select name="second_choice" class="form-control"  required>
+                                    <option  value="" disabled hidden selected>Select Program</option>
+                                {% Program_data as program %}
+                                  {% for dept in program %}
+                                  <option value="{{ dept.program_code }}">{{ dept.program_name }}</option>
+                                  {% endfor %}   
+                                  
+                                </select>
+                            </div>
+                            <div class="availability-input-field">
+                                <label for="program_of_study">Programme of Study</label>
+                                <select  name="program_of_study" class="form-control">
+                                    <option selected disabled value="">Choose Programme of Study...</option>
+                                    <option value="Undergraduate">Undergraduate</option>
+                                    <option value="Postgraduate">Postgraduate</option>
+                                </select>
+                            </div>
+                            <div class="availability-input-field">
+                                <label for="mode">Mode of Study</label>
+                                <select  name="mode" class="form-control">
+                                    <option selected disabled value="">Choose Programme of Study...</option>
+                                    <option value="Online">Online</option>
+                                    <option value="Regular">Regular</option>
+                                </select>
+                            </div>
+
+                            <div class="availability-input-field">
+                                <label>Column</label>
+                                <select name="Column_type" id="columnType" class="form-control" required>
+                                    <option value="" hidden>Select Column Type</option>
+                                    <option value="all">All Columns</option>
+                                    <option value="customised_Column">Customised Columns</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                            <!-- Customised Columns Selection -->
+                            <div id="customised_Column" style="display:none; margin-top: 20px;">
+                                <div id="Column_container">
+                                    <h3>
+                                        Select Columns:
+                                        <input type="checkbox" id="select-all"> Select All
+                                    </h3>
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Column Name</th>
+                                                <th>Select</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for col in columns %}
+                                            <tr>
+                                                <td>{{ col }}</td>
+                                                <td>
+                                                    <input type="checkbox" class="custom-column-checkbox" name="custom_columns" value="{{ col }}"
+                                                    {% if col in selected_columns %}checked{% endif %}>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <script>
+                                document.getElementById("columnType").addEventListener("change", function () {
+                                    let selection = this.value;
+                                    let customColumnsDiv = document.getElementById("customised_Column");
+                                
+                                    if (selection === "customised_Column") {
+                                        customColumnsDiv.style.display = "block";
+                                    } else {
+                                        customColumnsDiv.style.display = "none";
+                                    }
+                                });
+                                
+                                document.getElementById("select-all").addEventListener("click", function () {
+                                    let checkboxes = document.querySelectorAll(".custom-column-checkbox");
+                                    checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+                                });
+                                </script>
+                        
+                            <button type="submit" class="nextBtn" id="filterButton">
+                                <span class="btnText">Filter</span>
+                                <i class="uil uil-navigator"></i>
+                            </button>  
+                        
+                    </div>   
+                </div>
+            </form>
+            
+
+    
+
+            <div class="table-responsive scrollable-table">
+                <table class="table table-bordered">
+                    <main class="table" id="customers_table">
+                        <section class="table__header">
+                            <div class="input-group">
+                                <input type="text" placeholder="Search Data...">
+                                <img src="{% static 'images/search.png' %}" alt="">
+                            </div>
+                            <div class="export__file" style="display: flex;">
+                                <P>Export   </P>
+                                <a href="{% url 'export_enquiry_excel' %}" class="btn btn-success">Export Enquiry Data</a>
+
+                                
+                            </div>
+                        </section>
+                        {% comment %}  {% endcomment %}
+                        <div class="table-responsive scrollable-table">
+                            <table class="table table-bordered">
+                        {% comment %}   {% endcomment %}
+                                <section class="table__body">
+                                    <table id="example" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                {% if data and data|length > 0 %}
+                                                    {% for key in data.0.keys %}
+                                                        <th>{{ key }}</th>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in data %}
+                                                <tr>
+                                                    {% for value in row.values %}
+                                                        <td>{{ value }}</td>
+                                                    {% endfor %}
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </section>
+                            </table>
+                        </div>
+                    </main>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Place at the end of the <body> for better page load performance -->
+<!-- jQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<!-- jQuery UI -->
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+<!-- XLSX for Excel export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+
+<!-- jsPDF for PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
+
+
+<!-- Your Custom JS -->
+<script src="{% static '53_js/multiselect-dropdown.js' %}"></script>
+
+ <script>
+ document.querySelectorAll('input, select').forEach(input => {
+    input.addEventListener('change', () => {
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        const program = document.getElementById('program').value;
+
+        if (startDate && endDate && program) {
+            document.getElementById('filterButton').disabled = false;
+        } else {
+            document.getElementById('filterButton').disabled = true;
+        }
+    });
+});
+
+document.querySelector('.input-group input').addEventListener('keyup', function () {
+    const filter = this.value.toUpperCase();
+    const rows = document.querySelectorAll('#customers_table table tbody tr');
+
+    rows.forEach(row => {
+        const text = row.innerText.toUpperCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+    });
+});
+
+
+document.getElementById('exportExcel').addEventListener('click', function () {
+    const table = document.getElementById('example');
+    const workbook = XLSX.utils.table_to_book(table);
+    XLSX.writeFile(workbook, 'data.xlsx');
+});
+
+
+document.getElementById('exportPdf').addEventListener('click', function () {
+    const doc = new jsPDF();
+    doc.autoTable({ html: '#example' });
+    doc.save('data.pdf');
+});
+</script>
+
+<script>
+    // Parse the field_counts data passed from Django
+    const fieldCounts = JSON.parse('{{ field_counts|safe }}');
+
+    // Function to update the displayed value dynamically
+    function updateFieldCount(selectedField) {
+        const counts = fieldCounts[selectedField]; // Get counts for the selected field
+        const totalCount = counts.reduce((sum, item) => sum + item.count, 0); // Calculate total count
+
+        // Update the displayed value in the frontend
+        const countDisplayElement = document.getElementById('countDisplay');
+        countDisplayElement.innerText = `Total Count for ${selectedField}: ${totalCount}`;
+    }
+
+    // Initial display of total count for 'program'
+    updateFieldCount('program');
+
+    // Update display when the dropdown changes
+    document.getElementById('chartField').addEventListener('change', function () {
+        const selectedField = this.value;
+        updateFieldCount(selectedField);
+    });
+</script>
+{% endblock content %}
+</body>
+</html>

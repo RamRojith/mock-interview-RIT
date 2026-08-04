@@ -1,0 +1,446 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid py-4" style="max-width:1400px;">
+
+  <div class="card shadow rounded-4 border-0">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">
+        <i class="fas fa-calendar-check me-2"></i> Semester Exam Schedules
+      </h4>
+      <a href="{% url 'semester_exam_schedule' %}" class="btn btn-light btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back to Schedule
+      </a>
+    </div>
+
+    <div class="card-body">
+
+      <!-- ================= FILTER FORM ================= -->
+      <form method="get" id="filterForm" class="row g-3 mb-4 align-items-end">
+
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Degree</label>
+          <select class="form-select" id="degree" name="degree">
+            <option value="">All</option>
+            {% for d in degrees %}
+              <option value="{{ d.id }}" {% if selected_degree == d.id|stringformat:"s" %}selected{% endif %}>
+                {{ d.degree }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Department</label>
+          <select class="form-select" id="department" name="department">
+            <option value="">All</option>
+            {% for d in departments %}
+              <option value="{{ d.id }}" {% if selected_department == d.id|stringformat:"s" %}selected{% endif %}>
+                {{ d.Department }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Regulation</label>
+          <select class="form-select" id="regulation" name="regulation">
+            <option value="">All</option>
+            {% for r in regulations %}
+              <option value="{{ r.id }}" {% if selected_regulation == r.id|stringformat:"s" %}selected{% endif %}>
+                {{ r }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Semester</label>
+          <select class="form-select" id="semester" name="semester">
+            <option value="">All</option>
+            {% for s in semesters %}
+              <option value="{{ s }}" {% if selected_semester == s|stringformat:"s" %}selected{% endif %}>
+                {{ s }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+          <button class="btn btn-primary">
+            <i class="fas fa-filter me-1"></i> Apply
+          </button>
+
+          <a href="{% url 'view_semester_exam_schedule' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-rotate-left me-1"></i> Clear
+          </a>
+
+          <!-- ✅ PUBLISH BUTTON -->
+          <button
+  type="button"
+  id="openPublishModalBtn"
+  class="btn btn-success ms-auto">
+  <i class="fas fa-upload me-1"></i> Publish
+</button>
+
+
+          <button
+            type="submit"
+            form="deleteAllForm"
+            class="btn btn-danger"
+            onclick="return confirm('⚠️ This will DELETE ALL Semester Exam Schedules. Continue?');">
+            <i class="fas fa-trash me-1"></i> Delete All
+          </button>
+        </div>
+
+      </form>
+      <!-- ================= END FILTER FORM ================= -->
+
+
+      <!-- ================= DELETE ALL FORM ================= -->
+      <form method="post" action="{% url 'ses_delete_all' %}" id="deleteAllForm">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      </form>
+      <!-- =================================================== -->
+
+
+      <!-- ================= PUBLISH FORM ================= -->
+      <!-- ================= PUBLISH FORM ================= -->
+<form method="post" action="{% url 'ses_publish' %}" id="publishForm">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  
+    <!-- ✅ pass current filter values so publish matches what you are viewing -->
+    <input type="hidden" name="degree" value="{{ selected_degree }}">
+    <input type="hidden" name="department" value="{{ selected_department }}">
+    <input type="hidden" name="regulation" value="{{ selected_regulation }}">
+    <input type="hidden" name="semester" value="{{ selected_semester }}">
+  
+    <!-- ✅ NEW: Exam Session selection (required) -->
+    <input type="hidden" name="examsession" id="publish_examsession_hidden" value="">
+  
+    <!-- ✅ Modal (simple bootstrap modal) -->
+    <div class="modal fade" id="publishModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content rounded-4 shadow">
+  
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title"><i class="fas fa-upload me-2"></i>Publish Schedules</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+  
+          <div class="modal-body">
+            <div class="mb-2 text-muted small">
+              Select Exam Session before publishing.
+            </div>
+  
+            <label class="form-label fw-semibold">Exam Session</label>
+            <select class="form-select" id="publish_examsession_select" required>
+                <option value="">Select Exam Session</option>
+              </select>
+              
+          </div>
+  
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-success" id="confirmPublishBtn">
+              <i class="fas fa-check me-1"></i> Confirm & Publish
+            </button>
+          </div>
+  
+        </div>
+      </div>
+    </div>
+  
+  </form>
+  <!-- =============================================== -->
+  
+      <!-- =============================================== -->
+
+
+      <!-- ================= SESSION BULK UPDATE ================= -->
+      <div class="card border-warning mb-4">
+        <div class="card-header bg-warning fw-semibold">
+          <i class="fas fa-clock me-2"></i> Session Update (Department & Semester)
+        </div>
+
+        <div class="card-body">
+          <form method="post" action="{% url 'ses_bulk_session_update' %}" class="row g-3">
+            {% csrf_token %}
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Department</label>
+              <select class="form-select" name="department" id="bulk_department" required>
+                <option value="">Select Department</option>
+                {% for d in departments %}
+                  <option value="{{ d.id }}">{{ d.Department }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- ✅ Semester is a SELECT loaded from available data -->
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Semester</label>
+              <select class="form-select" name="semester" id="bulk_semester" required disabled>
+                <option value="">Select Semester</option>
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Session</label>
+              <select class="form-select" name="session" required>
+                <option value="FN">FN</option>
+                <option value="AN">AN</option>
+              </select>
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+              <button class="btn btn-dark w-100"
+                onclick="return confirm('Update session for selected department & semester?');">
+                <i class="fas fa-save me-1"></i> Update
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <!-- ======================================================= -->
+
+
+      <!-- ================= TABLE ================= -->
+      {% regroup schedules by department as dept_groups %}
+
+      {% for dept in dept_groups %}
+        <h5 class="fw-bold mt-4">{{ forloop.counter }}. {{ dept.grouper }}</h5>
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover align-middle">
+            <thead class="table-primary">
+              <tr>
+                <th>#</th>
+                <th>Degree</th>
+                <th>Department</th>
+                <th>Regulation</th>
+                <th>Semester</th>
+                <th>Batch</th>
+                <th>Course Code</th>
+                <th>Course Title</th>
+                <th>Date</th>
+                <th>Session</th>
+                <th style="width:150px;">Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for s in dept.list %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ s.degree }}</td>
+                <td>{{ s.department }}</td>
+                <td>{{ s.regulation }}</td>
+                <td>{{ s.semester }}</td>
+                <td>{{ s.batch }}</td>
+                <td>{{ s.course.course_code }}</td>
+                <td>{{ s.course.title }}</td>
+                <td>{{ s.exam_date|date:"d-m-Y" }}</td>
+                <td>
+                  <span class="badge bg-info">{{ s.session }}</span>
+                </td>
+
+                <td>
+                  <div class="d-flex gap-2">
+
+                    <!-- EDIT -->
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-warning ses-edit-btn"
+                      data-id="{{ s.id }}"
+                      data-date="{{ s.exam_date|date:'Y-m-d' }}"
+                      data-session="{{ s.session }}"
+                      data-bs-toggle="modal"
+                      data-bs-target="#editScheduleModal"
+                    >
+                      <i class="fas fa-pen"></i>
+                    </button>
+
+                    <!-- DELETE -->
+                    <form method="post"
+                          action="{% url 'ses_delete' s.id %}"
+                          onsubmit="return confirm('Delete this schedule row?');">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-danger">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </form>
+
+                  </div>
+                </td>
+
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+      {% empty %}
+        <div class="text-center text-muted py-5">No schedules found</div>
+      {% endfor %}
+      <!-- ======================================== -->
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= EDIT MODAL ================= -->
+<div class="modal fade" id="editScheduleModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4 shadow">
+
+      <form method="post" action="{% url 'ses_update' %}">
+        {% csrf_token %}
+
+        <div class="modal-header bg-warning">
+          <h5 class="modal-title">
+            <i class="fas fa-pen me-2"></i>Edit Semester Exam Schedule
+          </h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <input type="hidden" name="id" id="edit_id">
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Exam Date</label>
+            <input type="date" class="form-control" name="exam_date" id="edit_exam_date" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Session</label>
+            <select class="form-select" name="session" id="edit_session" required>
+              <option value="FN">FN</option>
+              <option value="AN">AN</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-warning">
+            <i class="fas fa-save me-1"></i> Update
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(function () {
+  // edit modal fill
+  $(document).on("click", ".ses-edit-btn", function () {
+    $("#edit_id").val($(this).data("id"));
+    $("#edit_exam_date").val($(this).data("date"));
+    $("#edit_session").val($(this).data("session"));
+  });
+
+  // ✅ load semesters for bulk update based on department selection
+  $("#bulk_department").on("change", function () {
+    const deptId = $(this).val();
+    const $sem = $("#bulk_semester");
+
+    $sem.prop("disabled", true).html('<option value="">Loading...</option>');
+
+    if (!deptId) {
+      $sem.html('<option value="">Select Semester</option>');
+      return;
+    }
+
+    $.get("{% url 'ses_semesters_by_department' %}", { department_id: deptId }, function (res) {
+      let html = '<option value="">Select Semester</option>';
+
+      (res.items || []).forEach(x => {
+        html += `<option value="${x.id}">${x.text}</option>`;
+      });
+
+      if (!res.items || res.items.length === 0) {
+        $sem.html('<option value="">No semesters found</option>');
+        $sem.prop("disabled", true);
+        return;
+      }
+
+      $sem.html(html);
+      $sem.prop("disabled", false);
+    }).fail(function () {
+      $sem.html('<option value="">Error loading semesters</option>');
+      $sem.prop("disabled", true);
+    });
+  });
+});
+</script>
+<script>
+    $(function () {
+      // open publish modal instead of direct submit
+      $("#openPublishModalBtn").on("click", function () {
+        // reset selection each time
+        $("#publish_examsession_select").val("");
+        $("#publish_examsession_hidden").val("");
+    
+        const modal = new bootstrap.Modal(document.getElementById("publishModal"));
+        modal.show();
+      });
+    
+      // confirm publish
+      $("#confirmPublishBtn").on("click", function () {
+        const val = $("#publish_examsession_select").val();
+    
+        if (!val) {
+          alert("Please select Exam Session (e.g., November-December 2026 / April-May 2026).");
+          return;
+        }
+    
+        if (!confirm("✅ Publish current schedules into Timetable for: " + val + " ?")) {
+          return;
+        }
+    
+        $("#publish_examsession_hidden").val(val);
+        $("#publishForm").trigger("submit");
+      });
+    });
+    </script>
+    <script>
+        $(function () {
+
+            function loadExamSessions() {
+        
+                const year = new Date().getFullYear();
+        
+                const sessions = [
+                    `November-December ${year}`,
+                    `April-May ${year}`
+                ];
+        
+                let html = '<option value="">Select Exam Session</option>';
+        
+                sessions.forEach(function(s) {
+                    html += `<option value="${s}">${s}</option>`;
+                });
+        
+                $("#publish_examsession_select").html(html);
+            }
+        
+            // Load options whenever modal opens
+            $("#publishModal").on("show.bs.modal", function () {
+                loadExamSessions();
+            });
+        
+        });
+        
+    </script>    
+
+{% endblock %}

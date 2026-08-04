@@ -1,0 +1,730 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+.attendance-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.attendance-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.attendance-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.attendance-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.attendance-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.attendance-portal .card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.attendance-portal .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.attendance-portal .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+}
+
+.attendance-portal .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.attendance-portal .card-body {
+  padding: 2rem;
+}
+
+/* Filter Bar */
+.filter-bar {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+}
+
+.filter-bar .form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a4b8c;
+  margin-bottom: 0.5rem;
+}
+
+.filter-bar .form-control,
+.filter-bar .form-select {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.filter-bar .form-control:focus,
+.filter-bar .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+/* Details Grid */
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.detail-item {
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+  padding: 1rem 1.2rem;
+  border-radius: 14px;
+  border-left: 4px solid #1a4b8c;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-item .label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.detail-item .value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Table Styles */
+.attendance-portal .table-responsive {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+}
+
+.attendance-portal .table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+}
+
+.attendance-portal .table th {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.attendance-portal .table td {
+  padding: 1rem 0.75rem;
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+  color: #374151;
+  font-weight: 500;
+}
+
+.attendance-portal .table tbody tr {
+  transition: all 0.3s ease;
+}
+
+.attendance-portal .table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.03);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.course-code {
+  background: rgba(26, 75, 140, 0.1);
+  color: #1a4b8c;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  display: inline-block;
+}
+
+.course-name {
+  text-align: left !important;
+  font-weight: 500;
+}
+
+/* Badges */
+.attendance-portal .badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.attendance-portal .badge-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.attendance-portal .badge-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+/* Buttons */
+.attendance-portal .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.attendance-portal .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(26, 75, 140, 0.3);
+}
+
+.attendance-portal .btn-outline-primary {
+  border: 2px solid #1a4b8c;
+  color: #1a4b8c;
+  background: transparent;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.attendance-portal .btn-outline-primary:hover {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.attendance-portal .btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.attendance-portal .btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.attendance-portal .btn-secondary {
+  background: #64748b;
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.attendance-portal .btn-secondary:hover {
+  background: #475569;
+  transform: translateY(-2px);
+}
+
+.btn-sm {
+  padding: 0.4rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Comments Card */
+.comments-card {
+  border: 2px solid #10b981;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-top: 2rem;
+}
+
+.comments-card .card-header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+}
+
+.comments-card .card-body {
+  background: #f0fdf4;
+}
+
+.comments-card p {
+  margin: 0;
+  color: #065f46;
+  font-size: 1rem;
+}
+
+/* Section Title */
+.attendance-portal .section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  margin: 2rem 0 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* Empty State */
+.attendance-portal .empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.attendance-portal .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+  color: #1a4b8c;
+}
+
+.attendance-portal .empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Header Actions */
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .attendance-portal .page-header {
+    padding: 1rem;
+  }
+  
+  .attendance-portal .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .attendance-portal .card-body {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .attendance-portal {
+    padding: 1rem;
+  }
+  
+  .attendance-portal .page-header {
+    padding: 0.75rem;
+  }
+  
+  .attendance-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .attendance-portal .card-body {
+    padding: 1.25rem;
+  }
+  
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    margin-top: 1rem;
+  }
+  
+  .btn-sm {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.attendance-portal .card {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+</style>
+
+<div class="attendance-portal">
+  <div class="page-container">
+    <!-- Header -->
+    <div class="page-header">
+      <h1><i class="bi bi-person-badge-fill"></i> Squad Member Reports</h1>
+      <div class="header-subtitle">View and Manage Submitted Reports</div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <form method="get">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Semester</label>
+            <select name="semester" class="form-select">
+              <option value="">All Semesters</option>
+              {% for i in "12345678" %}
+                <option value="{{ i }}" {% if selected_semester == i %}selected{% endif %}>Semester {{ i }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Department</label>
+            <select name="department" class="form-select">
+              <option value="">All Departments</option>
+              {% for dept in departments %}
+                <option value="{{ dept }}" {% if selected_department == dept %}selected{% endif %}>{{ dept }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Search Faculty Name</label>
+            <input type="text" name="search" value="{{ search_name }}" class="form-control" placeholder="Enter faculty name...">
+          </div>
+
+          <div class="col-md-1 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Reported Squad List -->
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="bi bi-table"></i> Reported Squad Members</h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Ref No.</th>
+                <th>Name</th>
+                <th>Faculty ID</th>
+                <th>Designation</th>
+                <th>Department</th>
+                <th>Sem</th>
+                <th>Date</th>
+                <th>IAT</th>
+                <th>Halls</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for squad in reported_squads %}
+              <tr>
+                <td><span class="course-code">{{ squad.appointment_ref }}</span></td>
+                <td class="course-name">{{ squad.faculty_id.name }}</td>
+                <td>{{ squad.faculty_id.faculty_id }}</td>
+                <td>{{ squad.faculty_id.designation }}</td>
+                <td>{{ squad.faculty_id.department }}</td>
+                <td>{{ squad.semester }}</td>
+                <td>{{ squad.date|date:"d-m-Y" }}</td>
+                <td>{{ squad.iat }}</td>
+                <td>{{ squad.no_of_hall }}</td>
+                <td>
+                  <span class="badge {% if squad.reported == 'Reported' %}badge-success{% else %}badge-warning{% endif %}">
+                    <i class="bi {% if squad.reported == 'Reported' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %}"></i>
+                    {{ squad.reported }}
+                  </span>
+                </td>
+                <td>
+                  <a href="?view_ref={{ squad.appointment_ref }}&semester={{ selected_semester }}&department={{ selected_department }}&search={{ search_name }}" 
+                     class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-eye"></i> View
+                  </a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="11">
+                  <div class="empty-state">
+                    <i class="bi bi-inbox-fill"></i>
+                    <p>No reported squads found.</p>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selected Report View -->
+    {% if selected_squad and selected_report %}
+    <div class="card">
+      <div class="card-header">
+        <div class="d-flex flex-wrap justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="bi bi-file-text-fill"></i> 
+            Report Details — {{ selected_squad.faculty_id.name }} ({{ selected_squad.appointment_ref }})
+          </h5>
+          <div class="header-actions">
+            <a href="?view_ref={{ selected_squad.appointment_ref }}&pdf=view" target="_blank" class="btn btn-success btn-sm">
+              <i class="bi bi-file-earmark-pdf"></i> View PDF
+            </a>
+            <a href="?view_ref={{ selected_squad.appointment_ref }}&pdf=download" class="btn btn-success btn-sm">
+              <i class="bi bi-download"></i> Download
+            </a>
+            <a href="{% url 'squad_member_report_view' %}" class="btn btn-secondary btn-sm">
+              <i class="bi bi-arrow-left"></i> Back
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <!-- Squad Details Grid -->
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="label">Designation</span>
+            <span class="value">{{ selected_squad.faculty_id.designation }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Department</span>
+            <span class="value">{{ selected_squad.faculty_id.department }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Semester</span>
+            <span class="value">{{ selected_squad.semester }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Date</span>
+            <span class="value">{{ selected_squad.date }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">IAT</span>
+            <span class="value">{{ selected_squad.iat }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">No. of Halls</span>
+            <span class="value">{{ selected_squad.no_of_hall }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Hall Numbers</span>
+            <span class="value">{{ selected_squad.hall_numbers }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Duration</span>
+            <span class="value">{{ selected_squad.duration }}</span>
+          </div>
+        </div>
+
+        <!-- Observations Table -->
+        <div class="section-title">
+          <i class="bi bi-check-circle-fill"></i> Observation Details
+        </div>
+
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width: 70%">Observation</th>
+                <th style="width: 30%">Response</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="course-name">Seating Arrangement Appropriate?</td>
+                <td>
+                  <span class="badge {% if selected_report.seating_appropriate %}badge-success{% else %}badge-warning{% endif %}">
+                    {{ selected_report.seating_appropriate|yesno:"Yes,No" }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="course-name">Classrooms Neat & Clean?</td>
+                <td>
+                  <span class="badge {% if selected_report.classrooms_clean %}badge-success{% else %}badge-warning{% endif %}">
+                    {{ selected_report.classrooms_clean|yesno:"Yes,No" }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="course-name">Students Seated as per Arrangement?</td>
+                <td>
+                  <span class="badge {% if selected_report.seating_as_arrangement %}badge-success{% else %}badge-warning{% endif %}">
+                    {{ selected_report.seating_as_arrangement|yesno:"Yes,No" }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="course-name">Materials Distributed Properly?</td>
+                <td>
+                  <span class="badge {% if selected_report.materials_distributed %}badge-success{% else %}badge-warning{% endif %}">
+                    {{ selected_report.materials_distributed|yesno:"Yes,No" }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="course-name">Only Permitted Materials Used?</td>
+                <td>
+                  <span class="badge {% if selected_report.only_permitted_materials %}badge-success{% else %}badge-warning{% endif %}">
+                    {{ selected_report.only_permitted_materials|yesno:"Yes,No" }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="course-name">Register Numbers Written?</td>
+                <td>
+                  <span class="badge {% if selected_report.register_no_written %}badge-success{% else %}badge-warning{% endif %}">
+                    {{ selected_report.register_no_written|yesno:"Yes,No" }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="course-name">No Intentional Markings?</td>
+                <td>
+                  <span class="badge {% if selected_report.no_markings_on_paper %}badge-success{% else %}badge-warning{% endif %}">
+                    {{ selected_report.no_markings_on_paper|yesno:"Yes,No" }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="course-name">ID Cards Worn?</td>
+                <td>
+                  <span class="badge {% if selected_report.id_worn %}badge-success{% else %}badge-warning{% endif %}">
+                    {{ selected_report.id_worn|yesno:"Yes,No" }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="course-name">Any Unruly Behaviour?</td>
+                <td>
+                  <span class="badge {% if selected_report.unruly_behaviour %}badge-warning{% else %}badge-success{% endif %}">
+                    {{ selected_report.unruly_behaviour|yesno:"Yes,No" }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="course-name">Exam Rules Followed?</td>
+                <td>
+                  <span class="badge {% if selected_report.followed_rules %}badge-success{% else %}badge-warning{% endif %}">
+                    {{ selected_report.followed_rules|yesno:"Yes,No" }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="course-name">Faculty Actively Monitoring?</td>
+                <td>
+                  <span class="badge {% if selected_report.faculty_present %}badge-success{% else %}badge-warning{% endif %}">
+                    {{ selected_report.faculty_present|yesno:"Yes,No" }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="course-name">Any Faculty Misconduct?</td>
+                <td>
+                  <span class="badge {% if selected_report.faculty_misconduct %}badge-warning{% else %}badge-success{% endif %}">
+                    {{ selected_report.faculty_misconduct|yesno:"Yes,No" }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Comments Section -->
+        {% if selected_report.feedback %}
+        <div class="comments-card">
+          <div class="card-header">
+            <i class="bi bi-chat-dots-fill"></i> Feedback / Comments
+          </div>
+          <div class="card-body">
+            <p class="mb-0">{{ selected_report.feedback }}</p>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+{% endblock %}

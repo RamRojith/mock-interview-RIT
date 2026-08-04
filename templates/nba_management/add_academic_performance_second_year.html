@@ -1,0 +1,495 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4 admin-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header mb-5">
+    <div class="header-content text-center">
+      <h1 class="display-6 fw-bold text-white mb-2">Academic Performance - Second Year</h1>
+      <p class="lead text-white-50"></p>
+    </div>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-xl-12">
+      <div class="card border-0 shadow-lg">
+        <div class="card-header bg-gradient-primary text-white py-4">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+              <div class="header-icon me-3">
+                <i class="fas fa-user-graduate fa-lg"></i>
+              </div>
+              <div>
+                <h4 class="mb-1 fw-bold">Academic Performance Index (API) — Second Year</h4>
+                <p class="mb-0 opacity-75">X = Mean of 2nd year GPA of successful students (10-point) or Mean%/10</p>
+              </div>
+            </div>
+            {% if selected_dept_id and latest_entry %}
+            <div class="status-badge">
+              <span class="badge {% if latest_entry.is_verified %}bg-success{% else %}bg-warning{% endif %} fs-6 px-3 py-2">
+                <i class="fas {% if latest_entry.is_verified %}fa-check-circle{% else %}fa-clock{% endif %} me-2"></i>
+                {% if latest_entry.is_verified %}Verified{% else %}Pending Review{% endif %}
+              </span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          {% if selected_dept_id and latest_entry and latest_entry.admin_remarks %}
+          <div class="alert-container mb-4">
+            <div class="alert alert-info border-0 shadow-sm">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-comment-alt me-3 fs-5 text-primary"></i>
+                <div class="flex-grow-1">
+                  <strong>Admin Remarks:</strong> {{ latest_entry.admin_remarks }}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          <form method="post" id="api2Form" class="needs-validation" novalidate action="{% url 'add_academic_performance_second_year' %}">
+            {% csrf_token %}
+
+            <!-- Selection -->
+            <div class="row mb-5">
+              <div class="col-12">
+                <h5 class="section-title mb-4">
+                  <i class="fas fa-filter me-2 text-primary"></i>Selection Criteria
+                </h5>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group mb-4">
+                  <label class="form-label small fw-semibold text-muted mb-2">
+                    <i class="fas fa-building me-1"></i>DEPARTMENT
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                      <i class="fas fa-university text-primary"></i>
+                    </span>
+                    <select name="department" id="api2_department" class="form-select border-start-0" required>
+                      <option value="">Select Department</option>
+                      {% for dept in departments %}
+                      <option value="{{ dept.id }}"
+                        {% if dept.id|stringformat:"s" == selected_dept_id|stringformat:"s" %}selected{% endif %}>
+                        {{ dept.Department }}
+                      </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group mb-4">
+                  <label class="form-label small fw-semibold text-muted mb-2">
+                    <i class="fas fa-calendar-alt me-1"></i>BATCH (CAY Start Year)
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                      <i class="fas fa-calendar text-primary"></i>
+                    </span>
+                    <select id="api2_cay_start_year" class="form-select border-start-0" required>
+                      <option value="">Select Batch</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Year Cards -->
+              <div class="col-12">
+                <div class="year-cards-container">
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <div class="year-card primary">
+                        <div class="year-badge"><i class="fas fa-layer-group"></i></div>
+                        <div class="year-content">
+                          <div class="year-label">CAYm1</div>
+                          <div class="year-value" id="api2_lbl_caym1">—</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="year-card success">
+                        <div class="year-badge"><i class="fas fa-layer-group"></i></div>
+                        <div class="year-content">
+                          <div class="year-label">CAYm2</div>
+                          <div class="year-value" id="api2_lbl_caym2">—</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="year-card warning">
+                        <div class="year-badge"><i class="fas fa-layer-group"></i></div>
+                        <div class="year-content">
+                          <div class="year-label">CAYm3</div>
+                          <div class="year-value" id="api2_lbl_caym3">—</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Academic Year Range -->
+              <div class="col-12 mt-4">
+                <div class="form-group">
+                  <label class="form-label small fw-semibold text-muted mb-2">
+                    <i class="fas fa-clock me-1"></i>ACADEMIC YEAR RANGE
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                      <i class="fas fa-history text-primary"></i>
+                    </span>
+                    <input type="text" name="academic_year_range" id="api2_academic_year_range"
+                           class="form-control border-start-0"
+                           placeholder="CAYm1 2023-24 / CAYm2 2022-23 / CAYm3 2021-22" readonly>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-section mb-5">
+              <div class="section-header mb-4">
+                <h5 class="section-title">
+                  <i class="fas fa-table me-2 text-primary"></i>Academic Performance (API) — Computation (Second Year)
+                </h5>
+                <p class="section-subtitle mb-0">
+                  X = Mean 2<sup>nd</sup>-year GPA of successful students (10-point) or Mean%/10 • Y = Total successful • Z = Total appeared • API = X×(Y/Z)
+                </p>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                  <thead class="table-dark">
+                    <tr>
+                      <th class="ps-4 text-start" style="width:45%;">Academic Performance</th>
+                      <th class="text-center">
+                        CAYm1<br><small id="api2_th_caym1" class="fw-normal">—</small>
+                      </th>
+                      <th class="text-center">
+                        CAYm2<br><small id="api2_th_caym2" class="fw-normal">—</small>
+                      </th>
+                      <th class="text-center">
+                        CAYm3<br><small id="api2_th_caym3" class="fw-normal">—</small>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="ps-4 text-start">
+                        <strong>X = Mean of 2nd year GPA of all successful students (10-point) or Mean%/10</strong>
+                      </td>
+                      <td><input type="number" name="x_caym1" step="0.01" min="0" max="10" class="form-control text-center" oninput="api2_recalc()"></td>
+                      <td><input type="number" name="x_caym2" step="0.01" min="0" max="10" class="form-control text-center" oninput="api2_recalc()"></td>
+                      <td><input type="number" name="x_caym3" step="0.01" min="0" max="10" class="form-control text-center" oninput="api2_recalc()"></td>
+                    </tr>
+                    <tr>
+                      <td class="ps-4 text-start"><strong>Y = Total no. of successful students</strong></td>
+                      <td><input type="number" name="y_caym1" min="0" step="1" class="form-control text-center" oninput="api2_recalc()"></td>
+                      <td><input type="number" name="y_caym2" min="0" step="1" class="form-control text-center" oninput="api2_recalc()"></td>
+                      <td><input type="number" name="y_caym3" min="0" step="1" class="form-control text-center" oninput="api2_recalc()"></td>
+                    </tr>
+                    <tr>
+                      <td class="ps-4 text-start"><strong>Z = Total no. of students appeared in the examination</strong></td>
+                      <td><input type="number" name="z_caym1" min="0" step="1" class="form-control text-center" oninput="api2_recalc()"></td>
+                      <td><input type="number" name="z_caym2" min="0" step="1" class="form-control text-center" oninput="api2_recalc()"></td>
+                      <td><input type="number" name="z_caym3" min="0" step="1" class="form-control text-center" oninput="api2_recalc()"></td>
+                    </tr>
+                    <tr class="table-active">
+                      <td class="ps-4 text-start"><strong>API = X × (Y / Z)</strong></td>
+                      <td><input class="form-control text-center readonly bg-light" type="text" id="api2_api1_view" readonly></td>
+                      <td><input class="form-control text-center readonly bg-light" type="text" id="api2_api2_view" readonly></td>
+                      <td><input class="form-control text-center readonly bg-light" type="text" id="api2_api3_view" readonly></td>
+                    </tr>
+                    <tr class="table-success">
+                      <td class="ps-4 text-start"><strong>Average API = (API_1 + API_2 + API_3)/3</strong></td>
+                      <td colspan="3"><input class="form-control text-center readonly bg-success text-white" type="text" id="api2_avg_api_view" readonly></td>
+                    </tr>
+                    <tr class="table-primary">
+                      <td class="ps-4 text-start"><strong>Marks Awarded (out of 10)</strong></td>
+                      <td colspan="3"><input class="form-control text-center readonly bg-primary text-white" type="text" id="api2_marks_view" readonly></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Hidden fields -->
+            <input type="hidden" name="caym1_label" id="api2_caym1_label">
+            <input type="hidden" name="caym2_label" id="api2_caym2_label">
+            <input type="hidden" name="caym3_label" id="api2_caym3_label">
+
+            <input type="hidden" name="api_1" id="api2_api1">
+            <input type="hidden" name="api_2" id="api2_api2">
+            <input type="hidden" name="api_3" id="api2_api3">
+            <input type="hidden" name="average_api" id="api2_avg_api">
+            <input type="hidden" name="marks_awarded" id="api2_marks_awarded">
+
+            <!-- Actions -->
+            <div class="action-section">
+              <div class="d-flex gap-3 justify-content-between align-items-center border-top pt-4">
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn btn-primary px-4 py-2">
+                    <i class="fas fa-save me-2"></i>Save API Data
+                  </button>
+                  <button type="button" id="api2_btn_show_past" class="btn btn-outline-primary px-4 py-2">
+                    <i class="fas fa-history me-2"></i>Show Past Submissions
+                  </button>
+                </div>
+                <div class="text-muted small">
+                  <i class="fas fa-info-circle me-1"></i>All calculations are performed automatically
+                </div>
+              </div>
+            </div>
+
+            <!-- Past Panel -->
+            <div id="api2_past_panel" class="mt-4" style="display:none;">
+              <div class="card border-0 bg-light">
+                <div class="card-body">
+                  <h6 class="card-title mb-4">
+                    <i class="fas fa-archive me-2 text-primary"></i>Previous API Submissions (Second Year)
+                  </h6>
+                  <div id="api2_past_cards" class="row g-3"></div>
+                  <div id="api2_past_empty" class="text-center py-4" style="display:none;">
+                    <i class="fas fa-inbox fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">No previous submissions found for this department.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Styles (same system as ER/SR pages) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+<style>
+:root { --primary-blue:#1a56db; --dark-blue:#1e3a8a; --medium-blue:#3b82f6; --light-blue:#dbeafe;
+        --white:#fff; --light-gray:#f8fafc; --border-color:#e2e8f0; --text-primary:#1e293b; --text-secondary:#64748b; }
+.admin-dashboard{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:var(--text-primary);}
+.dashboard-header{background:linear-gradient(135deg,var(--primary-blue),var(--dark-blue));color:#fff;border-radius:16px;
+  padding:3rem 2rem;margin-bottom:2rem;box-shadow:0 4px 6px rgba(0,0,0,.05);}
+.card-header.bg-gradient-primary{background:linear-gradient(135deg,var(--primary-blue),var(--medium-blue))!important;border-bottom:none;}
+.header-icon{width:50px;height:50px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;}
+.section-title{font-size:1.1rem;font-weight:600;color:var(--text-primary);margin-bottom:.5rem;}
+.section-subtitle{color:var(--text-secondary);font-size:.9rem;margin:0;}
+.section-header{border-bottom:2px solid var(--border-color);padding-bottom:1rem;margin-bottom:1.5rem;}
+.form-group{margin-bottom:1rem;}
+.input-group-text{background-color:var(--light-gray);border-color:var(--border-color);transition:.2s;}
+.form-control:focus,.form-select:focus{border-color:var(--medium-blue);box-shadow:0 0 0 .2rem rgba(59,130,246,.1);}
+.year-cards-container{margin:1.5rem 0;}
+.year-card{background:#fff;border-radius:12px;padding:1.5rem;display:flex;align-items:center;gap:1rem;box-shadow:0 2px 8px rgba(0,0,0,.1);
+  border-left:4px solid;transition:.3s;}
+.year-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.15);}
+.year-card.primary{border-left-color:var(--primary-blue);} .year-card.success{border-left-color:#10b981;}
+.year-card.warning{border-left-color:#f59e0b;}
+.year-badge{width:50px;height:50px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.25rem;}
+.year-card.primary .year-badge{background:var(--primary-blue);} .year-card.success .year-badge{background:#10b981;}
+.year-card.warning .year-badge{background:#f59e0b;}
+.year-label{font-size:.875rem;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.25rem;}
+.year-value{font-size:1.5rem;font-weight:700;color:var(--text-primary);}
+.table-section{background:#fff;border-radius:12px;padding:2rem;margin-bottom:2rem;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.table{border-radius:8px;overflow:hidden;}
+.table th{background:linear-gradient(135deg,#374151,#4b5563)!important;color:#fff;border:none;font-weight:600;padding:1rem;}
+.table td{padding:1rem;vertical-align:middle;border-color:var(--border-color);}
+.table input.form-control{border:2px solid var(--border-color);border-radius:6px;padding:.5rem;text-align:center;transition:.2s;}
+.table input.form-control:focus{border-color:var(--medium-blue);box-shadow:0 0 0 .2rem rgba(59,130,246,.1);}
+.table input.readonly{background:var(--light-gray);color:var(--text-secondary);border-color:var(--border-color);cursor:not-allowed;}
+.alert-container .alert{border:none;border-radius:8px;border-left:4px solid;}
+.alert-info{background:linear-gradient(135deg,#dbeafe,#eff6ff);color:#1e40af;border-left-color:var(--primary-blue);}
+.action-section{margin-top:2rem;}
+@media (max-width:768px){
+  .dashboard-header{padding:2rem 1rem;}
+  .card-body{padding:1.5rem!important;}
+  .year-card{flex-direction:column;text-align:center;padding:1rem;}
+  .action-section .d-flex{flex-direction:column;gap:1rem!important;}
+  .action-section .d-flex .btn{width:100%;}
+  .table-responsive{font-size:.875rem;}
+}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+#api2_past_panel{animation:slideDown .3s ease-out;}
+</style>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+/* Endpoints */
+const API2_BATCH_URL = "{% url 'get_batches_by_department' %}";
+const API2_PAST_URL  = "{% url 'get_past_academic_api2_entries' %}";
+
+/* Label helpers */
+function api2_endShort(y){ return String((y+1)%100).padStart(2,'0'); }
+function api2_label(y){ return `${y}-${api2_endShort(y)}`; }
+
+function api2_setYearLabels(cayStart){
+  const th1 = document.getElementById('api2_th_caym1');
+  const th2 = document.getElementById('api2_th_caym2');
+  const th3 = document.getElementById('api2_th_caym3');
+  const l1  = document.getElementById('api2_lbl_caym1');
+  const l2  = document.getElementById('api2_lbl_caym2');
+  const l3  = document.getElementById('api2_lbl_caym3');
+  const ayr = document.getElementById('api2_academic_year_range');
+
+  const h1  = document.getElementById('api2_caym1_label');
+  const h2  = document.getElementById('api2_caym2_label');
+  const h3  = document.getElementById('api2_caym3_label');
+
+  if(!cayStart){
+    [th1,th2,th3,l1,l2,l3].forEach(el=>el.textContent='—');
+    [h1,h2,h3].forEach(el=>el.value='');
+    ayr.value = '';
+    return;
+  }
+  const y = parseInt(cayStart,10);
+  const L1 = api2_label(y-1), L2 = api2_label(y-2), L3 = api2_label(y-3);
+
+  th1.textContent = L1; th2.textContent = L2; th3.textContent = L3;
+  l1.textContent  = L1; l2.textContent  = L2; l3.textContent  = L3;
+
+  h1.value = L1; h2.value = L2; h3.value = L3;
+  ayr.value = `CAYm1 ${L1} / CAYm2 ${L2} / CAYm3 ${L3}`;
+}
+
+/* Math */
+function api2_toNum(v){ return Number(v||0); }
+function api2_fmt(n){ return (isFinite(n)?(Math.round(n*100)/100).toFixed(2):"0.00"); }
+
+function api2_recalc(){
+  const x1 = api2_toNum(document.querySelector('#api2Form [name="x_caym1"]').value);
+  const x2 = api2_toNum(document.querySelector('#api2Form [name="x_caym2"]').value);
+  const x3 = api2_toNum(document.querySelector('#api2Form [name="x_caym3"]').value);
+  const y1 = api2_toNum(document.querySelector('#api2Form [name="y_caym1"]').value);
+  const y2 = api2_toNum(document.querySelector('#api2Form [name="y_caym2"]').value);
+  const y3 = api2_toNum(document.querySelector('#api2Form [name="y_caym3"]').value);
+  const z1 = api2_toNum(document.querySelector('#api2Form [name="z_caym1"]').value);
+  const z2 = api2_toNum(document.querySelector('#api2Form [name="z_caym2"]').value);
+  const z3 = api2_toNum(document.querySelector('#api2Form [name="z_caym3"]').value);
+
+  const a1 = z1 ? x1 * (y1 / z1) : 0;
+  const a2 = z2 ? x2 * (y2 / z2) : 0;
+  const a3 = z3 ? x3 * (y3 / z3) : 0;
+  const avg = (a1 + a2 + a3) / 3;
+  const marks = avg; // out of 10
+
+  document.getElementById('api2_api1_view').value    = api2_fmt(a1);
+  document.getElementById('api2_api2_view').value    = api2_fmt(a2);
+  document.getElementById('api2_api3_view').value    = api2_fmt(a3);
+  document.getElementById('api2_avg_api_view').value = api2_fmt(avg);
+  document.getElementById('api2_marks_view').value   = api2_fmt(marks);
+
+  document.getElementById('api2_api1').value   = api2_fmt(a1);
+  document.getElementById('api2_api2').value   = api2_fmt(a2);
+  document.getElementById('api2_api3').value   = api2_fmt(a3);
+  document.getElementById('api2_avg_api').value= api2_fmt(avg);
+  document.getElementById('api2_marks_awarded').value = api2_fmt(marks);
+}
+
+/* Remote */
+async function api2_fetchBatches(deptId){
+  const sel = document.getElementById('api2_cay_start_year');
+  sel.innerHTML = '<option value="">Select Batch</option>';
+  api2_setYearLabels(null);
+  if(!deptId) return;
+
+  try{
+    const res = await fetch(`${API2_BATCH_URL}?department_id=${encodeURIComponent(deptId)}`, {credentials:'same-origin'});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const batches = Array.isArray(data.batches) ? data.batches : [];
+    for(const y of batches){
+      const opt = document.createElement('option'); opt.value = y; opt.textContent = y; sel.appendChild(opt);
+    }
+    if(batches.length){ sel.value = batches[0]; api2_setYearLabels(batches[0]); }
+  }catch(e){ console.error(e); }
+}
+
+function api2_escapeHtml(s){ return String(s||"").replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function api2_cardHTML(e){
+  const badgeCls = e.is_verified ? 'bg-success' : 'bg-warning';
+  const badgeTxt = e.is_verified ? 'Verified' : 'Pending';
+  const f = (x)=> Number(x||0).toFixed(2);
+  const title = e.academic_year_range || [e.caym1_label, e.caym2_label, e.caym3_label].filter(Boolean).join(' / ');
+  return `
+  <div class="col-md-6">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h6 class="mb-0">${api2_escapeHtml(title || '—')}</h6>
+          <span class="badge ${badgeCls}">${badgeTxt}</span>
+        </div>
+        <div class="small text-muted mb-2">Avg API: ${f(e.average_api)} | Marks: ${f(e.marks_awarded)}</div>
+        <div class="row g-2 small">
+          <div class="col"><div class="border rounded p-2"><div class="text-muted">CAYm1</div><div><strong>${f(e.api_1)}</strong></div></div></div>
+          <div class="col"><div class="border rounded p-2"><div class="text-muted">CAYm2</div><div><strong>${f(e.api_2)}</strong></div></div></div>
+          <div class="col"><div class="border rounded p-2"><div class="text-muted">CAYm3</div><div><strong>${f(e.api_3)}</strong></div></div></div>
+        </div>
+        ${e.admin_remarks ? `<div class="mt-2 small"><i class="fas fa-comment-dots me-1 text-primary"></i>${api2_escapeHtml(e.admin_remarks)}</div>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+async function api2_fetchPast(deptId){
+  const cards = document.getElementById('api2_past_cards');
+  const empty = document.getElementById('api2_past_empty');
+  cards.innerHTML = ''; empty.style.display = 'none';
+  if(!deptId){ empty.style.display = 'block'; return; }
+  try{
+    const res = await fetch(`${API2_PAST_URL}?department_id=${encodeURIComponent(deptId)}`, {credentials:'same-origin'});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const entries = Array.isArray(data.entries) ? data.entries : [];
+    if(!entries.length){ empty.style.display = 'block'; return; }
+    cards.innerHTML = entries.map(api2_cardHTML).join('');
+  }catch(e){ console.error(e); empty.style.display = 'block'; }
+}
+
+/* Wiring */
+document.addEventListener('DOMContentLoaded', function(){
+  api2_recalc();
+
+  const dept  = document.getElementById('api2_department');
+  const batch = document.getElementById('api2_cay_start_year');
+
+  dept.addEventListener('change', function(e){
+    const id = e.target.value;
+    api2_fetchBatches(id);
+    if(document.getElementById('api2_past_panel').style.display === 'block'){
+      api2_fetchPast(id);
+    }
+  });
+
+  batch.addEventListener('change', function(e){
+    const y = e.target.value;
+    api2_setYearLabels(y ? parseInt(y,10) : null);
+  });
+
+  document.getElementById('api2Form').addEventListener('input', api2_recalc);
+  document.getElementById('api2Form').addEventListener('submit', api2_recalc);
+
+  document.getElementById('api2_btn_show_past').addEventListener('click', function(){
+    const panel = document.getElementById('api2_past_panel');
+    const isOpen = panel.style.display === 'block';
+    if(!isOpen){
+      panel.style.display = 'block';
+      api2_fetchPast(dept.value);
+      this.innerHTML = '<i class="fas fa-times me-2"></i>Hide Past Submissions';
+    }else{
+      panel.style.display = 'none';
+      this.innerHTML = '<i class="fas fa-history me-2"></i>Show Past Submissions';
+    }
+  });
+
+  const initialDept = "{{ selected_dept_id|default:'' }}";
+  if(initialDept){ api2_fetchBatches(initialDept); }
+});
+</script>
+{% endblock %}

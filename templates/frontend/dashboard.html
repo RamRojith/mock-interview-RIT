@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Operations Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="dashboard-body">
+    <div class="main-content">
+        <header class="app-header">
+            <!-- Left Side: Logo/Name -->
+            <div class="header-left">
+                <h2>College Operations</h2>
+            </div>
+            <!-- Right Side: User Profile & Logout -->
+            <div class="header-right">
+                <span id="user-name">Loading...</span>
+                <span id="user-role" class="role-badge">...</span>
+                <button onclick="logout()" class="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <div class="content-placeholder">
+            <h3>Welcome to the Faculty Portal</h3>
+            <p>Select a module from the left menu to proceed.</p>
+            <div style="margin-top:20px; color:#666;">
+                [Mock Content: Student Records, Attendance, Timetable, etc.]
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Chat Widget -->
+    <div class="widget-container">
+        <div id="chat-window" class="chat-window hidden">
+            <header>
+                <div class="header-content">
+                    <h1>ERP Assistant</h1>
+                    <p>Support System</p>
+                </div>
+                <button id="close-btn" class="close-btn">&times;</button>
+            </header>
+            <div id="chat-history" class="chat-history">
+                <div class="message bot-message">
+                    Hello! I'm here to assist you based on your role.
+                </div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Type query..." />
+                <button id="send-btn">Send</button>
+            </div>
+        </div>
+        <button id="chat-toggle-btn" class="chat-toggle-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        // --- Auth Check ---
+        const facultyId = sessionStorage.getItem('faculty_id');
+        const role = sessionStorage.getItem('user_role');
+        const name = sessionStorage.getItem('user_name');
+
+        if (!facultyId) {
+            window.location.href = 'index.html'; // Redirect to login
+        }
+
+        document.getElementById('user-name').innerText = name || 'User';
+        document.getElementById('user-role').innerText = role || 'Staff';
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // --- Chat Logic ---
+        const chatWindow = document.getElementById('chat-window');
+        const chatToggleBtn = document.getElementById('chat-toggle-btn');
+        const closeBtn = document.getElementById('close-btn');
+        const chatHistory = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        chatToggleBtn.addEventListener('click', () => {
+            chatWindow.classList.toggle('hidden');
+        });
+
+        closeBtn.addEventListener('click', () => {
+            chatWindow.classList.add('hidden');
+        });
+
+        function appendMessage(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', sender + '-message');
+            msgDiv.innerText = text;
+            chatHistory.appendChild(msgDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function appendChart(chartData) {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', 'bot-message');
+            // Allow more width for chart
+            msgDiv.style.maxWidth = '90%';
+
+            const canvas = document.createElement('canvas');
+            canvas.style.marginTop = '10px';
+            msgDiv.appendChild(canvas);
+
+            chatHistory.appendChild(msgDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(chartData),
+                    datasets: [{
+                        label: 'Marks',
+                        data: Object.values(chartData),
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, max: 100 }
+                    }
+                }
+            });
+        }
+
+        async function sendMessage() {
+            const query = userInput.value.trim();
+            if (!query) return;
+
+            appendMessage(query, 'user');
+            userInput.value = '';
+
+            try {
+                if (window.location.protocol === 'file:') {
+                    appendMessage("Error: Run via server (http://127.0.0.1:8000/).", 'bot');
+                    return;
+                }
+
+                const res = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query, faculty_id: parseInt(facultyId) })
+                });
+
+                if (!res.ok) {
+                    throw new Error(`Server ${res.status}`);
+                }
+
+                const data = await res.json();
+
+                // Handle Structured Response
+                if (typeof data.response === 'object' && data.response !== null) {
+                    if (data.response.type === 'chart') {
+                        appendMessage(data.response.text, 'bot');
+                        appendChart(data.response.data);
+                    } else {
+                        appendMessage(JSON.stringify(data.response), 'bot');
+                    }
+                } else {
+                    // Simple String Response
+                    appendMessage(data.response, 'bot');
+                }
+            } catch (error) {
+                console.error(error);
+                appendMessage(`Error: ${error.message}`, 'bot');
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+    <!-- Version: 1.1 -->
+</body>
+
+</html>

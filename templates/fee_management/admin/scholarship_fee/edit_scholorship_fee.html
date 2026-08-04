@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'admin_dashboard_css.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="container py-4">
+  <div class="card shadow border-0">
+    <div class="card-header bg-primary text-white py-3">
+      <h3 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Scholarship Deduction</h3>
+    </div>
+
+    <div class="card-body p-4">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'fee_management' %}">
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Scholarship</label>
+            <input type="text" class="form-control" value="{{ fee.scholarship }}" readonly>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Department</label>
+            <input type="text" class="form-control" value="{{ fee.department }}" readonly>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Quota</label>
+            <input type="text" class="form-control" value="{{ fee.quota  }}" readonly>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Scholarship Amount <span class="text-danger">*</span></label>
+            <div class="input-group has-validation">
+              <span class="input-group-text">₹</span>
+              <input type="number" step="0.01" min="0" name="scholarship_amount"
+                     class="form-control" value="{{ fee.scholarship_amount }}" required>
+              <div class="invalid-feedback">Please enter a valid amount.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <a href="{% url 'fee_management' %}" class="btn btn-outline-secondary">Cancel</a>
+          <button type="submit" class="btn btn-success">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const form = document.querySelector('.needs-validation');
+  form.addEventListener('submit', function (e) {
+    if (!form.checkValidity()) { e.preventDefault(); e.stopPropagation(); }
+    form.classList.add('was-validated');
+  }, false);
+})();
+</script>
+{% endblock %}

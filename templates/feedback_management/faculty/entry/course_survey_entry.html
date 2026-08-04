@@ -1,0 +1,607 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load cm_tags %}
+
+{% block title %}Course Surveys Management - Ramco Institute of Technology{% endblock %}
+
+{% block content %}
+
+<style>
+  :root{
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --card-soft:#f8fafc;
+    --text:#1e293b;
+    --muted:#64748b;
+    --line:#e2e8f0;
+    --primary:#1d4d8f;
+    --primary-dark:#163d72;
+    --success:#16a34a;
+    --warning:#d97706;
+    --purple:#7c3aed;
+    --shadow:0 8px 24px rgba(15, 23, 42, 0.06);
+    --shadow-hover:0 14px 30px rgba(15, 23, 42, 0.10);
+    --radius:18px;
+  }
+
+  .survey-page{
+    background: var(--bg);
+    min-height: 100vh;
+    padding: 28px 16px 40px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  .survey-wrap{
+    max-width: 1380px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .survey-hero{
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 28px 30px;
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+  }
+
+  .survey-hero-top{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .survey-hero-title{
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .survey-hero-icon{
+    width: 62px;
+    height: 62px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--primary) 0%, #2d6bc0 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.45rem;
+    box-shadow: 0 8px 18px rgba(29, 77, 143, 0.22);
+    flex-shrink: 0;
+  }
+
+  .survey-hero h1{
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.4px;
+  }
+
+  .survey-hero p{
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 0.96rem;
+  }
+
+  .survey-hero-actions{
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .action-btn{
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--primary);
+    padding: 10px 16px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.92rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all .25s ease;
+    cursor: pointer;
+  }
+
+  .action-btn:hover{
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+    transform: translateY(-2px);
+  }
+
+  .survey-hero-strip{
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  .hero-strip-card{
+    background: var(--card-soft);
+    border: 1px solid #edf2f7;
+    border-radius: 16px;
+    padding: 16px 18px;
+  }
+
+  .hero-strip-label{
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+
+  .hero-strip-value{
+    font-size: 1.1rem;
+    color: var(--text);
+    font-weight: 800;
+  }
+
+  /* Top section */
+  .section-title{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .section-title h2{
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .section-title span{
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  /* Grid */
+  .survey-grid{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+  }
+
+  /* Card */
+  .survey-card{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: all .28s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .survey-card:hover{
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .survey-card-head{
+    padding: 22px 22px 16px;
+    border-bottom: 1px solid #eef2f7;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  }
+
+  .survey-top-row{
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .survey-icon{
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+
+  .icon-green{ background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
+  .icon-purple{ background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+  .icon-orange{ background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+
+  .status-pill{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .status-active{
+    background: #ecfdf3;
+    color: #15803d;
+    border-color: #bbf7d0;
+  }
+
+  .survey-card-title{
+    margin: 0;
+    font-size: 1.18rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.35;
+  }
+
+  .survey-card-subtitle{
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+
+  .survey-card-body{
+    padding: 18px 22px 20px;
+    flex: 1;
+  }
+
+  .survey-card-desc{
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 18px;
+  }
+
+  .feature-box{
+    background: #f8fafc;
+    border: 1px solid #edf2f7;
+    border-radius: 16px;
+    padding: 14px 15px;
+  }
+
+  .feature-box h5{
+    margin: 0 0 12px;
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--primary);
+  }
+
+  .feature-list{
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .feature-list li{
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: #475569;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  .feature-list li:last-child{
+    margin-bottom: 0;
+  }
+
+  .feature-list i{
+    color: var(--primary);
+    margin-top: 3px;
+    font-size: 0.85rem;
+  }
+
+  .survey-card-foot{
+    padding: 18px 22px 22px;
+    border-top: 1px solid #eef2f7;
+    background: #fcfdff;
+  }
+
+  .survey-btn{
+    width: 100%;
+    border: none;
+    outline: none;
+    background: linear-gradient(135deg, var(--primary) 0%, #2a69bb 100%);
+    color: #fff;
+    padding: 13px 18px;
+    border-radius: 14px;
+    font-size: 0.94rem;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all .25s ease;
+  }
+
+  .survey-btn:hover{
+    color: #fff;
+    text-decoration: none;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(29, 77, 143, 0.20);
+  }
+
+  /* Info panel */
+  .bottom-panel{
+    margin-top: 26px;
+    background: #ffffff;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+
+  .bottom-panel h4{
+    margin: 0 0 10px;
+    font-size: 1.05rem;
+    color: var(--text);
+    font-weight: 800;
+  }
+
+  .bottom-panel p{
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.7;
+    font-size: 0.93rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 1100px){
+    .survey-grid{
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .survey-hero-strip{
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px){
+    .survey-page{
+      padding: 16px 10px 28px;
+    }
+
+    .survey-hero{
+      padding: 20px 18px;
+      border-radius: 18px;
+    }
+
+    .survey-hero h1{
+      font-size: 1.5rem;
+    }
+
+    .survey-grid{
+      grid-template-columns: 1fr;
+    }
+
+    .survey-card-head,
+    .survey-card-body,
+    .survey-card-foot{
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    .survey-hero-top{
+      align-items: flex-start;
+    }
+
+    .survey-hero-actions{
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="survey-page">
+  <div class="survey-wrap">
+
+    <div class="survey-hero">
+      <div class="survey-hero-top">
+        <div class="survey-hero-title">
+          <div class="survey-hero-icon">
+            <i class="fas fa-poll"></i>
+          </div>
+          <div>
+            <h1>Course Surveys Management</h1>
+            <p>Classic light dashboard for managing all survey and feedback systems in a single page.</p>
+          </div>
+        </div>
+
+        <div class="survey-hero-actions">
+          <button type="button" class="action-btn" onclick="showHelp()">
+            <i class="fas fa-circle-info"></i> Survey Guide
+          </button>
+          <button type="button" class="action-btn" onclick="refreshPage()">
+            <i class="fas fa-rotate-right"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+
+
+    <div class="section-title">
+
+    </div>
+
+    <div class="survey-grid">
+
+      <!-- Course Exit Survey -->
+      <div class="survey-card">
+        <div class="survey-card-head">
+          <div class="survey-top-row">
+            <div class="survey-icon icon-green">
+              <i class="fas fa-door-open"></i>
+            </div>
+            <span class="status-pill status-active">
+              <i class="fas fa-circle"></i> Active
+            </span>
+          </div>
+          <h3 class="survey-card-title">Course Exit Survey</h3>
+          <div class="survey-card-subtitle">Post-course completion feedback</div>
+        </div>
+
+        <div class="survey-card-body">
+          <div class="survey-card-desc">
+            Collect student feedback after course completion to understand satisfaction,
+            learning effectiveness, and suggestions for future course enhancement.
+          </div>
+
+          <div class="feature-box">
+            <h5>Key Highlights</h5>
+            <ul class="feature-list">
+              <li>
+                <i class="fas fa-check-circle"></i>
+                <span>Post-course evaluation and experience review</span>
+              </li>
+              <li>
+                <i class="fas fa-check-circle"></i>
+                <span>Student satisfaction and outcome reflection</span>
+              </li>
+              <li>
+                <i class="fas fa-check-circle"></i>
+                <span>Suggestions for course quality improvement</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="survey-card-foot">
+          <a href="{% url 'course_exit_survey_entry' %}" class="survey-btn">
+            <i class="fas fa-arrow-right"></i> Open Course Exit Survey
+          </a>
+        </div>
+      </div>
+
+      <!-- Course Feedback -->
+      <div class="survey-card">
+        <div class="survey-card-head">
+          <div class="survey-top-row">
+            <div class="survey-icon icon-purple">
+              <i class="fas fa-comments"></i>
+            </div>
+            <span class="status-pill status-active">
+              <i class="fas fa-circle"></i> Active
+            </span>
+          </div>
+          <h3 class="survey-card-title">Course Feedback</h3>
+          <div class="survey-card-subtitle">Continuous feedback during course delivery</div>
+        </div>
+
+        <div class="survey-card-body">
+          <div class="survey-card-desc">
+            Support regular feedback collection during the course to monitor teaching quality,
+            content delivery, and classroom engagement in a timely manner.
+          </div>
+
+          <div class="feature-box">
+            <h5>Key Highlights</h5>
+            <ul class="feature-list">
+              <li>
+                <i class="fas fa-check-circle"></i>
+                <span>Continuous and structured feedback collection</span>
+              </li>
+              <li>
+                <i class="fas fa-check-circle"></i>
+                <span>Real-time insight into teaching effectiveness</span>
+              </li>
+              <li>
+                <i class="fas fa-check-circle"></i>
+                <span>Supports mid-course corrective improvements</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="survey-card-foot">
+          <a href="{% url 'course_feedback_entry' %}" class="survey-btn">
+            <i class="fas fa-arrow-right"></i> Open Course Feedback
+          </a>
+        </div>
+      </div>
+
+      <!-- Program Exit Survey -->
+      <div class="survey-card">
+        <div class="survey-card-head">
+          <div class="survey-top-row">
+            <div class="survey-icon icon-orange">
+              <i class="fas fa-university"></i>
+            </div>
+            <span class="status-pill status-active">
+              <i class="fas fa-circle"></i> Active
+            </span>
+          </div>
+          <h3 class="survey-card-title">Program Exit Survey</h3>
+          <div class="survey-card-subtitle">End-of-program evaluation</div>
+        </div>
+
+        <div class="survey-card-body">
+          <div class="survey-card-desc">
+            Evaluate the complete academic program by capturing student perspectives on curriculum,
+            support services, readiness for career growth, and future opportunities.
+          </div>
+
+          <div class="feature-box">
+            <h5>Key Highlights</h5>
+            <ul class="feature-list">
+              <li>
+                <i class="fas fa-check-circle"></i>
+                <span>Program-level quality and structure assessment</span>
+              </li>
+              <li>
+                <i class="fas fa-check-circle"></i>
+                <span>Career and higher-study readiness feedback</span>
+              </li>
+              <li>
+                <i class="fas fa-check-circle"></i>
+                <span>Institution-wide improvement support</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="survey-card-foot">
+          <a href="{% url 'program_exit_survey_entry' %}" class="survey-btn">
+            <i class="fas fa-arrow-right"></i> Open Program Exit Survey
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+
+
+  </div>
+</div>
+
+<script>
+  function showHelp() {
+    alert(
+      "Survey Guide:\n\n" +
+      "1. Course Exit Survey: Feedback after course completion\n" +
+      "2. Course Feedback: Feedback during course delivery\n" +
+      "3. Program Exit Survey: Feedback at the end of the academic program"
+    );
+  }
+
+  function refreshPage() {
+    location.reload();
+  }
+</script>
+
+{% endblock content %}

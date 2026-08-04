@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid py-4" style="max-width:1400px;">
+  <div class="card shadow rounded-4 border-0">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+         style="border-radius: 1rem 1rem 0 0;">
+      <h4 class="mb-0">
+        <i class="fas fa-list-check me-2"></i>
+        Semester Exam Schedule Generation
+      </h4>
+    </div>
+
+    <div class="card-body p-4">
+
+      <!-- ✅ FORM -->
+      <form method="post" action="{% url 'semester_exam_schedule' %}" id="degreeDeptForm">
+        {% csrf_token %}
+
+        <div class="row g-3">
+
+          <!-- ✅ DEGREE -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Degree</label>
+            <select id="degree" name="degree" class="form-select" required>
+              <option value="" selected disabled>Select Degree</option>
+              {% for opt in degree_options %}
+                <option value="{{ opt.ids }}">{{ opt.name }}</option>
+              {% endfor %}
+            </select>
+            
+          </div>
+
+          <!-- ✅ DEPARTMENT -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Department</label>
+            <select id="department" name="department" class="form-select" required disabled>
+              <option value="" selected disabled>Select Degree first</option>
+            </select>
+          </div>
+
+          <!-- ✅ REGULATION -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Regulation</label>
+            <select id="regulation" name="regulation" class="form-select" required>
+              <option value="" disabled {% if not selected_regulation %}selected{% endif %}>
+                Select Regulation
+              </option>
+              {% for r in regulations %}
+                <option value="{{ r.id }}" {% if selected_regulation == r.id|stringformat:"s" %}selected{% endif %}>
+                  {{ r }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- ✅ NEW: EXAM SESSION -->
+        
+          <!-- ✅ DATE FIELD -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Schedule Date</label>
+            <input type="date" id="schedule_date" name="schedule_date" class="form-control" required>
+          </div>
+
+          <!-- ✅ SEMESTERS -->
+          <div class="col-md-12 mt-2" id="semester-selection" style="display:none;">
+            <label class="form-label fw-semibold">Select Semesters</label>
+
+            <div class="alert alert-light border rounded-3 py-2 mb-2" style="display:none;" id="semesterHint"></div>
+
+            <div id="semesters" class="d-flex flex-wrap gap-3"></div>
+          </div>
+
+        </div>
+
+        <div class="mt-4 d-flex gap-2 flex-wrap">
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-bolt me-1"></i> Generate
+          </button>
+
+          <button type="reset" class="btn btn-outline-secondary" id="resetBtn">
+            <i class="fas fa-rotate-left me-1"></i> Reset
+          </button>
+
+          <a href="{% url 'view_semester_exam_schedule' %}" class="btn btn-primary">
+            <i class="fas fa-eye me-1"></i> View Scheduled
+          </a>
+
+          <a href="{% url 'published_semester_exam_schedule' %}" class="btn btn-warning">
+            <i class="fas fa-upload me-1"></i> View Published Schedule
+          </a>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(function () {
+
+  // -----------------------
+  // Exam Session (Auto Year)
+  // -----------------------
+
+
+  // ----------- YOUR ORIGINAL JS BELOW (UNCHANGED) -----------
+
+  function setDeptLoading() {
+    $("#department").prop("disabled", true)
+      .html(`<option value="" selected disabled>Loading...</option>`);
+  }
+
+  function setDeptPlaceholder(msg) {
+    $("#department").prop("disabled", true)
+      .html(`<option value="" selected disabled>${msg}</option>`);
+  }
+
+  function setDeptOptions(items) {
+    let opts = `<option value="" selected disabled>Select Department</option>`;
+    (items || []).forEach(d => {
+      opts += `<option value="${d.id}">${d.text}</option>`;
+    });
+
+    const hasItems = items && items.length > 0;
+    $("#department").prop("disabled", !hasItems).html(opts);
+
+    if (!hasItems) setDeptPlaceholder("No departments found");
+  }
+
+  function hideSemesters(msg=null){
+    $("#semester-selection").hide();
+    $("#semesters").html("");
+    if (msg){
+      $("#semesterHint").show().html(msg);
+    } else {
+      $("#semesterHint").hide().html("");
+    }
+  }
+
+  function showSemesterLoading(){
+    $("#semester-selection").show();
+    $("#semesterHint").show().html("Loading semesters...");
+    $("#semesters").html("");
+  }
+
+  function loadSemesters(){
+    const degreeId = $("#degree").val();
+    const departmentId = $("#department").val();
+    const regulationId = $("#regulation").val();
+
+    if(!degreeId || !departmentId || !regulationId){
+      hideSemesters("Select <b>Degree</b>, <b>Department</b> and <b>Regulation</b> to load semesters.");
+      return;
+    }
+
+    showSemesterLoading();
+
+    $.get("{% url 'fetch_semesters' %}", {
+      degree_id: degreeId,
+      department_id: departmentId,
+      regulation_id: regulationId
+    }, function(res){
+
+      const sems = res.semesters || [];
+
+      if(sems.length === 0){
+        $("#semesterHint").show().html(`<span class="text-warning">No semesters found for this selection.</span>`);
+        $("#semesters").html("");
+        return;
+      }
+
+      $("#semesterHint").hide().html("");
+
+      const html = sems.map(sem => `
+        <div class="form-check">
+          <input type="checkbox" name="semesters" class="form-check-input" id="sem_${sem}" value="${sem}">
+          <label class="form-check-label fw-semibold" for="sem_${sem}">Semester ${sem}</label>
+        </div>
+      `).join("");
+
+      $("#semesters").html(html);
+
+    }).fail(function(){
+      $("#semesterHint").show().html(`<span class="text-danger">Error loading semesters.</span>`);
+      $("#semesters").html("");
+    });
+  }
+
+  $("#degree").on("change", function () {
+    const degreeId = $(this).val();
+    hideSemesters("Select <b>Degree</b>, <b>Department</b> and <b>Regulation</b> to load semesters.");
+
+    if (!degreeId) {
+      setDeptPlaceholder("Select Degree first");
+      return;
+    }
+
+    setDeptLoading();
+
+    $.get("{% url 'semester_departments_by_degree' %}", { degree_id: degreeId }, function (res) {
+      setDeptOptions(res.items || []);
+    }).fail(function () {
+      setDeptPlaceholder("Error loading departments");
+    });
+  });
+
+  $("#department").on("change", loadSemesters);
+  $("#regulation").on("change", loadSemesters);
+
+  $("#resetBtn").on("click", function () {
+    setDeptPlaceholder("Select Degree first");
+    $("#regulation").val("");
+    $("#schedule_date").val("");
+    hideSemesters("Select <b>Degree</b>, <b>Department</b> and <b>Regulation</b> to load semesters.");
+  });
+
+  setDeptPlaceholder("Select Degree first");
+  hideSemesters("Select <b>Degree</b>, <b>Department</b> and <b>Regulation</b> to load semesters.");
+
+});
+</script>
+
+<style>
+  select.form-select, input.form-control { text-align: left; }
+
+  #semesters .form-check {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    padding: 10px 14px;
+    border-radius: 10px;
+  }
+</style>
+
+{% endblock %}

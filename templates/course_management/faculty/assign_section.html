@@ -1,0 +1,912 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<style>
+.student-section {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.student-section .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.student-section .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.student-section .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.student-section .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.student-section .stats-bar {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-section .stats-bar .title-info h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  margin: 0 0 0.25rem 0;
+}
+
+.student-section .stats-bar .title-info p {
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+.student-section .stats-numbers {
+  display: flex;
+  gap: 2rem;
+  text-align: center;
+}
+
+.student-section .stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.student-section .stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a4b8c;
+  line-height: 1;
+}
+
+.student-section .stat-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.student-section .badge-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.student-section .badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.student-section .badge.bg-light {
+  background: #f8fafc !important;
+  color: #374151;
+  border: 1px solid #e2e8f0;
+}
+
+.student-section .badge.bg-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: white;
+}
+
+.student-section .filter-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.student-section .filter-card .card-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #374151;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.student-section .filter-card .card-header h5 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.student-section .filter-card .card-header i {
+  margin-right: 0.75rem;
+  color: #1a4b8c;
+}
+
+.student-section .filter-card .card-body {
+  padding: 1.5rem;
+}
+
+.student-section .form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.student-section .form-control,
+.student-section .form-select {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.student-section .form-control:focus,
+.student-section .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+}
+
+.student-section .info-text {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.student-section .main-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.student-section .main-card .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.student-section .main-card .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.student-section .main-card .card-header i {
+  margin-right: 0.75rem;
+}
+
+.student-section .bulk-action-bar {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1.5rem;
+}
+
+.student-section .bulk-form {
+  width: 100%;
+}
+
+.student-section .bulk-form .form-label {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.student-section .stats-breakdown {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.student-section .stats-breakdown .small {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.student-section .stats-breakdown strong {
+  color: #1a4b8c;
+}
+
+.student-section .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.student-section .btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.student-section .btn-primary:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.student-section .table-container {
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+}
+
+.student-section .table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.student-section .table thead {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.student-section .table th {
+  color: black;
+  font-weight: 700;
+  padding: 1rem;
+  text-align: left;
+  border: none;
+}
+
+.student-section .table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #4b5563;
+  vertical-align: middle;
+}
+
+.student-section .table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.student-section .table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.student-section .form-check-input {
+  width: 1.2em;
+  height: 1.2em;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.student-section .form-check-input:checked {
+  background-color: #1a4b8c;
+  border-color: #1a4b8c;
+}
+
+.student-section .form-check-input:focus {
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+}
+
+.student-section .avatar-sm {
+  width: 32px;
+  height: 32px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.student-section .text-primary {
+  color: #1a4b8c !important;
+  font-weight: 600;
+}
+
+.student-section .badge-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: white;
+  border: none !important;
+}
+
+.student-section .badge-secondary {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+  color: white;
+  border: none !important;
+}
+
+.student-section .badge-info {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  color: white;
+  border: none !important;
+}
+
+.student-section .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.student-section .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.student-section .help-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.student-section .help-card h6 {
+  color: #374151;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.student-section .help-card ul {
+  color: #64748b;
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.student-section .help-card li {
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .student-section .page-header {
+    padding: 1rem;
+  }
+  
+  .student-section .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .student-section .stats-bar {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .student-section .stats-numbers {
+    gap: 1.5rem;
+  }
+  
+  .student-section .badge-container {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .student-section {
+    padding: 1rem;
+  }
+  
+  .student-section .page-header {
+    padding: 0.75rem;
+  }
+  
+  .student-section .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .student-section .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .student-section .stats-numbers {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  .student-section .bulk-action-bar .row {
+    gap: 1rem;
+  }
+  
+  .student-section .bulk-action-bar .col-md-4 {
+    text-align: center;
+  }
+  
+  .student-section .table {
+    font-size: 0.8rem;
+  }
+  
+  .student-section .table th,
+  .student-section .table td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .student-section .main-card .card-header h5 {
+    font-size: 1.1rem;
+  }
+  
+  .student-section .stats-bar .title-info h2 {
+    font-size: 1.25rem;
+  }
+  
+  .student-section .stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .student-section .badge {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.6rem;
+  }
+}
+</style>
+
+
+<div class="student-section">
+  <div class="page-header">
+    <h1><i class="fas fa-users-cog me-2"></i>Student Section Management</h1>
+    <p class="header-subtitle">Assign students to sections based on their batch and academic criteria</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="title-info">
+        <h2>Student Section Management</h2>
+        <p>Manage student section assignments efficiently</p>
+      </div>
+      <div class="stats-numbers">
+        <div class="stat-item">
+          <span class="stat-value">{{ students|length }}</span>
+          <span class="stat-label">Total Students</span>
+        </div>
+        {% if selected_batch %}
+        <div class="stat-item">
+          <span class="stat-value text-primary">{{ selected_batch }}</span>
+          <span class="stat-label">Current Batch</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Additional Stats -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div class="badge-container">
+        <!-- Gender counts -->
+        <div class="d-flex align-items-center">
+          <small class="text-muted me-2">Gender Distribution:</small>
+          <span class="badge bg-light" title="Male">
+            <i class="fas fa-mars me-1"></i>Male {{ gender_counts.Male }}
+          </span>
+          <span class="badge bg-light" title="Female">
+            <i class="fas fa-venus me-1"></i>Female {{ gender_counts.Female }}
+          </span>
+          <span class="badge bg-light" title="Other/Unknown">
+            <i class="fas fa-user me-1"></i>Others {{ gender_counts.Other }}
+          </span>
+        </div>
+
+        <!-- Quota counts -->
+        <div class="d-flex align-items-center">
+          <small class="text-muted me-2">Quota Distribution:</small>
+          {% for q, cnt in quotas_pairs %}
+            <span class="badge bg-light" title="{{ q }}">{{ q }} {{ cnt }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Batch Selection Card -->
+    <div class="filter-card">
+      <div class="card-header">
+        <h5><i class="fas fa-filter me-2"></i>Filter by Batch</h5>
+      </div>
+      <div class="card-body">
+        <form method="get" action="">
+          <div class="row align-items-end">
+            <div class="col-md-6">
+              <label for="batch-select" class="form-label">Select Batch</label>
+              <select id="batch-select" name="batch" class="form-select" onchange="this.form.submit()">
+                <option value="">-- Select a Batch --</option>
+                {% for b in batches %}
+                  <option value="{{ b }}" {% if b == selected_batch %}selected{% endif %}>{{ b }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6 mt-md-0 mt-2">
+              <div class="info-text">
+                <i class="fas fa-info-circle me-2"></i>
+                {% if selected_batch %}
+                  Currently viewing Batch {{ selected_batch }} students
+                {% else %}
+                  Select a batch to view and manage students
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% if selected_batch %}
+    <!-- Students List Card -->
+    <div class="main-card">
+      <div class="card-header">
+        <h5><i class="fas fa-user-graduate me-2"></i>Students in Batch {{ selected_batch }}</h5>
+      </div>
+
+      <!-- Bulk Action Bar -->
+      <div class="bulk-action-bar">
+        <form id="bulk-form" method="post" class="bulk-form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="bulk_assign">
+          <div class="row g-3 align-items-center">
+            <div class="col-md-4">
+              <label class="form-label">Assign selected to section</label>
+              <select name="section_id" class="form-select" required>
+                <option value="">-- Select Section --</option>
+                {% for sec in sections %}
+                  <option value="{{ sec.id }}">{{ sec.section }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Selected count + selected gender & quota breakdown -->
+            <div class="col-md-4">
+              <div class="stats-breakdown">
+                <div class="small">
+                  <div><span id="selected-count">0</span> students selected</div>
+
+                  <div class="mt-2" id="selected-gender-breakdown">
+                    <span class="text-muted me-2">Gender —</span>
+                    <span class="me-2">Male: <strong id="sel-m">0</strong></span>
+                    <span class="me-2">Female: <strong id="sel-f">0</strong></span>
+                    <span class="me-2">Others: <strong id="sel-o">0</strong></span>
+                  </div>
+
+                  <div class="mt-1" id="selected-quota-breakdown">
+                    <span class="text-muted me-2">Quota —</span>
+                    {% for q, cnt in quotas_pairs %}
+                      <span class="me-2">{{ q }}: <strong id="sel-q-{{ forloop.counter0 }}">0</strong></span>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4 text-md-end">
+              <button type="submit" class="btn btn-primary" id="bulk-assign-btn" disabled>
+                <i class="fas fa-layer-group me-2"></i> Assign Section to Selected
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="table-container">
+
+        <!-- Search Bar -->
+        <div class="mb-4 search-container">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+            <input type="text" 
+                   id="student-search" 
+                   class="form-control border-start-0" 
+                   placeholder="Search by name, reg no, gender, quota, section..." 
+                   autocomplete="off">
+            <button class="btn btn-outline-secondary" type="button" id="clear-search" title="Clear search">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+
+        {% if students %}
+        <div class="table-responsive">
+          <table class="table align-middle mb-0" id="students-table">
+            <thead>
+              <tr>
+                <th width="5%">
+                  <input type="checkbox" id="select-all" class="form-check-input" />
+                </th>
+                <th width="5%">#</th>
+                <th width="15%">Registration No</th>
+                <th width="35%">Student Name</th>
+                <th width="10%">Gender</th>
+                <th width="10%">Academic Cut-off</th>
+                <th width="20%">Current Section</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for student in students %}
+              <tr>
+                <td>
+                  <input type="checkbox"
+                         class="form-check-input row-check"
+                         name="student_ids"
+                         form="bulk-form"
+                         value="{{ student.id }}"
+                         data-gender="{{ student.gender|default:'' }}"
+                         data-quota="{{ student.quota|default:'' }}"
+                         aria-label="Select {{ student.name }}">
+                </td>
+
+                <td>{{ forloop.counter }}</td>
+
+                <td>
+                  <span class="text-primary">{{ student.reg_no }}</span>
+                </td>
+
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="avatar-sm">
+                      <i class="fas fa-user"></i>
+                    </div>
+                    <div class="ms-2">
+                      <h6 class="mb-0 student-name">{{ student.name }}</h6>
+                      {% if student.quota %}
+                        <small class="text-muted quota-text">Quota: {{ student.quota }}</small>
+                      {% endif %}
+                    </div>
+                  </div>
+                </td>
+
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="avatar-sm">
+                      <i class="fas fa-{% if student.gender == 'Male' %}mars{% else %}venus{% endif %}"></i>
+                    </div>
+                    <div class="ms-2">
+                      <h6 class="mb-0">{{ student.gender|default:"—" }}</h6>
+                    </div>
+                  </div>
+                </td>
+
+                <td>
+                  {% if student.voc_cutoff != None %}
+                    <span class="badge bg-info">
+                      <strong>{{ student.voc_cutoff|floatformat:1 }}</strong>
+                    </span>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+
+                <td class="section-cell">
+                  {% if student.section %}
+                    <span class="badge bg-success">
+                      {{ student.section }}
+                    </span>
+                  {% else %}
+                    <span class="badge bg-secondary">Not Assigned</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <i class="fas fa-user-slash"></i>
+          <h4>No Students Found</h4>
+          <p class="text-muted">There are no students in Batch {{ selected_batch }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <!-- Empty State when no batch selected -->
+    <div class="main-card">
+      <div class="card-body text-center py-5">
+        <div class="mb-3">
+          <i class="fas fa-user-graduate fa-3x text-muted"></i>
+        </div>
+        <h4 class="text-muted">Select a Batch to Begin</h4>
+        <p class="text-muted mb-4">Choose a batch from the dropdown above to view and manage students</p>
+        <div class="d-flex justify-content-center">
+          <div class="help-card w-75">
+            <h6>How it works:</h6>
+            <ul class="text-start">
+              <li>Select a batch to view all students in that batch</li>
+              <li>Use the search box to quickly find students</li>
+              <li>Select students using the checkboxes</li>
+              <li>Choose a section from the bulk action bar and click Assign</li>
+              <li>Monitor gender and quota distribution for balanced sections</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+// -------- Bulk selection + Search Logic --------
+
+const selectAll      = document.getElementById('select-all');
+const rowChecks      = Array.from(document.querySelectorAll('.row-check'));
+const bulkBtn        = document.getElementById('bulk-assign-btn');
+const selectedCountEl = document.getElementById('selected-count');
+const selMEl         = document.getElementById('sel-m');
+const selFEl         = document.getElementById('sel-f');
+const selOEl         = document.getElementById('sel-o');
+
+// Quota setup
+const quotasList = JSON.parse('{{ quotas_list_json|escapejs }}');
+const quotaIndexMap = {};
+quotasList.forEach((q, idx) => { quotaIndexMap[q] = idx; });
+const selQuotaEls = quotasList.map((_, idx) => document.getElementById(`sel-q-${idx}`));
+
+// Search elements
+const searchInput = document.getElementById('student-search');
+const clearBtn    = document.getElementById('clear-search');
+const tableRows   = document.querySelectorAll('#students-table tbody tr');
+
+function normalizeGender(raw) {
+  if (!raw) return 'O';
+  const g = String(raw).trim().toLowerCase();
+  if (g === 'm' || g === 'male') return 'M';
+  if (g === 'f' || g === 'female') return 'F';
+  return 'O';
+}
+
+function normalizeQuota(raw) {
+  if (!raw) return 'Unspecified';
+  const q = String(raw).trim();
+  return q === '' ? 'Unspecified' : q;
+}
+
+function updateBulkUI() {
+  const checkedBoxes = document.querySelectorAll('.row-check:checked');
+  const checked = checkedBoxes.length;
+
+  selectedCountEl.textContent = checked;
+  bulkBtn.disabled = (checked === 0);
+
+  // Select-all state
+  if (selectAll) {
+    const total = rowChecks.length;
+    selectAll.indeterminate = checked > 0 && checked < total;
+    selectAll.checked = checked === total;
+  }
+
+  // Gender counts
+  let m = 0, f = 0, o = 0;
+  checkedBoxes.forEach(cb => {
+    const norm = normalizeGender(cb.dataset.gender);
+    if (norm === 'M') m++;
+    else if (norm === 'F') f++;
+    else o++;
+  });
+  selMEl.textContent = m;
+  selFEl.textContent = f;
+  selOEl.textContent = o;
+
+  // Quota counts
+  const qCounts = new Array(quotasList.length).fill(0);
+  checkedBoxes.forEach(cb => {
+    const normQ = normalizeQuota(cb.dataset.quota);
+    const idx = quotaIndexMap[normQ] ?? quotaIndexMap['Unspecified'];
+    if (idx !== undefined) qCounts[idx]++;
+  });
+
+  selQuotaEls.forEach((el, i) => {
+    if (el) el.textContent = qCounts[i];
+  });
+}
+
+// Search / Filter
+function performSearch() {
+  const term = (searchInput?.value || '').trim().toLowerCase();
+
+  tableRows.forEach((row, index) => {
+    if (!term) {
+      row.style.display = '';
+      return;
+    }
+
+    const cells = row.cells;
+    if (cells.length < 7) return;
+
+    const regNo   = cells[2].textContent.toLowerCase();
+    const name    = cells[3].querySelector('.student-name')?.textContent?.toLowerCase() || '';
+    const gender  = cells[4].textContent.trim().toLowerCase();
+    const quota   = cells[3].querySelector('.quota-text')?.textContent?.replace(/quota:\s*/i, '').toLowerCase() || '';
+    const section = cells[6].textContent.trim().toLowerCase();
+
+    const matches = 
+      regNo.includes(term) ||
+      name.includes(term) ||
+      gender.includes(term) ||
+      quota.includes(term) ||
+      section.includes(term);
+
+    row.style.display = matches ? '' : 'none';
+  });
+
+  // Re-evaluate bulk UI (only visible checked rows count)
+  updateBulkUI();
+}
+
+// Events
+selectAll?.addEventListener('change', () => {
+  const checked = selectAll.checked;
+  rowChecks.forEach(cb => {
+    if (cb.closest('tr').style.display !== 'none') {
+      cb.checked = checked;
+    }
+  });
+  updateBulkUI();
+});
+
+rowChecks.forEach(cb => cb.addEventListener('change', updateBulkUI));
+
+searchInput?.addEventListener('input', performSearch);
+
+searchInput?.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    searchInput.value = '';
+    performSearch();
+    searchInput.focus();
+  }
+});
+
+clearBtn?.addEventListener('click', () => {
+  if (searchInput) {
+    searchInput.value = '';
+    performSearch();
+    searchInput.focus();
+  }
+});
+
+// Prevent checkbox clicks from bubbling
+document.querySelectorAll('.row-check').forEach(cb => {
+  cb.addEventListener('click', e => e.stopPropagation());
+});
+
+// Initial update
+updateBulkUI();
+performSearch();
+</script>
+
+
+{% endblock content %}

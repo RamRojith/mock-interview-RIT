@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+<link rel="stylesheet" href="https://cdn.datatables.net/2.1.2/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="{% static 'bootstrap/js/bootstrap.bundle.js' %}"></script>
+<script src="https://cdn.datatables.net/2.1.2/js/dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/2.1.2/js/dataTables.bootstrap5.min.js"></script>
+
+<style>
+.global-users-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.global-users-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.global-users-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.global-users-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.global-users-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.global-users-portal .custom-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.global-users-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a4b8c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.global-users-portal .card-body-custom {
+  padding: 1.5rem;
+}
+
+.global-users-portal .filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.global-users-portal label {
+  font-weight: 700;
+  color: #334155;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.global-users-portal .form-control,
+.global-users-portal .form-select {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+}
+
+.global-users-portal .form-control:focus,
+.global-users-portal .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26,75,140,0.1);
+}
+
+.global-users-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.global-users-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.85rem;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.global-users-portal .global-row {
+  background: #f0fdf4 !important;
+}
+
+.global-users-portal .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.global-users-portal .badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.global-users-portal .badge-muted {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.global-users-portal .global-select {
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.global-users-portal .global-select.is-global {
+  background: #16a34a;
+  color: white;
+}
+
+.global-users-portal .alert-success-custom {
+  max-width: 1400px;
+  margin: 0 auto 1rem auto;
+  background: #dcfce7;
+  color: #166534;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  font-weight: 700;
+  border: 1px solid #bbf7d0;
+}
+
+@media(max-width: 768px) {
+  .global-users-portal {
+    padding: 1rem;
+  }
+
+  .global-users-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .global-users-portal .filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<div class="global-users-portal">
+
+  <div class="page-header">
+    <h1><i class="fas fa-users-gear me-2"></i> Create Global Users</h1>
+    <p class="header-subtitle">Manage global user access for approval workflows</p>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert-success-custom">
+        <i class="fas fa-circle-check me-2"></i> {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="page-container">
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-filter me-2"></i> Search & Filter</span>
+      </div>
+
+      <div class="card-body-custom">
+        <div class="filter-grid">
+          <div>
+            <label>Search</label>
+            <input type="text"
+                   id="globalSearch"
+                   class="form-control"
+                   placeholder="Search username, employee ID, email, department...">
+          </div>
+
+          <div>
+            <label>Filter by Department</label>
+            <select id="departmentFilter" class="form-select">
+              <option value="">All Departments</option>
+              {% for dept in departments %}
+                <option value="{{ dept.Department }}">
+                  {{ dept.Department }} - {{ dept.Department_code }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-list-check me-2"></i> Staff Users</span>
+        <span class="badge-status badge-success">
+          <i class="fas fa-arrow-up"></i> Global users shown first
+        </span>
+      </div>
+
+      <div class="card-body-custom">
+        <div class="table-responsive">
+          <table id="staffUsersTable" class="table data-table w-100 align-middle">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Username</th>
+                <th>Employee ID</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Global User</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for user in users %}
+              <tr class="{% if user.is_global_user %}global-row{% endif %}">
+                <td>{{ forloop.counter }}</td>
+                <td><strong>{{ user.username }}</strong></td>
+                <td>{{ user.Employee_id }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.Department.Department|default:"-" }}</td>
+                <td>{{ user.role.role|default:"-" }}</td>
+
+                <td>
+                  {% if user.is_global_user %}
+                    <span class="badge-status badge-success">
+                      <i class="fas fa-circle-check"></i> Global
+                    </span>
+                  {% else %}
+                    <span class="badge-status badge-muted">
+                      <i class="fas fa-circle-minus"></i> Not Global
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="user_id" value="{{ user.id }}">
+
+                    <select name="is_global"
+                            class="form-select form-select-sm global-select {% if user.is_global_user %}is-global{% endif %}"
+                            onchange="this.form.submit()">
+
+                      {% if user.is_global_user %}
+                        <option value="1" selected>1 - Global</option>
+                        <option value="0">0 - Not Global</option>
+                      {% else %}
+                        <option value="0" selected>0 - Not Global</option>
+                        <option value="1">1 - Global</option>
+                      {% endif %}
+
+                    </select>
+                  </form>
+                </td>
+              </tr>
+
+              {% empty %}
+              <tr>
+                <td colspan="8" class="text-center text-muted py-4">
+                  <i class="fas fa-inbox me-2"></i> No faculty users found.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  var table = $('#staffUsersTable').DataTable({
+    paging: true,
+    ordering: true,
+    info: true,
+    responsive: true,
+    autoWidth: false,
+    pageLength: 25,
+    order: [[6, 'asc']],
+    dom: 'rtip',
+    columnDefs: [
+      { targets: 6, visible: false }
+    ]
+  });
+
+  $('#globalSearch').on('keyup', function() {
+    table.search(this.value).draw();
+  });
+
+  $('#departmentFilter').on('change', function() {
+    var selected = this.value;
+    table.column(4).search(selected).draw();
+  });
+});
+</script>
+
+{% endblock %}

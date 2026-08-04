@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="student-upload-page">
+
+    <style>
+        .student-upload-page {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            padding: 20px;
+            min-height: 100%;
+        }
+
+        .student-upload-page .card {
+            background: #fff;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            max-width: 100%;
+        }
+
+        .student-upload-page h3,
+        .student-upload-page h4 {
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .student-upload-page .upload-form {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .student-upload-page button {
+            padding: 9px 18px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .student-upload-page button:hover {
+            background: #0056b3;
+        }
+
+        .student-upload-page .messages {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+
+        .student-upload-page .messages li {
+            color: #444;
+            margin-bottom: 6px;
+        }
+
+        .student-upload-page .stats {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .student-upload-page .stat-box {
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            min-width: 110px;
+            text-align: center;
+        }
+
+        .student-upload-page .created  { background: #d4edda; color: #155724; }
+        .student-upload-page .updated  { background: #cce5ff; color: #004085; }
+        .student-upload-page .skipped  { background: #fff3cd; color: #856404; }
+        .student-upload-page .error    { background: #f8d7da; color: #721c24; }
+        .student-upload-page .total    { background: #e2e3e5; color: #212529; }
+
+        .student-upload-page .search-box {
+            margin: 20px 0 12px;
+        }
+
+        .student-upload-page .search-box input {
+            width: 320px;
+            max-width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        .student-upload-page .table-wrapper {
+            max-height: 460px;
+            overflow: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+
+        .student-upload-page table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .student-upload-page thead th {
+            position: sticky;
+            top: 0;
+            background: #343a40;
+            color: white;
+            padding: 10px 12px;
+            z-index: 2;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .student-upload-page tbody td {
+            padding: 9px 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .student-upload-page .badge {
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 12.5px;
+            font-weight: 600;
+            display: inline-block;
+            min-width: 70px;
+            text-align: center;
+        }
+
+        .student-upload-page .badge.CREATED { background: #28a745; color: white; }
+        .student-upload-page .badge.UPDATED { background: #007bff; color: white; }
+        .student-upload-page .badge.SKIPPED { background: #ffc107; color: #212529; }
+        .student-upload-page .badge.ERROR   { background: #dc3545; color: white; }
+    </style>
+
+    <div class="card">
+
+        <h3>Upload Student Results</h3>
+
+        <form method="post" enctype="multipart/form-data" class="upload-form">
+            {% csrf_token %}
+            <input type="file" name="excel_file" required accept=".xlsx,.xls">
+            <button type="submit">Upload</button>
+        </form>
+
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if data %}
+            <hr style="margin: 25px 0; border-color: #eee;">
+
+            <h4>Upload Result Summary</h4>
+
+            <!-- COUNTS -->
+            <div class="stats" id="stats">
+                <div class="stat-box total">Total: <span id="totalCount">0</span></div>
+                <div class="stat-box created">Created: <span id="createdCount">0</span></div>
+                <div class="stat-box updated">Updated: <span id="updatedCount">0</span></div>
+                <div class="stat-box skipped">Skipped: <span id="skippedCount">0</span></div>
+                <div class="stat-box error">Error: <span id="errorCount">0</span></div>
+            </div>
+
+            <!-- SEARCH -->
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search reg no, name, course, status...">
+            </div>
+
+            <!-- TABLE -->
+            <div class="table-wrapper">
+                <table id="resultTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            {% for key in data.0.keys %}
+                                {% if key != "status" %}
+                                    <th>{{ key|upper }}</th>
+                                {% endif %}
+                            {% endfor %}
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            {% for key, value in row.items %}
+                                {% if key != "status" %}
+                                    <td>{{ value }}</td>
+                                {% endif %}
+                            {% endfor %}
+                            <td>
+                                <span class="badge {{ row.status }}">
+                                    {{ row.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+    </div><!-- .card -->
+
+</div><!-- .student-upload-page -->
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const container = document.querySelector(".student-upload-page");
+        if (!container) return;
+
+        const searchInput = container.querySelector("#searchInput");
+        const table = container.querySelector("#resultTable");
+        if (!searchInput || !table) return;
+
+        const rows = table.tBodies[0].rows;
+
+        function updateCounts() {
+            let total = 0, created = 0, updated = 0, skipped = 0, error = 0;
+
+            for (let row of rows) {
+                if (row.style.display === "none") continue;
+
+                total++;
+                const statusCell = row.cells[row.cells.length - 1];
+                const status = statusCell?.innerText?.trim().toUpperCase() || "";
+
+                if (status.includes("CREATED")) created++;
+                else if (status.includes("UPDATED")) updated++;
+                else if (status.includes("SKIPPED")) skipped++;
+                else if (status.includes("ERROR")) error++;
+            }
+
+            container.querySelector("#totalCount").textContent = total;
+            container.querySelector("#createdCount").textContent = created;
+            container.querySelector("#updatedCount").textContent = updated;
+            container.querySelector("#skippedCount").textContent = skipped;
+            container.querySelector("#errorCount").textContent = error;
+        }
+
+        searchInput.addEventListener("input", () => {
+            const filter = searchInput.value.toLowerCase().trim();
+
+            for (let row of rows) {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? "" : "none";
+            }
+            updateCounts();
+        });
+
+        // Initial count
+        updateCounts();
+    });
+</script>
+
+{% endblock %}

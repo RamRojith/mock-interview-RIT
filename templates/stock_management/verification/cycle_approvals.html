@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid py-4" style="max-width:1200px;">
+  <h2 class="fw-bold text-primary mb-3"><i class="fa-solid fa-stamp me-2"></i>Verification Cycle Approvals</h2>
+
+  {% if messages %}{% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}{% endif %}
+
+  <div class="card shadow-sm border-0">
+    <div class="table-responsive">
+      <table class="table table-bordered mb-0 align-middle">
+        <thead class="table-light text-center"><tr><th>Cycle</th><th>Financial Year</th><th>Dates</th><th>Assignments</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for c in cycles %}
+          <tr>
+            <td>{{ c.cycle_name }}</td>
+            <td class="text-center">{{ c.financial_year }}</td>
+            <td class="text-center">{{ c.start_date }} → {{ c.end_date }}</td>
+            <td class="text-center">{{ c.assignments.count }}</td>
+            <td style="min-width:260px;">
+              <div class="d-flex gap-2 align-items-center">
+                <a href="{% url 'verification_cycle_detail' c.id %}" class="btn btn-sm btn-outline-secondary">View</a>
+                <form method="post" action="{% url 'verification_cycle_action' c.id %}">{% csrf_token %}
+                  <input type="hidden" name="action" value="approve">
+                  <input type="hidden" name="next" value="{% url 'verification_cycle_approvals' %}">
+                  <button class="btn btn-sm btn-success">Approve</button>
+                </form>
+                <form method="post" action="{% url 'verification_cycle_action' c.id %}" class="d-flex gap-1">{% csrf_token %}
+                  <input type="hidden" name="action" value="reject">
+                  <input type="hidden" name="next" value="{% url 'verification_cycle_approvals' %}">
+                  <input type="text" name="reason" class="form-control form-control-sm" placeholder="Reason" style="max-width:120px;">
+                  <button class="btn btn-sm btn-danger">Reject</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center text-muted py-3">No cycles awaiting approval.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock content %}

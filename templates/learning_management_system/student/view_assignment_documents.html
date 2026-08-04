@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Modern UI Kit -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --primary: #4361EE;
+        --primary-light: #EFF3FF;
+        --secondary: #3A0CA3;
+        --text-dark: #2B2D42;
+        --text-medium: #4A4B63;
+        --text-light: #8D8E9E;
+        --bg-light: #FAFBFF;
+        --border-color: #E2E4ED;
+    }
+
+    .modern-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-title i {
+        color: var(--primary);
+    }
+
+    .course-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .course-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 24px rgba(67, 97, 238, 0.08);
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .course-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 32px rgba(67, 97, 238, 0.12);
+    }
+
+    .course-card a {
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .course-badge {
+        background: var(--primary-light);
+        color: var(--primary);
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+        margin-left: auto;
+    }
+
+    .course-header {
+        padding: 1.25rem;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        position: relative;
+    }
+
+    .course-code {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .course-title {
+        font-size: 0.95rem;
+        opacity: 0.9;
+    }
+
+    .course-body {
+        padding: 1.25rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .course-meta {
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px dashed var(--border-color);
+    }
+
+    .meta-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .meta-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .meta-icon {
+        width: 24px;
+        color: var(--primary);
+        font-size: 0.9rem;
+    }
+
+    .meta-label {
+        font-weight: 500;
+        color: var(--text-medium);
+        font-size: 0.85rem;
+        min-width: 80px;
+    }
+
+    .meta-value {
+        color: var(--text-dark);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .course-footer {
+        padding: 1rem 1.25rem;
+        background: var(--bg-light);
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .view-btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 1.25rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .view-btn:hover {
+        background: var(--secondary);
+        transform: translateY(-2px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+        grid-column: 1 / -1;
+    }
+
+    .empty-icon {
+        font-size: 3.5rem;
+        color: var(--primary);
+        opacity: 0.2;
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 0.75rem;
+    }
+
+    .empty-text {
+        color: var(--text-light);
+        max-width: 500px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+        .course-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<div class="modern-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-file-alt"></i>
+            Assignment Files
+        </h1>
+    </div>
+
+    {% if programs %}
+    
+        <div class="course-grid">
+            {% for program in programs %}
+                {% for course in program.courses %}
+                
+                    <div class="course-card">
+                        <a href="{% url 'view_uploaded_assignment_documents' course_code=course.course_code %}?intake={{ program.intake|urlencode }}&batch={{ program.batch|urlencode }}">
+                            <div class="course-header">
+                                <div class="course-code">
+                                    
+                                    {{ course.course_code }}
+                                    <span class="course-badge">{{ program.program_code }}</span>
+                                </div>
+                                <div class="course-title">{{ course.course_title }}</div>
+                            </div>
+                            <div class="course-body">
+                                <div class="course-meta">
+                                    <div class="meta-row">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </div>
+                                        <div class="meta-label">Semester:</div>
+                                        <div class="meta-value">{{ course.semester }}</div>
+                                    </div>
+                                    <div class="meta-row">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                        <div class="meta-label">Batch:</div>
+                                        <div class="meta-value">{{ program.batch }}</div>
+                                    </div>
+                                    <div class="meta-row">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-sign-in-alt"></i>
+                                        </div>
+                                        <div class="meta-label">Intake:</div>
+                                        <div class="meta-value">{{ program.intake }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="course-footer">
+                                <button class="view-btn">
+                                    <i class="fas fa-folder-open"></i> View Assignments
+                                </button>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-file-alt empty-icon"></i>
+            <h3 class="empty-title">No Assignments Available</h3>
+            <p class="empty-text">You are not currently enrolled in any courses with available assignments. Please contact your academic advisor if you believe this is an error.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

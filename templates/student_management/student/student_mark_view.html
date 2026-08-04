@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% load em_tags %}
+
+{% block content %}
+<div class="container mt-4">
+    <h4 class="mb-4">Student Marks Overview</h4>
+
+    <!-- Semester Cards -->
+    <div class="row mb-4">
+        {% for card in semester_cards %}
+        <div class="col-md-3 col-sm-6 mb-3">
+            <button
+                class="card w-100 border-0 shadow-sm semester-card-btn {% if active_semester == card.semester %}active-sem-card{% endif %}"
+                type="button"
+                onclick="showSemester({{ card.semester }})"
+                id="semester-card-{{ card.semester }}"
+                style="cursor:pointer;"
+            >
+                <div class="card-body text-center">
+                    <h5 class="mb-1">Semester {{ card.semester }}</h5>
+                    <small class="text-muted">{{ card.course_count }} Courses</small>
+                </div>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Semester Content -->
+    {% for sem, sem_data in semester_details.items %}
+    <div
+        class="semester-content"
+        id="semester-content-{{ sem }}"
+        {% if active_semester != sem %}style="display: none;"{% endif %}
+    >
+        <div class="card shadow-sm mb-4">
+            <div class="card-header text-center bg-primary text-white">
+                <h5 class="mb-0">Internal Mark Details (Semester {{ sem }})</h5>
+            </div>
+
+            <div class="card-body">
+                {% if sem_data.courses %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">#</th>
+                                    <th rowspan="2">Course Code</th>
+                                    <th rowspan="2">Course Name</th>
+                                    <th rowspan="2">Credits</th>
+
+                                    {% for exam in sem_data.exam_names %}
+                                        <th class="text-center">{{ exam }}</th>
+                                    {% endfor %}
+
+                                    <th rowspan="2">Overall</th>
+                                    <th rowspan="2">Total</th>
+                                    <th rowspan="2">Action</th>
+                                </tr>
+                                {% if sem_data.exam_names %}
+                                <tr>
+                                    {% for exam in sem_data.exam_names %}
+                                        <th class="text-center">{{ exam }}</th>
+                                    {% endfor %}
+                                </tr>
+                                {% endif %}
+                            </thead>
+                            <tbody>
+                                {% for item in sem_data.courses %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ item.course.course_code }}</td>
+                                    <td>{{ item.course.title }}</td>
+                                    <td>{{ item.credits }}</td>
+
+                                    {% for exam in sem_data.exam_names %}
+                                    <td class="text-center">
+                                        {% if exam in item.exam_wise_marks and item.exam_wise_marks|get_item:exam %}
+                                            {% with mark=item.exam_wise_marks|get_item:exam %}
+                                                {% if mark.has_mark %}
+                                                    {{ mark.total_obt }} / {{ mark.total_max }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            {% endwith %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+
+                                    <td class="text-center">
+                                        {% if item.overall_obt != None %}
+                                            {{ item.overall_obt }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-center">
+                                        {% if item.overall_total != None %}
+                                            {{ item.overall_total }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-center">
+                                        {% if item.latest_exam_name %}
+                                            <a href="{% url 'student_mark_pdf' %}?reg_no={{ student.reg_no }}&course_code={{ item.course.course_code }}&exam_name={{ item.latest_exam_name }}"
+                                               target="_blank"
+                                               class="btn btn-sm btn-primary">
+                                                View PDF
+                                            </a>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center mb-0">No course found</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .semester-card-btn {
+        background: #fff;
+        transition: 0.2s ease-in-out;
+        border-radius: 12px;
+    }
+
+    .semester-card-btn:hover,
+    .active-sem-card {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+        border: 1px solid #0d6efd !important;
+    }
+</style>
+
+<script>
+    function showSemester(semester) {
+        document.querySelectorAll(".semester-content").forEach(function(content) {
+            content.style.display = "none";
+        });
+
+        document.querySelectorAll(".semester-card-btn").forEach(function(card) {
+            card.classList.remove("active-sem-card");
+        });
+
+        const activeContent = document.getElementById("semester-content-" + semester);
+        const activeCard = document.getElementById("semester-card-" + semester);
+
+        if (activeContent) {
+            activeContent.style.display = "block";
+        }
+
+        if (activeCard) {
+            activeCard.classList.add("active-sem-card");
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        showSemester({{ active_semester }});
+    });
+</script>
+{% endblock content %}

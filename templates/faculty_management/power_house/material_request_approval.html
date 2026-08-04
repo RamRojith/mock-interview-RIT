@@ -1,0 +1,539 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.material-approval-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.material-approval-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.material-approval-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.material-approval-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.material-approval-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.material-approval-portal .custom-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.material-approval-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a4b8c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.material-approval-portal .card-body-custom {
+  padding: 1.5rem;
+}
+
+.material-approval-portal .alert-success-custom {
+  max-width: 1400px;
+  margin: 0 auto 1rem auto;
+  background: #dcfce7;
+  color: #166534;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  font-weight: 700;
+  border: 1px solid #bbf7d0;
+}
+
+.material-approval-portal .alert-error-custom {
+  max-width: 1400px;
+  margin: 0 auto 1rem auto;
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  font-weight: 700;
+  border: 1px solid #fecaca;
+}
+
+.material-approval-portal .search-box {
+  width: 260px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+}
+
+.material-approval-portal .search-box:focus,
+.material-approval-portal textarea:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26,75,140,0.1);
+  outline: none;
+}
+
+.material-approval-portal .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.material-approval-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.material-approval-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.material-approval-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.85rem;
+  color: #334155;
+  vertical-align: top;
+}
+
+.material-approval-portal .data-table tbody tr:hover {
+  background: rgba(26,75,140,0.03);
+}
+
+.material-approval-portal .item-line,
+.material-approval-portal .ticket-line {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 0.35rem 0.6rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.8rem;
+  color: #334155;
+}
+
+.material-approval-portal .ticket-line strong {
+  color: #1a4b8c;
+}
+
+.material-approval-portal .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.material-approval-portal .badge-info {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.material-approval-portal .badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.material-approval-portal .badge-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.material-approval-portal .badge-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.material-approval-portal textarea {
+  width: 100%;
+  min-width: 220px;
+  min-height: 80px;
+  resize: vertical;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+}
+
+.material-approval-portal .action-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.material-approval-portal .small-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 0.55rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.material-approval-portal .small-btn.success {
+  background: #16a34a;
+  color: white;
+}
+
+.material-approval-portal .small-btn.danger {
+  background: #dc2626;
+  color: white;
+}
+
+.material-approval-portal .empty-row {
+  text-align: center;
+  padding: 2rem !important;
+  color: #64748b;
+  font-weight: 700;
+}
+
+@media(max-width: 768px) {
+  .material-approval-portal {
+    padding: 1rem;
+  }
+
+  .material-approval-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .material-approval-portal .card-header-custom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .material-approval-portal .search-box,
+  .material-approval-portal .small-btn {
+    width: 100%;
+  }
+}
+</style>
+
+<div class="material-approval-portal">
+
+  <div class="page-header">
+    <h1><i class="fas fa-clipboard-check me-2"></i> Material Approval</h1>
+    <p class="header-subtitle">Approve material requests linked with tickets</p>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      {% if message.tags == "error" %}
+        <div class="alert-error-custom">
+          <i class="fas fa-circle-xmark me-2"></i> {{ message }}
+        </div>
+      {% else %}
+        <div class="alert-success-custom">
+          <i class="fas fa-circle-check me-2"></i> {{ message }}
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  <div class="page-container">
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-hourglass-half me-2"></i> Pending Approvals</span>
+
+        <input type="text"
+               class="search-box"
+               data-table="approvalTable"
+               placeholder="Search approval...">
+      </div>
+
+      <div class="card-body-custom">
+        <div class="table-responsive">
+          <table id="approvalTable" class="data-table">
+            <thead>
+              <tr>
+                <th>Request No</th>
+                <th>Ticket Details</th>
+                <th>User</th>
+                <th>Department</th>
+                <th>Purpose</th>
+                <th>Items</th>
+                <th>Level</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for entry in actionable_entries %}
+              <tr>
+                <td>
+                  <strong>{{ entry.request.request_no }}</strong>
+                </td>
+
+                <td>
+                  {% if entry.request.ticket %}
+                    <div class="ticket-line">
+                      <strong>Ticket #{{ entry.request.ticket.id }}</strong>
+                    </div>
+
+                    <div class="ticket-line">
+                      <strong>Issue:</strong> {{ entry.request.ticket.issue }}
+                    </div>
+
+                    <div class="ticket-line">
+                      <strong>Location:</strong> {{ entry.request.ticket.location }}
+                    </div>
+
+                    <div class="ticket-line">
+                      <strong>Status:</strong> {{ entry.request.ticket.status }}
+                    </div>
+
+                    <div class="ticket-line">
+                      <strong>Description:</strong> {{ entry.request.ticket.description }}
+                    </div>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if entry.request.ticket.student %}
+                    <div class="ticket-line">
+                      <strong>Student:</strong> {{ entry.request.ticket.student.name }}
+                    </div>
+                    <div class="ticket-line">
+                      <strong>Reg No:</strong> {{ entry.request.ticket.student.reg_no }}
+                    </div>
+                  {% elif entry.request.ticket.faculty %}
+                    <div class="ticket-line">
+                      <strong>Faculty:</strong> {{ entry.request.ticket.faculty.name }}
+                    </div>
+                    <div class="ticket-line">
+                      <strong>Faculty ID:</strong> {{ entry.request.ticket.faculty.faculty_id }}
+                    </div>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>{{ entry.request.department.Department|default:"-" }}</td>
+
+                <td>{{ entry.request.purpose }}</td>
+
+                <td>
+                  {% for item in entry.request.request_items.all %}
+                    <div class="item-line">
+                      {{ item.item.item_name }} - {{ item.requested_qty }} {{ item.item.unit }}
+                    </div>
+                  {% empty %}
+                    -
+                  {% endfor %}
+                </td>
+
+                <td>
+                  <span class="badge-status badge-info">
+                    <i class="fas fa-layer-group"></i> Level {{ entry.approver_level }}
+                  </span>
+                </td>
+
+                <td>
+                  <form method="post" onsubmit="return confirmApproval(this);">
+                    {% csrf_token %}
+                    <input type="hidden" name="entry_id" value="{{ entry.id }}">
+
+                    <textarea name="remarks" placeholder="Remarks"></textarea>
+
+                    <div class="action-row">
+                      <button type="submit"
+                              class="small-btn success"
+                              name="action"
+                              value="approve">
+                        <i class="fas fa-check me-1"></i> Approve
+                      </button>
+
+                      <button type="submit"
+                              class="small-btn danger"
+                              name="action"
+                              value="reject">
+                        <i class="fas fa-times me-1"></i> Reject
+                      </button>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+
+              {% empty %}
+              <tr>
+                <td colspan="8" class="empty-row">
+                  <i class="fas fa-inbox me-2"></i> No pending approvals.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-clock-rotate-left me-2"></i> My Approval History</span>
+
+        <input type="text"
+               id="historySearch"
+               class="search-box"
+               placeholder="Search history...">
+      </div>
+
+      <div class="card-body-custom">
+        <div class="table-responsive">
+          <table id="historyTable" class="data-table">
+            <thead>
+              <tr>
+                <th>Request</th>
+                <th>Ticket</th>
+                <th>User</th>
+                <th>Status</th>
+                <th>Reason</th>
+                <th>Acted On</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for entry in my_actions %}
+              <tr>
+                <td>
+                  <strong>{{ entry.request.request_no }}</strong>
+                </td>
+
+                <td>
+                  {% if entry.request.ticket %}
+                    #{{ entry.request.ticket.id }} - {{ entry.request.ticket.issue }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if entry.request.ticket.student %}
+                    Student: {{ entry.request.ticket.student.name }}
+                  {% elif entry.request.ticket.faculty %}
+                    Faculty: {{ entry.request.ticket.faculty.name }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if entry.status == "APPROVED" %}
+                    <span class="badge-status badge-success">
+                      <i class="fas fa-check-circle"></i> Approved
+                    </span>
+                  {% elif entry.status == "REJECTED" %}
+                    <span class="badge-status badge-danger">
+                      <i class="fas fa-times-circle"></i> Rejected
+                    </span>
+                  {% else %}
+                    <span class="badge-status badge-info">
+                      <i class="fas fa-circle-info"></i> {{ entry.status }}
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td>{{ entry.reason|default:"-" }}</td>
+                <td>{{ entry.acted_on|default:"-" }}</td>
+              </tr>
+
+              {% empty %}
+              <tr>
+                <td colspan="6" class="empty-row">
+                  <i class="fas fa-inbox me-2"></i> No approval history.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function confirmApproval(form) {
+  const clicked = document.activeElement;
+  const action = clicked.value;
+
+  if (action === "reject") {
+    const remarks = form.querySelector("textarea[name='remarks']").value.trim();
+
+    if (!remarks) {
+      alert("Rejection reason is required.");
+      return false;
+    }
+
+    return confirm("Are you sure you want to reject this request?");
+  }
+
+  return confirm("Are you sure you want to approve this request?");
+}
+
+function setupTableSearch(inputSelector, tableSelector) {
+  const input = document.querySelector(inputSelector);
+  const table = document.querySelector(tableSelector);
+
+  if (!input || !table) return;
+
+  input.addEventListener("input", function () {
+    const searchText = this.value.toLowerCase();
+    const rows = table.querySelectorAll("tbody tr");
+
+    rows.forEach(row => {
+      const isEmptyRow = row.querySelector(".empty-row");
+
+      if (isEmptyRow) return;
+
+      row.style.display = row.innerText.toLowerCase().includes(searchText) ? "" : "none";
+    });
+  });
+}
+
+setupTableSearch(".search-box[data-table='approvalTable']", "#approvalTable");
+setupTableSearch("#historySearch", "#historyTable");
+</script>
+
+{% endblock %}

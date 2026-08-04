@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Course Plan Completion Report{% endblock %}
+
+{% block content %}
+<div class="cpc-wrap">
+
+    <div class="cpc-header">
+        <div class="cpc-header-text">
+            <h1><i class="fas fa-clipboard-check"></i> Course Plan Completion — Record of Class Work</h1>
+            <p>Select a course and the section you handle to view its class-work record and export it as PDF.</p>
+        </div>
+    </div>
+
+    <!-- Course filter (top-level driver) -->
+    <div class="cpc-card cpc-filter-card">
+        <div class="cpc-card-head">
+            <h3><i class="fas fa-filter"></i> Filters</h3>
+        </div>
+        <div class="cpc-card-body">
+            <div class="cpc-filter-grid">
+                <div class="cpc-field">
+                    <label for="cpcCourse">Course <span class="cpc-req">*</span></label>
+                    <select id="cpcCourse" class="cpc-input"
+                            data-url="{% url 'course_plan_completion_report' %}">
+                        <option value="">-- Select Course --</option>
+                        {% for c in assigned_courses %}
+                            <option value="{{ c.course_code }}" {% if c.course_code == selected_course_code %}selected{% endif %}>
+                                {{ c.course_code }} — {{ c.title }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            {% if not assigned_courses %}
+                <p class="cpc-empty-note"><i class="fas fa-circle-info"></i> No courses are currently assigned to you.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Results (AJAX-swapped) -->
+    <div id="cpcResult">
+        {% if selected_course_code %}
+            {% include "student_management/_course_plan_completion_result.html" %}
+        {% else %}
+            <div class="cpc-placeholder">
+                <i class="fas fa-hand-pointer"></i>
+                <p>Select a course above to view its course-plan completion record.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.cpc-wrap {
+    --cpc-primary: #1a4b8c;
+    --cpc-primary-light: #2c5aa0;
+    --cpc-primary-soft: #eaf1fb;
+    --cpc-secondary: #f8b739;
+    --cpc-success: #28a745;
+    --cpc-success-soft: #e9f7ee;
+    --cpc-warning: #d97706;
+    --cpc-warning-soft: #fdf3e7;
+    --cpc-danger: #dc3545;
+    --cpc-border: #e2e8f0;
+    --cpc-dark: #1e293b;
+    --cpc-muted: #94a3b8;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+    color: var(--cpc-dark);
+}
+
+/* Header */
+.cpc-header {
+    background: linear-gradient(135deg, var(--cpc-primary) 0%, var(--cpc-primary-light) 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 1.8rem 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 24px rgba(26, 75, 140, 0.18);
+}
+.cpc-header h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 0.35rem; }
+.cpc-header p { margin: 0; opacity: 0.85; font-size: 0.95rem; }
+
+/* Cards */
+.cpc-card {
+    background: #fff;
+    border: 1px solid var(--cpc-border);
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+}
+.cpc-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--cpc-border);
+    background: #fafcff;
+}
+.cpc-card-head h3 { font-size: 1.05rem; font-weight: 700; margin: 0; color: var(--cpc-primary); }
+.cpc-card-head h3 i { margin-right: 0.4rem; }
+.cpc-card-body { padding: 1.25rem 1.5rem; }
+
+/* Filters */
+.cpc-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+.cpc-field { display: flex; flex-direction: column; }
+.cpc-field label { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.45rem; color: #475569; }
+.cpc-req { color: var(--cpc-danger); }
+.cpc-input {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 2px solid var(--cpc-border);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    background: #fbfdff;
+    color: var(--cpc-dark);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.cpc-input:focus {
+    outline: none;
+    border-color: var(--cpc-primary);
+    box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.12);
+    background: #fff;
+}
+.cpc-input:disabled { background: #f1f5f9; color: var(--cpc-muted); }
+.cpc-empty-note { margin: 0.9rem 0 0; color: var(--cpc-muted); font-size: 0.9rem; }
+
+/* Section controls row + PDF button */
+.cpc-controls-card .cpc-card-body { padding: 1.1rem 1.5rem; }
+.cpc-controls-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.cpc-section-field { min-width: 240px; flex: 1 1 240px; max-width: 380px; }
+.cpc-unit-field { min-width: 160px; flex: 0 1 200px; }
+.cpc-controls-actions { display: flex; align-items: center; margin-left: auto; }
+.cpc-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.3rem;
+    background: linear-gradient(135deg, #b91c1c, #dc2626);
+    color: #fff !important;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-radius: 12px;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.cpc-pdf-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(220, 38, 38, 0.32); color: #fff; }
+
+/* Summary stat cards */
+.cpc-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+.cpc-stat {
+    background: #fff;
+    border: 1px solid var(--cpc-border);
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    border-left: 5px solid var(--cpc-primary);
+}
+.cpc-stat-num { font-size: 1.7rem; font-weight: 800; line-height: 1; }
+.cpc-stat-label { font-size: 0.82rem; color: var(--cpc-muted); margin-top: 0.35rem; }
+.cpc-stat-done    { border-left-color: var(--cpc-success); }
+.cpc-stat-done    .cpc-stat-num { color: var(--cpc-success); }
+.cpc-stat-pending { border-left-color: var(--cpc-warning); }
+.cpc-stat-pending .cpc-stat-num { color: var(--cpc-warning); }
+.cpc-stat-pct     { border-left-color: var(--cpc-secondary); }
+.cpc-stat-pct     .cpc-stat-num { color: var(--cpc-primary); }
+
+/* Progress bar */
+.cpc-progress { height: 12px; background: #eef2f7; border-radius: 999px; overflow: hidden; margin-bottom: 1.25rem; }
+.cpc-progress-bar { height: 100%; background: linear-gradient(90deg, var(--cpc-success), #34d399); border-radius: 999px; transition: width 0.4s ease; }
+
+/* Register heading */
+.cpc-register-head { flex-direction: column; align-items: center; text-align: center; gap: 0.25rem; background: #fff; }
+.cpc-register-head h3 { font-size: 1.2rem; letter-spacing: 0.06em; color: var(--cpc-primary); }
+.cpc-register-sub { font-size: 0.9rem; color: var(--cpc-muted); font-weight: 500; }
+.cpc-ay-tag {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.12rem 0.7rem;
+    background: var(--cpc-primary-soft);
+    color: var(--cpc-primary);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+/* Register table (matches the physical Record of Class Work) */
+.cpc-table-wrap { overflow-x: auto; }
+.cpc-register { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.cpc-register thead th {
+    background: #fff;
+    color: var(--cpc-primary);
+    text-align: center;
+    padding: 0.7rem 0.6rem;
+    font-weight: 700;
+    border: 1px solid var(--cpc-primary);
+    white-space: normal;
+    line-height: 1.2;
+}
+.cpc-register tbody td {
+    padding: 0.6rem 0.7rem;
+    border: 1px solid #aebfd6;
+    vertical-align: top;
+}
+.cpc-cell-center { text-align: center; }
+.cpc-topic-cell { font-weight: 500; }
+.cpc-unit-row td {
+    background: var(--cpc-primary-soft);
+    color: var(--cpc-primary);
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+.cpc-row-done { background: #fbfffc; }
+.cpc-row-pending { background: #fffdf8; }
+.cpc-register tbody tr:hover td { background: #f4f8ff; }
+.cpc-init-check { color: var(--cpc-success); font-size: 0.95rem; }
+
+/* Placeholder / loading */
+.cpc-placeholder {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--cpc-muted);
+    background: #fff;
+    border: 1px dashed var(--cpc-border);
+    border-radius: 16px;
+}
+.cpc-placeholder i { font-size: 2.4rem; margin-bottom: 0.8rem; color: #cbd5e1; }
+.cpc-placeholder p { margin: 0; font-size: 0.98rem; }
+#cpcResult.cpc-loading { opacity: 0.5; pointer-events: none; transition: opacity 0.15s ease; }
+
+@media (max-width: 576px) {
+    .cpc-header { padding: 1.4rem; }
+    .cpc-header h1 { font-size: 1.2rem; }
+    .cpc-controls-row { align-items: stretch; }
+    .cpc-pdf-btn { justify-content: center; width: 100%; }
+}
+</style>
+
+<script>
+(function () {
+    const courseSelect = document.getElementById('cpcCourse');
+    const resultBox = document.getElementById('cpcResult');
+    if (!courseSelect || !resultBox) return;
+
+    const endpoint = courseSelect.dataset.url;
+
+    const PLACEHOLDER = '<div class="cpc-placeholder"><i class="fas fa-hand-pointer"></i>'
+        + '<p>Select a course above to view its course-plan completion record.</p></div>';
+    const ERROR = '<div class="cpc-placeholder"><i class="fas fa-triangle-exclamation"></i>'
+        + '<p>Failed to load the report. Please try again.</p></div>';
+
+    function loadReport(params) {
+        const usp = new URLSearchParams(params);
+        resultBox.classList.add('cpc-loading');
+        fetch(endpoint + '?' + usp.toString(), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function (r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.text();
+            })
+            .then(function (html) {
+                resultBox.innerHTML = html;
+                resultBox.classList.remove('cpc-loading');
+            })
+            .catch(function () {
+                resultBox.innerHTML = ERROR;
+                resultBox.classList.remove('cpc-loading');
+            });
+    }
+
+    // Delegated change handling: the Section + Unit selects live inside the
+    // AJAX-swapped region, so we listen on the document instead of binding
+    // directly (which would break after innerHTML is replaced).
+    document.addEventListener('change', function (e) {
+        const t = e.target;
+
+        if (t === courseSelect) {
+            if (!t.value) {
+                resultBox.innerHTML = PLACEHOLDER;
+                return;
+            }
+            // New course -> let the server pick the first section + all units.
+            loadReport({ course_code: t.value });
+
+        } else if (t.id === 'cpcSection') {
+            // Units are section-independent, so keep the current unit selection.
+            const unitEl = document.getElementById('cpcUnit');
+            loadReport({
+                course_code: courseSelect.value,
+                section_key: t.value,
+                unit_module_no: unitEl ? unitEl.value : ''
+            });
+
+        } else if (t.id === 'cpcUnit') {
+            const sectionEl = document.getElementById('cpcSection');
+            loadReport({
+                course_code: courseSelect.value,
+                section_key: sectionEl ? sectionEl.value : '',
+                unit_module_no: t.value
+            });
+        }
+    });
+})();
+</script>
+{% endblock content %}

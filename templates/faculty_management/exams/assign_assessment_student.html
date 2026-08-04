@@ -1,0 +1,700 @@
+{% extends "base.html" %}
+{% load static %}
+{% load fm_tags %}
+
+{% block content %}
+
+<style>
+.assign-assessment-page {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.assign-assessment-page .page-header {
+  max-width: 1200px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.assign-assessment-page .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.assign-assessment-page .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.assign-assessment-page .page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.assign-assessment-page .selection-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.assign-assessment-page .selection-card .card-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #374151;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.assign-assessment-page .selection-card .card-header h5 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.assign-assessment-page .selection-card .card-header i {
+  margin-right: 0.75rem;
+  color: #1a4b8c;
+}
+
+.assign-assessment-page .faculty-badge {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.assign-assessment-page .selection-card .card-body {
+  padding: 2rem;
+}
+
+.assign-assessment-page .selection-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.assign-assessment-page .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.assign-assessment-page .form-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.assign-assessment-page .form-select {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.assign-assessment-page .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+.assign-assessment-page .form-select:disabled {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.assign-assessment-page .info-panel {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.assign-assessment-page .info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.assign-assessment-page .info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.assign-assessment-page .info-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.assign-assessment-page .info-value {
+  font-size: 1rem;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.assign-assessment-page .assignment-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.assign-assessment-page .assignment-card .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.assign-assessment-page .assignment-card .card-header h5 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.assign-assessment-page .assignment-card .card-header i {
+  margin-right: 0.75rem;
+}
+
+.assign-assessment-page .assignment-card .card-body {
+  padding: 1.5rem;
+}
+
+.assign-assessment-page .action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.assign-assessment-page .student-count {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.assign-assessment-page .checkbox-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+.assign-assessment-page .checkbox-controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+  cursor: pointer;
+}
+
+.assign-assessment-page .form-check-input {
+  width: 1.1em;
+  height: 1.1em;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.assign-assessment-page .form-check-input:checked {
+  background-color: #1a4b8c;
+  border-color: #1a4b8c;
+}
+
+.assign-assessment-page .table-responsive {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.assign-assessment-page .table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0;
+}
+
+.assign-assessment-page .table th {
+  background: #f8fafc;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.assign-assessment-page .table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #374151;
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+.assign-assessment-page .table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.assign-assessment-page .table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.assign-assessment-page .student-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.assign-assessment-page .student-reg {
+  font-weight: 700;
+  color: #1a4b8c;
+  font-size: 0.95rem;
+}
+
+.assign-assessment-page .student-name {
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.assign-assessment-page .badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.assign-assessment-page .badge-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.assign-assessment-page .badge-secondary {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+}
+
+.assign-assessment-page .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 1.5rem;
+}
+
+.assign-assessment-page .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.assign-assessment-page .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+}
+
+.assign-assessment-page .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.assign-assessment-page .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 2px dashed #e2e8f0;
+}
+
+.assign-assessment-page .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .assign-assessment-page .page-header {
+    padding: 1rem;
+  }
+  
+  .assign-assessment-page .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .assign-assessment-page .selection-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .assign-assessment-page {
+    padding: 1rem;
+  }
+  
+  .assign-assessment-page .page-header {
+    padding: 0.75rem;
+  }
+  
+  .assign-assessment-page .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .assign-assessment-page .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .assign-assessment-page .selection-card .card-body {
+    padding: 1.5rem;
+  }
+  
+  .assign-assessment-page .assignment-card .card-body {
+    padding: 1rem;
+  }
+  
+  .assign-assessment-page .action-bar {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .assign-assessment-page .info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .assign-assessment-page .checkbox-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .assign-assessment-page .table-responsive {
+    font-size: 0.8rem;
+  }
+  
+  .assign-assessment-page .table th,
+  .assign-assessment-page .table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .assign-assessment-page .btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+</style>
+
+<div class="assign-assessment-page">
+  <div class="page-header">
+    <h1><i class="fas fa-tasks me-2"></i>Assign Assessment To Students</h1>
+    <p class="header-subtitle">Manage assessment assignments for your students</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Selection Card -->
+    <div class="selection-card">
+      <div class="card-header">
+        <h5><i class="fas fa-filter me-2"></i>Select Course & Assessment</h5>
+        <div class="faculty-badge">
+          <i class="fas fa-user-tie me-1"></i> Faculty ID: {{ faculty_id }}
+        </div>
+      </div>
+      <div class="card-body">
+        <form method="get" class="selection-form">
+          <input type="hidden" name="fid" value="{{ faculty_id }}">
+          
+          <div class="selection-grid">
+            <div class="form-group">
+              <label class="form-label">Your Assigned Subjects</label>
+              <select class="form-select" name="asf" onchange="this.form.submit()">
+                <option value="">Select Subject</option>
+                {% for a in assignments %}
+                  <option value="{{ a.id }}" {% if selected_asf and selected_asf.id == a.id %}selected{% endif %}>
+                    {{ a.course }} | Sem {{ a.course.semester }}{% if a.section %} - {{ a.section }}{% endif %}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Assessment</label>
+              <select class="form-select" name="assessment" {% if not selected_asf %}disabled{% endif %} onchange="this.form.submit()">
+                <option value="">Select Assessment</option>
+                {% for a in assessments %}
+                  <option value="{{ a.id }}" {% if selected_assessment and selected_assessment.id == a.id %}selected{% endif %}>
+                    {% if a.Assessmentname %}
+                      {{ a.Assessmentname }}
+                    {% elif a.assessment %}
+                      {{ a.assessment.assessment_name }}
+                    {% else %}
+                      (unnamed)
+                    {% endif %}
+                    {% if a.module %}(Module {{ a.module }}){% endif %}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </form>
+
+        {% if selected_asf and selected_assessment %}
+          <div class="info-panel">
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Course</span>
+                <span class="info-value">{{ selected_asf.course }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Semester</span>
+                <span class="info-value">{{ selected_asf.course.semester }}</span>
+              </div>
+              {% if selected_asf.section %}
+              <div class="info-item">
+                <span class="info-label">Section</span>
+                <span class="info-value">{{ selected_asf.section }}</span>
+              </div>
+              {% endif %}
+              {% if selected_asf.batch %}
+              <div class="info-item">
+                <span class="info-label">Batch</span>
+                <span class="info-value">{{ selected_asf.batch }}</span>
+              </div>
+              {% endif %}
+              {% if selected_asf.course.department %}
+              <div class="info-item">
+                <span class="info-label">Department</span>
+                <span class="info-value">{{ selected_asf.course.department }}</span>
+              </div>
+              {% endif %}
+              <div class="info-item">
+                <span class="info-label">Assessment</span>
+                <span class="info-value">
+                  {% if selected_assessment.Assessmentname %}
+                    {{ selected_assessment.Assessmentname }}
+                  {% elif selected_assessment.assessment %}
+                    {{ selected_assessment.assessment.assessment_name }}
+                  {% else %}
+                    (unnamed)
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if selected_asf and selected_assessment %}
+      <!-- Student Assignment Card -->
+      <div class="assignment-card">
+        <div class="card-header">
+          <h5><i class="fas fa-user-graduate me-2"></i>Student Assignment</h5>
+        </div>
+        <div class="card-body">
+          <div class="action-bar">
+            <div class="student-count">
+              <i class="fas fa-users me-2"></i>
+              <strong>{{ students|length }}</strong> students found
+            </div>
+          </div>
+
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="asf" value="{{ selected_asf.id }}">
+            <input type="hidden" name="assessment" value="{{ selected_assessment.id }}">
+
+            <div class="checkbox-controls">
+              <label>
+                <input type="checkbox" id="chkAll" class="form-check-input">
+                Select All Students
+              </label>
+              <span class="text-muted small">| Click to select/deselect all students</span>
+            </div>
+            
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width:50px;"></th>
+                    <th style="width:60px;">#</th>
+                    <th>Student Information</th>
+                    <th style="width:120px;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for s in students %}
+                    {% with assigned=assigned_map|get_item:s.id %}
+                    <tr>
+                      <td>
+                        <input type="checkbox" name="students" value="{{ s.id }}" class="form-check-input chkRow" {% if assigned %}checked{% endif %}>
+                      </td>
+                      <td class="text-center">
+                        <strong>{{ forloop.counter }}</strong>
+                      </td>
+                      <td>
+                        <div class="student-info">
+                          <div class="student-reg">{{ s.register_no|default:s.reg_no }}</div>
+                          <div class="student-name">{{ s.full_name|default:s.name|default:s }}</div>
+                        </div>
+                      </td>
+                      <td>
+                        {% if assigned %}
+                          <span class="badge badge-success">
+                            <i class="fas fa-check me-1"></i>Assigned
+                          </span>
+                        {% else %}
+                          <span class="badge badge-secondary">
+                            <i class="fas fa-times me-1"></i>Not Assigned
+                          </span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    {% endwith %}
+                  {% empty %}
+                    <tr>
+                      <td colspan="4" class="text-center">
+                        <div class="empty-state">
+                          <i class="fas fa-users-slash"></i>
+                          <h4>No Students Found</h4>
+                          <p class="text-muted">No students match the selected filters.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            {% if students %}
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">
+                  <i class="fas fa-paper-plane me-2"></i>Assign Selected Students
+                </button>
+              </div>
+            {% endif %}
+          </form>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Select All functionality
+  const selectAll = document.getElementById('chkAll');
+  const rowCheckboxes = document.querySelectorAll('.chkRow');
+  
+  if (selectAll) {
+    selectAll.addEventListener('change', function() {
+      rowCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+      });
+    });
+  }
+
+  // Update Select All when individual checkboxes change
+  rowCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+      const someChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+      
+      if (selectAll) {
+        selectAll.checked = allChecked;
+        selectAll.indeterminate = someChecked && !allChecked;
+      }
+    });
+  });
+
+  // Add loading state to form submission
+  const form = document.querySelector('form[method="post"]');
+  if (form) {
+    form.addEventListener('submit', function() {
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Assigning...';
+        submitBtn.disabled = true;
+        
+        // Revert after 5 seconds if still on page
+        setTimeout(() => {
+          if (submitBtn.disabled) {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+          }
+        }, 5000);
+      }
+    });
+  }
+
+  // Add visual feedback for checkbox interactions
+  rowCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      const row = this.closest('tr');
+      if (this.checked) {
+        row.style.backgroundColor = '#f0f9ff';
+      } else {
+        row.style.backgroundColor = '';
+      }
+    });
+  });
+});
+</script>
+
+{% endblock %}

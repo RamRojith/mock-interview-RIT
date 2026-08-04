@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    .perm-page .card{
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.06);
+    }
+    .perm-page .card-header{
+        border-radius: 16px 16px 0 0 !important;
+    }
+    .perm-page .form-label{
+        font-weight: 600;
+        color: #374151;
+    }
+    .perm-page .table thead th{
+        background: #1f2937;
+        color: #fff;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    .perm-page .table tbody td{
+        vertical-align: middle;
+    }
+</style>
+
+<div class="container mt-4 perm-page">
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Permission Timing Master</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                <input type="hidden" name="row_id" value="{% if edit_obj %}{{ edit_obj.id }}{% endif %}">
+
+                <div class="col-md-4">
+                    <label class="form-label">Session Name</label>
+                    <input
+                        type="text"
+                        name="session_name"
+                        class="form-control"
+                        placeholder="Forenoon / Afternoon"
+                        value="{% if edit_obj %}{{ edit_obj.session_name }}{% endif %}"
+                        required
+                    >
+                </div>
+
+                <div class="col-md-3">
+    <label class="form-label">Start Time (24-hour format)</label>
+    <input
+        type="time"
+        name="start_time"
+        class="form-control"
+        value="{% if edit_obj %}{{ edit_obj.start_time|time:'H:i' }}{% endif %}"
+        required
+    >
+</div>
+
+<div class="col-md-3">
+    <label class="form-label">End Time (24-hour format)</label>
+    <input
+        type="time"
+        name="end_time"
+        class="form-control"
+        value="{% if edit_obj %}{{ edit_obj.end_time|time:'H:i' }}{% endif %}"
+        required
+    >
+</div>
+                <div class="col-md-2">
+    <label class="form-label">Value</label>
+    <input
+        type="number"
+        step="0.1"
+        name="value"
+        class="form-control"
+        placeholder="0.5 / 1.0"
+        value="{% if edit_obj %}{{ edit_obj.value }}{% endif %}"
+        required
+    >
+</div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <div class="form-check mb-2">
+                        <input
+                            type="checkbox"
+                            class="form-check-input"
+                            id="is_active"
+                            name="is_active"
+                            {% if edit_obj %}
+                                {% if edit_obj.is_active %}checked{% endif %}
+                            {% else %}
+                                checked
+                            {% endif %}
+                        >
+                        <label class="form-check-label" for="is_active">Active</label>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" class="btn btn-success">
+                        {% if edit_obj %}Update{% else %}Save{% endif %}
+                    </button>
+                    <a href="{% url 'permission_timing_master' %}" class="btn btn-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Saved Permission Timings</h5>
+        </div>
+        <div class="card-body table-responsive">
+            <table class="table table-bordered table-striped align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Session Name</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                        <th style="width: 150px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in timings %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ row.session_name }}</td>
+                            <td>{{ row.start_time|time:"h:i A" }}</td>
+                            <td>{{ row.end_time|time:"h:i A" }}</td>
+                            <td>{{ row.value }}</td>
+                            <td>
+                                {% if row.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="?edit={{ row.id }}" class="btn btn-sm btn-primary">Edit</a>
+                                <a href="?delete={{ row.id }}"
+                                   class="btn btn-sm btn-danger"
+                                   onclick="return confirm('Are you sure you want to delete this timing?');">
+                                    Delete
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No permission timings found.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,746 @@
+{% extends "base.html" %}
+{% load static %}
+{% load feedback_tags %}
+{% block content %}
+
+<style>
+  :root{
+    --card: #ffffff;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --border: #e5e7eb;
+    --soft: #f8fafc;
+    --pri: #2563eb;
+    --pri2: #1e40af;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --r: 18px;
+  }
+
+  *,
+  *::before,
+  *::after{
+    box-sizing: border-box;
+  }
+
+  html,
+  body{
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body{
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--ink);
+    background: #f8fafc;
+  }
+
+  .fb-wrap{
+    width: 100%;
+    max-width: 1500px;
+    margin: 22px auto;
+    padding: 0 16px;
+  }
+
+  .fb-card{
+    width: 100%;
+    min-width: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+  }
+
+  .fb-head{
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(
+      135deg,
+      rgba(37, 99, 235, 0.10),
+      rgba(99, 102, 241, 0.07)
+    );
+  }
+
+  .fb-title{
+    margin: 0;
+    color: var(--ink);
+    font-size: clamp(1.55rem, 2vw, 2rem);
+    font-weight: 800;
+    line-height: 1.25;
+    text-align: left;
+  }
+
+  .fb-sub{
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.6;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .head-badges{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .badge-light{
+    max-width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #ffffff;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .questions-wrap{
+    width: 100%;
+    min-width: 0;
+    padding: 22px;
+  }
+
+  .category-block{
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 24px;
+  }
+
+  .category-title{
+    width: 100%;
+    margin-bottom: 14px;
+    padding: 13px 16px;
+    border: 1px solid #dbe4ff;
+    border-radius: 14px;
+    background: #eef2ff;
+    color: #1e3a8a;
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  /*
+    Default laptop layout:
+    Keep the question and grade options on separate rows.
+
+    This gives every grade option enough width and prevents overlap
+    even when the base template has a sidebar.
+  */
+  .question-row{
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+    margin-bottom: 14px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.03);
+    overflow: hidden;
+  }
+
+  .question-left{
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .question-number{
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+    border-radius: 50%;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .question-text{
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  /*
+    Four equal columns for normal laptop and desktop screens.
+
+    minmax(0, 1fr) stops long grade names such as
+    "Needs Improvement" from pushing or overlapping nearby options.
+  */
+  .question-right{
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .grade-option{
+    width: 100%;
+    min-width: 0;
+    display: flex;
+  }
+
+  .grade-option input[type="radio"]{
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .grade-label{
+    width: 100%;
+    min-width: 0;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #334155;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    user-select: none;
+  }
+
+  .grade-label::before{
+    content: "";
+    width: 16px;
+    min-width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    display: inline-block;
+    border: 2px solid #94a3b8;
+    border-radius: 50%;
+    background: #ffffff;
+    transition: all 0.2s ease;
+  }
+
+  .grade-label:hover{
+    border-color: #94a3b8;
+    background: #f8fafc;
+    transform: translateY(-1px);
+  }
+
+  .grade-option input[type="radio"]:focus-visible + .grade-label{
+    outline: 3px solid rgba(37, 99, 235, 0.25);
+    outline-offset: 2px;
+  }
+
+  .grade-option input[type="radio"]:checked + .grade-label{
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+
+  .grade-option input[type="radio"]:checked + .grade-label::before{
+    border-color: #2563eb;
+    background: radial-gradient(
+      circle at center,
+      #2563eb 0,
+      #2563eb 44%,
+      #ffffff 47%,
+      #ffffff 100%
+    );
+  }
+
+  .submitted-badge{
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border: 1px solid #bbf7d0;
+    border-radius: 14px;
+    background: #ecfdf5;
+    color: #166534;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.35;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .empty-message{
+    width: 100%;
+    margin: 0;
+    padding: 18px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 14px;
+    background: #f8fafc;
+    color: var(--muted);
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .summary-box{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 15px 22px;
+    border-top: 1px solid var(--border);
+    background: #f8fafc;
+  }
+
+  .summary-title{
+    color: #166534;
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .actions{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 16px 22px 22px;
+    border-top: 1px solid var(--border);
+    background: #ffffff;
+  }
+
+  .btn{
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-weight: 700;
+  }
+
+  .btn-primary{
+    background: var(--pri);
+    border-color: var(--pri);
+  }
+
+  .btn-primary:hover{
+    background: var(--pri2);
+    border-color: var(--pri2);
+  }
+
+  /*
+    Only very wide screens use side-by-side question and grade sections.
+    The grade section is given a large minimum width.
+  */
+  @media (min-width: 1500px){
+    .question-row{
+      grid-template-columns: minmax(360px, 1.2fr) minmax(680px, 1.8fr);
+      align-items: center;
+    }
+  }
+
+  /*
+    Smaller laptop and tablet landscape:
+    Two grade options per row.
+  */
+  @media (max-width: 1100px){
+    .fb-wrap{
+      margin: 16px auto;
+      padding: 0 12px;
+    }
+
+    .fb-head{
+      padding: 20px 18px 16px;
+    }
+
+    .questions-wrap{
+      padding: 18px;
+    }
+
+    .question-row{
+      padding: 16px;
+    }
+
+    .question-right{
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .grade-label{
+      min-height: 48px;
+      padding: 10px;
+      font-size: 13px;
+    }
+  }
+
+  /*
+    Tablet and larger mobile screens.
+  */
+  @media (max-width: 768px){
+    .fb-wrap{
+      margin: 10px auto;
+      padding: 0 8px;
+    }
+
+    .fb-card{
+      border-radius: 14px;
+    }
+
+    .fb-head{
+      padding: 18px 15px 15px;
+    }
+
+    .fb-title{
+      font-size: 1.55rem;
+    }
+
+    .head-badges{
+      gap: 8px;
+    }
+
+    .badge-light{
+      flex: 1 1 170px;
+      padding: 8px 10px;
+      font-size: 12.5px;
+    }
+
+    .questions-wrap{
+      padding: 14px;
+    }
+
+    .category-block{
+      margin-bottom: 18px;
+    }
+
+    .category-title{
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 16px;
+    }
+
+    .question-row{
+      gap: 14px;
+      padding: 14px;
+      border-radius: 14px;
+    }
+
+    .question-left{
+      gap: 10px;
+    }
+
+    .question-number{
+      width: 30px;
+      min-width: 30px;
+      height: 30px;
+      font-size: 13px;
+    }
+
+    .question-text{
+      font-size: 14px;
+    }
+
+    .question-right{
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .grade-label{
+      min-height: 46px;
+      padding: 9px 8px;
+      border-radius: 12px;
+      font-size: 12.5px;
+    }
+
+    .submitted-badge{
+      min-height: 46px;
+      border-radius: 12px;
+    }
+
+    .summary-box{
+      padding: 14px;
+    }
+
+    .actions{
+      padding: 14px;
+    }
+
+    .actions .btn{
+      flex: 1 1 160px;
+    }
+  }
+
+  /*
+    Small mobile screens:
+    One grade option per row.
+  */
+  @media (max-width: 480px){
+    .fb-wrap{
+      padding: 0 5px;
+    }
+
+    .fb-head{
+      padding: 16px 13px 14px;
+    }
+
+    .fb-title{
+      font-size: 1.35rem;
+    }
+
+    .head-badges{
+      flex-direction: column;
+    }
+
+    .badge-light{
+      width: 100%;
+      flex: none;
+    }
+
+    .questions-wrap{
+      padding: 10px;
+    }
+
+    .question-row{
+      padding: 12px;
+    }
+
+    .question-right{
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .grade-label{
+      min-height: 44px;
+      justify-content: flex-start;
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+
+    .submitted-badge{
+      width: 100%;
+    }
+
+    .actions{
+      flex-direction: column-reverse;
+    }
+
+    .actions .btn{
+      width: 100%;
+      flex: none;
+    }
+  }
+</style>
+
+<div class="fb-wrap">
+  <div class="fb-card">
+
+    <div class="fb-head">
+      <h4 class="fb-title">
+        Exit Survey Form
+      </h4>
+
+      <div class="head-badges">
+
+        <span class="badge-light">
+          Start:
+          {% if window_start %}
+            {{ window_start|date:"d M Y" }}
+          {% else %}
+            Not available
+          {% endif %}
+        </span>
+
+        <span class="badge-light">
+          End:
+          {% if window_end %}
+            {{ window_end|date:"d M Y" }}
+          {% else %}
+            Not available
+          {% endif %}
+        </span>
+
+      </div>
+    </div>
+
+    <form method="POST" id="exitSurveyForm">
+      {% csrf_token %}
+
+      <div class="questions-wrap">
+
+        {% for cat, qlist in grouped.items %}
+
+          <div class="category-block">
+
+            <div class="category-title">
+              {{ cat|default:"General" }}
+            </div>
+
+            {% for q in qlist %}
+
+              <div class="question-row">
+
+                <div class="question-left">
+
+                  <span class="question-number">
+                    {{ forloop.counter }}
+                  </span>
+
+                  <div class="question-text">
+                    {{ q.question_text }}
+                  </div>
+
+                </div>
+
+                <div class="question-right">
+
+                  {% if already_submitted %}
+
+                    <span class="submitted-badge">
+                      {{ score_grade_map|get_item:answers_map|get_item:q.id|default:"Saved" }}
+                    </span>
+
+                  {% else %}
+
+                    {% for g in grade_options %}
+
+                      <div class="grade-option">
+
+                        <input
+                          type="radio"
+                          id="q{{ q.id }}_g{{ g.id }}"
+                          name="q_{{ q.id }}"
+                          value="{{ g.id }}"
+                          required
+                        >
+
+                        <label
+                          for="q{{ q.id }}_g{{ g.id }}"
+                          class="grade-label"
+                        >
+                          {{ g.grade }}
+                        </label>
+
+                      </div>
+
+                    {% endfor %}
+
+                  {% endif %}
+
+                </div>
+
+              </div>
+
+            {% endfor %}
+
+          </div>
+
+        {% empty %}
+
+          <div class="alert alert-warning empty-message">
+            No exit survey questions available.
+          </div>
+
+        {% endfor %}
+
+      </div>
+
+      {% if already_submitted %}
+
+        <div class="summary-box">
+          <div class="summary-title">
+            Exit survey already submitted
+          </div>
+        </div>
+
+      {% endif %}
+
+      <div class="actions">
+
+        <a
+          href="{% url 'course_exit_survey' %}"
+          class="btn btn-secondary"
+        >
+          Back
+        </a>
+
+        {% if not already_submitted %}
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+          >
+            Submit Exit Survey
+          </button>
+
+        {% endif %}
+
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const msgWrap = document.getElementById("msgWrap");
+
+  if (msgWrap) {
+    setTimeout(function () {
+      msgWrap.style.transition = "opacity .4s ease";
+      msgWrap.style.opacity = "0";
+
+      setTimeout(function () {
+        if (msgWrap) {
+          msgWrap.remove();
+        }
+      }, 450);
+    }, 3000);
+  }
+});
+</script>
+
+{% endblock %}

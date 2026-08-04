@@ -1,0 +1,921 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    .hbr-page{
+        max-width: 1440px;
+        margin: 20px auto 28px;
+        padding: 0 14px;
+    }
+
+    .hbr-top{
+        background: linear-gradient(120deg, #0f172a, #1e3a8a);
+        border-radius: 16px;
+        color: #fff;
+        padding: 18px 20px;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.20);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .hbr-title{
+        margin: 0;
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+    }
+
+    .hbr-sub{
+        margin: 4px 0 0;
+        font-size: 13px;
+        opacity: 0.92;
+    }
+
+    .hbr-stat-wrap{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .hbr-stat{
+        background: rgba(255,255,255,0.14);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .hbr-layout{
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        align-items: start;
+    }
+
+    .panel{
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .panel-head{
+        padding: 14px 16px;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+    }
+
+    .panel-head h5{
+        margin: 0;
+        font-size: 16px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .panel-head p{
+        margin: 4px 0 0;
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    .panel-body{
+        padding: 16px;
+    }
+
+    .sticky-form{
+        position: sticky;
+        top: 14px;
+    }
+
+    .form-label{
+        font-size: 13px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 6px;
+    }
+
+    .form-control,
+    .form-select{
+        min-height: 42px;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        font-size: 13px;
+    }
+
+    .form-control:focus,
+    .form-select:focus{
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 0.18rem rgba(59,130,246,0.18);
+    }
+
+    select[multiple]{
+        min-height: 200px;
+        padding: 6px;
+    }
+
+    .role-picker-tools{
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+    }
+
+    .role-search{
+        flex: 1 1 200px;
+        min-width: 160px;
+    }
+
+    .role-selectall{
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 12.5px;
+        font-weight: 700;
+        color: #334155;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+    .role-selected-count{
+        font-size: 12px;
+        font-weight: 700;
+        color: #4338ca;
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        border-radius: 999px;
+        padding: 3px 10px;
+        white-space: nowrap;
+    }
+
+    .role-picker{
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 8px;
+        max-height: 280px;
+        overflow: auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 4px;
+    }
+
+    .role-check{
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 7px 9px;
+        border-radius: 8px;
+        font-size: 13px;
+        color: #0f172a;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .role-check:hover{ background: #f1f5f9; }
+
+    .role-check input{
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+        accent-color: #4f46e5;
+        cursor: pointer;
+    }
+
+    .role-check span{
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .role-check.is-hidden{ display: none; }
+
+    .hbr-help{
+        margin-top: 6px;
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    .legend-row{
+        margin-top: 14px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .legend-pill{
+        font-size: 11px;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 4px 10px;
+        border: 1px solid;
+    }
+
+    .lp-full{ background: #ecfdf5; color: #166534; border-color: #a7f3d0; }
+    .lp-fn{ background: #fffbeb; color: #92400e; border-color: #fde68a; }
+    .lp-an{ background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+
+    .btn-save{
+        border: none;
+        border-radius: 10px;
+        padding: 10px 16px;
+        background: #16a34a;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .btn-save:hover{ background: #15803d; color: #fff; }
+
+    .btn-cancel{
+        border: 1px solid #94a3b8;
+        border-radius: 10px;
+        padding: 10px 16px;
+        background: #fff;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .btn-cancel:hover{ background: #f8fafc; color: #0f172a; }
+
+    .msg-box{
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .msg-success{ background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .msg-error{ background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .msg-warning{ background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    .list-tools{
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .search-box{
+        max-width: 320px;
+        width: 100%;
+    }
+
+    .holiday-list{
+        display: grid;
+        gap: 12px;
+        max-height: calc(100vh - 220px);
+        overflow: auto;
+        padding-right: 4px;
+    }
+
+    .saved-card{
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #4f46e5;
+        border-radius: 12px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        transition: box-shadow .15s ease, transform .15s ease;
+    }
+
+    .saved-card:hover{
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.10);
+        transform: translateY(-1px);
+    }
+
+    .saved-info{
+        min-width: 0;
+    }
+
+    .saved-info-top{
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .saved-date{
+        margin: 0;
+        font-size: 16px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: 0.2px;
+    }
+
+    .saved-count{
+        font-size: 11px;
+        font-weight: 700;
+        color: #4338ca;
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        border-radius: 999px;
+        padding: 2px 9px;
+        white-space: nowrap;
+    }
+
+    .saved-reason-line{
+        margin: 5px 0 0;
+        font-size: 12.5px;
+        color: #64748b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .saved-reason-line strong{ color: #334155; }
+
+    .btn-view{
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid #4f46e5;
+        background: #4f46e5;
+        color: #fff;
+        border-radius: 9px;
+        padding: 7px 14px;
+        font-size: 12.5px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .btn-view:hover{ background: #4338ca; border-color: #4338ca; }
+
+    .saved-actions{
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .btn-edit-date{
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border: 1px solid #c7d2fe;
+        background: #eef2ff;
+        color: #4338ca;
+        border-radius: 9px;
+        padding: 6px 14px;
+        font-size: 12.5px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .btn-edit-date:hover{ background: #e0e7ff; color: #3730a3; }
+
+    .modal-head-actions{
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .modal-edit{
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.18);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: #fff;
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-size: 12.5px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .modal-edit:hover{ background: rgba(255,255,255,0.3); color: #fff; }
+
+    /* Modal */
+    .modal-overlay{
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 1080;
+    }
+
+    .modal-overlay[hidden]{ display: none; }
+
+    .modal-card{
+        background: #fff;
+        width: 100%;
+        max-width: 640px;
+        max-height: 86vh;
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+    }
+
+    .modal-head{
+        background: linear-gradient(135deg, #4f46e5, #3730a3);
+        color: #fff;
+        padding: 14px 18px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .modal-head h5{
+        margin: 0;
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .modal-head p{
+        margin: 5px 0 0;
+        font-size: 12.5px;
+        opacity: 0.92;
+    }
+
+    .modal-close{
+        background: rgba(255,255,255,0.18);
+        border: none;
+        color: #fff;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .modal-close:hover{ background: rgba(255,255,255,0.3); }
+
+    .modal-body{
+        padding: 14px 16px 18px;
+        overflow: auto;
+    }
+
+    .role-grid{
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .role-line{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 5px 8px;
+        border: 1px solid #eef2f7;
+        border-radius: 8px;
+        background: #f8fafc;
+    }
+
+    .role-line-main{
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        min-width: 0;
+    }
+
+    .role-name{
+        margin: 0;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #0f172a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .session-badge{
+        flex-shrink: 0;
+        font-size: 10px;
+        font-weight: 800;
+        border-radius: 999px;
+        padding: 2px 7px;
+        border: 1px solid;
+        white-space: nowrap;
+    }
+
+    .sb-full{ background: #ecfdf5; color: #166534; border-color: #a7f3d0; }
+    .sb-fn{ background: #fffbeb; color: #92400e; border-color: #fde68a; }
+    .sb-an{ background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+
+    .role-actions{
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    .btn-icon{
+        width: 27px;
+        height: 27px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 7px;
+        font-size: 11px;
+        text-decoration: none;
+    }
+
+    .btn-icon.edit{ background: #fef9c3; color: #854d0e; }
+    .btn-icon.edit:hover{ background: #fde68a; }
+    .btn-icon.delete{ background: #fee2e2; color: #b91c1c; }
+    .btn-icon.delete:hover{ background: #fecaca; }
+
+    .empty-box{
+        text-align: center;
+        color: #64748b;
+        font-weight: 700;
+        border: 1px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 28px 10px;
+    }
+
+    @media (max-width: 1100px){
+        .hbr-layout{
+            grid-template-columns: 1fr;
+        }
+
+        .sticky-form{
+            position: static;
+        }
+
+        .holiday-list{
+            max-height: none;
+        }
+    }
+
+    @media (max-width: 640px){
+        .role-grid{ grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="hbr-page">
+    <div class="hbr-top">
+        <div>
+            <h1 class="hbr-title">Add Holidays</h1>
+            <p class="hbr-sub">Allocate full-day or half-day holidays by role and faculty category, then manage them from the saved list.</p>
+        </div>
+        <div class="hbr-stat-wrap">
+            <span class="hbr-stat">Dates: {{ grouped_holidays|length }}</span>
+            <span class="hbr-stat">Mode: {% if edit_date_data %}Edit{% else %}Create{% endif %}</span>
+        </div>
+    </div>
+
+    <div class="hbr-layout">
+        <div class="panel">
+            <div class="panel-head">
+                <h5>{% if edit_date_data %}Edit Holiday Allocation{% else %}Add Holiday Allocation{% endif %}</h5>
+                <p>{% if edit_date_data %}Update the date, reason, session, roles and categories assigned to this holiday.{% else %}You can assign one date to multiple role/category combinations in a single save.{% endif %}</p>
+            </div>
+            <div class="panel-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="msg-box {% if message.tags == 'success' %}msg-success{% elif message.tags == 'warning' %}msg-warning{% else %}msg-error{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="edit_date" value="{% if edit_date_data %}{{ edit_date_data.holiday_date|date:'Y-m-d' }}{% endif %}">
+
+                    <div class="mb-3">
+                        <label class="form-label">Roles</label>
+                        <div class="role-picker-tools">
+                            <input id="roleSearch" type="text" class="form-control role-search" placeholder="Search role...">
+                            <label class="role-selectall">
+                                <input type="checkbox" id="roleSelectAll"> Select all
+                            </label>
+                            <span class="role-selected-count"><span id="roleSelectedCount">0</span> selected</span>
+                        </div>
+                        <div class="role-picker" id="rolePicker">
+                            {% for role in roles %}
+                                <label class="role-check" data-role-name="{{ role.role|lower }}">
+                                    <input type="checkbox" name="role" value="{{ role.id }}" {% if edit_date_data and role.id in edit_date_data.role_ids %}checked{% endif %}>
+                                    <span title="{{ role.role }}">{{ role.role }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <div class="hbr-help">Tick the roles to assign this holiday to.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Categories</label>
+                        <div class="role-picker-tools">
+                            <input id="categorySearch" type="text" class="form-control role-search" placeholder="Search category...">
+                            <label class="role-selectall">
+                                <input type="checkbox" id="categorySelectAll"> Select all
+                            </label>
+                            <span class="role-selected-count"><span id="categorySelectedCount">0</span> selected</span>
+                        </div>
+                        <div class="role-picker" id="categoryPicker">
+                            {% for category in categories %}
+                                <label class="role-check" data-role-name="{{ category.category_name|lower }}">
+                                    <input type="checkbox" name="category" value="{{ category.id }}" {% if edit_date_data and category.id in edit_date_data.category_ids %}checked{% endif %}>
+                                    <span title="{{ category.category_name }}">{{ category.category_name }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <div class="hbr-help">Tick the faculty categories for this holiday allocation.</div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label class="form-label">Holiday Date</label>
+                            <input
+                                type="date"
+                                name="holiday_date"
+                                class="form-control"
+                                value="{% if edit_date_data %}{{ edit_date_data.holiday_date|date:'Y-m-d' }}{% endif %}"
+                                required
+                            >
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label">Session</label>
+                            <select name="session_type" class="form-select" required>
+                                <option value="">-- Select --</option>
+                                {% for value, label in session_choices %}
+                                    <option value="{{ value }}" {% if edit_date_data and edit_date_data.session_type == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="form-label">Reason</label>
+                        <input
+                            type="text"
+                            name="reason"
+                            class="form-control"
+                            value="{% if edit_date_data %}{{ edit_date_data.reason }}{% endif %}"
+                            placeholder="Ex: Founder Day, Festival, University Event"
+                        >
+                    </div>
+
+                    <div class="legend-row">
+                        <span class="legend-pill lp-full">Full Day</span>
+                        <span class="legend-pill lp-fn">Forenoon</span>
+                        <span class="legend-pill lp-an">Afternoon</span>
+                    </div>
+
+                    <div class="mt-3 d-flex gap-2 flex-wrap">
+                        <button type="submit" class="btn-save">{% if edit_date_data %}Update Entry{% else %}Save Entry{% endif %}</button>
+                        {% if edit_date_data %}
+                            <a href="{% url 'Employee_holidays' %}" class="btn-cancel">Cancel Edit</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head">
+                <h5>Saved Holiday Entries</h5>
+                <p>Search by date or reason, then click <strong>View</strong> to manage the assigned role/category entries.</p>
+            </div>
+            <div class="panel-body">
+                <div class="list-tools mb-3">
+                    <input id="holidaySearch" type="text" class="form-control search-box" placeholder="Search date / reason / role / category">
+                </div>
+
+                {% if grouped_holidays %}
+                    <div id="holidayList" class="holiday-list">
+                        {% for item in grouped_holidays %}
+                            <article class="saved-card"
+                                     data-search="{{ item.holiday_date|date:'d-m-Y' }} {{ item.reason|default:''|lower }} {% for role in item.roles %} {{ role.role_name|lower }} {{ role.category_name|lower }} {{ role.session_label|lower }} {% endfor %}"
+                                     data-date="{{ item.holiday_date|date:'d M Y' }}"
+                                     data-reason="{{ item.reason|default:'-' }}"
+                                     data-edit-date="{{ item.holiday_date|date:'Y-m-d' }}">
+                                <div class="saved-info">
+                                    <div class="saved-info-top">
+                                        <h6 class="saved-date">{{ item.holiday_date|date:"d M Y" }}</h6>
+                                        <span class="saved-count">{{ item.roles|length }} assignment{{ item.roles|length|pluralize }}</span>
+                                    </div>
+                                    <p class="saved-reason-line"><strong>Reason:</strong> {{ item.reason|default:"-" }}</p>
+                                </div>
+                                <div class="saved-actions">
+                                    <button type="button" class="btn-view"><i class="fas fa-eye"></i> View</button>
+                                    <a href="{% url 'Employee_holidays' %}?edit_date={{ item.holiday_date|date:'Y-m-d' }}" class="btn-edit-date"><i class="fas fa-pen"></i> Edit</a>
+                                </div>
+
+                                <div class="role-data" hidden>
+                                    <div class="role-grid">
+                                        {% for role in item.roles %}
+                                            <div class="role-line">
+                                                <div class="role-line-main">
+                                                    <span class="session-badge {% if role.session_type == 'F' or role.session_type == 'H' %}sb-full{% elif role.session_type == 'FN' %}sb-fn{% else %}sb-an{% endif %}">{{ role.session_label }}</span>
+                                                    <p class="role-name" title="{{ role.role_name }} / {{ role.category_name }}">{{ role.role_name }} / {{ role.category_name }}</p>
+                                                </div>
+                                                <div class="role-actions">
+                                                    <a href="{% url 'Employee_holidays' %}?delete={{ role.id }}" class="btn-icon delete" title="Remove this assignment" onclick="return confirm('Remove this assignment from the holiday?');"><i class="fas fa-trash"></i></a>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-box">No holiday records found.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="roleModal" class="modal-overlay" hidden>
+    <div class="modal-card">
+        <div class="modal-head">
+            <div>
+                <h5 id="modalDate"></h5>
+                <p id="modalReason"></p>
+            </div>
+            <div class="modal-head-actions">
+                <a href="#" class="modal-edit" id="modalEdit"><i class="fas fa-pen"></i> Edit</a>
+                <button type="button" class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+            </div>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<script id="categoryRoleMap" type="application/json">{{ category_role_map_json|safe }}</script>
+<script>
+(function(){
+    var input = document.getElementById('holidaySearch');
+    var list = document.getElementById('holidayList');
+
+    if (input && list) {
+        var cards = Array.prototype.slice.call(list.querySelectorAll('.saved-card'));
+        input.addEventListener('input', function(){
+            var q = (input.value || '').toLowerCase().trim();
+            cards.forEach(function(card){
+                var text = (card.getAttribute('data-search') || '').toLowerCase();
+                card.style.display = text.indexOf(q) !== -1 ? '' : 'none';
+            });
+        });
+    }
+
+    // View -> open modal with that date's roles
+    var modal = document.getElementById('roleModal');
+    var modalDate = document.getElementById('modalDate');
+    var modalReason = document.getElementById('modalReason');
+    var modalBody = document.getElementById('modalBody');
+    var modalClose = document.getElementById('modalClose');
+    var modalEdit = document.getElementById('modalEdit');
+
+    function closeModal(){
+        if (!modal) return;
+        modal.hidden = true;
+        modalBody.innerHTML = '';
+        document.body.style.overflow = '';
+    }
+
+    function openModal(card){
+        if (!modal) return;
+        var roleData = card.querySelector('.role-data');
+        modalDate.textContent = card.getAttribute('data-date') || '';
+        modalReason.textContent = 'Reason: ' + (card.getAttribute('data-reason') || '-');
+        modalBody.innerHTML = roleData ? roleData.innerHTML : '';
+        if (modalEdit) {
+            var editDate = card.getAttribute('data-edit-date') || '';
+            modalEdit.href = window.location.pathname + '?edit_date=' + encodeURIComponent(editDate);
+        }
+        modal.hidden = false;
+        document.body.style.overflow = 'hidden';
+    }
+
+    if (list) {
+        list.addEventListener('click', function(e){
+            var btn = e.target.closest('.btn-view');
+            if (!btn) return;
+            var card = btn.closest('.saved-card');
+            if (card) openModal(card);
+        });
+    }
+
+    function initPicker(pickerId, searchId, selectAllId, countId) {
+        var picker = document.getElementById(pickerId);
+        if (!picker) return;
+
+        var search = document.getElementById(searchId);
+        var selectAll = document.getElementById(selectAllId);
+        var count = document.getElementById(countId);
+        var checks = Array.prototype.slice.call(picker.querySelectorAll('input[type="checkbox"]'));
+
+        function visibleChecks(){
+            return checks.filter(function(cb){
+                return !cb.closest('.role-check').classList.contains('is-hidden');
+            });
+        }
+
+        function updateCount(){
+            var n = checks.filter(function(cb){ return cb.checked; }).length;
+            if (count) count.textContent = n;
+            if (selectAll) {
+                var vis = visibleChecks();
+                selectAll.checked = vis.length > 0 && vis.every(function(cb){ return cb.checked; });
+            }
+        }
+
+        picker.addEventListener('change', updateCount);
+
+        if (search) {
+            search.addEventListener('input', function(){
+                var q = (search.value || '').toLowerCase().trim();
+                picker.querySelectorAll('.role-check').forEach(function(row){
+                    var name = row.getAttribute('data-role-name') || '';
+                    row.classList.toggle('is-hidden', name.indexOf(q) === -1);
+                });
+                updateCount();
+            });
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function(){
+                visibleChecks().forEach(function(cb){ cb.checked = selectAll.checked; });
+                updateCount();
+            });
+        }
+
+        updateCount();
+    }
+
+    initPicker('rolePicker', 'roleSearch', 'roleSelectAll', 'roleSelectedCount');
+    initPicker('categoryPicker', 'categorySearch', 'categorySelectAll', 'categorySelectedCount');
+
+    // Selecting a category auto-ticks the roles held by the faculty in that
+    // category (derived from general_information). Deselecting a category
+    // unticks its roles unless another still-selected category also covers them.
+    // The user can then manually untick any role they don't want.
+    (function linkCategoryRoles(){
+        var mapEl = document.getElementById('categoryRoleMap');
+        var categoryPicker = document.getElementById('categoryPicker');
+        var rolePicker = document.getElementById('rolePicker');
+        if (!mapEl || !categoryPicker || !rolePicker) return;
+
+        var catRoleMap = {};
+        try { catRoleMap = JSON.parse(mapEl.textContent || '{}'); } catch (e) { return; }
+
+        function setRole(roleId, checked){
+            var cb = rolePicker.querySelector('input[name="role"][value="' + roleId + '"]');
+            if (cb) cb.checked = checked;
+        }
+        function rolesCoveredByCheckedCategories(){
+            var covered = {};
+            categoryPicker.querySelectorAll('input[name="category"]:checked').forEach(function(c){
+                (catRoleMap[c.value] || []).forEach(function(r){ covered[r] = true; });
+            });
+            return covered;
+        }
+
+        categoryPicker.querySelectorAll('input[name="category"]').forEach(function(catCb){
+            catCb.addEventListener('change', function(){
+                var ids = catRoleMap[catCb.value] || [];
+                if (catCb.checked){
+                    ids.forEach(function(r){ setRole(r, true); });
+                } else {
+                    var covered = rolesCoveredByCheckedCategories();
+                    ids.forEach(function(r){ if (!covered[r]) setRole(r, false); });
+                }
+                // Refresh the role picker's "selected" count.
+                rolePicker.dispatchEvent(new Event('change'));
+            });
+        });
+    })();
+
+    if (modalClose) modalClose.addEventListener('click', closeModal);
+    if (modal) {
+        modal.addEventListener('click', function(e){
+            if (e.target === modal) closeModal();
+        });
+    }
+    document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape' && modal && !modal.hidden) closeModal();
+    });
+})();
+</script>
+{% endblock %}

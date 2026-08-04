@@ -1,0 +1,491 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2 flex-wrap gap-3">
+    <div class="d-flex align-items-center flex-wrap gap-3">
+      <a href="javascript:history.back()" class="btn btn-outline-secondary px-4 back-btn">
+        <i class="fas fa-arrow-left me-2"></i> Back
+      </a>
+      <div>
+        <h2 class="mb-0 fw-semibold">Library Book Entry</h2>
+        <small class="text-muted"></small>
+      </div>
+    </div>
+
+    <a class="btn btn-outline-success px-4" href="{% url 'library_books_sample_excel' %}">
+      ⬇️ Download Sample Excel
+    </a>
+  </div>
+
+  {% if messages %}
+    <div class="mb-4">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Upload Card -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body px-4 py-4">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h6 class="form-block-title mb-0">Upload Excel (.xlsx)</h6>
+
+        <form method="post"
+              action="{% url 'delete_all_library_books' %}"
+              onsubmit="return confirm('⚠️ Are you sure? This will delete ALL books permanently!');"
+              class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger px-4">
+            🗑 Remove All Books
+          </button>
+        </form>
+      </div>
+
+      <hr class="my-3">
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row g-3 align-items-end">
+          <div class="col-md-7">
+            <label class="form-label">Excel File <span class="text-danger">*</span></label>
+            <input type="file" name="excel_file" class="form-control" accept=".xlsx" required>
+            <small class="text-muted d-block mt-2"></small>
+          </div>
+          <div class="col-md-5 text-end">
+            <a href="{% url 'library_book_entry' %}" class="btn btn-outline-secondary px-4">Cancel</a>
+            <button type="submit" class="btn btn-primary px-5">Upload & Save</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Stored Books -->
+  <div class="card shadow-sm border-0">
+    <div class="card-body px-4 py-4">
+
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+          <h5 class="mb-0 fw-semibold">Stored Books Details</h5>
+          <small class="text-muted"></small>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <form method="get" class="d-flex align-items-center gap-2 flex-wrap" id="titleFilterForm">
+            <select name="title" id="titleFilterSelect" class="form-select" style="min-width:320px; height:40px;">
+              <option value="">-- All Books --</option>
+              {% for t in title_choices %}
+                <option value="{{ t }}" {% if selected_title == t %}selected{% endif %}>{{ t }}</option>
+              {% endfor %}
+            </select>
+
+            <a href="{% url 'library_book_entry' %}" class="btn btn-outline-secondary" style="height:40px;">Clear</a>
+          </form>
+
+          {% if books %}
+            <span class="text-muted ms-2">Total: {{ books.paginator.count }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if books %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th style="width:70px;">S.No</th>
+              <th style="width:170px;">Dept</th>
+              <th style="width:120px;">Accession</th>
+              <th>Title</th>
+              <th>Authors</th>
+              <th style="width:140px;">Type</th>
+              <th style="width:180px;" class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in books %}
+            <tr id="book-row-{{ b.id }}">
+              <td>{{ books.start_index|add:forloop.counter0 }}</td>
+
+              <td class="js-col-dept">{{ b.dept_code }}</td>
+              <td class="js-col-accession">{{ b.accession_book }}</td>
+              <td class="fw-semibold js-col-title">{{ b.title }}</td>
+              <td class="js-col-authors">{{ b.authors }}</td>
+              <td class="js-col-type">
+                {% if b.book_type %}
+                  {{ b.book_type.book_type }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+
+              <td class="text-end">
+                <!-- Edit -->
+                <button type="button"
+                        class="btn btn-sm btn-outline-primary me-2 js-edit-btn"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editBookModal"
+                        data-id="{{ b.id }}"
+                        data-dept="{{ b.dept_code|default_if_none:'' }}"
+                        data-accession="{{ b.accession_book|default_if_none:'' }}"
+                        data-title="{{ b.title|default_if_none:''|escape }}"
+                        data-authors="{{ b.authors|default_if_none:''|escape }}"
+                        data-booktype="{% if b.book_type %}{{ b.book_type.book_type|default_if_none:''|escape }}{% endif %}">
+                  Edit
+                </button>
+
+                <!-- Delete -->
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger js-delete-btn"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteBookModal"
+                        data-id="{{ b.id }}"
+                        data-title="{{ b.title|default_if_none:''|escape }}">
+                  Delete
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if books.has_other_pages %}
+      <nav class="mt-3">
+        <ul class="pagination justify-content-end mb-0">
+
+          {% if books.has_previous %}
+            <li class="page-item">
+              <a class="page-link"
+                 href="?page={{ books.previous_page_number }}{% if selected_title %}&title={{ selected_title|urlencode }}{% endif %}">
+                Previous
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+          {% endif %}
+
+          <li class="page-item disabled">
+            <span class="page-link">Page {{ books.number }} of {{ books.paginator.num_pages }}</span>
+          </li>
+
+          {% if books.has_next %}
+            <li class="page-item">
+              <a class="page-link"
+                 href="?page={{ books.next_page_number }}{% if selected_title %}&title={{ selected_title|urlencode }}{% endif %}">
+                Next
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+          {% endif %}
+
+        </ul>
+      </nav>
+      {% endif %}
+
+      {% else %}
+        <p class="text-muted mb-0">No books found.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ===================== EDIT MODAL ===================== -->
+<div class="modal fade" id="editBookModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Book</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form id="editBookForm" method="post">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" name="book_id" id="editBookId">
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Dept</label>
+              <input type="text" class="form-control" name="dept_code" id="editDept" placeholder="Dept code">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Accession</label>
+              <input type="text" class="form-control" name="accession_book" id="editAccession" placeholder="Accession no">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Book Type</label>
+              <input type="text" class="form-control" name="book_type" id="editBookType" placeholder="Type">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Title</label>
+              <input type="text" class="form-control" name="title" id="editTitle" placeholder="Title">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Authors</label>
+              <input type="text" class="form-control" name="authors" id="editAuthors" placeholder="Authors">
+            </div>
+          </div>
+
+          <div class="alert alert-warning mt-3 mb-0" id="editInfoBox">
+            Update the book details and click update.
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="editSaveBtn">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== DELETE MODAL ===================== -->
+<div class="modal fade" id="deleteBookModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">Delete Book</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form id="deleteBookForm" method="post">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="deleteBookId">
+          <p class="mb-2">Are you sure you want to delete this book?</p>
+          <div class="p-3 rounded bg-light border">
+            <strong id="deleteBookTitle">-</strong>
+          </div>
+          <div class="text-danger small mt-3">
+            This action cannot be undone.
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger" id="deleteConfirmBtn">Yes, Delete</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .form-block-title{
+    font-weight:700;
+    padding-left:10px;
+    border-left:4px solid #0d6efd;
+    color:#495057;
+  }
+  .form-label{
+    font-weight:600;
+  }
+  .form-control{
+    height:44px;
+    border-radius:10px;
+  }
+  .form-select{
+    border-radius:10px;
+  }
+  .btn-primary{
+    font-weight:700;
+    border:none;
+  }
+  .back-btn{
+    height:44px;
+    border-radius:10px;
+    font-weight:600;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .table td, .table th{
+    vertical-align:middle;
+  }
+  .filter-loading{
+    opacity:.65;
+    pointer-events:none;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const titleFilterForm = document.getElementById('titleFilterForm');
+    const titleFilterSelect = document.getElementById('titleFilterSelect');
+
+    if (titleFilterSelect && titleFilterForm) {
+      titleFilterSelect.addEventListener('change', function () {
+        titleFilterForm.classList.add('filter-loading');
+        titleFilterForm.submit();
+      });
+    }
+
+    const editModalEl = document.getElementById('editBookModal');
+    const editForm = document.getElementById('editBookForm');
+
+    const deleteModalEl = document.getElementById('deleteBookModal');
+    const deleteForm = document.getElementById('deleteBookForm');
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    /* ===================== EDIT ===================== */
+    if (editModalEl) {
+      editModalEl.addEventListener('show.bs.modal', function (event) {
+        const btn = event.relatedTarget;
+        if (!btn) return;
+
+        const id = btn.getAttribute('data-id') || '';
+        const dept = btn.getAttribute('data-dept') || '';
+        const accession = btn.getAttribute('data-accession') || '';
+        const title = btn.getAttribute('data-title') || '';
+        const authors = btn.getAttribute('data-authors') || '';
+        const booktype = btn.getAttribute('data-booktype') || '';
+
+        document.getElementById('editBookId').value = id;
+        document.getElementById('editDept').value = dept;
+        document.getElementById('editAccession').value = accession;
+        document.getElementById('editTitle').value = title;
+        document.getElementById('editAuthors').value = authors;
+        document.getElementById('editBookType').value = booktype;
+
+        editForm.setAttribute('data-url', "/library_management/library_admin/book-entry/edit/" + id + "/");
+      });
+    }
+
+    if (editForm) {
+      editForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const url = editForm.getAttribute('data-url');
+        const formData = new FormData(editForm);
+
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': csrftoken,
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            const id = document.getElementById('editBookId').value;
+            const row = document.getElementById(`book-row-${id}`);
+
+            if (row) {
+              row.querySelector('.js-col-dept').innerText = document.getElementById('editDept').value;
+              row.querySelector('.js-col-accession').innerText = document.getElementById('editAccession').value;
+              row.querySelector('.js-col-title').innerText = document.getElementById('editTitle').value;
+              row.querySelector('.js-col-authors').innerText = document.getElementById('editAuthors').value;
+              row.querySelector('.js-col-type').innerText = document.getElementById('editBookType').value || '-';
+            }
+
+            const editBtn = document.querySelector(`.js-edit-btn[data-id="${id}"]`);
+            if (editBtn) {
+              editBtn.setAttribute('data-dept', document.getElementById('editDept').value);
+              editBtn.setAttribute('data-accession', document.getElementById('editAccession').value);
+              editBtn.setAttribute('data-title', document.getElementById('editTitle').value);
+              editBtn.setAttribute('data-authors', document.getElementById('editAuthors').value);
+              editBtn.setAttribute('data-booktype', document.getElementById('editBookType').value);
+            }
+
+            const modal = bootstrap.Modal.getInstance(editModalEl);
+            if (modal) modal.hide();
+
+            alert('Book updated successfully');
+          } else {
+            alert(data.error || 'Update failed');
+          }
+        } catch (error) {
+          alert('Network error while updating');
+        }
+      });
+    }
+
+    /* ===================== DELETE ===================== */
+    if (deleteModalEl) {
+      deleteModalEl.addEventListener('show.bs.modal', function (event) {
+        const btn = event.relatedTarget;
+        if (!btn) return;
+
+        const id = btn.getAttribute('data-id') || '';
+        const title = btn.getAttribute('data-title') || '-';
+
+        document.getElementById('deleteBookId').value = id;
+        document.getElementById('deleteBookTitle').innerText = title;
+
+        deleteForm.setAttribute('data-url', "/library_management/library_admin/book-entry/delete/" + id + "/");
+      });
+    }
+
+    if (deleteForm) {
+      deleteForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const url = deleteForm.getAttribute('data-url');
+        const id = document.getElementById('deleteBookId').value;
+        const formData = new FormData(deleteForm);
+
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': csrftoken,
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+          });
+
+          if (response.ok) {
+            const row = document.getElementById(`book-row-${id}`);
+            if (row) row.remove();
+
+            const modal = bootstrap.Modal.getInstance(deleteModalEl);
+            if (modal) modal.hide();
+
+            alert('Book deleted successfully');
+          } else {
+            alert('Delete failed');
+          }
+        } catch (error) {
+          alert('Network error while deleting');
+        }
+      });
+    }
+  });
+</script>
+
+{% endblock %}

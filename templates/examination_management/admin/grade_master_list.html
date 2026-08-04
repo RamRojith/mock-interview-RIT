@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Grade List</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="gradeTable" class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Department</th>
+                            <th>Regulation</th>
+                            <th>Mark Range</th>
+                            <th>Grade</th>
+                            <th>Grade Points</th>
+                            <th>Class Category</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for grade in grade_list %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ grade.degree|default:"-" }}</td>
+                            <td>{{ grade.regulation|default:"-" }}</td>
+                            <td><span class="badge bg-info text-dark">{{ grade.mark_from }} - {{ grade.mark_to }}</span></td>
+                            <td>
+                                {% if grade.grade == "F" %}
+                                    <span class="badge bg-danger text-white">{{ grade.grade }}</span>
+                                {% else %}
+                                    <span class="badge bg-success text-white">{{ grade.grade }}</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="badge bg-warning text-dark">{{ grade.grade_from }} - {{ grade.grade_to }}</span></td>
+                            <td>{{ grade.class_category|default:"-" }}</td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="" class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <a href="" 
+                                       class="btn btn-outline-danger"
+                                       onclick="return confirm('Are you sure you want to delete this grade?')">
+                                        <i class="fas fa-trash-alt"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- ✅ DataTables v2.3.3 with Bootstrap 5 -->
+<link rel="stylesheet" href="https://cdn.datatables.net/2.3.3/css/dataTables.bootstrap5.css">
+<script src="https://cdn.datatables.net/2.3.3/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/2.3.3/js/dataTables.bootstrap5.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+      new DataTable('#gradeTable', {
+          pageLength: 10,
+          lengthMenu: [5, 10, 25, 50],
+          ordering: true,
+          searching: true,
+          language: {
+              search: "🔍 Search:",
+              lengthMenu: "Show _MENU_ entries"
+          }
+      });
+  });
+</script>
+{% endblock %}

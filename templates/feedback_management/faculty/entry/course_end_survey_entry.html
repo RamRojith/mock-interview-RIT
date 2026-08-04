@@ -1,0 +1,766 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load feedback_tags %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+
+<style>
+    :root{
+        --primary:#0b57d0;
+        --primary-soft:#eef4ff;
+        --primary-dark:#073b8a;
+        --success:#198754;
+        --text:#1e293b;
+        --muted:#64748b;
+        --border:#e2e8f0;
+        --soft:#f8fafc;
+        --white:#ffffff;
+        --shadow:0 8px 24px rgba(15, 23, 42, 0.06);
+        --radius:18px;
+    }
+
+    body{
+        background:#f3f6fb;
+    }
+
+    .ces-page{
+        font-family: "Inter", "Segoe UI", Arial, sans-serif;
+        color:var(--text);
+    }
+
+    .page-head{
+        background:#fff;
+        border:1px solid var(--border);
+        border-radius:22px;
+        padding:22px 24px;
+        box-shadow:var(--shadow);
+        margin-bottom:22px;
+    }
+
+    .page-head-top{
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:16px;
+        flex-wrap:wrap;
+    }
+
+    .page-title{
+        font-size:1.7rem;
+        font-weight:800;
+        color:#0f172a;
+        margin:0 0 6px;
+    }
+
+    .page-subtitle{
+        margin:0;
+        color:var(--muted);
+        font-size:.96rem;
+    }
+
+    .faculty-badge{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        background:var(--primary-soft);
+        color:var(--primary-dark);
+        border:1px solid #d8e5ff;
+        border-radius:999px;
+        padding:10px 14px;
+        font-weight:700;
+        white-space:nowrap;
+    }
+
+    .section-shell{
+        background:#fff;
+        border:1px solid var(--border);
+        border-radius:22px;
+        box-shadow:var(--shadow);
+        overflow:hidden;
+        margin-bottom:22px;
+    }
+
+    .section-head{
+        padding:18px 22px;
+        border-bottom:1px solid var(--border);
+        background:linear-gradient(to right,#ffffff,#fafcff);
+    }
+
+    .section-head h4{
+        margin:0;
+        font-size:1.08rem;
+        font-weight:800;
+        color:#0f172a;
+    }
+
+    .section-head p{
+        margin:6px 0 0;
+        color:var(--muted);
+        font-size:.92rem;
+    }
+
+    .section-body{
+        padding:22px;
+    }
+
+    .course-grid{
+        display:grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap:16px;
+    }
+
+    .course-link{
+        text-decoration:none;
+        color:inherit;
+    }
+
+    .course-card{
+        height:100%;
+        background:#fff;
+        border:1px solid var(--border);
+        border-radius:18px;
+        padding:18px;
+        transition:all .22s ease;
+        position:relative;
+        overflow:hidden;
+    }
+
+    .course-card:hover{
+        transform:translateY(-3px);
+        box-shadow:0 12px 28px rgba(11, 87, 208, 0.10);
+        border-color:#c9dafd;
+    }
+
+    .course-card.active{
+        border:2px solid var(--primary);
+        background:linear-gradient(180deg,#f8fbff 0%, #ffffff 100%);
+        box-shadow:0 14px 30px rgba(11, 87, 208, 0.12);
+    }
+
+    .course-card.active::after{
+        content:"Selected";
+        position:absolute;
+        top:12px;
+        right:12px;
+        background:var(--primary);
+        color:#fff;
+        font-size:.72rem;
+        font-weight:700;
+        padding:5px 10px;
+        border-radius:999px;
+    }
+
+    .course-code{
+        display:inline-flex;
+        align-items:center;
+        gap:6px;
+        padding:6px 10px;
+        border-radius:999px;
+        background:var(--primary-soft);
+        color:var(--primary-dark);
+        font-size:.8rem;
+        font-weight:800;
+        margin-bottom:12px;
+    }
+
+    .course-name{
+        font-size:1rem;
+        font-weight:700;
+        color:#0f172a;
+        line-height:1.45;
+        margin-bottom:14px;
+        min-height:48px;
+    }
+
+    .course-meta{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0,1fr));
+        gap:10px;
+    }
+
+    .meta-box{
+        background:#f8fafc;
+        border:1px solid #edf2f7;
+        border-radius:14px;
+        padding:10px 12px;
+    }
+
+    .meta-label{
+        font-size:.73rem;
+        color:var(--muted);
+        text-transform:uppercase;
+        letter-spacing:.04em;
+        font-weight:700;
+        margin-bottom:4px;
+    }
+
+    .meta-value{
+        font-size:.9rem;
+        font-weight:700;
+        color:#334155;
+    }
+
+    .selected-strip{
+        background: #1a4b8c;;
+        color:#fff;
+        border-radius:18px;
+        padding:18px 20px;
+        margin-bottom:18px;
+    }
+
+    .selected-strip-top{
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:16px;
+        flex-wrap:wrap;
+    }
+
+    .selected-title{
+        margin:0 0 10px;
+        font-size:1.1rem;
+        font-weight:800;
+    }
+
+    .selected-sub{
+        display:flex;
+        flex-wrap:wrap;
+        gap:10px;
+    }
+
+    .selected-pill{
+        display:inline-flex;
+        align-items:center;
+        gap:6px;
+        padding:7px 12px;
+        border-radius:999px;
+        background:rgba(255,255,255,.14);
+        border:1px solid rgba(255,255,255,.18);
+        font-size:.83rem;
+        font-weight:600;
+    }
+
+    .co-count-box{
+        min-width:120px;
+        text-align:center;
+        background:rgba(255,255,255,.14);
+        border:1px solid rgba(255,255,255,.18);
+        border-radius:16px;
+        padding:12px 14px;
+    }
+
+    .co-count-box .count{
+        font-size:1.35rem;
+        font-weight:800;
+        line-height:1;
+        margin-bottom:4px;
+    }
+
+    .co-count-box .label{
+        font-size:.8rem;
+        opacity:.9;
+    }
+
+    .form-block{
+        background:#f8fafc;
+        border:1px solid var(--border);
+        border-radius:18px;
+        padding:18px;
+        margin-bottom:18px;
+    }
+
+    .form-label{
+        font-weight:700;
+        color:#0f172a;
+        margin-bottom:8px;
+    }
+
+    .form-control{
+        border-radius:14px;
+        border:1px solid #d7e0ea;
+        min-height:48px;
+        font-size:.95rem;
+    }
+
+    .form-control:focus{
+        border-color:#98b8f9;
+        box-shadow:0 0 0 .2rem rgba(11, 87, 208, 0.12);
+    }
+
+    .table-wrap{
+        border:1px solid var(--border);
+        border-radius:18px;
+        overflow:hidden;
+        background:#fff;
+    }
+
+    #courseSurveyTable{
+        margin-bottom:0 !important;
+    }
+
+    #courseSurveyTable thead th{
+        background:#f1f5f9 !important;
+        color:#0f172a;
+        font-weight:800;
+        border-bottom:1px solid #dde6ef !important;
+        vertical-align:middle;
+        white-space:nowrap;
+    }
+
+    #courseSurveyTable tbody td{
+        padding:16px 12px;
+        vertical-align:top;
+    }
+
+    .sno-chip{
+        width:38px;
+        height:38px;
+        border-radius:50%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:#f1f5f9;
+        color:#334155;
+        font-weight:800;
+    }
+
+    .co-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:72px;
+        padding:8px 12px;
+        border-radius:999px;
+        background:var(--primary-soft);
+        color:var(--primary-dark);
+        font-weight:800;
+        border:1px solid #d8e5ff;
+    }
+
+    .desc-view{
+        min-height:88px;
+        background:#fbfdff;
+        border:1px solid #e7edf5;
+        border-radius:14px;
+        padding:14px 15px;
+        color:#334155;
+        line-height:1.6;
+    }
+
+    .desc-edit textarea{
+        min-height:120px;
+        resize:vertical;
+    }
+
+    .action-wrap{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+    }
+
+    .btn{
+        border-radius:12px;
+        font-weight:700;
+    }
+
+    .btn-primary{
+        background:linear-gradient(135deg,#0b57d0,#2563eb);
+        border:none;
+    }
+
+    .btn-primary:hover{
+        background:linear-gradient(135deg,#0847ae,#0b57d0);
+    }
+
+    .save-row{
+        display:flex;
+        justify-content:flex-end;
+        margin-top:18px;
+    }
+
+    .empty-panel{
+        background:#fff;
+        border:1px dashed #cbd5e1;
+        border-radius:20px;
+        padding:50px 24px;
+        text-align:center;
+        color:var(--muted);
+    }
+
+    .empty-panel i{
+        font-size:3rem;
+        color:#94a3b8;
+        display:block;
+        margin-bottom:14px;
+    }
+
+    .dataTables_wrapper .dataTables_filter input,
+    .dataTables_wrapper .dataTables_length select{
+        border-radius:10px;
+        border:1px solid #d6e0ea;
+        padding:6px 10px;
+    }
+
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter{
+        padding:12px 12px 0 12px;
+    }
+
+    .dataTables_wrapper .dataTables_paginate{
+        padding:10px 12px 12px 12px !important;
+    }
+
+    @media (max-width: 768px){
+        .page-head,
+        .section-head,
+        .section-body{
+            padding:16px;
+        }
+
+        .page-title{
+            font-size:1.35rem;
+        }
+
+        .course-grid{
+            grid-template-columns:1fr;
+        }
+
+        .course-meta{
+            grid-template-columns:1fr 1fr;
+        }
+
+        .selected-strip{
+            padding:16px;
+        }
+
+        .save-row .btn{
+            width:100%;
+        }
+    }
+</style>
+
+<div class="container py-4 ces-page">
+
+    <div class="page-head">
+        <div class="page-head-top">
+            <div>
+                <h2 class="page-title">Course End Survey Entry</h2>
+                <p class="page-subtitle">Choose a course and maintain Course Outcome descriptions in a cleaner single-flow layout.</p>
+            </div>
+            <div class="faculty-badge">
+                <i class="bi bi-person-circle"></i>
+                Faculty: {{ faculty.name }}
+            </div>
+        </div>
+    </div>
+
+    <div class="section-shell">
+        <div class="section-head">
+            <h4><i class="bi bi-bookmarks me-2"></i>Select Assigned Course</h4>
+            <p>All your assigned courses are shown below. Click any one course to open its CO description entry area.</p>
+        </div>
+
+        <div class="section-body">
+            {% if assigned_subjects %}
+                <div class="course-grid">
+                    {% for assign in assigned_subjects %}
+                        <a href="?assign_id={{ assign.id }}" class="course-link">
+                            <div class="course-card {% if selected_assignment and selected_assignment.id == assign.id %}active{% endif %}">
+                                <div class="course-code">
+                                    <i class="bi bi-journal-text"></i>
+                                    {{ assign.course.course_code|default:"-" }}
+                                </div>
+
+                                <div class="course-name">
+                                    {{ assign.course.course_name|default:assign.course.title|default:"Untitled Course" }}
+                                </div>
+
+                                <div class="course-meta">
+                                    <div class="meta-box">
+                                        <div class="meta-label">Batch</div>
+                                        <div class="meta-value">{{ assign.batch|default:"-" }}</div>
+                                    </div>
+                                    <div class="meta-box">
+                                        <div class="meta-label">Section</div>
+                                        <div class="meta-value">{{ assign.section|default:"-" }}</div>
+                                    </div>
+                                    <div class="meta-box">
+                                        <div class="meta-label">Year</div>
+                                        <div class="meta-value">{{ assign.course.year|default:"-" }}</div>
+                                    </div>
+                                    <div class="meta-box">
+                                        <div class="meta-label">Semester</div>
+                                        <div class="meta-value">{{ assign.course.semester|default:"-" }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-panel">
+                    <i class="bi bi-journal-x"></i>
+                    <h5 class="mb-2">No Assigned Courses</h5>
+                    <p class="mb-0">There are no courses available for this faculty right now.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="section-shell">
+        {% if selected_course and selected_assignment %}
+ 
+
+            <div class="section-body">
+                <div class="selected-strip">
+                    <div class="selected-strip-top">
+                        <div>
+                            <h5 class="selected-title">
+                                {{ selected_course.course_code|default:"-" }} - {{ selected_course.course_name|default:selected_course.title|default:"-" }}
+                            </h5>
+
+                            <div class="selected-sub">
+                                <span class="selected-pill">
+                                    <i class="bi bi-mortarboard"></i>
+                                    Year: {{ selected_course.year|default:"-" }}
+                                </span>
+                                <span class="selected-pill">
+                                    <i class="bi bi-calendar3"></i>
+                                    Semester: {{ selected_course.semester|default:"-" }}
+                                </span>
+                                <span class="selected-pill">
+                                    <i class="bi bi-people"></i>
+                                    Batch: {{ selected_assignment.batch|default:"-" }}
+                                </span>
+                                <span class="selected-pill">
+                                    <i class="bi bi-grid-3x3-gap"></i>
+                                    Section: {{ selected_assignment.section|default:"-" }}
+                                </span>
+                                <span class="selected-pill">
+                                    <i class="bi bi-clock-history"></i>
+                                    Academic Year: {{ selected_assignment.academic_year|default:"-" }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="co-count-box">
+                            <div class="count">{{ co_po_mappings|length }}</div>
+                            <div class="label">CO Records</div>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="POST" id="courseEndSurveyForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="assign_id" value="{{ selected_assignment.id }}">
+
+                    <div class="form-block">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="start_datetime" class="form-label">
+                                    <i class="bi bi-calendar-event me-1"></i>Start Date & Time
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    class="form-control"
+                                    id="start_datetime"
+                                    name="start_datetime"
+                                    value="{{ saved_start_datetime }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="end_datetime" class="form-label">
+                                    <i class="bi bi-calendar-check me-1"></i>End Date & Time
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    class="form-control"
+                                    id="end_datetime"
+                                    name="end_datetime"
+                                    value="{{ saved_end_datetime }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <div class="table-responsive">
+                            <table id="courseSurveyTable" class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th style="width:90px;">S.No</th>
+                                        <th style="width:130px;">CO</th>
+                                        <th>Course Outcome Description</th>
+                                        <th style="width:180px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for mapping in co_po_mappings %}
+                                    {% with saved_desc=saved_desc_map|get_item:mapping.id %}
+                                    <tr>
+                                        <td>
+                                            <div class="sno-chip">{{ forloop.counter }}</div>
+                                        </td>
+
+                                        <td>
+                                            <span class="co-chip">
+                                                {% if mapping.co_number and mapping.co_number.co_code %}
+                                                    {{ mapping.co_number.co_code }}
+                                                {% elif mapping.co_number and mapping.co_number.co_number %}
+                                                    {{ mapping.co_number.co_number }}
+                                                {% else %}
+                                                    CO {{ forloop.counter }}
+                                                {% endif %}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <div id="viewBox{{ mapping.id }}" class="desc-view">
+                                                {% if saved_desc and saved_desc.co_description %}
+                                                    {{ saved_desc.co_description }}
+                                                {% elif mapping.co_description %}
+                                                    {{ mapping.co_description }}
+                                                {% else %}
+                                                    <span class="text-muted">No description available</span>
+                                                {% endif %}
+                                            </div>
+
+                                            <div id="editBox{{ mapping.id }}" class="desc-edit d-none mt-2">
+                                                <textarea
+                                                    class="form-control"
+                                                    name="co_description_{{ mapping.id }}"
+                                                    id="textarea{{ mapping.id }}"
+                                                    rows="4"
+                                                >{% if saved_desc and saved_desc.co_description %}{{ saved_desc.co_description }}{% elif mapping.co_description %}{{ mapping.co_description }}{% endif %}</textarea>
+                                            </div>
+
+                                            <input
+                                                type="hidden"
+                                                name="original_co_description_{{ mapping.id }}"
+                                                value="{% if saved_desc and saved_desc.co_description %}{{ saved_desc.co_description }}{% elif mapping.co_description %}{{ mapping.co_description }}{% endif %}">
+                                        </td>
+
+                                        <td>
+                                            <div class="action-wrap">
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-primary btn-sm"
+                                                    id="editBtn{{ mapping.id }}"
+                                                    onclick="enableEdit('{{ mapping.id }}')">
+                                                    <i class="bi bi-pencil-square me-1"></i>Edit
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-outline-secondary btn-sm d-none"
+                                                    id="cancelBtn{{ mapping.id }}"
+                                                    onclick="cancelEdit('{{ mapping.id }}')">
+                                                    <i class="bi bi-x-circle me-1"></i>Cancel
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endwith %}
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">
+                                            No CO-PO mappings available for the selected course.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if co_po_mappings %}
+                    <div class="save-row">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-save me-1"></i>Save All Changes
+                        </button>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        {% else %}
+            <div class="section-head">
+                <h4><i class="bi bi-pencil-square me-2"></i>Course Outcome Description Entry</h4>
+                <p>Select any course above to open the entry section.</p>
+            </div>
+
+            <div class="section-body">
+                <div class="empty-panel">
+                    <i class="bi bi-ui-checks-grid"></i>
+                    <h5 class="mb-2">Select a Course</h5>
+                    <p class="mb-0">After selecting a course, its Course Outcome Description Entry form will appear here.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        if ($('#courseSurveyTable').length) {
+            $('#courseSurveyTable').DataTable({
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                ordering: true,
+                searching: true,
+                paging: true,
+                info: true,
+                autoWidth: false,
+                responsive: false,
+                columnDefs: [
+                    { orderable: false, targets: [3] }
+                ],
+                language: {
+                    search: "Search:",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    paginate: {
+                        previous: "Previous",
+                        next: "Next"
+                    },
+                    emptyTable: "No course outcome descriptions available."
+                }
+            });
+        }
+    });
+
+    function enableEdit(id) {
+        const viewBox = document.getElementById(`viewBox${id}`);
+        const editBox = document.getElementById(`editBox${id}`);
+        const editBtn = document.getElementById(`editBtn${id}`);
+        const cancelBtn = document.getElementById(`cancelBtn${id}`);
+
+        viewBox.classList.add('d-none');
+        editBox.classList.remove('d-none');
+        editBtn.classList.add('d-none');
+        cancelBtn.classList.remove('d-none');
+    }
+
+    function cancelEdit(id) {
+        const viewBox = document.getElementById(`viewBox${id}`);
+        const editBox = document.getElementById(`editBox${id}`);
+        const editBtn = document.getElementById(`editBtn${id}`);
+        const cancelBtn = document.getElementById(`cancelBtn${id}`);
+        const textarea = document.getElementById(`textarea${id}`);
+        const originalValue = document.querySelector(`input[name="original_co_description_${id}"]`).value;
+
+        textarea.value = originalValue;
+
+        viewBox.classList.remove('d-none');
+        editBox.classList.add('d-none');
+        editBtn.classList.remove('d-none');
+        cancelBtn.classList.add('d-none');
+    }
+</script>
+{% endblock %}

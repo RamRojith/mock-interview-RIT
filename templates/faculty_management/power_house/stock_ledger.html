@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.stock-ledger-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.stock-ledger-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.stock-ledger-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.stock-ledger-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.stock-ledger-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.stock-ledger-portal .custom-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.stock-ledger-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a4b8c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stock-ledger-portal .card-body-custom {
+  padding: 1.5rem;
+}
+
+.stock-ledger-portal .ledger-search {
+  width: 260px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.65rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.stock-ledger-portal .ledger-search:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26,75,140,0.1);
+  outline: none;
+}
+
+.stock-ledger-portal .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.stock-ledger-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.stock-ledger-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.stock-ledger-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.stock-ledger-portal .data-table tbody tr {
+  transition: all 0.2s;
+}
+
+.stock-ledger-portal .data-table tbody tr:hover {
+  background: rgba(26,75,140,0.03);
+}
+
+.stock-ledger-portal .item-name {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.stock-ledger-portal .badge-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 40px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.stock-ledger-portal .badge-in {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.stock-ledger-portal .badge-out,
+.stock-ledger-portal .badge-issue {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.stock-ledger-portal .badge-default {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.stock-ledger-portal .qty-in {
+  color: #059669;
+  font-weight: 700;
+}
+
+.stock-ledger-portal .qty-out {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.stock-ledger-portal .balance {
+  color: #1a4b8c;
+  font-weight: 800;
+}
+
+.stock-ledger-portal .empty-row {
+  text-align: center;
+  padding: 2rem !important;
+  color: #64748b;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .stock-ledger-portal {
+    padding: 1rem;
+  }
+
+  .stock-ledger-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .stock-ledger-portal .card-header-custom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stock-ledger-portal .ledger-search {
+    width: 100%;
+  }
+}
+</style>
+
+<div class="stock-ledger-portal">
+  <div class="page-header">
+    <h1><i class="fas fa-book me-2"></i> Stock Ledger</h1>
+    <p class="header-subtitle">Complete stock movement history</p>
+  </div>
+
+  <div class="page-container">
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-list-check me-2"></i> Ledger Entries</span>
+        <input type="text"
+               class="ledger-search"
+               data-table="ledgerTable"
+               placeholder="Search ledger...">
+      </div>
+
+      <div class="card-body-custom">
+        <div class="table-responsive">
+          <table id="ledgerTable" class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Item</th>
+                <th>Type</th>
+                <th>Qty In</th>
+                <th>Qty Out</th>
+                <th>Balance</th>
+                <th>Reference</th>
+                <th>Handled By</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for row in ledger_entries %}
+              <tr>
+                <td>{{ row.created_at }}</td>
+                <td class="item-name">{{ row.item.item_name }}</td>
+                <td>
+                  <span class="badge-type 
+                    {% if row.transaction_type == 'IN' or row.transaction_type == 'PURCHASE' or row.transaction_type == 'RECEIVE' %}
+                      badge-in
+                    {% elif row.transaction_type == 'OUT' or row.transaction_type == 'ISSUE' %}
+                      badge-issue
+                    {% else %}
+                      badge-default
+                    {% endif %}">
+                    {% if row.transaction_type == 'IN' or row.transaction_type == 'PURCHASE' or row.transaction_type == 'RECEIVE' %}
+                      <i class="fas fa-arrow-down"></i>
+                    {% elif row.transaction_type == 'OUT' or row.transaction_type == 'ISSUE' %}
+                      <i class="fas fa-arrow-up"></i>
+                    {% else %}
+                      <i class="fas fa-right-left"></i>
+                    {% endif %}
+                    {{ row.transaction_type }}
+                  </span>
+                </td>
+                <td class="qty-in">{{ row.qty_in }}</td>
+                <td class="qty-out">{{ row.qty_out }}</td>
+                <td class="balance">{{ row.balance_qty }}</td>
+                <td>{{ row.reference_no|default:"-" }}</td>
+                <td>{{ row.handled_by|default:"-" }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="8" class="empty-row">
+                  <i class="fas fa-inbox me-2"></i> No ledger entries found.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("input", function (e) {
+  if (!e.target.matches("[data-table]")) return;
+
+  const tableId = e.target.getAttribute("data-table");
+  const table = document.getElementById(tableId);
+  const searchText = e.target.value.toLowerCase();
+
+  if (!table) return;
+
+  table.querySelectorAll("tbody tr").forEach(row => {
+    row.style.display = row.innerText.toLowerCase().includes(searchText) ? "" : "none";
+  });
+});
+</script>
+
+{% endblock %}

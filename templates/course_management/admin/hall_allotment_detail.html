@@ -1,0 +1,687 @@
+{# course_management/admin/hall_allotment_detail.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <h3 class="fw-bold text-primary mb-1">Hall Allotment</h3>
+          <p class="text-muted mb-0"></p>
+        </div>
+        <a href="{% url 'hall_allotment' %}" class="btn btn-outline-secondary">← Back</a>
+      </div>
+
+      <hr class="my-4">
+
+      <!-- ✅ Django messages -->
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+          {{ error }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endif %}
+
+      <!-- ✅ Hall Dropdown -->
+      {% if halls %}
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-body">
+            <div class="row g-3 align-items-end">
+              <div class="col-md-8">
+                <label class="form-label fw-semibold mb-1">Hall Name</label>
+
+                <select id="hallSwitch" class="form-select">
+                  <option value="">-- Select Hall --</option>
+                  {% for h in halls %}
+                    <option value="{{ h.id }}"
+                            data-hallname="{{ h.hall_name|escapejs }}"
+                            data-benches="{{ h.benches|default_if_none:'' }}">
+                      {{ h.hall_name }} ({{ h.benches }})
+                    </option>
+                  {% endfor %}
+                </select>
+
+                <div class="form-text text-muted">Select hall.</div>
+              </div>
+
+              <div class="col-12">
+                <div id="hallSwitchError" class="alert alert-danger d-none mb-0"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Hall Info -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded-3 border">
+            <div class="small text-muted">Hall</div>
+            <div class="fw-bold" id="uiHallName">-</div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded-3 border">
+            <div class="small text-muted">Total Seats</div>
+            <div class="fw-bold" id="uiTotalSeats">-</div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded-3 border">
+            <div class="small text-muted">Allocated / Remaining</div>
+            <div class="fw-bold">
+              <span id="uiAllocated">-</span> /
+              <span id="uiRemaining">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ Exam Details (always visible, constant) -->
+      <div class="row g-3 mb-3">
+
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded-3 border">
+            <div class="small text-muted">Exam Type</div>
+            <div class="fw-bold" id="uiExamType">-</div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded-3 border">
+            <div class="small text-muted">IAT Number</div>
+            <div class="fw-bold" id="uiIatText">-</div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded-3 border">
+            <div class="small text-muted">Semester</div>
+            <div class="fw-bold" id="uiSemText">-</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- MAIN FORM -->
+      <form method="POST" id="mainForm" class="mb-4">
+        {% csrf_token %}
+
+        <input type="hidden" name="hall_id" id="hallIdField" value="">
+        <input type="hidden" name="action" id="actionField" value="load">
+
+        <!-- Filters -->
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-body">
+            <div class="row g-3 align-items-end">
+
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">Degree</label>
+                <select name="degree_id" id="degreeSelect" class="form-select">
+                  <option value="">-- Select Degree --</option>
+                  {% for d in degrees %}
+                    <option value="{{ d.id }}" {% if selected_degree_id|slugify == d.id|slugify %}selected{% endif %}>
+                      {{ d.degree_code }} - {{ d.degree }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">Department</label>
+                <select name="department_id" id="deptSelect" class="form-select">
+                  <option value="">-- Select Department --</option>
+                  {% for dep in departments %}
+                    <option value="{{ dep.id }}" {% if selected_department_id|slugify == dep.id|slugify %}selected{% endif %}>
+                      {{ dep.Department }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-md-2">
+                <label class="form-label fw-semibold">Batch</label>
+                <select name="batch" id="batchSelect" class="form-select">
+                  <option value="">-- Select Batch --</option>
+                  {% for b in batches %}
+                    <option value="{{ b }}" {% if selected_batch == b %}selected{% endif %}>{{ b }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-md-2">
+                <label class="form-label fw-semibold">Section (optional)</label>
+                <select name="section" id="sectionSelect" class="form-select">
+                  <option value="">-- Any --</option>
+                  {% for s in sections %}
+                    <option value="{{ s.section }}" {% if selected_section == s.section %}selected{% endif %}>
+                      {{ s.section }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-md-2 d-grid gap-2">
+                <button type="submit" class="btn btn-outline-primary" id="btnLoad" onclick="setAction('load')">
+                  Load Students
+                </button>
+                <button type="submit" class="btn btn-outline-secondary" id="btnClearFilters" onclick="setAction('clear')">
+                  Clear Filters
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+          <button type="button" class="btn btn-primary" id="btnAllotModal">Allot</button>
+          <button type="button" class="btn btn-outline-danger" id="btnClearHallModal">Clear Hall</button>
+          <a href="#" class="btn btn-outline-dark" id="btnViewSeating">View Seating</a>
+        </div>
+
+        <!-- AVAILABLE STUDENTS -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+              <div><h5 class="fw-bold mb-0">Available Students</h5></div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectAll(true)">Select All</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectAll(false)">Clear</button>
+              </div>
+            </div>
+
+            {% if students %}
+              {% with sorted_students=students|dictsort:"department_id" %}
+                {% regroup sorted_students by department_id as avail_groups %}
+
+                <div class="accordion" id="availAccordion">
+                  {% for g in avail_groups %}
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="avH{{ forloop.counter }}">
+                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#avC{{ forloop.counter }}"
+                                aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                                aria-controls="avC{{ forloop.counter }}">
+                          <div class="d-flex w-100 justify-content-between align-items-center">
+                            <div class="fw-semibold">
+                              {% if g.list.0.department %}
+                                {{ g.list.0.department.Department|default:"-" }}
+                              {% else %}
+                                No Department
+                              {% endif %}
+                            </div>
+                            <span class="badge text-bg-primary ms-3">{{ g.list|length }}</span>
+                          </div>
+                        </button>
+                      </h2>
+
+                      <div id="avC{{ forloop.counter }}"
+                           class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                           aria-labelledby="avH{{ forloop.counter }}"
+                           data-bs-parent="#availAccordion">
+                        <div class="accordion-body p-0">
+                          <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0">
+                              <thead class="table-light">
+                                <tr>
+                                  <th style="width:60px;">Select</th>
+                                  <th>Reg No</th>
+                                  <th>Name</th>
+                                  <th>Department</th>
+                                  <th>Batch</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {% for st in g.list %}
+                                  <tr>
+                                    <td class="text-center">
+                                      <input class="form-check-input student-check"
+                                             type="checkbox"
+                                             name="student_ids"
+                                             value="{{ st.id }}">
+                                    </td>
+                                    <td>{{ st.reg_no|default:"-" }}</td>
+                                    <td>{{ st.name|default:"-" }}</td>
+                                    <td>{% if st.department %}{{ st.department.Department|default:"-" }}{% else %}-{% endif %}</td>
+                                    <td>{{ st.batch|default:"-" }}</td>
+                                  </tr>
+                                {% endfor %}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  {% endfor %}
+                </div>
+
+              {% endwith %}
+            {% else %}
+              <div class="alert alert-info mb-0">
+                No students loaded. Select filters and click <b>Load Students</b>.
+              </div>
+            {% endif %}
+
+          </div>
+        </div>
+
+      </form>
+
+      <!-- ALLOTTED STUDENTS -->
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div><h5 class="fw-bold mb-0">Allotted Students (Department wise)</h5></div>
+            <div class="text-muted small"><span class="fw-semibold">{{ allotted_students|length }}</span></div>
+          </div>
+
+          {% if allotted_students %}
+            {% with sorted_allotted=allotted_students|dictsort:"student.department_id" %}
+              {% regroup sorted_allotted by student.department_id as allotted_groups %}
+
+              <div class="accordion" id="allotAccordion">
+                {% for g in allotted_groups %}
+                  <div class="accordion-item">
+
+                    {% with dept_id=g.list.0.student.department.id %}
+                    <div class="d-flex align-items-stretch justify-content-between">
+
+                      <h2 class="accordion-header flex-grow-1" id="alH{{ forloop.counter }}">
+                        <button class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#alC{{ forloop.counter }}"
+                                aria-expanded="false"
+                                aria-controls="alC{{ forloop.counter }}">
+                          <div class="d-flex w-100 justify-content-between align-items-center">
+                            <div class="fw-semibold">
+                              {% if g.list.0.student.department %}
+                                {{ g.list.0.student.department.Department|default:"-" }}
+                              {% else %}
+                                No Department
+                              {% endif %}
+                            </div>
+                            <span class="badge text-bg-success ms-3">{{ g.list|length }}</span>
+                          </div>
+                        </button>
+                      </h2>
+
+                      {% if g.list.0.student.department %}
+                        <div class="d-flex align-items-center px-2" style="background:#cfe2ff;">
+                          <a class="btn btn-sm btn-outline-success"
+                             target="_blank"
+                             href="{% url 'hall_dept_students_pdf' hall.id dept_id %}">
+                            PDF (Signature)
+                          </a>
+                        </div>
+                      {% endif %}
+                    </div>
+                    {% endwith %}
+
+                    <div id="alC{{ forloop.counter }}"
+                         class="accordion-collapse collapse"
+                         aria-labelledby="alH{{ forloop.counter }}"
+                         data-bs-parent="#allotAccordion">
+                      <div class="accordion-body p-0">
+                        <div class="table-responsive">
+                          <table class="table table-bordered align-middle mb-0">
+                            <thead class="table-light">
+                              <tr>
+                                <th style="width:80px;">Seat No</th>
+                                <th>Reg No</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Batch</th>
+                                <th style="width:120px;" class="text-center">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for a in g.list %}
+                                <tr>
+                                  <td class="fw-bold">{{ a.seat_no|default:"-" }}</td>
+                                  <td>{{ a.student.reg_no|default:"-" }}</td>
+                                  <td>{{ a.student.name|default:"-" }}</td>
+                                  <td>{% if a.student.department %}{{ a.student.department.Department|default:"-" }}{% else %}-{% endif %}</td>
+                                  <td>{{ a.student.batch|default:"-" }}</td>
+
+                                  <!-- ✅ Remove (Modal Confirm) -->
+                                  <td class="text-center">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger"
+                                            onclick="openRemoveModal('{{ a.student.id }}','{{ a.student.reg_no|default:"-" }}')">
+                                      Remove
+                                    </button>
+                                  </td>
+                                </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                {% endfor %}
+              </div>
+
+            {% endwith %}
+          {% else %}
+            <div class="alert alert-warning mb-0">No students allotted in this hall.</div>
+          {% endif %}
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Allot Confirm Modal -->
+<div class="modal fade" id="allotConfirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold text-primary">Confirm Allot</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-1">Allot selected students to this hall?</p>
+        <div class="small text-muted">This will allocate seats using your current logic.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmAllotBtn">Yes, Allot</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Clear Hall Confirm Modal -->
+<div class="modal fade" id="clearHallConfirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold text-danger">Confirm Clear Hall</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-1">Are you sure you want to clear all students from this hall?</p>
+        <div class="small text-muted">This action cannot be undone.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmClearHallBtn">Yes, Clear Hall</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Remove Student Confirm Modal -->
+<div class="modal fade" id="removeStudentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold text-danger">Confirm Remove</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-1">Are you sure you want to remove this student from the hall?</p>
+        <p class="text-muted small mb-0">Register No: <span class="fw-semibold" id="removeStudentReg"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmRemoveBtn">Yes, Remove</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Hidden Remove Form (re-used) -->
+<form method="POST" id="removeStudentForm" class="d-none">
+  {% csrf_token %}
+  <input type="hidden" name="hall_id" value="{{ hall.id }}">
+  <input type="hidden" name="action" value="remove">
+  <input type="hidden" name="remove_student_id" id="removeStudentId">
+</form>
+
+<script>
+  function setAction(val){ document.getElementById("actionField").value = val; }
+  function selectAll(flag) { document.querySelectorAll(".student-check").forEach(cb => cb.checked = flag); }
+
+  function setHallControlsEnabled(enabled){
+    ["btnLoad","btnClearFilters"].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.disabled = !enabled;
+    });
+    const viewBtn = document.getElementById("btnViewSeating");
+    if(viewBtn){
+      viewBtn.classList.toggle("disabled", !enabled);
+      viewBtn.setAttribute("aria-disabled", String(!enabled));
+      if(!enabled) viewBtn.href = "#";
+    }
+  }
+
+  // ✅ Hall dropdown
+  (function(){
+    const hallSwitch  = document.getElementById("hallSwitch");
+    const hallIdField = document.getElementById("hallIdField");
+
+    const uiHallName   = document.getElementById("uiHallName");
+    const uiTotalSeats = document.getElementById("uiTotalSeats");
+    const uiAllocated  = document.getElementById("uiAllocated");
+    const uiRemaining  = document.getElementById("uiRemaining");
+
+    function clearHallUI(){
+      uiHallName.textContent = "-";
+      uiTotalSeats.textContent = "-";
+      uiAllocated.textContent = "-";
+      uiRemaining.textContent = "-";
+      hallIdField.value = "";
+      setHallControlsEnabled(false);
+    }
+
+    function fillHallUI(opt){
+      const hallName = (opt.getAttribute("data-hallname") || "").trim()
+                    || (opt.textContent || "").trim().split(" (")[0].trim();
+      const benches  = (opt.getAttribute("data-benches") || "").trim();
+
+      uiHallName.textContent = hallName || "-";
+      uiTotalSeats.textContent = benches || "-";
+      uiAllocated.textContent = "{{ allocated_count|default:'-' }}";
+      uiRemaining.textContent = "{{ remaining_seats|default:'-' }}";
+
+      hallIdField.value = opt.value;
+      setHallControlsEnabled(true);
+
+      const viewBtn = document.getElementById("btnViewSeating");
+      if(viewBtn){
+        viewBtn.href = "{% if hall %}{% url 'hall_students' hall.id %}{% else %}#{% endif %}";
+      }
+    }
+
+    if(!hallSwitch){ clearHallUI(); return; }
+
+    const params = new URLSearchParams(window.location.search);
+    const hallIdInUrl = (params.get("hall_id") || "").trim();
+
+    if(!hallIdInUrl){
+      hallSwitch.value = "";
+      clearHallUI();
+    }else{
+      hallSwitch.value = hallIdInUrl;
+      const opt0 = hallSwitch.options[hallSwitch.selectedIndex];
+      if(opt0 && opt0.value) fillHallUI(opt0);
+      else clearHallUI();
+    }
+
+    hallSwitch.addEventListener("change", function(){
+      const opt = hallSwitch.options[hallSwitch.selectedIndex];
+      if(!opt || !opt.value){ clearHallUI(); return; }
+
+      fillHallUI(opt);
+
+      // ✅ keep existing params (no field affect)
+      const url = new URL(window.location.href);
+      url.searchParams.set("hall_id", opt.value);
+      window.location.href = url.toString();
+    });
+  })();
+
+  // ✅ Constant Exam display (URL params missing after POST redirect -> localStorage fallback)
+  (function(){
+    const params = new URLSearchParams(window.location.search);
+
+    // from URL
+    let examType = (params.get("exam_type") || "").trim();
+    let iatId    = (params.get("iat_no") || "").trim();
+    let semVal   = (params.get("semester") || "").trim();
+    let extraSem = (params.get("extra_semester") || "").trim();
+
+    // fallback from localStorage (because view redirect drops params)
+    if(!examType) examType = localStorage.getItem("ha_exam_type") || "";
+    if(!iatId)    iatId    = localStorage.getItem("ha_iat_no") || "";
+    if(!semVal)   semVal   = localStorage.getItem("ha_semester") || "";
+    if(!extraSem) extraSem = localStorage.getItem("ha_extra_semester") || "";
+
+    // if URL has values -> save again
+    if(params.get("exam_type")) localStorage.setItem("ha_exam_type", examType);
+    if(params.get("iat_no"))    localStorage.setItem("ha_iat_no", iatId);
+    if(params.get("semester"))  localStorage.setItem("ha_semester", semVal);
+    if(params.get("extra_semester")) localStorage.setItem("ha_extra_semester", extraSem);
+
+    const uiExamType = document.getElementById("uiExamType");
+    const uiIatText  = document.getElementById("uiIatText");
+    const uiSemText  = document.getElementById("uiSemText");
+
+    const IAT_MAP = {
+      {% if iat %}
+        {% for ia in iat %}
+          {# ✅ IAT 3 hide #}
+          {% if ia.iat != 3 and ia.iat|stringformat:"s" != "3" %}
+            "{{ ia.id }}": "{{ ia.iat|escapejs }}",
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    };
+
+    // exam type text
+    if(uiExamType){
+      if(examType === "iat") uiExamType.textContent = "IAT Exam";
+      else if(examType === "sem") uiExamType.textContent = "Semester Exam";
+      else uiExamType.textContent = "-";
+    }
+
+    // semester show (for sem: semVal else extraSem, for iat: extraSem)
+    const semToShow = (examType === "sem") ? (semVal || extraSem) : (extraSem || semVal);
+    uiSemText.textContent = semToShow ? semToShow : "-";
+
+    // iat show only if iat exam
+    if(examType === "iat"){
+      const mapped = (iatId && IAT_MAP[iatId]) ? IAT_MAP[iatId] : "";
+      uiIatText.textContent = mapped || (iatId ? ("IAT " + iatId) : "-");
+    }else{
+      uiIatText.textContent = "-";
+    }
+  })();
+
+  // ✅ Block submit if hall not selected
+  document.getElementById("mainForm")?.addEventListener("submit", function(e){
+    const hallIdField = document.getElementById("hallIdField");
+    if(!hallIdField || !hallIdField.value){
+      e.preventDefault();
+      alert("Please select Hall first.");
+    }
+  });
+
+  // ✅ Allot Modal
+  (function(){
+    const openBtn = document.getElementById("btnAllotModal");
+    const confirmBtn = document.getElementById("confirmAllotBtn");
+    const actionField = document.getElementById("actionField");
+    const form = document.getElementById("mainForm");
+    const modalNode = document.getElementById("allotConfirmModal");
+
+    if(!openBtn || !confirmBtn || !actionField || !form || !modalNode) return;
+
+    openBtn.addEventListener("click", function(){
+      const hallId = document.getElementById("hallIdField")?.value || "";
+      if(!hallId){ alert("Please select Hall first."); return; }
+
+      const checked = document.querySelectorAll(".student-check:checked").length;
+      if(checked <= 0){ alert("Please select at least one student to allot."); return; }
+
+      new bootstrap.Modal(modalNode).show();
+    });
+
+    confirmBtn.addEventListener("click", function(){
+      actionField.value = "reseat_allot";
+      form.submit();
+    });
+  })();
+
+  // ✅ Clear Hall Modal
+  (function(){
+    const openBtn = document.getElementById("btnClearHallModal");
+    const confirmBtn = document.getElementById("confirmClearHallBtn");
+    const actionField = document.getElementById("actionField");
+    const form = document.getElementById("mainForm");
+    const modalNode = document.getElementById("clearHallConfirmModal");
+
+    if(!openBtn || !confirmBtn || !actionField || !form || !modalNode) return;
+
+    openBtn.addEventListener("click", function(){
+      const hallId = document.getElementById("hallIdField")?.value || "";
+      if(!hallId){ alert("Please select Hall first."); return; }
+      new bootstrap.Modal(modalNode).show();
+    });
+
+    confirmBtn.addEventListener("click", function(){
+      actionField.value = "clear_hall";
+      form.submit();
+    });
+  })();
+
+  // ✅ Remove Modal
+  function openRemoveModal(studentId, regNo){
+    document.getElementById("removeStudentId").value = studentId;
+    document.getElementById("removeStudentReg").innerText = regNo || "-";
+    new bootstrap.Modal(document.getElementById("removeStudentModal")).show();
+  }
+
+  document.getElementById("confirmRemoveBtn")?.addEventListener("click", function(){
+    document.getElementById("removeStudentForm").submit();
+  });
+
+  // Degree redirect
+  document.getElementById("degreeSelect")?.addEventListener("change", function() {
+    const url = new URL(window.location.href);
+    url.searchParams.set("degree_id", this.value || "");
+    window.location.href = url.toString();
+  });
+</script>
+
+<style>
+  .table td, .table th { vertical-align: middle; }
+  a.disabled { pointer-events:none; opacity:.6; }
+</style>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% load static %}
+{% load cm_tags %}
+{% cm_current_function as permission_data %}
+
+<div class="modal fade" id="addpermissionModal" tabindex="-1" aria-labelledby="addpermissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <!-- Modal Header -->
+            <div class="modal-header bg-black text-white">
+                <h5 class="modal-title fw-bold" id="addpermissionModalLabel">Add Permission</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body bg-dark">
+                <div class="container my-4">
+                    <h3 class="text-center text-primary mb-4">Permissions for Pages</h3>
+
+                    <!-- Select All Checkboxes -->
+                    {% comment %} <div class="d-flex justify-content-end mb-3">
+                        <label for="selectAll" class="form-check-label me-2 fw-bold">Select All</label>
+                        <input type="checkbox" id="selectAll" class="form-check-input" onclick="toggleSelectAll()">
+                    </div> {% endcomment %}
+
+                    <!-- Permission Table -->
+                    <div class="table-responsive">
+                        <form method="POST" action="{% url 'cm_assign_permission' %}">
+                            {% csrf_token %}
+                            <table class="table table-bordered table-striped text-center">
+                                <thead class="table-dark">
+                               <tr>
+                                        <th>ROLES</th>
+                                        {% for per in permission_data.0 %}
+                                            <th>{{ per|replace_underscore }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for per in permission_data.1 %}
+                                        <tr>
+                                            <td>{{ per.role }}</td>
+                                            {% for field in permission_data.0 %}
+                                                {% has_permission per field as has_per %}
+                                                <td>
+                                                    <!-- Hidden field to send False when checkbox is unchecked -->
+                                                    <input 
+                                                        type="hidden" 
+                                                        name="permissions[{{ per.role }}][{{ field }}]" 
+                                                        value="false"
+                                                    >
+                                                    
+                                                    <!-- Checkbox to send True when checked -->
+                                                    <input 
+                                                        type="checkbox" 
+                                                        name="permissions[{{ per.role }}][{{ field }}]" 
+                                                        class="form-check-input functionCheckbox" 
+                                                        data-id="{{ field }}" 
+                                                        data-function="{{ field }}"
+                                                        value="true"
+                                                        {% if per|default:'' == field or has_per %}
+                                                            checked
+                                                        {% endif %}
+                                                    >
+                                                </td>
+                                                {% endfor %}
+                                            </tr>
+                                        {% endfor %}
+                                </tbody>
+                            </table>
+                            <button type="submit" class="btn btn-primary">Save Permissions</button>
+                        </form>
+                        
+                        
+                    </div>
+                    
+                    
+
+                    <!-- Selected Functions -->
+                    {% comment %} <div id="selectedFunctions" class="mt-4">
+                        <h4 class="text-primary">Selected Pages:</h4>
+                        <ul id="functionList" class="list-group"></ul>
+                    </div> {% endcomment %}
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer bg-gradient-primary text-white">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+

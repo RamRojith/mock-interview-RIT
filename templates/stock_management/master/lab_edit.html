@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container py-4" style="max-width:640px;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="fw-bold text-primary mb-0"><i class="fa-solid fa-pen me-2"></i>Edit Lab</h2>
+    <a href="{% url 'lab_management' %}" class="btn btn-sm btn-outline-secondary">Back</a>
+  </div>
+
+  {% if messages %}{% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}{% endif %}
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <form method="post" action="{% url 'lab_edit' lab.id %}">
+        {% csrf_token %}
+        <div class="mb-3"><label class="form-label fw-semibold">Lab Name <span class="text-danger">*</span></label>
+          <input type="text" name="name" class="form-control" value="{{ lab.name }}" required></div>
+
+        <div class="mb-3"><label class="form-label fw-semibold">Lab Code <span class="text-danger">*</span></label>
+          <input type="text" name="lab_code" class="form-control text-uppercase" value="{{ lab.lab_code }}" required></div>
+
+        <div class="mb-3"><label class="form-label fw-semibold">Department <span class="text-danger">*</span></label>
+          <select name="department" class="form-select" required>
+            <option value="">-- Select --</option>
+            {% for d in departments %}
+              <option value="{{ d.id }}" data-name="{{ d.Department|lower }}" {% if lab.department_id == d.id %}selected{% endif %}>{{ d.Department }}</option>
+            {% endfor %}
+          </select></div>
+
+        <div class="mb-3 position-relative">
+          <label class="form-label fw-semibold">Lab Incharge</label>
+          <input type="text" id="incharge_search" class="form-control" placeholder="Type name to search…" autocomplete="off"
+                 value="{{ lab.incharge.name|default:'' }}">
+          <input type="hidden" name="incharge" id="incharge_id" value="{{ lab.incharge_id|default:'' }}">
+          <div id="incharge_dropdown" class="list-group position-absolute w-100 shadow-sm"
+               style="z-index:1055;max-height:230px;overflow:auto;display:none;">
+            {% for f in incharges %}
+              <button type="button" class="list-group-item list-group-item-action py-1 incharge-opt"
+                      data-id="{{ f.id }}" data-name="{{ f.name }}"
+                      data-deptname="{{ f.department.Department|lower }}">
+                {{ f.name }}
+                {% if f.designation %}
+                  <small class="{% if f.designation.is_teaching %}text-muted{% else %}text-success fw-semibold{% endif %}">— {{ f.designation.designation_name }}</small>
+                {% endif %}
+              </button>
+            {% endfor %}
+          </div>
+          <small class="text-muted">Type to filter, then click a name to select.</small>
+        </div>
+
+        <div class="mb-3"><label class="form-label fw-semibold">Location</label>
+          <input type="text" name="location" class="form-control" value="{{ lab.location|default:'' }}"></div>
+
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" name="is_active" id="lab_active" {% if lab.is_active %}checked{% endif %}>
+          <label class="form-check-label" for="lab_active">Active</label>
+        </div>
+
+        <button class="btn btn-primary"><i class="fas fa-save me-1"></i>Update Lab</button>
+        <a href="{% url 'lab_management' %}" class="btn btn-outline-secondary">Cancel</a>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const search = document.getElementById("incharge_search");
+  const hidden = document.getElementById("incharge_id");
+  const dd = document.getElementById("incharge_dropdown");
+  const deptSelect = document.querySelector('select[name="department"]');
+  if (!search || !hidden || !dd) return;
+  const opts = Array.prototype.slice.call(dd.querySelectorAll(".incharge-opt"));
+
+  function closeDD() { dd.style.display = "none"; }
+  function selectedDeptName() {
+    if (!deptSelect) return "";
+    const opt = deptSelect.options[deptSelect.selectedIndex];
+    return opt ? (opt.getAttribute("data-name") || "") : "";
+  }
+  function filterOptions(forceOpen) {
+    const q = search.value.toLowerCase().trim();
+    const deptName = selectedDeptName();
+    let any = false;
+    opts.forEach(function (o) {
+      const matchText = o.dataset.name.toLowerCase().indexOf(q) !== -1;
+      const matchDept = !deptName || (o.dataset.deptname || "") === deptName;
+      const show = matchText && matchDept;
+      o.style.display = show ? "block" : "none";
+      if (show) any = true;
+    });
+    dd.style.display = (any && (forceOpen || document.activeElement === search)) ? "block" : "none";
+    return any;
+  }
+
+  search.addEventListener("focus", function () { filterOptions(true); });
+  search.addEventListener("input", function () { hidden.value = ""; filterOptions(true); });
+  if (deptSelect) {
+    deptSelect.addEventListener("change", function () {
+      hidden.value = ""; search.value = ""; filterOptions(true);
+    });
+  }
+  opts.forEach(function (o) {
+    o.addEventListener("click", function () {
+      hidden.value = this.dataset.id; search.value = this.dataset.name; closeDD();
+    });
+  });
+  document.addEventListener("click", function (e) {
+    if (!dd.contains(e.target) && e.target !== search) closeDD();
+  });
+});
+</script>
+{% endblock content %}

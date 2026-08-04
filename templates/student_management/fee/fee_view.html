@@ -1,0 +1,1280 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.fee-page{
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  background: linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%);
+  min-height:100vh;
+  padding: 1.5rem 1rem;
+}
+.page-header{
+  max-width:1400px;
+  margin:0 auto 1.25rem auto;
+  padding: 1.25rem 1.5rem;
+  border-radius: 16px;
+  color:#fff;
+  background: linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);
+  box-shadow: 0 10px 25px rgba(15,23,42,.18);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+}
+.page-header h1{ margin:0; font-weight:800; letter-spacing:-0.4px; }
+.page-header .subtitle{ margin:0; opacity:.9; }
+.page-container{ max-width:1400px; margin:0 auto; }
+
+.stats-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.stat-card{
+  background:#fff;
+  border-radius: 16px;
+  padding: 1rem 1rem;
+  box-shadow: 0 10px 24px rgba(15,23,42,.08);
+  border-left: 4px solid #1a4b8c;
+  display:flex;
+  align-items:center;
+  gap:.85rem;
+}
+.stat-icon{
+  width:48px;height:48px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  background: #1a4b8c; color:#fff;
+}
+.stat-number{ font-size:1.5rem; font-weight:900; line-height:1; display:block; }
+.stat-label{ font-size:.85rem; color:#64748b; font-weight:700; display:block; margin-top:.15rem; }
+
+.summary-card{
+  background:#fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(15,23,42,.08);
+  margin-bottom: 1rem;
+  overflow:hidden;
+}
+.card-headerx{
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+}
+.card-headerx h5{ margin:0; font-weight:800; color:#0f172a; }
+.badge-role{
+  background:#1a4b8c;
+  color:#fff;
+  padding:.45rem .8rem;
+  border-radius: 999px;
+  font-weight:800;
+  font-size:.85rem;
+  display:inline-flex;
+  gap:.5rem;
+  align-items:center;
+}
+.card-bodyx{ padding: 1rem 1.25rem; }
+
+.table-wrap{
+  border:1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow:hidden;
+}
+table{ margin:0; width:100%; border-collapse:collapse; }
+th{
+  background:#f8fafc;
+  padding:.85rem .9rem;
+  font-size:.85rem;
+  text-transform: uppercase;
+  letter-spacing:.5px;
+  color:#475569;
+  border-bottom: 1px solid #e2e8f0;
+}
+td{
+  padding:.85rem .9rem;
+  border-bottom: 1px solid #e2e8f0;
+  font-size:.9rem;
+  color:#0f172a;
+  vertical-align:middle;
+}
+tbody tr:hover{ background:#f8fafc; }
+tfoot td{ font-weight:900; background:#f8fafc; }
+
+.student-reg{ font-weight:900; color:#1a4b8c; }
+.student-name{ color:#334155; font-size:.88rem; }
+.money{ font-weight:900; }
+.paid{ color:#059669; font-weight:800; }
+.pending{ color:#dc2626; font-weight:800; }
+
+.btn-mini{
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+  border-radius: 10px;
+  padding:.45rem .65rem;
+  font-weight:800;
+  font-size:.82rem;
+  border:1px solid #dbeafe;
+  background:#eff6ff;
+  color:#1d4ed8;
+  text-decoration:none;
+  cursor:pointer;
+}
+.btn-mini:hover{ background:#dbeafe; }
+.btn-mini.gray{
+  border:1px solid #e2e8f0;
+  background:#f8fafc;
+  color:#0f172a;
+}
+.btn-mini.gray:hover{ background:#f1f5f9; }
+.btn-mini.green{
+  border:1px solid #d1fae5;
+  background:#ecfdf5;
+  color:#047857;
+}
+.btn-mini.green:hover{ background:#d1fae5; }
+
+.filter-grid{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr) 1fr auto; /* Degree + Dept + Year + Section + Search + Actions */
+  gap:.75rem;
+  align-items:end;
+}
+@media (max-width: 992px){
+  .filter-grid{ grid-template-columns: 1fr; }
+}
+.form-labelx{
+  font-weight:900;
+  font-size:.85rem;
+  color:#0f172a;
+  margin-bottom:.35rem;
+  display:block;
+}
+.form-selectx, .form-inputx{
+  width:100%;
+  padding:.65rem .85rem;
+  border:1px solid #e2e8f0;
+  border-radius: 12px;
+  background:#fff;
+  font-weight:800;
+  color:#0f172a;
+}
+.form-inputx{ font-weight:700; }
+
+.modal-content{ border-radius: 16px; overflow:hidden; }
+.modal-header{
+  background: linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%);
+  border-bottom:1px solid #e2e8f0;
+}
+.modal-title{ font-weight:900; }
+.loading-box{
+  padding: 2rem 1.25rem;
+  text-align:center;
+  color:#64748b;
+}
+.spinner-border{ width:2rem; height:2rem; }
+.small-muted{ color:#64748b; font-weight:700; font-size:.85rem; }
+.hr-lite{ border:0; border-top:1px solid #e2e8f0; margin: .75rem 0; }
+
+.pager-wrap{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:.6rem;
+  flex-wrap:wrap;
+  margin-top: 12px;
+}
+
+.charts-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.chart-card{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+}
+.chart-card canvas{ max-height: 260px; }
+</style>
+
+<div class="fee-page">
+  <div class="page-header">
+    <div>
+      <h1>
+        {% if mode == "principal" %}
+          <i class="fa-solid fa-user-shield me-2"></i> Fee View (All)
+        {% elif mode == "hod" %}
+          <i class="fa-solid fa-user-tie me-2"></i> Fee View (Department)
+        {% elif mode == "faculty" %}
+          <i class="fa-solid fa-file-invoice-dollar me-2"></i> Fee View (Faculty)
+        {% else %}
+          Fee View
+        {% endif %}
+      </h1>
+      <p class="subtitle">
+        {% if mode == "principal" %} Overall → Year-wise → Department-wise → Department-Year-wise {% endif %}
+        {% if mode == "hod" %} Department student fee overview {% endif %}
+        {% if mode == "faculty" %} Mentor + Class Advisor student fee overview {% endif %}
+      </p>
+    </div>
+
+    <div class="badge-role">
+      <i class="fa-solid fa-user"></i>
+      {% if mode == "faculty" %}
+        {{ faculty }}
+      {% elif mode == "hod" %}
+        {% if hod_dept %}{{ hod_dept.Department }}{% else %}HOD{% endif %}
+      {% elif mode == "principal" %}
+        All Permissions
+      {% else %}
+        User
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="page-container">
+
+    {% if mode == "none" %}
+      <div class="summary-card">
+        <div class="card-bodyx">
+          <div class="p-4 text-center text-muted">
+            <i class="fa-solid fa-ban fa-2x mb-2"></i>
+            <h5 class="fw-bold">No Permission</h5>
+            <div>Please contact admin.</div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if mode == "principal" %}
+
+      <!-- Filters -->
+      <div class="summary-card">
+        <div class="card-headerx">
+          <h5><i class="fa-solid fa-filter me-2"></i> Filters</h5>
+          <div class="d-flex gap-2">
+            <a href="{% url 'download_fee_summary_pdf' %}?{{ request.GET.urlencode }}" class="btn-mini green" target="_blank">
+              <i class="fa-solid fa-file-pdf"></i> PDF
+            </a>
+            <span class="badge-role"><i class="fa-solid fa-sliders"></i> Apply</span>
+          </div>
+        </div>
+        <div class="card-bodyx">
+          <form method="get" class="filter-grid">
+
+            <!-- ✅ Degree -->
+            <div>
+              <label class="form-labelx">Degree</label>
+              <select id="degreeSelect" name="degree" class="form-selectx">
+                <option value="">All Degrees</option>
+                {% for d in degree_options %}
+                  <option value="{{ d.id }}" {% if selected_degree_id == d.id %}selected{% endif %}>
+                    {{ d.label }}{% if d.code %} ({{ d.code }}){% endif %}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- ✅ Department (filtered by degree via API) -->
+            <div>
+              <label class="form-labelx">Department</label>
+              <select id="deptSelect" name="department" class="form-selectx">
+                <option value="">All Departments</option>
+                {% for d in dept_options %}
+                  <option value="{{ d.id }}" {% if selected_dept_id == d.id|stringformat:'s' %}selected{% endif %}>
+                    {{ d.Department }}{% if d.Department_code %} ({{ d.Department_code }}){% endif %}
+                  </option>
+                {% endfor %}
+              </select>
+              <div class="small-muted mt-1"></div>
+            </div>
+
+            <!-- Year -->
+            <div>
+              <label class="form-labelx">Academic Year</label>
+              <select name="year" class="form-selectx">
+                <option value="">All Years</option>
+                <option value="1" {% if selected_year == '1' %}selected{% endif %}>First Year</option>
+                <option value="2" {% if selected_year == '2' %}selected{% endif %}>Second Year</option>
+                <option value="3" {% if selected_year == '3' %}selected{% endif %}>Third Year</option>
+                <option value="4" {% if selected_year == '4' %}selected{% endif %}>Fourth Year</option>
+              </select>
+            </div>
+
+            <!-- Section -->
+            <div>
+              <label class="form-labelx">Section</label>
+              <select name="section" class="form-selectx">
+                <option value="">All Sections</option>
+                {% for s in section_options %}
+                  <option value="{{ s }}" {% if selected_section == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Search -->
+            <div>
+              <label class="form-labelx">Search</label>
+              <input type="text" name="q" value="{{ q }}" class="form-inputx" placeholder="Reg No / Name / Section">
+            </div>
+
+            <div class="d-flex gap-2">
+              <button class="btn-mini" type="submit">
+                <i class="fa-solid fa-magnifying-glass"></i> Apply
+              </button>
+              <a class="btn-mini gray" href="?">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+              </a>
+            </div>
+          </form>
+
+          <div class="small-muted mt-2">
+            Student list appears only after you apply at least one filter (Degree / Dept / Year / Section / Search).
+          </div>
+        </div>
+      </div>
+
+      <!-- Summaries -->
+      <div class="summary-card">
+        <div class="card-headerx">
+          <h5><i class="fa-solid fa-chart-simple me-2"></i> Summary (Always Visible)</h5>
+          <span class="badge-role"><i class="fa-solid fa-layer-group"></i> Overall → Year → Dept → Dept-Year</span>
+        </div>
+        <div class="card-bodyx">
+
+          <!-- Overall -->
+          <h6 class="fw-bold mb-2"><i class="fa-solid fa-globe me-2"></i> Overall</h6>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+              <div>
+                <span class="stat-number" id="overallTotal">{{ overall_summary.total }}</span>
+                <span class="stat-label">Total</span>
+              </div>
+            </div>
+            <div class="stat-card" style="border-left-color:#059669">
+              <div class="stat-icon" style="background:#059669"><i class="fa-solid fa-circle-check"></i></div>
+              <div>
+                <span class="stat-number" id="overallPaid">{{ overall_summary.paid }}</span>
+                <span class="stat-label">Paid</span>
+              </div>
+            </div>
+            <div class="stat-card" style="border-left-color:#dc2626">
+              <div class="stat-icon" style="background:#dc2626"><i class="fa-solid fa-clock"></i></div>
+              <div>
+                <span class="stat-number" id="overallPending">{{ overall_summary.pending }}</span>
+                <span class="stat-label">Pending</span>
+              </div>
+            </div>
+            <div class="stat-card" style="border-left-color:#7c3aed">
+              <div class="stat-icon" style="background:#7c3aed"><i class="fa-solid fa-users"></i></div>
+              <div>
+                <span class="stat-number" id="overallCount">{{ overall_summary.count }}</span>
+                <span class="stat-label">Students Count</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hr-lite"></div>
+
+          <!-- Charts -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <h6 class="fw-bold mb-2"><i class="fa-solid fa-chart-pie me-2"></i> Paid vs Pending</h6>
+              <canvas id="paidPendingChart" height="220"></canvas>
+            </div>
+            <div class="chart-card">
+              <h6 class="fw-bold mb-2"><i class="fa-solid fa-chart-column me-2"></i> Year-wise Total / Paid / Pending</h6>
+              <canvas id="yearBarChart" height="220"></canvas>
+            </div>
+          </div>
+
+          <!-- Year-wise (filled via API too if you want, but keeping static table area) -->
+          <h6 class="fw-bold mb-2"><i class="fa-solid fa-calendar-days me-2"></i> Year-wise</h6>
+          <div class="table-wrap mb-3">
+            <table>
+              <thead>
+                <tr>
+                  <th>Year</th><th>Students</th><th>Total</th><th>Paid</th><th>Pending</th>
+                </tr>
+              </thead>
+              <tbody id="yearWiseTbody">
+                {% for y,info in year_wise_summary.items %}
+                <tr>
+                  <td>Year {{ y }}</td>
+                  <td>{{ info.count }}</td>
+                  <td class="money">{{ info.total }}</td>
+                  <td class="paid">{{ info.paid }}</td>
+                  <td class="pending">{{ info.pending }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section-wise -->
+          <h6 class="fw-bold mb-2"><i class="fa-solid fa-chalkboard me-2"></i> Section-wise</h6>
+          <div class="table-wrap mb-3">
+            <table>
+              <thead>
+                <tr>
+                  <th>Section</th><th>Students</th><th>Total</th><th>Paid</th><th>Pending</th>
+                </tr>
+              </thead>
+              <tbody id="sectionWiseTbody">
+                {% for sec,info in section_wise_summary.items %}
+                <tr>
+                  <td>{{ sec }}</td>
+                  <td>{{ info.count }}</td>
+                  <td class="money">{{ info.total }}</td>
+                  <td class="paid">{{ info.paid }}</td>
+                  <td class="pending">{{ info.pending }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Department-wise -->
+          <h6 class="fw-bold mb-2"><i class="fa-solid fa-building me-2"></i> Department-wise</h6>
+          <div class="table-wrap mb-3">
+            <table>
+              <thead>
+                <tr>
+                  <th>Department</th><th>Students</th><th>Total</th><th>Paid</th><th>Pending</th>
+                </tr>
+              </thead>
+              <tbody id="deptWiseTbody">
+                {% for k,info in dept_wise_summary.items %}
+                <tr>
+                  <td>{{ info.label }}</td>
+                  <td>{{ info.count }}</td>
+                  <td class="money">{{ info.total }}</td>
+                  <td class="paid">{{ info.paid }}</td>
+                  <td class="pending">{{ info.pending }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Dept-Year-wise -->
+          <h6 class="fw-bold mb-2"><i class="fa-solid fa-diagram-project me-2"></i> Department + Year-wise</h6>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Department</th><th>Year</th><th>Students</th><th>Total</th><th>Paid</th><th>Pending</th>
+                </tr>
+              </thead>
+              <tbody id="deptYearWiseTbody">
+                {% for dk,dinfo in dept_year_wise_summary.items %}
+                  {% for y,yinfo in dinfo.years.items %}
+                    {% if yinfo.count > 0 %}
+                    <tr>
+                      <td>{{ dinfo.label }}</td>
+                      <td>Year {{ y }}</td>
+                      <td>{{ yinfo.count }}</td>
+                      <td class="money">{{ yinfo.total }}</td>
+                      <td class="paid">{{ yinfo.paid }}</td>
+                      <td class="pending">{{ yinfo.pending }}</td>
+                    </tr>
+                    {% endif %}
+                  {% endfor %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Students list (API) -->
+      <div class="summary-card">
+        <div class="card-headerx">
+          <h5><i class="fa-solid fa-table me-2"></i> Students</h5>
+          <span class="badge-role"><i class="fa-solid fa-circle-info"></i> Server-side pagination</span>
+        </div>
+
+        <div class="card-bodyx">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Department</th>
+                  <th>Section</th>
+                  <th>Year</th>
+                  <th>Total</th>
+                  <th>Paid</th>
+                  <th>Pending</th>
+                  <th style="width:220px;">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody id="studentsTbody">
+                <tr><td colspan="8" style="text-align:center;padding:20px;color:#64748b;">Loading...</td></tr>
+              </tbody>
+
+              <tfoot>
+                <tr>
+                  <td colspan="4" class="text-end">Totals (This Page)</td>
+                  <td class="money" id="pageTotal">0.00</td>
+                  <td class="paid" id="pagePaid">0.00</td>
+                  <td class="pending" id="pagePending">0.00</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div id="studentsPagination"></div>
+        </div>
+      </div>
+
+    {% endif %}
+
+
+    {% if mode == "hod" %}
+
+      <div class="summary-card">
+        <div class="card-headerx">
+          <h5><i class="fa-solid fa-filter me-2"></i> Filters</h5>
+          <div class="d-flex gap-2">
+            <a href="{% url 'download_fee_summary_pdf' %}?{{ request.GET.urlencode }}" class="btn-mini green" target="_blank">
+              <i class="fa-solid fa-file-pdf"></i> PDF
+            </a>
+            <span class="badge-role"><i class="fa-solid fa-sliders"></i> Apply</span>
+          </div>
+        </div>
+        <div class="card-bodyx">
+          <form method="get" class="filter-grid" style="grid-template-columns: 1fr 1fr 1fr auto;">
+            <div>
+              <label class="form-labelx">Academic Year</label>
+              <select name="year" class="form-selectx">
+                <option value="">All Years</option>
+                <option value="1" {% if selected_year == '1' %}selected{% endif %}>First Year</option>
+                <option value="2" {% if selected_year == '2' %}selected{% endif %}>Second Year</option>
+                <option value="3" {% if selected_year == '3' %}selected{% endif %}>Third Year</option>
+                <option value="4" {% if selected_year == '4' %}selected{% endif %}>Fourth Year</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="form-labelx">Section</label>
+              <select name="section" class="form-selectx">
+                <option value="">All Sections</option>
+                {% for s in section_options %}
+                  <option value="{{ s }}" {% if selected_section == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div>
+              <label class="form-labelx">Search</label>
+              <input type="text" name="q" value="{{ q }}" class="form-inputx" placeholder="Reg No / Name / Section">
+            </div>
+
+            <div class="d-flex gap-2">
+              <button class="btn-mini" type="submit">
+                <i class="fa-solid fa-magnifying-glass"></i> Apply
+              </button>
+              <a class="btn-mini gray" href="?">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary-card">
+        <div class="card-headerx">
+          <h5><i class="fa-solid fa-chart-simple me-2"></i> Department Summary</h5>
+          <span class="badge-role"><i class="fa-solid fa-layer-group"></i> Overall → Year → Section</span>
+        </div>
+        <div class="card-bodyx">
+
+          <!-- Overall -->
+          <h6 class="fw-bold mb-2"><i class="fa-solid fa-globe me-2"></i> Overall</h6>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+              <div>
+                <span class="stat-number" id="overallTotal">{{ overall_summary.total }}</span>
+                <span class="stat-label">Total</span>
+              </div>
+            </div>
+            <div class="stat-card" style="border-left-color:#059669">
+              <div class="stat-icon" style="background:#059669"><i class="fa-solid fa-circle-check"></i></div>
+              <div>
+                <span class="stat-number" id="overallPaid">{{ overall_summary.paid }}</span>
+                <span class="stat-label">Paid</span>
+              </div>
+            </div>
+            <div class="stat-card" style="border-left-color:#dc2626">
+              <div class="stat-icon" style="background:#dc2626"><i class="fa-solid fa-clock"></i></div>
+              <div>
+                <span class="stat-number" id="overallPending">{{ overall_summary.pending }}</span>
+                <span class="stat-label">Pending</span>
+              </div>
+            </div>
+            <div class="stat-card" style="border-left-color:#7c3aed">
+              <div class="stat-icon" style="background:#7c3aed"><i class="fa-solid fa-users"></i></div>
+              <div>
+                <span class="stat-number" id="overallCount">{{ overall_summary.count }}</span>
+                <span class="stat-label">Students Count</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hr-lite"></div>
+
+          <!-- Charts -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <h6 class="fw-bold mb-2"><i class="fa-solid fa-chart-pie me-2"></i> Paid vs Pending</h6>
+              <canvas id="paidPendingChart" height="220"></canvas>
+            </div>
+            <div class="chart-card">
+              <h6 class="fw-bold mb-2"><i class="fa-solid fa-chart-column me-2"></i> Year-wise Total / Paid / Pending</h6>
+              <canvas id="yearBarChart" height="220"></canvas>
+            </div>
+          </div>
+
+          <!-- Year-wise -->
+          <h6 class="fw-bold mb-2"><i class="fa-solid fa-calendar-days me-2"></i> Year-wise</h6>
+          <div class="table-wrap mb-3">
+            <table>
+              <thead>
+                <tr>
+                  <th>Year</th><th>Students</th><th>Total</th><th>Paid</th><th>Pending</th>
+                </tr>
+              </thead>
+              <tbody id="yearWiseTbody">
+                {% for y,info in year_wise_summary.items %}
+                <tr>
+                  <td>Year {{ y }}</td>
+                  <td>{{ info.count }}</td>
+                  <td class="money">{{ info.total }}</td>
+                  <td class="paid">{{ info.paid }}</td>
+                  <td class="pending">{{ info.pending }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section-wise -->
+          <h6 class="fw-bold mb-2"><i class="fa-solid fa-chalkboard me-2"></i> Section-wise</h6>
+          <div class="table-wrap mb-3">
+            <table>
+              <thead>
+                <tr>
+                  <th>Section</th><th>Students</th><th>Total</th><th>Paid</th><th>Pending</th>
+                </tr>
+              </thead>
+              <tbody id="sectionWiseTbody">
+                {% for sec,info in section_wise_summary.items %}
+                <tr>
+                  <td>{{ sec }}</td>
+                  <td>{{ info.count }}</td>
+                  <td class="money">{{ info.total }}</td>
+                  <td class="paid">{{ info.paid }}</td>
+                  <td class="pending">{{ info.pending }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Year + Section-wise -->
+          <h6 class="fw-bold mb-2"><i class="fa-solid fa-diagram-project me-2"></i> Year + Section-wise</h6>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Year</th><th>Section</th><th>Students</th><th>Total</th><th>Paid</th><th>Pending</th>
+                </tr>
+              </thead>
+              <tbody id="yearSectionWiseTbody">
+                {% for y,secs in year_section_wise_summary.items %}
+                  {% for sec,info in secs.items %}
+                    {% if info.count > 0 %}
+                    <tr>
+                      <td>Year {{ y }}</td>
+                      <td>{{ sec }}</td>
+                      <td>{{ info.count }}</td>
+                      <td class="money">{{ info.total }}</td>
+                      <td class="paid">{{ info.paid }}</td>
+                      <td class="pending">{{ info.pending }}</td>
+                    </tr>
+                    {% endif %}
+                  {% endfor %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-headerx">
+          <h5><i class="fa-solid fa-table me-2"></i> Students</h5>
+          <span class="badge-role"><i class="fa-solid fa-user-graduate"></i> Server-side pagination</span>
+        </div>
+
+        <div class="card-bodyx">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th><th>Section</th><th>Year</th><th>Total</th><th>Paid</th><th>Pending</th><th style="width:220px;">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody id="studentsTbody">
+                <tr><td colspan="7" style="text-align:center;padding:20px;color:#64748b;">Loading...</td></tr>
+              </tbody>
+
+              <tfoot>
+                <tr>
+                  <td colspan="3" class="text-end">Totals (This Page)</td>
+                  <td class="money" id="pageTotal">0.00</td>
+                  <td class="paid" id="pagePaid">0.00</td>
+                  <td class="pending" id="pagePending">0.00</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div id="studentsPagination"></div>
+        </div>
+      </div>
+
+    {% endif %}
+
+
+    {% if mode == "faculty" %}
+
+      <div class="summary-card">
+        <div class="card-headerx">
+          <h5><i class="fa-solid fa-magnifying-glass me-2"></i> Search</h5>
+          <div class="d-flex gap-2">
+            <a href="{% url 'download_fee_summary_pdf' %}?{{ request.GET.urlencode }}&scope=mentor" class="btn-mini green" target="_blank">
+              <i class="fa-solid fa-file-pdf"></i> Mentor PDF
+            </a>
+            <a href="{% url 'download_fee_summary_pdf' %}?{{ request.GET.urlencode }}&scope=ca" class="btn-mini green" target="_blank">
+              <i class="fa-solid fa-file-pdf"></i> CA PDF
+            </a>
+          </div>
+        </div>
+        <div class="card-bodyx">
+          <form method="get" class="filter-grid" style="grid-template-columns: 1fr auto;">
+            <div>
+              <label class="form-labelx">Search</label>
+              <input type="text" name="q" value="{{ q }}" class="form-inputx" placeholder="Reg No / Name / Section">
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn-mini" type="submit">
+                <i class="fa-solid fa-magnifying-glass"></i> Apply
+              </button>
+              <a class="btn-mini gray" href="?">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+              </a>
+            </div>
+          </form>
+          <div class="small-muted mt-2">Search applies to both Mentor + CA lists.</div>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-headerx">
+          <h5><i class="fa-solid fa-table me-2"></i> Students (Mentor/CA)</h5>
+          <span class="badge-role"><i class="fa-solid fa-user-graduate"></i> Server-side pagination</span>
+        </div>
+
+        <div class="card-bodyx">
+          <div class="small-muted mb-2">
+            By default API uses Mentor scope. If you want CA list, open this page with <b>?scope=ca</b>.
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th><th>Department</th><th>Section</th><th>Year</th><th>Total</th><th>Paid</th><th>Pending</th><th style="width:220px;">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody id="studentsTbody">
+                <tr><td colspan="8" style="text-align:center;padding:20px;color:#64748b;">Loading...</td></tr>
+              </tbody>
+
+              <tfoot>
+                <tr>
+                  <td colspan="4" class="text-end">Totals (This Page)</td>
+                  <td class="money" id="pageTotal">0.00</td>
+                  <td class="paid" id="pagePaid">0.00</td>
+                  <td class="pending" id="pagePending">0.00</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div id="studentsPagination"></div>
+        </div>
+      </div>
+
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- One Modal -->
+<div class="modal fade" id="cardModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cardModalTitle"><i class="fa-solid fa-id-card me-2"></i>Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="cardModalBody">
+        <div class="loading-box">
+          <div class="spinner-border" role="status"></div>
+          <div class="mt-3 fw-bold">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const mode = "{{ mode }}";
+
+  const degreeSelect = document.getElementById("degreeSelect");
+  const deptSelect = document.getElementById("deptSelect");
+
+  const studentsTbody = document.getElementById("studentsTbody");
+  const studentsPagination = document.getElementById("studentsPagination");
+
+  const overallTotalEl = document.getElementById("overallTotal");
+  const overallPaidEl = document.getElementById("overallPaid");
+  const overallPendingEl = document.getElementById("overallPending");
+  const overallCountEl = document.getElementById("overallCount");
+
+  const yearWiseTbody = document.getElementById("yearWiseTbody");
+  const deptWiseTbody = document.getElementById("deptWiseTbody");
+  const deptYearWiseTbody = document.getElementById("deptYearWiseTbody");
+  const sectionWiseTbody = document.getElementById("sectionWiseTbody");
+  const yearSectionWiseTbody = document.getElementById("yearSectionWiseTbody");
+
+  const chartColors = { total: "#1a4b8c", paid: "#059669", pending: "#dc2626" };
+  let paidPendingChart = null;
+  let yearBarChart = null;
+
+  function ensureCharts(){
+    const ppEl = document.getElementById("paidPendingChart");
+    if(ppEl && !paidPendingChart && window.Chart){
+      paidPendingChart = new Chart(ppEl, {
+        type: "doughnut",
+        data: {
+          labels: ["Paid", "Pending"],
+          datasets: [{ data: [0, 0], backgroundColor: [chartColors.paid, chartColors.pending] }]
+        },
+        options: { plugins: { legend: { position: "bottom" } } }
+      });
+    }
+    const ybEl = document.getElementById("yearBarChart");
+    if(ybEl && !yearBarChart && window.Chart){
+      yearBarChart = new Chart(ybEl, {
+        type: "bar",
+        data: {
+          labels: ["Year 1", "Year 2", "Year 3", "Year 4"],
+          datasets: [
+            { label: "Paid", data: [0,0,0,0], backgroundColor: chartColors.paid },
+            { label: "Pending", data: [0,0,0,0], backgroundColor: chartColors.pending },
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true } },
+          plugins: { legend: { position: "bottom" } }
+        }
+      });
+    }
+  }
+
+  function updateCharts(data){
+    ensureCharts();
+    if(paidPendingChart){
+      paidPendingChart.data.datasets[0].data = [
+        parseFloat(data.overall_summary.paid) || 0,
+        parseFloat(data.overall_summary.pending) || 0,
+      ];
+      paidPendingChart.update();
+    }
+    if(yearBarChart && data.year_wise_summary){
+      const years = ["1","2","3","4"];
+      yearBarChart.data.datasets[0].data = years.map(y => parseFloat(data.year_wise_summary[y]?.paid) || 0);
+      yearBarChart.data.datasets[1].data = years.map(y => parseFloat(data.year_wise_summary[y]?.pending) || 0);
+      yearBarChart.update();
+    }
+  }
+
+  function qsParams() {
+    const url = new URL(window.location.href);
+    return url.searchParams;
+  }
+
+  async function fetchJSON(url){
+    const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+    return await res.json();
+  }
+
+  function escapeHTML(s){
+    return (s || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+
+  // ✅ Degree -> Departments
+  async function loadDepartmentsForDegree(degreeId){
+    if(!deptSelect) return;
+    const url = new URL("{% url 'api_degree_departments' %}", window.location.origin);
+    if(degreeId) url.searchParams.set("degree", degreeId);
+
+    const data = await fetchJSON(url.toString());
+    if(!data.ok) return;
+
+    const current = deptSelect.value;
+    deptSelect.innerHTML = `<option value="">All Departments</option>`;
+    data.departments.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d.id;
+      opt.textContent = `${d.Department}${d.Department_code ? " ("+d.Department_code+")" : ""}`;
+      deptSelect.appendChild(opt);
+    });
+
+    if ([...deptSelect.options].some(o => o.value === current)) {
+      deptSelect.value = current;
+    } else {
+      deptSelect.value = "";
+    }
+  }
+
+  if(degreeSelect){
+    degreeSelect.addEventListener("change", async function(){
+      await loadDepartmentsForDegree(this.value);
+      // optional: reset dept when degree changes
+      // (keeps your UX consistent)
+      // submit is optional; but usually you want summary/list updated with new degree
+    });
+  }
+
+  // ✅ Summary API (principal + hod)
+  async function loadSummary(){
+    if(mode !== "principal" && mode !== "hod") return;
+
+    const url = new URL("{% url 'api_fee_summary' %}", window.location.origin);
+    qsParams().forEach((v,k)=>url.searchParams.set(k,v));
+
+    const data = await fetchJSON(url.toString());
+    if(!data.ok) return;
+
+    if(overallTotalEl) overallTotalEl.textContent = data.overall_summary.total;
+    if(overallPaidEl) overallPaidEl.textContent = data.overall_summary.paid;
+    if(overallPendingEl) overallPendingEl.textContent = data.overall_summary.pending;
+    if(overallCountEl) overallCountEl.textContent = data.overall_summary.count;
+
+    updateCharts(data);
+
+    // Fill Section-wise table
+    if(sectionWiseTbody && data.section_wise_summary){
+      sectionWiseTbody.innerHTML = "";
+      Object.keys(data.section_wise_summary).forEach(sec => {
+        const info = data.section_wise_summary[sec];
+        sectionWiseTbody.insertAdjacentHTML("beforeend", `
+          <tr>
+            <td>${escapeHTML(sec)}</td>
+            <td>${escapeHTML(String(info.count))}</td>
+            <td class="money">${escapeHTML(info.total)}</td>
+            <td class="paid">${escapeHTML(info.paid)}</td>
+            <td class="pending">${escapeHTML(info.pending)}</td>
+          </tr>
+        `);
+      });
+    }
+
+    // Fill Year + Section-wise table (hod)
+    if(yearSectionWiseTbody && data.year_section_wise_summary){
+      yearSectionWiseTbody.innerHTML = "";
+      Object.keys(data.year_section_wise_summary).forEach(y => {
+        const secs = data.year_section_wise_summary[y] || {};
+        Object.keys(secs).forEach(sec => {
+          const info = secs[sec];
+          if((info.count || 0) > 0){
+            yearSectionWiseTbody.insertAdjacentHTML("beforeend", `
+              <tr>
+                <td>Year ${escapeHTML(y)}</td>
+                <td>${escapeHTML(sec)}</td>
+                <td>${escapeHTML(String(info.count))}</td>
+                <td class="money">${escapeHTML(info.total)}</td>
+                <td class="paid">${escapeHTML(info.paid)}</td>
+                <td class="pending">${escapeHTML(info.pending)}</td>
+              </tr>
+            `);
+          }
+        });
+      });
+    }
+
+    // Fill Year-wise table
+    if(yearWiseTbody && data.year_wise_summary){
+      yearWiseTbody.innerHTML = "";
+      Object.keys(data.year_wise_summary).forEach(y => {
+        const info = data.year_wise_summary[y];
+        yearWiseTbody.insertAdjacentHTML("beforeend", `
+          <tr>
+            <td>Year ${escapeHTML(y)}</td>
+            <td>${escapeHTML(String(info.count))}</td>
+            <td class="money">${escapeHTML(info.total)}</td>
+            <td class="paid">${escapeHTML(info.paid)}</td>
+            <td class="pending">${escapeHTML(info.pending)}</td>
+          </tr>
+        `);
+      });
+    }
+
+    // Fill Dept-wise table
+    if(deptWiseTbody && data.dept_wise_summary){
+      deptWiseTbody.innerHTML = "";
+      Object.keys(data.dept_wise_summary).forEach(k => {
+        const info = data.dept_wise_summary[k];
+        deptWiseTbody.insertAdjacentHTML("beforeend", `
+          <tr>
+            <td>${escapeHTML(info.label)}</td>
+            <td>${escapeHTML(String(info.count))}</td>
+            <td class="money">${escapeHTML(info.total)}</td>
+            <td class="paid">${escapeHTML(info.paid)}</td>
+            <td class="pending">${escapeHTML(info.pending)}</td>
+          </tr>
+        `);
+      });
+    }
+
+    // Fill Dept-Year-wise table
+    if(deptYearWiseTbody && data.dept_year_wise_summary){
+      deptYearWiseTbody.innerHTML = "";
+      Object.keys(data.dept_year_wise_summary).forEach(dk => {
+        const dinfo = data.dept_year_wise_summary[dk];
+        const years = dinfo.years || {};
+        Object.keys(years).forEach(y => {
+          const yinfo = years[y];
+          if((yinfo.count || 0) > 0){
+            deptYearWiseTbody.insertAdjacentHTML("beforeend", `
+              <tr>
+                <td>${escapeHTML(dinfo.label)}</td>
+                <td>Year ${escapeHTML(y)}</td>
+                <td>${escapeHTML(String(yinfo.count))}</td>
+                <td class="money">${escapeHTML(yinfo.total)}</td>
+                <td class="paid">${escapeHTML(yinfo.paid)}</td>
+                <td class="pending">${escapeHTML(yinfo.pending)}</td>
+              </tr>
+            `);
+          }
+        });
+      });
+    }
+  }
+
+  // ✅ Students API (pagination)
+  async function loadStudents(page=1){
+    if(!studentsTbody) return;
+
+    const url = new URL("{% url 'api_fee_students' %}", window.location.origin);
+    qsParams().forEach((v,k)=>url.searchParams.set(k,v));
+    url.searchParams.set("page", String(page));
+    url.searchParams.set("page_size", "50");
+
+    const colspan = (mode === "hod") ? 7 : 8;
+    studentsTbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center;padding:20px;color:#64748b;">Loading...</td></tr>`;
+
+    const data = await fetchJSON(url.toString());
+    if(!data.ok) {
+      studentsTbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center;padding:20px;color:#dc2626;">Failed to load</td></tr>`;
+      return;
+    }
+
+    if(data.filter_applied === false){
+      studentsTbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center;padding:20px;color:#64748b;">Apply filters to view students</td></tr>`;
+      if(studentsPagination) studentsPagination.innerHTML = "";
+      return;
+    }
+
+    if(!data.results || data.results.length === 0){
+      studentsTbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center;padding:20px;color:#64748b;">No students found</td></tr>`;
+      if(studentsPagination) studentsPagination.innerHTML = "";
+      return;
+    }
+
+    studentsTbody.innerHTML = "";
+    data.results.forEach(r => {
+      if(mode === "hod"){
+        studentsTbody.insertAdjacentHTML("beforeend", `
+          <tr>
+            <td>
+              <div class="student-reg">${escapeHTML(r.reg_no || "-")}</div>
+              <div class="student-name">${escapeHTML(r.name || "-")}</div>
+            </td>
+            <td>${escapeHTML(r.section || "-")}</td>
+            <td>${escapeHTML(String(r.year_index || "-"))}</td>
+            <td class="money">${escapeHTML(r.total_current_year)}</td>
+            <td class="paid">${escapeHTML(r.paid_total)}</td>
+            <td class="pending">${escapeHTML(r.pending_total)}</td>
+            <td>
+              <button class="btn-mini" data-modal="fee_entry_view" data-student="${escapeHTML(String(r.student_id))}">
+                <i class="fa-solid fa-layer-group"></i> Fee Entry
+              </button>
+              <button class="btn-mini green" data-modal="fee_receipt_view" data-student="${escapeHTML(String(r.student_id))}">
+                <i class="fa-solid fa-receipt"></i> Receipts
+              </button>
+            </td>
+          </tr>
+        `);
+      } else {
+        // principal + faculty
+        const deptCell = (mode === "principal" || mode === "faculty") ? `<td>${escapeHTML(r.department || "-")}</td>` : "";
+        studentsTbody.insertAdjacentHTML("beforeend", `
+          <tr>
+            <td>
+              <div class="student-reg">${escapeHTML(r.reg_no || "-")}</div>
+              <div class="student-name">${escapeHTML(r.name || "-")}</div>
+            </td>
+            ${deptCell}
+            <td>${escapeHTML(r.section || "-")}</td>
+            <td>${escapeHTML(String(r.year_index || "-"))}</td>
+            <td class="money">${escapeHTML(r.total_current_year)}</td>
+            <td class="paid">${escapeHTML(r.paid_total)}</td>
+            <td class="pending">${escapeHTML(r.pending_total)}</td>
+            <td>
+              <button class="btn-mini" data-modal="fee_entry_view" data-student="${escapeHTML(String(r.student_id))}">
+                <i class="fa-solid fa-layer-group"></i> Fee Entry
+              </button>
+              <button class="btn-mini green" data-modal="fee_receipt_view" data-student="${escapeHTML(String(r.student_id))}">
+                <i class="fa-solid fa-receipt"></i> Receipts
+              </button>
+            </td>
+          </tr>
+        `);
+      }
+    });
+
+    // page totals
+    const totalEl = document.getElementById("pageTotal");
+    const paidEl = document.getElementById("pagePaid");
+    const pendingEl = document.getElementById("pagePending");
+    if(totalEl) totalEl.textContent = data.totals.total;
+    if(paidEl) paidEl.textContent = data.totals.paid;
+    if(pendingEl) pendingEl.textContent = data.totals.pending;
+
+    // pagination
+    if(studentsPagination){
+      const cur = data.page || 1;
+      const pages = data.num_pages || 1;
+
+      const prevDisabled = (cur <= 1);
+      const nextDisabled = (cur >= pages);
+
+      studentsPagination.innerHTML = `
+        <div class="pager-wrap">
+          <button class="btn-mini gray" ${prevDisabled ? "disabled" : ""} data-page="${cur-1}">Prev</button>
+          <span class="small-muted">Page <b>${cur}</b> / ${pages} | Total: ${data.count || 0}</span>
+          <button class="btn-mini gray" ${nextDisabled ? "disabled" : ""} data-page="${cur+1}">Next</button>
+        </div>
+      `;
+
+      studentsPagination.querySelectorAll("button[data-page]").forEach(b=>{
+        b.addEventListener("click", ()=>{
+          const p = parseInt(b.getAttribute("data-page"));
+          if(!isNaN(p)) loadStudents(p);
+        });
+      });
+    }
+
+    bindModalButtons();
+  }
+
+  // Modal (your existing AJAX modal subview)
+  const modalEl = document.getElementById("cardModal");
+  const modalBody = document.getElementById("cardModalBody");
+  const modalTitle = document.getElementById("cardModalTitle");
+
+  function titleFor(modal){
+    if(modal === "fee_entry_view") return "Fee Entry (4 Years)";
+    if(modal === "fee_receipt_view") return "Receipts";
+    return "Details";
+  }
+
+  async function loadCard(modal, studentId){
+    modalTitle.innerHTML = `<i class="fa-solid fa-id-card me-2"></i>${titleFor(modal)}`;
+    modalBody.innerHTML = `
+      <div class="loading-box">
+        <div class="spinner-border" role="status"></div>
+        <div class="mt-3 fw-bold">Loading...</div>
+      </div>
+    `;
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("modal", modal);
+    url.searchParams.set("student_id", studentId);
+
+    const res = await fetch(url.toString(), { headers: { "X-Requested-With": "XMLHttpRequest" } });
+    const html = await res.text();
+    modalBody.innerHTML = html;
+  }
+
+  function bindModalButtons(){
+    document.querySelectorAll("[data-modal][data-student]").forEach(btn => {
+      btn.onclick = function(){
+        const modal = this.getAttribute("data-modal");
+        const studentId = this.getAttribute("data-student");
+        loadCard(modal, studentId);
+        const bsModal = new bootstrap.Modal(modalEl);
+        bsModal.show();
+      };
+    });
+  }
+
+  // initial: load summary + students; dept list if degree selected
+  if(mode === "principal"){
+    if(degreeSelect && degreeSelect.value){
+      loadDepartmentsForDegree(degreeSelect.value);
+    }
+    ensureCharts();
+    loadSummary();
+    loadStudents(1);
+  } else if(mode === "hod"){
+    ensureCharts();
+    loadSummary();
+    loadStudents(1);
+  } else if(mode === "faculty"){
+    loadStudents(1);
+  }
+
+});
+</script>
+
+{% endblock %}

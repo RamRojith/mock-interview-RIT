@@ -1,0 +1,107 @@
+<form method="post"
+      action="{% if obj %}{% url 'course_grade_update' obj.id %}{% else %}{% url 'course_grade_create' %}{% endif %}"
+      class="js-grade-form">
+
+  {% csrf_token %}
+
+  <!-- Modal Header -->
+  <div class="modal-header">
+      <h5 class="modal-title">
+          {% if obj %}Edit Course Grade{% else %}Add Course Grade{% endif %}
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  </div>
+
+  <!-- Modal Body -->
+  <div class="modal-body">
+
+      {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
+
+      <!-- Degree -->
+      <div class="mb-3">
+        <label class="form-label">Degree</label>
+        <select name="degree" class="form-select" {% if obj %}disabled{% endif %} required>
+          <option value="">-- Select Degree --</option>
+          {% for d in degrees %}
+            <option value="{{ d.id }}"
+              {% if obj and obj.class_category_ref.degree_id == d.id %}selected{% endif %}>
+              {{ d.degree }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Regulation -->
+      <div class="mb-3">
+        <label class="form-label">Regulation</label>
+        <select name="regulation" class="form-select" {% if obj %}disabled{% endif %} required>
+          <option value="">-- Select Regulation --</option>
+          {% for r in regulations %}
+            <option value="{{ r.id }}"
+              {% if obj and obj.class_category_ref.regulation_id == r.id %}selected{% endif %}>
+              {{ r.year }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Departments -->
+      <div class="mb-3">
+        <label class="form-label">Departments</label>
+        <select name="departments" class="form-select" multiple {% if obj %}disabled{% endif %} required>
+          {% for dept in departments %}
+            <option value="{{ dept.id }}"
+              {% if obj and dept.id == obj.class_category_ref.department_id %}selected{% endif %}>
+              {{ dept.Department }}
+            </option>
+          {% endfor %}
+        </select>
+        <small class="text-muted">Hold Ctrl (Windows) / Cmd (Mac) to select multiple</small>
+      </div>
+
+      <!-- Class Category -->
+      <div class="mb-3">
+        <label class="form-label">Class Category</label>
+        <select name="class_category_ref" class="form-select" required>
+          <option value="">-- Select Class Category --</option>
+          {% for c in class_categories %}
+            <option value="{{ c.id }}"
+              {% if obj and obj.class_category_ref_id == c.id %}selected{% endif %}>
+              {{ c.class_category }} - {{ c.department.Department }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Letter Grade -->
+      <div class="mb-3">
+        <label class="form-label">Letter Grade</label>
+        <input type="text"
+               name="letter_grade"
+               class="form-control"
+               value="{{ obj.letter_grade|default:'' }}"
+               required>
+      </div>
+
+      <!-- Grade Points -->
+      <div class="mb-3">
+        <label class="form-label">Grade Points</label>
+        <input type="number"
+               step="0.01"
+               name="grade_points"
+               class="form-control"
+               value="{{ obj.grade_points|default:'' }}"
+               required>
+      </div>
+
+  </div>
+
+  <!-- Modal Footer -->
+  <div class="modal-footer">
+      <button type="submit" class="btn btn-success btn-sm">Save</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+  </div>
+
+</form>

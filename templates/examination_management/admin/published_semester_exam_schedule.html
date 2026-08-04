@@ -1,0 +1,347 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <h4 class="mb-3">Semester Timetable Filter</h4>
+
+  <div class="row g-3">
+
+    <div class="col-md-3">
+      <label class="form-label fw-semibold">Degree</label>
+      <select id="degree" class="form-select">
+        <option value="">Select Degree</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label fw-semibold">Department <span class="text-muted fw-normal">(Optional)</span></label>
+      <select id="department" class="form-select" disabled>
+        <option value="">All Departments</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label fw-semibold">Regulation</label>
+      <select id="regulation" class="form-select" disabled>
+        <option value="">Select Regulation</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label fw-semibold">Month / Year</label>
+      <select id="monthyear" class="form-select" disabled>
+        <option value="">Select Month/Year</option>
+      </select>
+    </div>
+
+  </div>
+
+  <!-- Buttons -->
+  <div class="d-flex gap-2 mt-3">
+    <button type="button" id="applyFilter" class="btn btn-primary">
+      <i class="fas fa-filter me-1"></i> Apply Filter
+    </button>
+
+    <a href="javascript:void(0)" id="downloadPdf" class="btn btn-dark disabled" aria-disabled="true"
+       target="_blank" rel="noopener">
+      <i class="fas fa-file-pdf me-1"></i> Download PDF
+    </a>
+
+    <button type="button" id="clearAll" class="btn btn-outline-danger">
+      <i class="fas fa-eraser me-1"></i> Clear All
+    </button>
+  </div>
+
+  <!-- Preview -->
+  <div class="mt-4">
+    <div id="appliedPreviewBox" class="alert alert-light border rounded-3 mb-0 d-none">
+      <div class="d-flex flex-wrap gap-3">
+        <div><span class="fw-semibold">Degree:</span> <span id="showDegree">-</span></div>
+        <div><span class="fw-semibold">Department:</span> <span id="showDept">All</span></div>
+        <div><span class="fw-semibold">Regulation:</span> <span id="showReg">-</span></div>
+        <div><span class="fw-semibold">Month/Year:</span> <span id="showMY">-</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="card shadow-sm border-0 rounded-3 mt-4">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">Filtered Exam Schedule</span>
+      <span id="resultCount" class="badge bg-light text-dark">0</span>
+    </div>
+
+    <div class="card-body p-3">
+      <!-- ✅ Department-wise tables will be rendered here -->
+      <div id="deptTablesWrap" class="mt-2">
+        <div class="text-center text-muted py-4">Apply filter to view timetable</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(function () {
+
+  function resetSelect(id, label){
+    $("#" + id).empty().append(`<option value="">${label}</option>`).prop("disabled", true);
+  }
+
+  function fillSelectObject(id, label, data){
+    resetSelect(id, label);
+    $("#" + id).prop("disabled", false);
+    data.forEach(item => $("#" + id).append(`<option value="${item.id}">${item.text}</option>`));
+  }
+
+  function fillSelectValueText(id, label, data){
+    resetSelect(id, label);
+    $("#" + id).prop("disabled", false);
+    data.forEach(item => $("#" + id).append(`<option value="${item.value}">${item.text}</option>`));
+  }
+
+  function updatePreview(){
+    const deptText = $("#department").val() ? ($("#department option:selected").text() || "-") : "All";
+    $("#showDegree").text($("#degree option:selected").text() || "-");
+    $("#showDept").text(deptText);
+    $("#showReg").text($("#regulation option:selected").text() || "-");
+    $("#showMY").text($("#monthyear option:selected").text() || "-");
+  }
+
+  function clearResults(msg="Apply filter to view timetable"){
+    $("#deptTablesWrap").html(`<div class="text-center text-muted py-4">${msg}</div>`);
+    $("#resultCount").text("0");
+  }
+
+  function disablePdf(){
+    $("#downloadPdf").addClass("disabled").attr("aria-disabled", "true").attr("href", "javascript:void(0)");
+  }
+  function enablePdf(){
+    $("#downloadPdf").removeClass("disabled").attr("aria-disabled", "false");
+  }
+
+  resetSelect("department", "All Departments");
+  resetSelect("regulation", "Select Regulation");
+  resetSelect("monthyear", "Select Month/Year");
+  clearResults();
+  disablePdf();
+
+  // Load Degrees
+  $.get("{% url 'load_sem_adi_degrees' %}", function (data) {
+    $("#degree").empty().append(`<option value="">Select Degree</option>`);
+    data.forEach(item => $("#degree").append(`<option value="${item.id}">${item.text}</option>`));
+  });
+
+  // Degree -> Department + Regulation
+  $("#degree").on("change", function () {
+    const degreeId = $(this).val();
+
+    resetSelect("department", "All Departments");
+    resetSelect("regulation", "Select Regulation");
+    resetSelect("monthyear", "Select Month/Year");
+    clearResults();
+    $("#appliedPreviewBox").addClass("d-none");
+    disablePdf();
+
+    $("#department").prop("disabled", !degreeId);
+    $("#regulation").prop("disabled", !degreeId);
+
+    if (!degreeId) return;
+
+    $.get("{% url 'load_sem_adi_departments' %}", { degree_id: degreeId }, function (data) {
+      $("#department").empty().append(`<option value="">All Departments</option>`);
+      data.forEach(item => $("#department").append(`<option value="${item.id}">${item.text}</option>`));
+      $("#department").prop("disabled", false);
+    });
+
+    $.get("{% url 'load_sem_adi_regulations' %}", { degree_id: degreeId, department_id: "" }, function (data) {
+      fillSelectObject("regulation", "Select Regulation", data);
+    });
+  });
+
+  // Department -> refresh regulations
+  $("#department").on("change", function () {
+    resetSelect("regulation", "Select Regulation");
+    resetSelect("monthyear", "Select Month/Year");
+    clearResults();
+    $("#appliedPreviewBox").addClass("d-none");
+    disablePdf();
+
+    $.get("{% url 'load_sem_adi_regulations' %}", {
+      degree_id: $("#degree").val(),
+      department_id: $(this).val() || ""
+    }, function (data) {
+      fillSelectObject("regulation", "Select Regulation", data);
+    });
+  });
+
+  // Regulation -> Month/Year
+  $("#regulation").on("change", function () {
+    resetSelect("monthyear", "Select Month/Year");
+    clearResults();
+    $("#appliedPreviewBox").addClass("d-none");
+    disablePdf();
+
+    const regId = $(this).val();
+    if(!regId) return;
+
+    $.get("{% url 'load_sem_adi_monthyears' %}", {
+      degree_id: $("#degree").val(),
+      department_id: $("#department").val() || "",
+      regulation_id: regId
+    }, function (data) {
+      fillSelectValueText("monthyear", "Select Month/Year", data);
+    });
+  });
+
+  // MonthYear change
+  $("#monthyear").on("change", function () {
+    clearResults();
+    $("#appliedPreviewBox").addClass("d-none");
+    disablePdf();
+    if($("#monthyear").val()) enablePdf();
+  });
+
+  // ✅ APPLY FILTER
+  $("#applyFilter").on("click", function () {
+
+    if(!$("#degree").val() || !$("#regulation").val() || !$("#monthyear").val()){
+      clearResults("Please select Degree, Regulation and Month/Year then click Apply Filter");
+      disablePdf();
+      return;
+    }
+
+    $("#appliedPreviewBox").removeClass("d-none");
+    updatePreview();
+
+    $("#deptTablesWrap").html(`<div class="text-center text-muted py-4">Loading...</div>`);
+
+    $.get("{% url 'load_sem_adi_timetable' %}", {
+      degree_id: $("#degree").val(),
+      department_id: $("#department").val() || "",
+      regulation_id: $("#regulation").val(),
+      monthyear: $("#monthyear").val()
+    }, function (rows) {
+
+      $("#resultCount").text(rows.length);
+
+      if(rows.length){
+        const qs = $.param({
+          degree_id: $("#degree").val(),
+          department_id: $("#department").val() || "",
+          regulation_id: $("#regulation").val(),
+          monthyear: $("#monthyear").val(),
+        });
+        $("#downloadPdf").attr("href", "{% url 'admin_semester_timetable_pdf' %}?" + qs);
+        enablePdf();
+      } else {
+        disablePdf();
+      }
+
+      if(!rows.length){
+        clearResults("No timetable found for selected filter");
+        return;
+      }
+
+      // ✅ Group rows by department
+      const deptMap = {};
+      rows.forEach(r => {
+        const dept = (r.department_key || r.department_code || r.department || "—").trim();
+        if(!deptMap[dept]) deptMap[dept] = [];
+        deptMap[dept].push(r);
+      });
+
+      const deptKeys = Object.keys(deptMap).sort();
+
+      let html = "";
+      deptKeys.forEach(dept => {
+        const list = deptMap[dept] || [];
+
+        // sort by exam_date then session
+        list.sort((a, b) => {
+
+            // Semester sort
+            const sa = parseInt(a.semester || 0);
+            const sb = parseInt(b.semester || 0);
+            if (sa !== sb) return sa - sb;
+          
+            // Date sort (DD-MM-YYYY → Date object)
+            const parseDate = d => {
+              if(!d) return new Date(0);
+              const parts = d.split("-");
+              return new Date(parts[2], parts[1]-1, parts[0]);
+            };
+          
+            const da = parseDate(a.exam_date);
+            const db = parseDate(b.exam_date);
+            if (da - db !== 0) return da - db;
+          
+            // Session sort
+            const order = { "FN": 1, "AN": 2 };
+            return (order[a.session] || 9) - (order[b.session] || 9);
+          });
+          
+
+        html += `
+          <div class="card border-0 shadow-sm rounded-3 mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+              <span class="fw-semibold">Department: ${dept}</span>
+              <span class="badge bg-light text-dark">${list.length}</span>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:110px;" class="text-center">Semester</th>
+                      <th style="width:160px;">Exam Date</th>
+                      <th style="width:90px;" class="text-center">Session</th>
+                      <th>Course</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+        `;
+
+        list.forEach(r => {
+          const course = (r.course_title || r.course_code || "—");
+          html += `
+            <tr>
+              <td class="text-center fw-semibold">${r.semester || "-"}</td>
+              <td>${r.exam_date || ""}</td>
+              <td class="text-center">${r.session || ""}</td>
+              <td>${course}</td>
+            </tr>
+          `;
+        });
+
+        html += `
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      $("#deptTablesWrap").html(html);
+    });
+
+  });
+
+  $("#clearAll").on("click", function () {
+    $("#degree").val("");
+    resetSelect("department", "All Departments");
+    resetSelect("regulation", "Select Regulation");
+    resetSelect("monthyear", "Select Month/Year");
+    clearResults();
+    disablePdf();
+    $("#appliedPreviewBox").addClass("d-none");
+  });
+
+});
+</script>
+{% endblock %}

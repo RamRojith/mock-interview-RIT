@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+{% load cm_tags %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4 text-center">Filter by Program of Study, Department, Program</h1>
+    <form method="get" class="card p-4 shadow-sm">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label for="programme_of_study" class="form-label">Program of Study</label>
+                <select name="programme_of_study" id="programme_of_study" class="form-select" required>
+                    <option value="">Select Program of Study</option>
+                    {% for option in programme_of_study_options %}
+                        <option value="{{ option }}" {% if selected_program_of_study == option %}selected{% endif %}>{{ option }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label for="department_id" class="form-label">Department</label>
+                <select name="department_id" id="department_id" class="form-select">
+                    <option value="">Select Department</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label for="program_name" class="form-label">Program</label>
+                <select name="program_name" id="program_name" class="form-select">
+                    <option value="">Select Program</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label for="course_code" class="form-label">Courses</label>
+                <select name="course_code" id="course_code" class="form-select">
+                    <option value="">Select Course Code</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label for="semester" class="form-label">Semester</label>
+                <select name="semester" id="semester" class="form-select">
+                    <option value="">Select Semester</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label for="intake" class="form-label">Intake</label>
+                <select name="intake" id="intake" class="form-select">
+                    <option value="">Select Intake</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label for="batch" class="form-label">Batch</label>
+                <select name="batch" id="batch" class="form-select">
+                    <option value="">Select Batch</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">Submit</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% if student_details_list %}
+<div class="container mt-4">
+    <h2 class="mb-3">Student List</h2>
+    <form method="post">
+        {% csrf_token %}
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Reg. No</th>
+                    <th>Student Name</th>
+                    <th>Department</th>
+                    <th>Program</th>
+                    <th>Year</th>
+                    <th>Semester</th>
+                    <th>Intake-Batch</th>
+                    {% for exam in examinations_list %}
+                        <th>{{ exam.exams }} ({{ exam.mark }})</th>
+                    {% endfor %}
+                    <th>Internal Mark</th>
+                    <th>For 100</th>
+                    {% if selected_program_of_study == "Bachelor Degree" or selected_program_of_study == "Diploma" %}
+                        <th>For 60</th>
+                    {% elif selected_program_of_study == "Master Degree" %}
+                        <th>For 50</th>
+                    {% endif %}
+                    <th>Total</th>
+                    <th>Grade</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in student_details_list %}
+                <tr>
+                    <td>{{ student.reg_no }}</td>
+                    <td>{{ student.first_name }} {{ student.surname }}</td>
+                    <td>{{ student.department_name }}</td>
+                    <td>{{ student.program_name }}</td>
+                    <td>{{ student.year }}</td>
+                    <td>{{ student.semester }}</td>
+                    <td>{{ student.intake }}-{{ student.batch }}</td>
+                    {% for exam in examinations_list %}
+                        <td>
+                            <input type="number"
+                                   name="exam_{{ exam.exams|slugify }}_{{ student.reg_no }}"
+                                   class="form-control exam-mark"
+                                   data-reg="{{ student.reg_no }}"
+                                   data-exam="{{ exam.exams|slugify }}"
+                                   min="0"
+                                   max="{{ exam.mark }}"
+                                   value="{{ student.marks|get_mark:exam.exams|default:'' }}">
+                        </td>
+                    {% endfor %}
+                    <td>
+                        <input type="number" name="internal_mark_{{ student.reg_no }}"
+                               id="internal_mark_{{ student.reg_no }}"
+                               class="form-control internal-mark"
+                               readonly
+                               value="{{ student.marks|get_mark:'internal_mark'|default:'' }}">
+                    </td>
+                    <td>
+                        <input type="number" name="for100_{{ student.reg_no }}"
+                               id="for100_{{ student.reg_no }}"
+                               class="form-control"
+                               value="{{ student.marks|get_mark:'for_100'|default:'' }}">
+                    </td>
+                    {% if selected_program_of_study == "Bachelor Degree" or selected_program_of_study == "Diploma" %}
+                        <td>
+                            <input  type="number" name="for60_{{ student.reg_no }}"
+                                   id="for60_{{ student.reg_no }}"
+                                   class="form-control for-60-mark"
+                                   readonly
+                                   value="{{ student.marks|get_mark:'conversion_100'|default:'' }}">
+                        </td>
+                    {% elif selected_program_of_study == "Master Degree" %}
+                        <td>
+                            <input type="number" name="for50_{{ student.reg_no }}"
+                                   id="for50_{{ student.reg_no }}"
+                                   class="form-control for-50-mark"
+                                   readonly
+                                   value="{{ student.marks|get_mark:'conversion_100'|default:'' }}">
+                        </td>
+                    {% endif %}
+                    <td>
+                        <input  type="number" name="total_{{ student.reg_no }}"
+                               id="total_{{ student.reg_no }}"
+                               class="form-control total-mark"
+                               readonly
+                               value="{{ student.marks|get_mark:'total'|default:'' }}">
+                    </td>
+                    <td>
+                        <input  type="text" name="grade_{{ student.reg_no }}"
+                               id="grade_{{ student.reg_no }}"
+                               class="form-control"
+                               value="{{ student.marks|get_mark:'grade' }}"
+                               readonly>
+                    </td>
+                    
+                    
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-success">Save Marks</button>
+    </form>
+</div>
+{% endif %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('#programme_of_study').change(function() {
+        const val = $(this).val();
+        $.get("{% url 'mark_get_departments' %}", { programme_of_study: val }, function(data) {
+            $('#department_id').empty().append('<option value="">Select Department</option>');
+            data.forEach(item => $('#department_id').append(`<option value="${item.id}">${item.Department}</option>`));
+            $('#program_name, #course_code, #semester, #intake, #batch').empty().append('<option value="">Select</option>');
+        });
+    });
+
+    $('#department_id').change(function() {
+        const val = $(this).val();
+        $.get("{% url 'mark_get_programs' %}", { department_id: val }, function(data) {
+            $('#program_name').empty().append('<option value="">Select Program</option>');
+            data.forEach(item => $('#program_name').append(`<option value="${item.program_name}">${item.program_name} - ${item.program_code}</option>`));
+            $('#course_code, #semester, #intake, #batch').empty().append('<option value="">Select</option>');
+        });
+    });
+
+    $('#program_name').change(function() {
+        const val = $(this).val();
+        $.get("{% url 'mark_get_courses' %}", { program_name: val }, function(data) {
+            $('#course_code').empty().append('<option value="">Select Course Code</option>');
+            data.forEach(item => $('#course_code').append(`<option value="${item.course_code}">${item.course_code} - ${item.title}</option>`));
+            $('#semester, #intake, #batch').empty().append('<option value="">Select</option>');
+        });
+    });
+
+    $('#course_code').change(function() {
+        const programName = $('#program_name').val();
+        const courseCode = $(this).val();
+        $.get("{% url 'ajax_get_semester_intake_batch' %}", { program_name: programName, course_code: courseCode }, function(data) {
+            $('#semester').empty().append('<option value="">Select Semester</option>');
+            $('#intake').empty().append('<option value="">Select Intake</option>');
+            $('#batch').empty().append('<option value="">Select Batch</option>');
+            data.semesters.forEach(val => $('#semester').append(`<option value="${val}">${val}</option>`));
+            data.intakes.forEach(val => $('#intake').append(`<option value="${val}">${val}</option>`));
+            data.batches.forEach(val => $('#batch').append(`<option value="${val}">${val}</option>`));
+        });
+    });
+});
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const markInputs = document.querySelectorAll('.exam-mark');
+        const for100Inputs = document.querySelectorAll('input[id^="for100_"]');
+        const programOfStudy = "{{ selected_program_of_study }}";
+    
+        // Calculate internal marks and update total
+        markInputs.forEach(input => {
+            input.addEventListener('input', function () {
+                const regNo = this.dataset.reg;
+                const examMax = parseFloat(this.getAttribute('max'));
+                if (parseFloat(this.value) > examMax) {
+                    this.value = examMax;
+                    alert(`Maximum allowed for ${this.dataset.exam.toUpperCase()} is ${examMax}`);
+                }
+    
+                const relatedMarks = document.querySelectorAll(`input.exam-mark[data-reg="${regNo}"]`);
+                let totalInternal = 0;
+                relatedMarks.forEach(markInput => {
+                    const val = parseFloat(markInput.value);
+                    if (!isNaN(val)) totalInternal += val;
+                });
+    
+                // Update internal mark field
+                const internalField = document.getElementById(`internal_mark_${regNo}`);
+                if (internalField) internalField.value = totalInternal;
+    
+                // Trigger recalculation of total
+                const for100Field = document.getElementById(`for100_${regNo}`);
+                if (for100Field) {
+                    for100Field.dispatchEvent(new Event('input'));
+                }
+            });
+        });
+    
+        // Convert for100 to for60/for50 and calculate total
+        for100Inputs.forEach(input => {
+            input.addEventListener('input', function () {
+                const regNo = this.id.replace('for100_', '');
+                const value100 = parseFloat(this.value);
+                const internalMark = parseFloat(document.getElementById(`internal_mark_${regNo}`).value) || 0;
+                let total = 0;
+    
+                if (!isNaN(value100)) {
+                    if (programOfStudy === "Bachelor Degree" || programOfStudy === "Diploma") {
+                        const for60 = Math.round((value100 * 60) / 100);
+                        const for60Input = document.getElementById(`for60_${regNo}`);
+                        if (for60Input) for60Input.value = for60;
+                        total = internalMark + for60;
+                    } else if (programOfStudy === "Master Degree") {
+                        const for50 = Math.round((value100 * 50) / 100);
+                        const for50Input = document.getElementById(`for50_${regNo}`);
+                        if (for50Input) for50Input.value = for50;
+                        total = internalMark + for50;
+                    }
+    
+                    const totalField = document.getElementById(`total_${regNo}`);
+                    if (totalField) totalField.value = total;
+                } else {
+                    const for60Input = document.getElementById(`for60_${regNo}`);
+                    const for50Input = document.getElementById(`for50_${regNo}`);
+                    if (for60Input) for60Input.value = '';
+                    if (for50Input) for50Input.value = '';
+                    const totalField = document.getElementById(`total_${regNo}`);
+                    if (totalField) totalField.value = '';
+                }
+            });
+        });
+    });
+    </script>
+
+<style>
+    /* Make all input boxes larger */
+    .form-control {
+        width: 100px;
+        min-width: 100px;
+        padding: 0.5rem 0.75rem;
+        font-size: 1rem;
+    }
+</style>
+    
+{% endblock %}

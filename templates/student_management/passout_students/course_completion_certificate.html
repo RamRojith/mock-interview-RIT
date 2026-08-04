@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+body {
+    background-color: #f8f9fc;
+}
+
+.card {
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.card-header {
+    background: linear-gradient(90deg, #0d6efd, #3b82f6);
+    color: white;
+    font-weight: 600;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #333;
+}
+
+.form-select, .form-control {
+    border-radius: 0.5rem;
+}
+
+table.dataTable tbody tr:hover {
+    background-color: #f3f6ff;
+    transition: background 0.2s;
+}
+
+table th {
+    white-space: nowrap;
+}
+
+.btn-sm {
+    border-radius: 0.5rem;
+}
+
+.btn-success {
+    background-color: #198754;
+    border: none;
+}
+
+.btn-success:hover {
+    background-color: #157347;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+}
+
+#filterForm {
+    background-color: #f9fafc;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+</style>
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="bi bi-award-fill me-2"></i> Course Completion Certificate Generator</h4>
+            <div>
+                <span class="me-3">{{ students.count }} Students</span>
+                <a href="{% url 'generate_bulk_course_completion_certificate' %}?department={{ selected_department }}&batch={{ selected_batch }}&to_month={{ to_month }}&date_entry={{ date_entry }}"
+                   class="btn btn-primary btn-sm shadow-sm" target="_blank">
+                    <i class="bi bi-filetype-pdf me-1"></i> Bulk PDF
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+
+            <!-- Filters -->
+            <form method="get" class="row g-3 mb-4" id="filterForm">
+                <div class="col-md-3">
+                    <label for="department" class="form-label">Department</label>
+                    <select name="department" id="department" class="form-select">
+                        <option value="">All</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if dept.id|stringformat:"s" == selected_department %}selected{% endif %}>
+                                {{ dept.Department }} - {{ dept.Department_code }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="batch" class="form-label">Batch</label>
+                    <select name="batch" id="batch" class="form-select">
+                        <option value="">All</option>
+                        {% for b in batches %}
+                            <option value="{{ b }}" {% if b|stringformat:"s" == selected_batch %}selected{% endif %}>
+                                {{ b }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="to_month" class="form-label">To Month</label>
+                    <select name="to_month" id="to_month" class="form-select">
+                        {% for m in months %}
+                            <option value="{{ m }}" {% if m == to_month %}selected{% endif %}>{{ m }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="date_entry" class="form-label">Date</label>
+                    <input type="date" name="date_entry" id="date_entry" class="form-control" value="{{ date_entry|date:'Y-m-d' }}">
+                </div>
+
+                <div class="col-md-1 d-flex align-items-end justify-content-end">
+                    <button type="submit" class="btn btn-primary w-100 shadow-sm">
+                        <i class="bi bi-funnel-fill me-1"></i> Filter
+                    </button>
+                </div>
+                <div class="col-md-1 d-flex align-items-end justify-content-end">
+                    <button type="button" id="clearFilters" class="btn btn-outline-secondary w-100 shadow-sm">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Clear
+                    </button>
+                </div>
+            </form>
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table id="studentsTable" class="table table-striped table-hover align-middle border">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Reg. No</th>
+                            <th>Department</th>
+                            <th>Batch</th>
+                            <th>Certificate No.</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ student.student.name }}</td>
+                            <td>{{ student.student.reg_no }}</td>
+                            <td>{{ student.department.degree_department }}</td>
+                            <td>{{ student.student.batch }}</td>
+                            <td>{{ student.certificate_number }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'generate_course_completion_certificate' student.id %}?department={{ selected_department }}&batch={{ selected_batch }}&to_month={{ to_month }}&date_entry={{ date_entry }}&serial_no={{ forloop.counter }}"
+                                   class="btn btn-success btn-sm shadow-sm" target="_blank">
+                                    <i class="bi bi-filetype-pdf me-1"></i> PDF
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">No students found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    let table = $('#studentsTable').DataTable({
+        language: {
+            emptyTable: "No students available",
+            zeroRecords: "No matching records found",
+            paginate: { next: "Next →", previous: "← Previous" }
+        },
+        ordering: true,
+        pageLength: 25,
+        responsive: true,
+        pagingType: "simple_numbers"
+    });
+
+    $.fn.dataTable.ext.errMode = 'none';
+    $('#studentsTable').on('error.dt', function(e, settings, techNote, message) {
+        console.warn("DataTables warning avoided:", message);
+    });
+
+    $('#clearFilters').click(function() {
+        $('#department, #batch, #to_month, #date_entry').val('');
+        $('#filterForm').submit();
+    });
+});
+</script>
+{% endblock %}

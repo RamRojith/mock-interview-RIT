@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+/* =========================
+   Project Upload (Styled like certificate-upload)
+   ========================= */
+.project-upload {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.project-upload .page-container { max-width: 1100px; margin: 0 auto; width: 100%; }
+
+.project-upload .upload-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    border: 1px solid #e2e8f0;
+    padding: 0;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.project-upload .upload-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.project-upload .card-header {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+    border-bottom: none;
+}
+
+.project-upload .card-header h4 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.project-upload .card-header i { font-size: 2rem; }
+
+.project-upload .card-body { padding: 2.5rem; }
+
+/* Section cards inside */
+.project-upload .section-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #fff;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.04);
+}
+
+.project-upload .section-title {
+    padding: 1rem 1.25rem;
+    font-weight: 800;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.project-upload .section-title.primary {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+}
+.project-upload .section-title.success {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+}
+
+.project-upload .section-content { padding: 1.5rem; }
+
+/* Form styles */
+.project-upload .form-group { margin-bottom: 1.25rem; animation: fadeInUp 0.6s ease forwards; opacity: 0; }
+.project-upload .form-group:nth-child(1) { animation-delay: 0.05s; }
+.project-upload .form-group:nth-child(2) { animation-delay: 0.10s; }
+.project-upload .form-group:nth-child(3) { animation-delay: 0.15s; }
+.project-upload .form-group:nth-child(4) { animation-delay: 0.20s; }
+.project-upload .form-group:nth-child(5) { animation-delay: 0.25s; }
+.project-upload .form-group:nth-child(6) { animation-delay: 0.30s; }
+.project-upload .form-group:nth-child(7) { animation-delay: 0.35s; }
+.project-upload .form-group:nth-child(8) { animation-delay: 0.40s; }
+.project-upload .form-group:nth-child(9) { animation-delay: 0.45s; }
+
+.project-upload label.form-label {
+    font-weight: 700;
+    color: #1a4b8c;
+    margin-bottom: 0.6rem;
+    font-size: 1rem;
+}
+
+.project-upload input.form-control,
+.project-upload select.form-select {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.95rem 1.1rem;
+    font-size: 1rem;
+    background: white;
+    color: #1e293b;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.project-upload input.form-control:focus,
+.project-upload select.form-select:focus {
+    border-color: #1a4b8c;
+    box-shadow: 0 0 0 4px rgba(26, 75, 140, 0.15);
+    transform: translateY(-2px);
+    outline: none;
+}
+
+/* Table */
+.project-upload .table-wrap {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.project-upload table.table {
+    margin: 0;
+}
+
+.project-upload .table thead th {
+    background: #f8fafc !important;
+    color: #0f172a;
+    font-weight: 800;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 1rem 0.75rem;
+    white-space: nowrap;
+}
+
+.project-upload .table tbody td {
+    padding: 0.9rem 0.75rem;
+    vertical-align: middle;
+    background: #fff;
+}
+
+.project-upload .table tbody tr:hover td { background: #f8fafc; }
+
+/* Buttons */
+.project-upload .btn-soft {
+    border-radius: 12px;
+    font-weight: 700;
+    padding: 0.55rem 0.9rem;
+    border: 1px solid rgba(226, 232, 240, 1);
+    background: #fff;
+    transition: all 0.25s ease;
+}
+
+.project-upload .btn-soft:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+}
+
+.project-upload .btn-verify {
+    border: none;
+    color: #fff;
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+}
+.project-upload .btn-verify:hover { filter: brightness(0.98); }
+
+.project-upload .btn-remove {
+    border: none;
+    color: #fff;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+.project-upload .btn-remove:hover { filter: brightness(0.98); }
+
+.project-upload .btn-add {
+    border: none;
+    color: #0f172a;
+    background: rgba(255,255,255,0.92);
+}
+.project-upload .btn-add:hover { background: #fff; }
+
+.project-upload .submit-btn {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+    border: none;
+    padding: 1.15rem 2.75rem;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.project-upload .submit-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.project-upload .submit-btn:hover::before { left: 100%; }
+
+.project-upload .submit-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(26, 75, 140, 0.35);
+    background: linear-gradient(135deg, #153e75 0%, #1e4a8e 100%);
+}
+
+.project-upload .actions-row {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0.75rem;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .project-upload .card-body { padding: 2rem; }
+}
+@media (max-width: 768px) {
+    .project-upload { padding: 1rem 0.5rem; }
+    .project-upload .card-body { padding: 1.5rem; }
+    .project-upload .card-header { padding: 1.5rem; }
+    .project-upload .card-header h4 { font-size: 1.45rem; }
+    .project-upload input.form-control,
+    .project-upload select.form-select { padding: 0.85rem 1rem; font-size: 0.95rem; }
+    .project-upload .submit-btn { width: 100%; }
+    .project-upload .actions-row { justify-content: stretch; }
+}
+@media (max-width: 480px) {
+    .project-upload .card-header h4 { flex-direction: column; gap: 0.5rem; }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<div class="project-upload">
+    <div class="page-container">
+        <div class="upload-card">
+
+            <div class="card-header">
+                <h4>
+                    <i class="fa-solid fa-diagram-project"></i>
+                    Student Project Upload
+                </h4>
+            </div>
+
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <!-- Project Details -->
+                    <div class="section-card">
+                        <div class="section-title primary">
+                            <span>Project Details</span>
+                        </div>
+
+                        <div class="section-content">
+                            <div class="row g-3">
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label">Title</label>
+                                    <input type="text" name="title" class="form-control" required>
+                                </div>
+
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label">Domain</label>
+                                    <input type="text" name="domain" class="form-control" required>
+                                </div>
+
+                                <div class="col-md-4 form-group">
+                                    <label class="form-label">Status</label>
+                                    <select name="status" class="form-select" required>
+                                        <option value="" hidden>Select</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="on going">On Going</option>
+                                        <option value="completed">Completed</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4 form-group">
+                                    <label class="form-label">Activity</label>
+                                    <select name="activity_name" class="form-select" required>
+                                        <option value="" hidden>Select</option>
+                                        <option value="college">College</option>
+                                        <option value="hackathon">Hackathon</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4 form-group">
+                                    <label class="form-label">Date</label>
+                                    <input type="date" name="date" class="form-control" required>
+                                </div>
+
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label">Organisation</label>
+                                    <input type="text" name="organisation" class="form-control" required>
+                                </div>
+
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label">Place</label>
+                                    <input type="text" name="place" class="form-control" required>
+                                </div>
+
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label">Academic Year</label>
+                                    <select name="academic_year" id="academic_year" class="form-select" required>
+                                        <option value="" hidden>Select Academic Year</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Student Members -->
+                    <div class="section-card">
+                        <div class="section-title success">
+                            <span>Student Members</span>
+                            <button type="button" id="addStudent" class="btn btn-add btn-soft btn-sm">+ Add</button>
+                        </div>
+
+                        <div class="section-content">
+                            <div class="table-wrap">
+                                <table class="table table-bordered text-center" id="studentTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Reg No</th>
+                                            <th>Name</th>
+                                            <th>Dept</th>
+                                            <th>Batch</th>
+                                            <th>Year</th>
+                                            <th>Sem</th>
+                                            <th>Sec</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="actions-row">
+                        <button type="submit" class="submit-btn">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Project
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(function() {
+
+    function createRow(data={}) {
+        return `<tr>
+            <td><input type="text" name="student_register_no[]" class="form-control reg" value="${data.reg_no||''}" required></td>
+            <td><input type="text" class="form-control name" value="${data.name||''}" readonly></td>
+            <td><input type="text" class="form-control dept" value="${data.department||''}" readonly></td>
+            <td><input type="text" class="form-control batch" value="${data.batch||''}" readonly></td>
+            <td><input type="text" class="form-control year" value="${data.year||''}" readonly></td>
+            <td><input type="text" class="form-control sem" value="${data.semester||''}" readonly></td>
+            <td><input type="text" class="form-control sec" value="${data.section||''}" readonly></td>
+            <td class="d-flex gap-2 justify-content-center flex-wrap">
+                <button type="button" class="btn btn-verify btn-soft btn-sm verify">Verify</button>
+                <button type="button" class="btn btn-remove btn-soft btn-sm remove">Remove</button>
+            </td>
+        </tr>`;
+    }
+
+    // ✅ Add one empty row initially
+    $("#studentTable tbody").append(createRow());
+
+    // Add row
+    $("#addStudent").click(() => $("#studentTable tbody").append(createRow()));
+
+    // Remove row
+    $("#studentTable").on("click",".remove",function(){
+        $(this).closest("tr").remove();
+    });
+
+    // Verify Student AJAX
+    $("#studentTable").on("click",".verify",function(){
+        let row = $(this).closest("tr");
+        let reg = row.find(".reg").val().trim();
+        if(!reg) return;
+
+        $.get("{% url 'student_project_upload' %}", {verify_students:1, regs:[reg]}, function(res){
+            let s = res.students[0];
+            if(!s.error){
+                row.find(".name").val(s.name);
+                row.find(".dept").val(s.department);
+                row.find(".batch").val(s.batch);
+                row.find(".year").val(s.year);
+                row.find(".sem").val(s.semester);
+                row.find(".sec").val(s.section);
+                row.find(".reg").prop("readonly", true);
+            } else {
+                alert("Invalid Register Number");
+            }
+        });
+    });
+
+});
+</script>
+
+<!-- Auto Academic Year -->
+<script>
+(function(){
+  const select=document.getElementById("academic_year");
+  const year=new Date().getFullYear();
+  const start=(new Date().getMonth()+1)>=7 ? year : year-1;
+  for(let y=start-2; y<=start+3; y++){
+    select.innerHTML+=`<option value="${y}-${y+1}">${y}-${y+1}</option>`;
+  }
+})();
+</script>
+
+{% endblock %}

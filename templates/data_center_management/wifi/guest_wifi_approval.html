@@ -1,0 +1,483 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .approval-page {
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        min-height: 80vh;
+    }
+
+    .approval-content {
+        padding: 1rem 2rem;
+        max-width: 1500px;
+        margin: 0 auto;
+    }
+
+    .card-box {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid #1a4b8c;
+        margin-bottom: 1.5rem;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1a4b8c;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .section-header h4 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.05rem;
+    }
+
+    .meta-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding: 0.9rem 1rem;
+        border-radius: 10px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+    }
+
+    .meta-pill {
+        font-size: 0.9rem;
+        color: #1e3a8a;
+        font-weight: 600;
+    }
+
+    .table-box {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .table-box thead th {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        border: none;
+        text-align: center;
+        vertical-align: middle;
+        padding: 0.9rem 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .table-box tbody td {
+        vertical-align: middle;
+        text-align: center;
+        padding: 0.75rem 0.5rem;
+        border-color: #e2e8f0;
+        font-size: 0.9rem;
+    }
+
+    .detail-box {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 0.75rem;
+    }
+
+    .detail-label {
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .btn-approve {
+        background: #16a34a;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.45rem 0.9rem;
+    }
+
+    .btn-reject {
+        background: #dc2626;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.45rem 0.9rem;
+    }
+
+    .btn-view {
+        background: #1a4b8c;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.45rem 0.9rem;
+    }
+
+    .badge-status {
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .badge-pending {
+        background: #facc15;
+        color: #111827;
+    }
+
+    .badge-approved {
+        background: #16a34a;
+        color: white;
+    }
+
+    .badge-rejected {
+        background: #dc2626;
+        color: white;
+    }
+
+    .reason-box {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 0.5rem;
+        resize: vertical;
+    }
+
+    .flow-table th, .flow-table td {
+        font-size: 0.85rem;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    @media (max-width: 768px) {
+        .approval-content {
+            padding: 1rem;
+        }
+    }
+</style>
+
+<div class="approval-page">
+    <main class="approval-content">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card-box">
+            <h2 class="page-title">
+                <i class="fas fa-check-circle me-2"></i>Guest WiFi Approval Page
+            </h2>
+
+            <div class="meta-strip">
+                <div class="meta-pill">Logged in Role: {{ logged_in_role|default:"-" }}</div>
+                <div class="meta-pill">Global User: {% if is_global_user %}Yes{% else %}No{% endif %}</div>
+                <div class="meta-pill">Approver: {{ logged_in_faculty.name|default:"-" }}</div>
+            </div>
+
+            <div class="section-header">
+                <h4>Pending Requests</h4>
+            </div>
+
+            {% if actionable_entries %}
+            <div class="table-responsive table-box">
+                <table class="table table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Guest Name</th>
+                            <th>Requested By</th>
+                            <th>Department</th>
+                            <th>Purpose</th>
+                            <th>Visit Date</th>
+                            <th>Level</th>
+                            <th>Status</th>
+                            <th>View</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in actionable_entries %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ entry.request.guest_name }}</td>
+                            <td>{{ entry.request.faculty.name|default:"-" }}</td>
+                            <td>{{ entry.request.faculty.department.Department|default:"-" }}</td>
+                            <td>{{ entry.request.get_purpose_of_visit_display }}</td>
+                            <td>{{ entry.request.visit_date|date:"d M Y" }}</td>
+                            <td>{{ entry.approver_level }}</td>
+                            <td><span class="badge-status badge-pending">PENDING</span></td>
+                            <td>
+                                <button type="button" class="btn-view" onclick="toggleDetails('pending-{{ entry.id }}')">
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr id="pending-{{ entry.id }}" style="display:none;">
+                            <td colspan="9">
+                                <div class="detail-box">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Request ID:</span> {{ entry.request.id }}
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Current Level:</span> {{ entry.approver_level }}
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Current Role:</span> {{ entry.approver_role_name|default:"-" }}
+                                        </div>
+
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Guest Name:</span> {{ entry.request.guest_name }}
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Guest Mobile:</span> {{ entry.request.guest_mobile_no }}
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Guest Email:</span> {{ entry.request.guest_email|default:"-" }}
+                                        </div>
+
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Organization:</span> {{ entry.request.guest_organization|default:"-" }}
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Device Type:</span> {{ entry.request.device_type }}
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Device MAC:</span> {{ entry.request.device_mac_address }}
+                                        </div>
+
+                                        <div class="col-md-6 mb-2">
+                                            <span class="detail-label">Access From:</span> {{ entry.request.access_from|date:"d M Y, h:i A" }}
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="detail-label">Access To:</span> {{ entry.request.access_to|date:"d M Y, h:i A" }}
+                                        </div>
+
+                                        <div class="col-md-6 mb-2">
+                                            <span class="detail-label">Mobile Static MAC:</span> {{ entry.request.mobile_static_mac_address|default:"-" }}
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="detail-label">Applied On:</span> {{ entry.request.created_at|date:"d M Y, h:i A" }}
+                                        </div>
+
+                                        <div class="col-md-12 mb-2">
+                                            <span class="detail-label">Reason:</span> {{ entry.request.reason }}
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <h6 class="fw-bold text-primary">Approval Flow</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered flow-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Level</th>
+                                                        <th>Approver</th>
+                                                        <th>Role</th>
+                                                        <th>Status</th>
+                                                        <th>Remarks</th>
+                                                        <th>Acted On</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for flow in entry.request.approval_entries.all %}
+                                                    <tr>
+                                                        <td>{{ flow.approver_level }}</td>
+                                                        <td>{% if flow.approver %}{{ flow.approver.name }}{% else %}-{% endif %}</td>
+                                                        <td>{{ flow.approver_role_name|default:"-" }}</td>
+                                                        <td>
+                                                            {% if flow.status == "APPROVED" %}
+                                                                <span class="badge-status badge-approved">APPROVED</span>
+                                                            {% elif flow.status == "REJECTED" %}
+                                                                <span class="badge-status badge-rejected">REJECTED</span>
+                                                            {% else %}
+                                                                <span class="badge-status badge-pending">PENDING</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>{{ flow.reason|default:"-" }}</td>
+                                                        <td>{{ flow.acted_on|date:"d M Y, h:i A" }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="entry_id" value="{{ entry.id }}">
+
+                                        <div class="mb-2">
+                                            <textarea name="remarks" rows="3" class="reason-box" placeholder="Remarks / rejection reason"></textarea>
+                                        </div>
+
+                                        <div class="d-flex gap-2 justify-content-center">
+                                            <button type="submit" name="action" value="approve" class="btn-approve">
+                                                Approve
+                                            </button>
+                                            <button type="submit" name="action" value="reject" class="btn-reject">
+                                                Reject
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center mb-0">
+                No pending Guest WiFi approvals.
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card-box">
+            <div class="section-header">
+                <h4>My Actioned Requests</h4>
+            </div>
+
+            {% if my_actions %}
+            <div class="table-responsive table-box">
+                <table class="table table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Guest Name</th>
+                            <th>Requested By</th>
+                            <th>Purpose</th>
+                            <th>Device</th>
+                            <th>Status</th>
+                            <th>Acted On</th>
+                            <th>View</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in my_actions %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ entry.request.guest_name|default:"-" }}</td>
+                            <td>{{ entry.request.faculty.name|default:"-" }}</td>
+                            <td>{{ entry.request.get_purpose_of_visit_display|default:"-" }}</td>
+                            <td>{{ entry.request.device_type|default:"-" }}</td>
+                            <td>
+                                {% if entry.status == "APPROVED" %}
+                                    <span class="badge-status badge-approved">APPROVED</span>
+                                {% else %}
+                                    <span class="badge-status badge-rejected">REJECTED</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ entry.acted_on|date:"d M Y, h:i A" }}</td>
+                            <td>
+                                <button type="button" class="btn-view" onclick="toggleDetails('actioned-{{ entry.id }}')">
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr id="actioned-{{ entry.id }}" style="display:none;">
+                            <td colspan="8">
+                                <div class="detail-box">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Request ID:</span> {{ entry.request.id }}
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Guest Name:</span> {{ entry.request.guest_name|default:"-" }}
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Requested By:</span> {{ entry.request.faculty.name|default:"-" }}
+                                        </div>
+
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Purpose:</span> {{ entry.request.get_purpose_of_visit_display|default:"-" }}
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Device Type:</span> {{ entry.request.device_type|default:"-" }}
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <span class="detail-label">Final Status:</span> {{ entry.request.status|default:"-" }}
+                                        </div>
+
+                                        <div class="col-md-12 mb-2">
+                                            <span class="detail-label">Your Remarks:</span> {{ entry.reason|default:"-" }}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h6 class="fw-bold text-primary">Approval Flow</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered flow-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Level</th>
+                                                        <th>Approver</th>
+                                                        <th>Role</th>
+                                                        <th>Status</th>
+                                                        <th>Remarks</th>
+                                                        <th>Acted On</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for flow in entry.request.approval_entries.all %}
+                                                    <tr>
+                                                        <td>{{ flow.approver_level }}</td>
+                                                        <td>{% if flow.approver %}{{ flow.approver.name }}{% else %}-{% endif %}</td>
+                                                        <td>{{ flow.approver_role_name|default:"-" }}</td>
+                                                        <td>
+                                                            {% if flow.status == "APPROVED" %}
+                                                                <span class="badge-status badge-approved">APPROVED</span>
+                                                            {% elif flow.status == "REJECTED" %}
+                                                                <span class="badge-status badge-rejected">REJECTED</span>
+                                                            {% else %}
+                                                                <span class="badge-status badge-pending">PENDING</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>{{ flow.reason|default:"-" }}</td>
+                                                        <td>{{ flow.acted_on|date:"d M Y, h:i A" }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center mb-0">
+                No action taken yet.
+            </div>
+            {% endif %}
+        </div>
+
+    </main>
+</div>
+
+<script>
+function toggleDetails(id) {
+    const row = document.getElementById(id);
+    if (!row) return;
+    row.style.display = row.style.display === "none" ? "table-row" : "none";
+}
+</script>
+{% endblock %}

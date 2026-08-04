@@ -1,0 +1,122 @@
+{% comment %}
+    Record of Class Work — results partial.
+    Returned on its own for AJAX requests and {% include %}d on first page load.
+    Contains the Section filter, the PDF export button, the completion summary
+    and the register table. All cpc-* CSS lives in course_plan_completion_report.html.
+{% endcomment %}
+
+<div class="cpc-card cpc-controls-card">
+    <div class="cpc-card-body cpc-controls-row">
+        <div class="cpc-field cpc-section-field">
+            <label for="cpcSection">Section</label>
+            <select id="cpcSection" class="cpc-input" {% if not sections %}disabled{% endif %}>
+                {% for s in sections %}
+                    <option value="{{ s.key }}" {% if s.key == selected_section_key %}selected{% endif %}>{{ s.label }}</option>
+                {% empty %}
+                    <option value="">— No assigned section —</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="cpc-field cpc-unit-field">
+            <label for="cpcUnit">Unit</label>
+            <select id="cpcUnit" class="cpc-input" {% if not units %}disabled{% endif %}>
+                <option value="" {% if not selected_unit %}selected{% endif %}>All Units</option>
+                {% for u in units %}
+                    <option value="{{ u.unit_module_no }}" {% if u.unit_module_no == selected_unit %}selected{% endif %}>
+                        Unit {{ u.unit_module_no|default:"—" }} ({{ u.plan_count }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% if rows %}
+        <div class="cpc-controls-actions">
+            <a class="cpc-pdf-btn" target="_blank"
+               href="{% url 'course_plan_completion_report_pdf' %}?course_code={{ selected_course_code|urlencode }}&section_key={{ selected_section_key|urlencode }}&unit_module_no={{ selected_unit|urlencode }}">
+                <i class="fas fa-file-pdf"></i> Download PDF
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if rows %}
+    <!-- Summary -->
+    <div class="cpc-stats">
+        <div class="cpc-stat cpc-stat-total">
+            <div class="cpc-stat-num">{{ summary.total_topics }}</div>
+            <div class="cpc-stat-label">Planned Hours</div>
+        </div>
+        <div class="cpc-stat cpc-stat-done">
+            <div class="cpc-stat-num">{{ summary.completed_topics }}</div>
+            <div class="cpc-stat-label">Completed</div>
+        </div>
+        <div class="cpc-stat cpc-stat-pending">
+            <div class="cpc-stat-num">{{ summary.pending_topics }}</div>
+            <div class="cpc-stat-label">Pending</div>
+        </div>
+        <div class="cpc-stat cpc-stat-pct">
+            <div class="cpc-stat-num">{{ summary.completion_pct }}%</div>
+            <div class="cpc-stat-label">Completion</div>
+        </div>
+    </div>
+
+    <div class="cpc-progress" title="{{ summary.completion_pct }}% completed">
+        <div class="cpc-progress-bar" style="width: {{ summary.completion_pct }}%;"></div>
+    </div>
+
+    <!-- Record of Class Work register -->
+    <div class="cpc-card">
+        <div class="cpc-card-head cpc-register-head">
+            <h3>RECORD OF CLASS WORK</h3>
+            <span class="cpc-register-sub">
+                {{ course_title }}
+                {% if plan_academic_year %}<span class="cpc-ay-tag">AY {{ plan_academic_year }}</span>{% endif %}
+            </span>
+        </div>
+
+        <div class="cpc-table-wrap">
+            <table class="cpc-register">
+                <thead>
+                    <tr>
+                        <th style="width:90px;">Date</th>
+                        <th style="width:60px;">Period</th>
+                        <th style="width:80px;">Cumulative Hours</th>
+                        <th>Topics Covered</th>
+                        <th style="width:150px;">Instructional Methods</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        {% if row.type == "unit" %}
+                            <tr class="cpc-unit-row">
+                                <td></td><td></td><td></td>
+                                <td colspan="2">{% if row.unit %}UNIT - {{ row.unit }}{% else %}OTHER TOPICS{% endif %}</td>
+                            </tr>
+                        {% else %}
+                            <tr class="{% if row.covered %}cpc-row-done{% else %}cpc-row-pending{% endif %}">
+                                <td class="cpc-cell-center">{% if row.date %}{{ row.date|date:"d/m/y" }}{% endif %}</td>
+                                <td class="cpc-cell-center">{% if row.period %}{{ row.period }}{% endif %}</td>
+                                <td class="cpc-cell-center">{{ row.cum_hours }}</td>
+                                <td class="cpc-topic-cell">{{ row.topic|default:"" }}</td>
+                                <td>{{ row.method|default:"" }}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="cpc-placeholder">
+        <i class="fas fa-folder-open"></i>
+        <p>
+            {% if sections %}
+                No course plan exists for this course / section yet. Please create a course plan first.
+            {% else %}
+                You are not assigned to any section for this course.
+            {% endif %}
+        </p>
+    </div>
+{% endif %}

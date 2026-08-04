@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- HEADER -->
+    <div class="dashboard-header mb-4">
+        <h2>Academic Regulations Management</h2>
+        <p>Add, Edit, Delete & Export Regulations</p>
+    </div>
+
+    <!-- ADD FORM -->
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Add New Regulation</h5>
+                </div>
+
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add">
+
+                        <div class="mb-3">
+                            <label class="form-label">Regulation Number</label>
+                            <input type="number" name="regulation_number"
+                                   class="form-control" min="1" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Year</label>
+                            <input type="number" name="year"
+                                   class="form-control" min="2000" max="2050" required>
+                        </div>
+
+                        <button class="btn btn-success w-100">
+                            Add Regulation
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0">Existing Regulations</h5>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="?export=csv" class="btn btn-outline-success btn-sm">
+                    Export CSV
+                </a>
+           
+            </div>
+        </div>
+
+        {% if regulations %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Regulation No</th>
+                        <th>Year</th>
+                        <th width="40%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reg in regulations %}
+                    <tr>
+                        <td><strong>{{ reg.regulation_number }}</strong></td>
+                        <td>{{ reg.year }}</td>
+                        <td>
+
+                            <!-- EDIT -->
+                            <form method="post" class="edit-form d-inline-flex gap-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="edit">
+                                <input type="hidden" name="reg_id" value="{{ reg.id }}">
+                                <input type="hidden" name="current_regulation_number" value="{{ reg.regulation_number }}">
+                                <input type="hidden" name="current_year" value="{{ reg.year }}">
+
+                                <input type="number"
+                                       name="new_regulation_number"
+                                       value="{{ reg.regulation_number }}"
+                                       class="form-control form-control-sm"
+                                       min="1" required>
+
+                                <input type="number"
+                                       name="new_year"
+                                       value="{{ reg.year }}"
+                                       class="form-control form-control-sm"
+                                       min="2000" max="2050" required>
+
+                                <button class="btn btn-warning btn-sm">
+                                    Save
+                                </button>
+                            </form>
+
+                            <!-- DELETE -->
+                            <form method="post" class="delete-form d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="reg_id" value="{{ reg.id }}">
+                                <button class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Delete this regulation?');">
+                                    Delete
+                                </button>
+                            </form>
+
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+            No regulations found.
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<style>
+.dashboard-header {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h2 {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-header p {
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.card {
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+    padding: 1rem 1.5rem;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    font-weight: 600;
+    color: #495057;
+    text-transform: none;
+    letter-spacing: normal;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.input-group {
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+}
+
+.form-control {
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+.bg-primary-subtle {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+}
+
+.edit-form, .delete-form {
+    margin: 0;
+}
+
+.edit-form .input-group-sm {
+    width: auto;
+    min-width: 120px;
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .dashboard-header h2 {
+        font-size: 1.75rem;
+    }
+    
+    .table-responsive {
+        margin: 0 -1rem;
+    }
+    
+    .edit-form {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+    
+    .edit-form .input-group {
+        width: 100% !important;
+        min-width: auto;
+    }
+    
+    .edit-form .btn-sm {
+        align-self: flex-start;
+    }
+    
+    td .d-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Focus on first input field
+    const firstInput = document.querySelector('input[name="regulation_number"]');
+    if (firstInput) {
+        firstInput.focus();
+    }
+    
+    // Edit form validation
+    document.querySelectorAll('.edit-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const regulationInput = this.querySelector('input[name="new_regulation_number"]');
+            const yearInput = this.querySelector('input[name="new_year"]');
+            const currentRegulation = this.querySelector('input[name="current_regulation_number"]').value;
+            const currentYear = this.querySelector('input[name="current_year"]').value;
+
+            if (!regulationInput.value.trim() || !yearInput.value.trim()) {
+                e.preventDefault();
+                alert('Please fill in both regulation number and year.');
+                return false;
+            }
+
+            const newRegulation = regulationInput.value;
+            const newYear = yearInput.value;
+
+            if (currentRegulation === newRegulation && currentYear === newYear) {
+                e.preventDefault();
+                alert('No changes detected. Please modify at least one field.');
+                return false;
+            }
+
+            if (!confirm(`Update Regulation ${currentRegulation} to No. ${newRegulation} (Year: ${newYear})?`)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
+
+    // Empty state button functionality
+    const emptyStateBtn = document.querySelector('.text-center .btn-outline-primary');
+    if (emptyStateBtn && firstInput) {
+        emptyStateBtn.addEventListener('click', function() {
+            firstInput.scrollIntoView({ behavior: 'smooth' });
+            firstInput.focus();
+        });
+    }
+});
+</script>
+{% endblock %}

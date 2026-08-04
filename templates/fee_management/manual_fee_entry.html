@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Student Search</h4>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+    <!-- Search Field -->
+    <div class="col-md-8 col-sm-12">
+        <label for="searchInput" class="form-label">Search by Name, NRC or Registration Number</label>
+        <input type="text" class="form-control" id="searchInput" name="search"
+               value="{{ search_query }}" placeholder="Enter student name, NRC or registration number">
+    </div>
+
+    <!-- Clear Button -->
+    <div class="col-md-4 col-sm-12">
+        <label class="form-label d-none d-md-block">&nbsp;</label>
+        <a href="{% url 'manual_fee' %}" class="btn btn-secondary w-100">
+            <i class="fas fa-eraser me-2"></i> Clear Search
+        </a>
+    </div>
+</div>
+
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <label for="nrcSelect" class="form-label">Select Student</label>
+                    <select class="form-select" id="nrcSelect">
+                        <option value="" selected hidden>Select a student from the list</option>
+                        {% for student in students %}
+                            <option value="{{ student.nrc_number }}" data-reg-number="{{ student.reg_number }}">
+                                {{ student.reg_number }} - {{ student.nrc_number }} - {{ student.first_name }} {{ student.surname }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Fee Payment Form</h4>
+        </div>
+        <div class="card-body">
+            <form id="manualFeeForm" method="post" action="{% url 'manual_fee' %}">
+                {% csrf_token %}
+                <input type="hidden" id="nrcNumber" name="nrc_number" value="">
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="studentName" class="form-label">Student Name</label>
+                        <input type="text" class="form-control" id="studentName" name="student_name" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="regNumber" class="form-label">Registration Number</label>
+                        <input type="text" class="form-control" id="regNumber" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="nrcDisplay" class="form-label">NRC Number</label>
+                        <input type="text" class="form-control" id="nrcDisplay" readonly>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="programme" class="form-label">Programme of Study</label>
+                        <input type="text" class="form-control" id="programme" name="programme_of_study" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="program" class="form-label">Program</label>
+                        <input type="text" class="form-control" id="program" name="program" readonly>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="amountPaid" class="form-label">Amount Paid</label>
+                        <div class="input-group">
+                            <span class="input-group-text">ZMW</span>
+                            <input type="number" step="0.01" class="form-control" id="amountPaid" name="amount_paid" required>
+                        </div>
+                        <small class="text-muted">Enter amount in Zambian Kwacha</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="referenceNumber" class="form-label">Reference Number (Optional)</label>
+                        <input type="text" class="form-control" id="referenceNumber" name="reference_number" placeholder="Optional transaction reference">
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-success me-md-2">
+                        <i class="fas fa-save me-2"></i>Save Payment
+                    </button>
+                    <button type="reset" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Reset Form
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('searchInput');
+    const nrcSelect = document.getElementById('nrcSelect');
+    const studentName = document.getElementById('studentName');
+    const regNumber = document.getElementById('regNumber');
+    const nrcDisplay = document.getElementById('nrcDisplay');
+    const programme = document.getElementById('programme');
+    const program = document.getElementById('program');
+    const nrcNumber = document.getElementById('nrcNumber');
+
+    // Store original options
+    let originalOptions = [];
+    if (nrcSelect) {
+        originalOptions = Array.from(nrcSelect.options).map(option => ({
+            value: option.value,
+            text: option.text,
+            regNumber: option.dataset.regNumber
+        }));
+    }
+
+    // Search functionality
+    if (searchInput && nrcSelect) {
+        searchInput.addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            nrcSelect.innerHTML = '<option value="" selected hidden>Select a student from the list</option>';
+
+            const filteredOptions = originalOptions.filter(option =>
+                option.text.toLowerCase().includes(searchTerm)
+            );
+
+            filteredOptions.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option.value;
+                opt.text = option.text;
+                opt.dataset.regNumber = option.regNumber;
+                nrcSelect.appendChild(opt);
+            });
+        });
+    }
+
+    // Auto-fill form when NRC is selected
+    if (nrcSelect) {
+        nrcSelect.addEventListener('change', function () {
+            if (this.value) {
+                const selectedOption = this.options[this.selectedIndex];
+
+                if (regNumber) regNumber.value = selectedOption.dataset.regNumber || '';
+                if (nrcDisplay) nrcDisplay.value = this.value;
+                if (nrcNumber) nrcNumber.value = this.value;
+
+                // Fetch student details from backend
+                fetch(`/fee/api/student-details/${this.value}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (studentName) studentName.value = `${data.first_name} ${data.surname}`;
+                        if (programme) programme.value = data.programme_of_study || '';
+                        if (program) program.value = data.program_name || '';
+                    })
+                    .catch(error => console.error('Error:', error));
+            } else {
+                if (studentName) studentName.value = '';
+                if (regNumber) regNumber.value = '';
+                if (nrcDisplay) nrcDisplay.value = '';
+                if (nrcNumber) nrcNumber.value = '';
+                if (programme) programme.value = '';
+                if (program) program.value = '';
+            }
+        });
+    }
+});
+</script>
+
+
+<style>
+.container {
+    max-width: 900px;
+}
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+    padding: 1rem 1.5rem;
+}
+.form-control[readonly] {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+}
+.input-group-text {
+    background-color: #e9ecef;
+    min-width: 60px;
+}
+</style>
+{% endblock %}

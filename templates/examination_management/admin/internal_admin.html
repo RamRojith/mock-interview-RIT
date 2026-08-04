@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+
+<style>
+  body { font-family: "Inter", sans-serif; }
+  .cardx { border: 0; border-radius: 18px; box-shadow: 0 10px 25px rgba(0,0,0,.06); }
+  .cardx .card-header { border-radius: 18px 18px 0 0; }
+  .select2-container .select2-selection--multiple { min-height: 42px; }
+  .select2-container--default .select2-selection--multiple { border: 1px solid #ced4da; border-radius: .375rem; }
+  .hint { font-size: .9rem; color: #6c757d; }
+</style>
+
+<div class="container-fluid py-4" style="max-width:1400px;">
+  <div class="card cardx">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-0">Internal Admin – Consolidated Assessment Filter</h4>
+        <small class="opacity-75">Degree → Department → Batch → Section → Semester → Courses (Multiple)</small>
+      </div>
+      <span class="badge bg-light text-dark"><i class="fa-solid fa-filter me-1"></i> Dynamic Filters</span>
+    </div>
+
+    <div class="card-body p-4">
+
+      <form method="get" id="filterForm" action="">
+        <div class="row g-3">
+
+          <!-- Degree -->
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Degree</label>
+            <select id="degree" name="degree" class="form-select">
+              <option value="">-- Select Degree --</option>
+              {% for d in degrees %}
+                <option value="{{ d.id }}">{{ d.degree_code }} - {{ d.degree }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Department -->
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Department</label>
+            <select id="department" name="department" class="form-select" disabled>
+              <option value="">-- Select Department --</option>
+            </select>
+          </div>
+
+          <!-- Batch -->
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Batch</label>
+            <select id="batch" name="batch" class="form-select" disabled>
+              <option value="">-- Select Batch --</option>
+            </select>
+          </div>
+
+          <!-- Section -->
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Section</label>
+            <select id="section" name="section" class="form-select" disabled>
+              <option value="">-- Select Section --</option>
+            </select>
+          </div>
+
+          <!-- Semester -->
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Semester</label>
+            <select id="semester" name="semester" class="form-select" disabled>
+              <option value="">-- Select Semester --</option>
+            </select>
+          </div>
+
+          <!-- Courses (Multiple) -->
+          <div class="col-md-12">
+            <label class="form-label fw-semibold">Courses (Multiple Select)</label>
+            <select id="courses" name="courses[]" class="form-select" multiple disabled></select>
+            <small class="hint">You can search & select multiple courses.</small>
+          </div>
+
+          <!-- Assessments (Theory, Activity, Practical) -->
+          <div class="col-md-12">
+            <label class="form-label fw-semibold">Select Assessments</label>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="theory" name="assessment" value="theory">
+              <label class="form-check-label" for="theory">
+                Theory
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="activity" name="assessment" value="activity">
+              <label class="form-check-label" for="activity">
+                Activity
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="practical" name="assessment" value="practical">
+              <label class="form-check-label" for="practical">
+                Practical
+              </label>
+            </div>
+            <small class="hint">You can select one or more assessments.</small>
+          </div>
+
+        </div>
+
+        <div class="mt-4 d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-outline-secondary" id="btnReset">
+            <i class="fa-solid fa-rotate-left me-1"></i> Reset
+          </button>
+
+          <!-- ✅ Download PDF -->
+          <button type="button" class="btn btn-success px-4" id="btnDownloadPdf" disabled>
+            <i class="fa-solid fa-file-arrow-down me-1"></i> Download PDF
+          </button>
+
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="fa-solid fa-magnifying-glass me-1"></i> Apply Filter
+          </button>
+        </div>
+      </form>
+
+      <hr class="my-4">
+
+      <div id="resultsBox" class="alert alert-light border mb-0">
+        <i class="fa-solid fa-circle-info me-1"></i> Select Degree to begin.
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+  const URL_DEPARTMENTS = "{% url 'api_internal_departments' %}";
+  const URL_BATCHES     = "{% url 'api_internal_batches' %}";
+  const URL_SECTIONS    = "{% url 'api_internal_sections' %}";
+  const URL_SEMESTERS   = "{% url 'api_internal_semesters' %}";
+  const URL_COURSES     = "{% url 'api_internal_courses' %}";
+
+  // ✅ PDF download endpoint
+  const URL_PDF         = "{% url 'internal_admin_download_pdf' %}";
+
+  function showMsg(text) {
+    $("#resultsBox").html(`<i class="fa-solid fa-circle-info me-1"></i> ${text}`);
+  }
+
+  function resetSelect($sel, placeholder, disable=true) {
+    $sel.empty().append(`<option value="">${placeholder}</option>`);
+    $sel.prop("disabled", disable);
+  }
+
+  function resetBelow(level) {
+    if (level <= 1) resetSelect($("#department"), "-- Select Department --", true);
+    if (level <= 2) resetSelect($("#batch"), "-- Select Batch --", true);
+    if (level <= 3) resetSelect($("#section"), "-- Select Section --", true);
+    if (level <= 4) resetSelect($("#semester"), "-- Select Semester --", true);
+    if (level <= 5) {
+      $("#courses").empty().prop("disabled", true).val(null).trigger("change");
+      $("#theory, #activity, #practical").prop("checked", false).prop("disabled", true); // Reset checkboxes
+    }
+    updatePdfButtonState();
+  }
+
+  function loadOptions(url, params, $target, placeholder) {
+    resetSelect($target, placeholder, true);
+    return $.ajax({
+      url: url,
+      method: "GET",
+      data: params,
+      dataType: "json",
+      success: function(resp) {
+        const items = resp.items || [];
+        items.forEach(it => $target.append(`<option value="${it.id}">${it.text}</option>`));
+        $target.prop("disabled", items.length === 0);
+        updatePdfButtonState();
+      },
+      error: function() {
+        $target.prop("disabled", true);
+        updatePdfButtonState();
+      }
+    });
+  }
+
+  function loadCourses(params) {
+    $("#courses").empty().prop("disabled", true).val(null).trigger("change");
+    return $.ajax({
+      url: URL_COURSES,
+      method: "GET",
+      data: params,
+      dataType: "json",
+      success: function(resp) {
+        const items = resp.items || [];
+        items.forEach(it => $("#courses").append(`<option value="${it.id}">${it.text}</option>`));
+        $("#courses").prop("disabled", items.length === 0).trigger("change");
+        
+        // Enable the assessment checkboxes once courses are loaded
+        if (items.length > 0) {
+          $("#theory, #activity, #practical").prop("disabled", false);
+          showMsg("Courses loaded. Select multiple courses and assessments.");
+        } else {
+          $("#theory, #activity, #practical").prop("disabled", true);
+          showMsg("No courses found for selected filters.");
+        }
+
+        updatePdfButtonState();
+      },
+      error: function() {
+        $("#courses").prop("disabled", true).trigger("change");
+        showMsg("Error loading courses.");
+        updatePdfButtonState();
+      }
+    });
+  }
+
+  // ✅ Enable PDF only if all filters + at least 1 course selected
+  function updatePdfButtonState() {
+    const ok =
+      $("#degree").val() &&
+      $("#department").val() &&
+      $("#batch").val() &&
+      $("#section").val() &&
+      $("#semester").val() &&
+      ($("#courses").val() || []).length > 0 &&
+      ($("#theory").prop("checked") || $("#activity").prop("checked") || $("#practical").prop("checked"));
+
+    $("#btnDownloadPdf").prop("disabled", !ok);
+  }
+
+  // ✅ Build query string (includes courses[] and assessments)
+  function buildQueryString() {
+    const arr = $("#filterForm").serializeArray();
+    const params = new URLSearchParams();
+    arr.forEach(x => {
+      if (x.value !== null && String(x.value).trim() !== "") params.append(x.name, x.value);
+    });
+    return params.toString();
+  }
+
+  $(document).ready(function() {
+    $("#courses").select2({
+      width: "100%",
+      placeholder: "Select courses...",
+      closeOnSelect: false
+    });
+
+    // ✅ Download PDF click - Open in a new tab
+    $("#btnDownloadPdf").on("click", function () {
+      const qs = buildQueryString();
+      if (!qs) return;
+      // Open the PDF URL in a new tab
+      window.open(`${URL_PDF}?${qs}`, '_blank');
+    });
+
+    $("#degree").on("change", function() {
+      const degreeId = $(this).val();
+      resetBelow(1);
+
+      if (!degreeId) { showMsg("Select Degree to continue."); return; }
+
+      showMsg("Loading departments...");
+      loadOptions(URL_DEPARTMENTS, { degree_id: degreeId }, $("#department"), "-- Select Department --")
+        .then(() => showMsg("Select Department to continue."));
+    });
+
+    $("#department").on("change", function() {
+      const degreeId = $("#degree").val();
+      const departmentId = $(this).val();
+      resetBelow(2);
+
+      if (!degreeId || !departmentId) { showMsg("Select Department to continue."); return; }
+
+      showMsg("Loading batches...");
+      loadOptions(URL_BATCHES, { degree_id: degreeId, department_id: departmentId }, $("#batch"), "-- Select Batch --")
+        .then(() => showMsg("Select Batch to continue."));
+    });
+
+    $("#batch").on("change", function() {
+      const degreeId = $("#degree").val();
+      const departmentId = $("#department").val();
+      const batch = $(this).val();
+      resetBelow(3);
+
+      if (!degreeId || !departmentId || !batch) { showMsg("Select Batch to continue."); return; }
+
+      showMsg("Loading sections...");
+      loadOptions(URL_SECTIONS, { degree_id: degreeId, department_id: departmentId, batch: batch }, $("#section"), "-- Select Section --")
+        .then(() => showMsg("Select Section to continue."));
+    });
+
+    $("#section").on("change", function() {
+      const degreeId = $("#degree").val();
+      const departmentId = $("#department").val();
+      const batch = $("#batch").val();
+      const section = $(this).val();
+      resetBelow(4);
+
+      if (!degreeId || !departmentId || !batch || !section) { showMsg("Select Section to continue."); return; }
+
+      showMsg("Loading semesters...");
+      loadOptions(URL_SEMESTERS, { degree_id: degreeId, department_id: departmentId, batch: batch, section: section }, $("#semester"), "-- Select Semester --")
+        .then(() => showMsg("Select Semester to load courses."));
+    });
+
+    $("#semester").on("change", function() {
+      const degreeId = $("#degree").val();
+      const departmentId = $("#department").val();
+      const batch = $("#batch").val();
+      const section = $("#section").val();
+      const semester = $(this).val();
+      resetBelow(5);
+
+      if (!degreeId || !departmentId || !batch || !section || !semester) {
+        showMsg("Select Semester to load courses.");
+        return;
+      }
+
+      showMsg("Loading courses...");
+      loadCourses({ degree_id: degreeId, department_id: departmentId, batch: batch, section: section, semester: semester });
+    });
+
+    $("#courses").on("change", function() {
+      updatePdfButtonState();
+      const n = ($("#courses").val() || []).length;
+      if (n) showMsg(`${n} course(s) selected. You can Download PDF now.`);
+    });
+
+    updatePdfButtonState();
+  })
+  ;
+
+</script>
+
+{% endblock content %}

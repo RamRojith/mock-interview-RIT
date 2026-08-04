@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Bloom's Levels Management</h2>
+        
+    </div>
+
+    
+
+    <div class="row">
+        <!-- Form Section -->
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas {% if level %}fa-edit{% else %}fa-plus-circle{% endif %} me-2"></i>
+                        {% if level %}Update Level{% else %}Add New Level{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% if level %}
+                            <input type="hidden" name="id" value="{{ level.id }}">
+                        {% endif %}
+
+                        <!-- Level Code -->
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-bold">Level Code</label>
+                            <input type="text" class="form-control" name="level_code"
+                                   value="{{ level.level_code|default:'' }}" 
+                                   placeholder="e.g., L1, L2, L3, .." required>
+                           
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold">Description</label>
+                            <textarea class="form-control" name="description" rows="3" 
+                                      placeholder="Level 1 , Level 2, ..."
+                                      required>{{ level.description|default:'' }}</textarea>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-fill">
+                                <i class="fas {% if level %}fa-save{% else %}fa-plus{% endif %} me-1"></i>
+                                {% if level %} Update Level {% else %} Add Level {% endif %}
+                            </button>
+                            {% if level %}
+                                <a href="{% url 'update_blooms_level' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i> Cancel
+                                </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- List Section -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Existing Bloom's Levels</h5>
+                    <span class="badge bg-primary rounded-pill">{{ levels|length }}</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if levels %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Level Code</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for l in levels %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td class="fw-bold">{{ l.level_code }}</td>
+                                    <td>{{ l.description }}</td>
+                                    <td>
+    <div class="btn-group btn-group-sm gap-2">
+        <a href="?edit={{ l.id }}" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="Edit">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <form method="post" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="delete" value="{{ l.id }}">
+            <button type="submit" class="btn btn-outline-danger"
+                    onclick="return confirm('Are you sure you want to delete {{ l.level_code }}?');"
+                    data-bs-toggle="tooltip" title="Delete">
+                <i class="fas fa-trash-alt"></i> Delete
+            </button>
+        </form>
+    </div>
+</td>
+
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No Bloom's levels added yet.</p>
+                        <p class="text-muted small">Use the form to add your first taxonomy level</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+    
+    // Show help section if there are no levels
+    {% if not levels %}
+    new bootstrap.Collapse(document.getElementById('helpSection')).show();
+    {% endif %}
+});
+</script>
+{% endblock %}

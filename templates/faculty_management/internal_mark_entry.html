@@ -1,0 +1,1383 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">Assigned Subjects</h2>
+      <p class="text-muted mb-2 mb-md-0">Manage your course assignments and student marks</p>
+    </div>
+    <div class="d-flex align-items-center">
+      <span class="badge bg-primary fs-6">{{ assigned_subjects|length }} Subjects</span>
+    </div>
+  </div>
+
+  {% if assigned_subjects %}
+    <div class="row g-4 mb-5">
+      {% for subject in assigned_subjects %}
+        <div class="col-xl-4 col-lg-6 col-md-6">
+          <div class="card subject-card h-100 shadow-sm border-0 hover-lift"
+               data-course-id="{{ subject.course.id }}"
+               data-course-code="{{ subject.course.course_code }}"
+               data-course-title="{{ subject.course.title }}"
+               data-department="{{ subject.department_code }} {{ subject.department_name }}"
+               data-department-id="{{ subject.department.id }}"
+               data-batch="{{ subject.batch }}"
+               data-section="{{ subject.section }}"
+               data-degree-id="{{ subject.degree_id }}"
+               data-degree-code="{{ subject.degree_code }}"
+               data-degree-name="{{ subject.degree_name }}"
+               data-regulation="{{ subject.regulation }}"
+               data-experiments='{{ subject.experiments_json|default:"[]"|escapejs }}'>
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="course-badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-3">
+                  <h5 class="mb-0 fw-bold">{{ subject.course.course_code }}</h5>
+                </div>
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-outline-secondary border-0 dropdown-toggle"
+                          type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-three-dots-vertical"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#">View Details</a></li>
+                    <li><a class="dropdown-item" href="#">Student List</a></li>
+                  </ul>
+                </div>
+              </div>
+
+              <h6 class="card-title mb-3 text-dark">{{ subject.course.title }}</h6>
+
+              <div class="subject-meta mb-3">
+                <div class="d-flex align-items-center text-muted mb-2">
+                  <i class="bi bi-building me-2"></i>
+                  <small>{{ subject.department_code }} - {{ subject.department_name }}</small>
+                </div>
+
+                {% if subject.degree_code or subject.degree_name %}
+                <div class="d-flex align-items-center text-muted mb-2">
+                  <i class="bi bi-mortarboard me-2"></i>
+                  <small>
+                    {{ subject.degree_code }}{% if subject.degree_code and subject.degree_name %} — {% endif %}{{ subject.degree_name }}
+                  </small>
+                </div>
+                {% endif %}
+
+                {% if subject.batch or subject.section %}
+                <div class="d-flex gap-2 flex-wrap">
+                  {% if subject.batch %}
+                    <span class="badge bg-success">
+                      <i class="bi bi-people me-1"></i>Batch {{ subject.batch }}
+                    </span>
+                  {% endif %}
+                  {% if subject.section %}
+                    <span class="badge bg-info text-dark">
+                      <i class="bi bi-layout-split me-1"></i>Section {{ subject.section }}
+                    </span>
+                  {% endif %}
+                </div>
+                {% endif %}
+              </div>
+
+              <div class="text-center mt-3 d-flex justify-content-center gap-2 flex-wrap">
+                {% if subject.has_theory %}
+                  <button class="btn btn-primary px-4 select-subject-btn">
+                    <i class="bi bi-pencil-square me-2"></i>Enter Marks
+                  </button>
+                {% endif %}
+
+                {% if subject.has_practical %}
+                  <button type="button" class="btn btn-outline-dark px-3 practical-btn">
+                    <i class="bi bi-flask me-2"></i>Practical
+                  </button>
+
+                  <button type="button" class="btn btn-outline-primary px-3 model-lab-btn">
+                    <i class="bi bi-cpu me-2"></i>Model Lab
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div id="iat-section" class="card shadow-sm border-0 mb-4" style="display:none;">
+      <div class="card-header bg-light py-3">
+        <h5 class="mb-0" id="selected-subject-title">
+          <i class="bi bi-journal-text me-2"></i>Select Assessment (Internal / QP-required)
+        </h5>
+      </div>
+      <div class="card-body p-4">
+        <div class="row align-items-end">
+          <div class="col-md-6">
+            <label for="iat-select" class="form-label fw-semibold">Assessment</label>
+            <select id="iat-select" class="form-select" data-placeholder="Choose Assessment">
+              <option value="" selected disabled>Choose Assessment</option>
+            </select>
+            <div id="iat-help" class="form-text"></div>
+          </div>
+          <div class="col-md-6">
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-primary px-4" id="submit-selected-subject">
+                <i class="bi bi-check-lg me-2"></i>Load Students
+              </button>
+              <button type="button" class="btn btn-outline-secondary" id="cancel-selection">
+                <i class="bi bi-x-lg me-2"></i>Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form id="selected-subject-form" method="POST" style="display:none;">
+      {% csrf_token %}
+      <input type="hidden" name="course_id" id="course_id">
+      <input type="hidden" name="course_code" id="course_code">
+      <input type="hidden" name="course_title" id="course_title">
+      <input type="hidden" name="department" id="department">
+      <input type="hidden" name="department_id" id="department_id">
+      <input type="hidden" name="batch" id="batch">
+      <input type="hidden" name="section" id="section">
+      <input type="hidden" name="iat" id="iat">
+      <input type="hidden" name="degree_id" id="degree_id">
+      <input type="hidden" name="degree_code" id="degree_code">
+      <input type="hidden" name="degree_name" id="degree_name">
+      <input type="hidden" name="iat_qp" id="iat_qp" value="0">
+      <input type="hidden" name="model_lab_id" id="model_lab_id">
+    </form>
+
+    {% if students %}
+    <div id="students-table" class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="mb-1">
+              {{ selected_course_code }} - {{ selected_course_title }}
+            </h5>
+            <div class="d-flex flex-wrap gap-3 text-muted">
+              {% if selected_batch %}
+                <span><i class="bi bi-people me-1"></i>Batch: {{ selected_batch }}</span>
+              {% endif %}
+              {% if selected_section %}
+                <span><i class="bi bi-layout-split me-1"></i>Section: {{ selected_section }}</span>
+              {% endif %}
+              {% if selected_department %}
+                <span><i class="bi bi-building me-1"></i>{{ selected_department }}</span>
+              {% endif %}
+              {% if selected_degree_code or selected_degree_name %}
+                <span><i class="bi bi-mortarboard me-1"></i>
+                  {{ selected_degree_code }}{% if selected_degree_code and selected_degree_name %} — {% endif %}{{ selected_degree_name }}
+                </span>
+              {% endif %}
+              {% if selected_iat %}
+                <span class="badge bg-primary">{{ selected_iat }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2">
+            <div class="text-muted">
+              {{ students|length }} students
+            </div>
+
+            {% if selected_iat and students %}
+              <button type="button"
+                      class="btn btn-outline-primary btn-sm"
+                      id="enter-marks-main-btn"
+                      data-reg-no="{{ students.0.reg_no }}"
+                      data-student-name="{{ students.0.name }}"
+                      data-course-code="{{ selected_course_code }}"
+                      data-course-title="{{ selected_course_title }}"
+                      data-batch="{{ selected_batch }}"
+                      data-section="{{ selected_section }}"
+                      data-iat="{{ selected_iat }}"
+                      data-dept-name="{{ students.0.department_name }}"
+                      data-dept-code="{{ students.0.department_code }}"
+                      data-dept-id="{{ selected_department_id }}"
+                      data-degree-id="{{ students.0.degree_id }}"
+                      data-degree-code="{{ students.0.degree_code }}"
+                      data-degree-name="{{ students.0.degree_name }}">
+                <i class="bi bi-pencil me-1"></i>Enter Marks
+              </button>
+            {% else %}
+              <button class="btn btn-outline-primary btn-sm" type="button" disabled title="Select an assessment first">
+                <i class="bi bi-pencil me-1"></i>Enter Marks
+              </button>
+            {% endif %}
+
+            {% if selected_iat %}
+              <a id="btn-all-pdf" class="btn btn-outline-danger btn-sm" role="button">
+                <i class="bi bi-filetype-pdf me-1"></i> View Student Mark Statements (PDF)
+              </a>
+            {% else %}
+              <button class="btn btn-outline-danger btn-sm" type="button" disabled title="Select an assessment first">
+                <i class="bi bi-filetype-pdf me-1"></i> View Student Mark Statements (PDF)
+              </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">Reg No</th>
+                <th>Student Name</th>
+                <th>Department</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for student in students %}
+                <tr>
+                  <td class="ps-4 fw-semibold">{{ student.reg_no }}</td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-sm bg-light rounded-circle d-flex align-items-center justify-content-center me-3">
+                        <i class="bi bi-person text-muted"></i>
+                      </div>
+                      {{ student.name }}
+                    </div>
+                  </td>
+                  <td>
+                    <small class="text-muted">{{ student.department_name }}</small>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  {% else %}
+    <div class="text-center py-5">
+      <div class="empty-state-icon mb-4">
+        <i class="bi bi-journal-x display-1 text-muted"></i>
+      </div>
+      <h4 class="text-muted mb-3">No Subjects Assigned</h4>
+      <p class="text-muted mb-4">You don't have any subjects assigned to you at the moment.</p>
+      <button class="btn btn-outline-primary">
+        <i class="bi bi-arrow-clockwise me-2"></i>Refresh</button>
+    </div>
+  {% endif %}
+</div>
+
+<script id="assessments-json" type="application/json">
+  {{ assessments_by_degree_json|default:"{}"|safe }}
+</script>
+
+<script id="co-mapping-json" type="application/json">
+  {{ co_mapping_json|default:"{}"|safe }}
+</script>
+
+<script id="blooms-mapping-json" type="application/json">
+  {{ blooms_mapping_json|default:"[]"|safe }}
+</script>
+
+<div class="modal fade" id="practicalModal" tabindex="-1" aria-labelledby="practicalModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="practicalModalLabel">Experiment Mapping</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="practical-existing-exps-placeholder"></div>
+        <div id="practical-exps-mapping" class="mt-3"></div>
+
+        <div class="border-top pt-3 d-flex align-items-center justify-content-between">
+          <span class="text-muted small">Need the consolidated practical statement?</span>
+          <button type="button" class="btn btn-outline-danger btn-sm" id="open-practical-statement">
+            <i class="bi bi-filetype-pdf me-1"></i> View Practical Statement (PDF)
+          </button>
+        </div>
+
+        <hr>
+
+        <div class="mb-2">
+          <label for="experiment-number" class="form-label fw-semibold">Enter Practical Marks for Experiment No.</label>
+          <input type="number" min="1" class="form-control" id="experiment-number" placeholder="e.g., 3">
+          <div class="form-text">Choose one experiment number to open the marks entry page.</div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="submit-experiment">Open Marks Entry</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modelLabModal" tabindex="-1" aria-labelledby="modelLabModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modelLabModalLabel">Select Model Lab</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="model-lab-iat-select" class="form-label fw-semibold">Internal Assessment</label>
+          <select id="model-lab-iat-select" class="form-select" disabled>
+            <option value="" selected>Select Internal Assessment</option>
+          </select>
+          <div id="model-lab-iat-help" class="form-text"></div>
+        </div>
+
+        <div class="mb-3">
+          <label for="model-lab-select" class="form-label">Model Lab (filtered by Internal Assessment)</label>
+          <select id="model-lab-select" class="form-select" disabled>
+            <option value="" selected>Choose Model Lab</option>
+          </select>
+          <div id="model-lab-help" class="form-text"></div>
+        </div>
+
+        <div class="mb-3">
+          <label for="only-model-lab-select" class="form-label">Only Model Lab</label>
+          <select id="only-model-lab-select" class="form-select" disabled>
+            <option value="" selected>Choose Only Model Lab</option>
+          </select>
+          <div id="only-model-lab-help" class="form-text"></div>
+        </div>
+
+        <div class="border-top pt-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="text-muted small">
+              View saved Model Lab marks statement for this class (Program/Viva). If no lab is selected, all labs will be included.
+            </span>
+            <button type="button" class="btn btn-outline-danger btn-sm" id="open-model-lab-statement">
+              <i class="bi bi-filetype-pdf me-1"></i> View Model Lab Statement (PDF)
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="submit-model-lab" disabled>Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:1080">
+  <div id="toast-save" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body" id="toast-save-body">Mapping saved.</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function showAlert(message, type) {
+    const existingAlert = document.querySelector('.alert');
+    if (existingAlert) existingAlert.remove();
+
+    let alertClass = 'alert-danger';
+    if (type === 'warning') alertClass = 'alert-warning';
+    if (type === 'success') alertClass = 'alert-success';
+
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    const container = document.querySelector('.container-fluid');
+    const anchor = document.querySelector('.row') || container.firstChild;
+    container.insertBefore(alertDiv, anchor);
+
+    setTimeout(() => {
+      if (alertDiv.parentElement) alertDiv.remove();
+    }, 3000);
+  }
+
+  function showToast(msg, variant='success') {
+    const el = document.getElementById('toast-save');
+    const body = document.getElementById('toast-save-body');
+    if (!el || !body) return;
+
+    body.textContent = msg || 'Saved.';
+    el.classList.remove('text-bg-success','text-bg-danger','text-bg-warning');
+    el.classList.add(
+      variant === 'danger' ? 'text-bg-danger' :
+      variant === 'warning' ? 'text-bg-warning' : 'text-bg-success'
+    );
+
+    const t = bootstrap.Toast.getOrCreateInstance(el, {delay: 2000});
+    t.show();
+  }
+
+  function setLoading(btn, isLoading) {
+    if (!btn) return;
+    if (isLoading) {
+      btn.dataset._oldHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Saving...`;
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = btn.dataset._oldHtml || 'Save mapping';
+    }
+  }
+
+  const cards = document.querySelectorAll('.subject-card');
+  const iatSection = document.getElementById('iat-section');
+  const selectedTitle = document.getElementById('selected-subject-title');
+  const iatSelect = document.getElementById('iat-select');
+  const form = document.getElementById('selected-subject-form');
+  const cancelBtn = document.getElementById('cancel-selection');
+
+  const modelLabModalEl = document.getElementById('modelLabModal');
+  const modelLabModal = new bootstrap.Modal(modelLabModalEl);
+  const modelLabIATSelect = document.getElementById('model-lab-iat-select');
+  const modelLabIATHelp = document.getElementById('model-lab-iat-help');
+  const modelLabSelect = document.getElementById('model-lab-select');
+  const modelLabHelp = document.getElementById('model-lab-help');
+  const onlyModelLabSelect = document.getElementById('only-model-lab-select');
+  const onlyModelLabHelp = document.getElementById('only-model-lab-help');
+  const modelLabModalLabel = document.getElementById('modelLabModalLabel');
+  const openModelLabStatementBtn = document.getElementById('open-model-lab-statement');
+  const submitModelLabBtn = document.getElementById('submit-model-lab');
+
+  const practicalModalEl = document.getElementById('practicalModal');
+  const practicalModal = new bootstrap.Modal(practicalModalEl);
+  const practicalExistingPlaceholder = document.getElementById('practical-existing-exps-placeholder');
+  const practicalMappingContainer = document.getElementById('practical-exps-mapping');
+
+  const assessmentsMapEl = document.getElementById('assessments-json');
+  const ASSESSMENTS_BY_DEGREE = assessmentsMapEl ? JSON.parse(assessmentsMapEl.textContent || '{}') : {};
+
+  const coMapEl = document.getElementById('co-mapping-json');
+  const bloomsMapEl = document.getElementById('blooms-mapping-json');
+  const COURSE_OUTCOMES = coMapEl ? JSON.parse(coMapEl.textContent || '{}') : {};
+  const BLOOMS_LEVELS = bloomsMapEl ? JSON.parse(bloomsMapEl.textContent || '[]') : [];
+
+  let selectedSubject = {};
+  let selectedForPractical = {};
+  let practicalIATSelection = {};
+  let practicalCOSelection = {};
+  let practicalBloomsSelection = {};
+
+  function populateIATOptions(degreeId) {
+    const help = document.getElementById('iat-help');
+    iatSelect.innerHTML = '';
+
+    const ph = document.createElement('option');
+    ph.value = '';
+    ph.disabled = true;
+    ph.selected = true;
+    ph.textContent = iatSelect.dataset.placeholder || 'Choose Assessment';
+    iatSelect.appendChild(ph);
+
+    const degKey = String(degreeId);
+    const bucket = ASSESSMENTS_BY_DEGREE[degKey] || {};
+    const globalBucket = ASSESSMENTS_BY_DEGREE["global"] || {};
+
+    const internalIATs = []
+      .concat(bucket.internal_iats || [])
+      .concat(globalBucket.internal_iats || []);
+
+    const allAssessments = []
+      .concat(bucket.assessments || [])
+      .concat(globalBucket.assessments || []);
+
+    const qpList = allAssessments.filter(item => item.qp === true || item.qp === "true");
+
+    let anyOption = false;
+
+    if (internalIATs.length) {
+      const og = document.createElement('optgroup');
+      og.label = 'Internal Assessment';
+      internalIATs.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.name;
+        opt.textContent = item.name;
+        opt.dataset.source = 'internal';
+        opt.dataset.internalId = item.id || '';
+        opt.dataset.qp = 'false';
+        og.appendChild(opt);
+      });
+      iatSelect.appendChild(og);
+      anyOption = true;
+    }
+
+    if (qpList.length) {
+      const og2 = document.createElement('optgroup');
+      og2.label = 'Assessments (QP required)';
+      qpList.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.name;
+        opt.textContent = `${item.name} (QP required)`;
+        opt.dataset.assessmentId = item.id || '';
+        opt.dataset.qp = 'true';
+        og2.appendChild(opt);
+      });
+      iatSelect.appendChild(og2);
+      anyOption = true;
+    }
+
+    if (!anyOption) {
+      iatSelect.disabled = true;
+      help.textContent = 'No Internal Assessments or QP-required assessments configured for this degree.';
+      return;
+    }
+
+    iatSelect.disabled = false;
+    help.textContent = 'Pick an Internal Assessment (IAT1/IAT2/…) or a QP-required assessment.';
+  }
+
+  function populateModelLabModal(degreeId) {
+    modelLabIATSelect.innerHTML = '';
+    modelLabSelect.innerHTML = '';
+    onlyModelLabSelect.innerHTML = '';
+
+    const phIAT = document.createElement('option');
+    phIAT.value = '';
+    phIAT.selected = true;
+    phIAT.textContent = 'Select Internal Assessment';
+    modelLabIATSelect.appendChild(phIAT);
+
+    const phML = document.createElement('option');
+    phML.value = '';
+    phML.selected = true;
+    phML.textContent = 'Choose Model Lab';
+    modelLabSelect.appendChild(phML);
+
+    const phOnlyML = document.createElement('option');
+    phOnlyML.value = '';
+    phOnlyML.selected = true;
+    phOnlyML.textContent = 'Choose Only Model Lab';
+    onlyModelLabSelect.appendChild(phOnlyML);
+
+    const degKey = String(degreeId);
+    const degreeBucket = ASSESSMENTS_BY_DEGREE[degKey] || {};
+    const globalBucket = ASSESSMENTS_BY_DEGREE["global"] || {};
+
+    const allIATs = []
+      .concat(degreeBucket.internal_iats || [])
+      .concat(globalBucket.internal_iats || []);
+
+    const allMLabs = []
+      .concat(degreeBucket.mlabs || [])
+      .concat(globalBucket.mlabs || []);
+
+    const uniqueIATNames = Array.from(new Set(
+      allIATs.map(x => (x.name || '').trim()).filter(Boolean)
+    )).sort();
+
+    if (uniqueIATNames.length) {
+      uniqueIATNames.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        modelLabIATSelect.appendChild(opt);
+      });
+      modelLabIATSelect.disabled = false;
+      modelLabIATHelp.textContent = 'Pick IAT to see applicable Model Labs.';
+    } else {
+      modelLabIATSelect.disabled = true;
+      modelLabIATHelp.textContent = 'No Internal Assessments configured for this degree.';
+    }
+
+    const iatNameToIds = {};
+    allIATs.forEach(i => {
+      const nm = (i.name || '').trim();
+      if (!nm) return;
+      if (!iatNameToIds[nm]) iatNameToIds[nm] = new Set();
+      if (i.id != null) iatNameToIds[nm].add(i.id);
+    });
+
+    const seenOnly = new Set();
+
+    allMLabs.forEach(m => {
+      const name = (m.name || '').trim();
+      if (!name) return;
+
+      const key = `${name.toLowerCase()}|${m.id}`;
+      if (seenOnly.has(key)) return;
+      seenOnly.add(key);
+
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = name;
+      opt.dataset.mlabName = name;
+      onlyModelLabSelect.appendChild(opt);
+    });
+
+    modelLabSelect.disabled = true;
+    onlyModelLabSelect.disabled = true;
+    modelLabHelp.textContent = 'Select an Internal Assessment first.';
+    onlyModelLabHelp.textContent = 'Select an Internal Assessment first.';
+    if (submitModelLabBtn) submitModelLabBtn.disabled = true;
+
+    function updateSubmitState() {
+      if (submitModelLabBtn) {
+        submitModelLabBtn.disabled = !(modelLabSelect.value || onlyModelLabSelect.value);
+      }
+    }
+
+    function refreshModelLabOptions() {
+      const chosenIAT = (modelLabIATSelect.value || '').trim();
+
+      modelLabSelect.innerHTML = '';
+      const ph = document.createElement('option');
+      ph.value = '';
+      ph.selected = true;
+      ph.textContent = 'Choose Model Lab';
+      modelLabSelect.appendChild(ph);
+
+      onlyModelLabSelect.value = '';
+
+      if (!chosenIAT) {
+        modelLabSelect.disabled = true;
+        onlyModelLabSelect.disabled = true;
+        modelLabHelp.textContent = 'Select an Internal Assessment first.';
+        onlyModelLabHelp.textContent = 'Select an Internal Assessment first.';
+        updateSubmitState();
+        return;
+      }
+
+      const allowedIAIds = iatNameToIds[chosenIAT] || new Set();
+
+      let count = 0;
+      allMLabs.forEach(m => {
+        const matches = m.internal_iat_id && allowedIAIds.has(m.internal_iat_id);
+        if (matches) {
+          const opt = document.createElement('option');
+          opt.value = m.id;
+          opt.textContent = m.name;
+          opt.dataset.mlabName = m.name || '';
+          modelLabSelect.appendChild(opt);
+          count++;
+        }
+      });
+
+      if (count === 0) {
+        modelLabSelect.disabled = true;
+        modelLabHelp.textContent = 'No Model Labs linked to the selected Internal Assessment.';
+      } else {
+        modelLabSelect.disabled = false;
+        modelLabHelp.textContent = '';
+      }
+
+      onlyModelLabSelect.disabled = false;
+      onlyModelLabHelp.textContent = 'Choose any Model Lab from this degree.';
+
+      updateSubmitState();
+    }
+
+    modelLabIATSelect.onchange = refreshModelLabOptions;
+
+    modelLabSelect.onchange = function () {
+      if (modelLabSelect.value) {
+        onlyModelLabSelect.value = '';
+        onlyModelLabSelect.disabled = true;
+      } else {
+        onlyModelLabSelect.disabled = !modelLabIATSelect.value;
+      }
+      updateSubmitState();
+    };
+
+    onlyModelLabSelect.onchange = function () {
+      if (onlyModelLabSelect.value) {
+        modelLabSelect.value = '';
+        modelLabSelect.disabled = true;
+      } else {
+        modelLabSelect.disabled = !modelLabIATSelect.value;
+      }
+      updateSubmitState();
+    };
+  }
+
+  function captureCardData(target, card) {
+    target.course_id = card.dataset.courseId || '';
+    target.course_code = card.dataset.courseCode || '';
+    target.course_title = card.dataset.courseTitle || '';
+    target.department = card.dataset.department || '';
+    target.department_id = card.dataset.departmentId || '';
+    target.batch = card.dataset.batch || '';
+    target.section = card.dataset.section || '';
+    target.degree_id = card.dataset.degreeId || '';
+    target.degree_code = card.dataset.degreeCode || '';
+    target.degree_name = card.dataset.degreeName || '';
+    target.regulation = card.dataset.regulation || '';
+
+    try {
+      const raw = card.dataset.experiments || '[]';
+      const arr = JSON.parse(raw);
+      target.experiments = Array.isArray(arr) ? arr.map(n => Number(n)).filter(n => !isNaN(n)) : [];
+    } catch (err) {
+      target.experiments = [];
+    }
+  }
+
+  function buildPracticalIATMappingUI(subject) {
+    practicalMappingContainer.innerHTML = '';
+
+    const degKey = String(subject.degree_id || 'null');
+    const degreeBucket = ASSESSMENTS_BY_DEGREE[degKey] || {};
+    const globalBucket = ASSESSMENTS_BY_DEGREE["global"] || {};
+    const iats = []
+      .concat(degreeBucket.internal_iats || [])
+      .concat(globalBucket.internal_iats || []);
+
+    const seen = new Set();
+    const uniqueIats = [];
+    iats.forEach(i => {
+      const name = (i.name || '').trim();
+      if (name && !seen.has(name.toLowerCase())) {
+        seen.add(name.toLowerCase());
+        uniqueIats.push(i);
+      }
+    });
+
+    const subjectRegulation = subject.regulation || '';
+    const coItems = COURSE_OUTCOMES[subjectRegulation] || [];
+    const bloomsItems = BLOOMS_LEVELS || [];
+
+    if (!subject.experiments || subject.experiments.length === 0) {
+      practicalMappingContainer.innerHTML = '<div class="text-muted small">No experiments to map for this subject.</div>';
+      return;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'list-group';
+
+    subject.experiments.slice().sort((a, b) => a - b).forEach(expNo => {
+      const row = document.createElement('div');
+      row.className = 'mb-3 p-3 border rounded bg-white';
+
+      const header = document.createElement('div');
+      header.className = 'd-flex align-items-center justify-content-between mb-3';
+      header.innerHTML = `<div><strong>Experiment ${expNo}</strong></div>`;
+
+      const existingChoice = practicalIATSelection[expNo];
+      if (existingChoice) {
+        const mappedBadge = document.createElement('span');
+        mappedBadge.className = 'mapped-badge badge bg-success ms-auto';
+        mappedBadge.textContent = `Mapped to ${existingChoice}`;
+        header.appendChild(mappedBadge);
+      }
+
+      const iatBlock = document.createElement('div');
+      iatBlock.className = 'mb-3';
+      iatBlock.innerHTML = `<label class="form-label fw-semibold">IAT Mapping</label>`;
+
+      const iatBoxGroup = document.createElement('div');
+      iatBoxGroup.className = 'd-flex flex-wrap gap-3';
+
+      uniqueIats.forEach(i => {
+        const name = (i.name || '').trim();
+        const idSafe = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const checkboxId = `exp-${expNo}-iat-${idSafe}`;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'form-check form-check-inline';
+
+        const input = document.createElement('input');
+        input.className = 'form-check-input iat-checkbox';
+        input.type = 'checkbox';
+        input.name = `exp-${expNo}-iat`;
+        input.id = checkboxId;
+        input.value = name;
+        input.dataset.expNo = String(expNo);
+
+        if (practicalIATSelection[expNo] &&
+            practicalIATSelection[expNo].toLowerCase() === name.toLowerCase()) {
+          input.checked = true;
+        }
+
+        const label = document.createElement('label');
+        label.className = 'form-check-label';
+        label.setAttribute('for', checkboxId);
+        label.textContent = name;
+
+        wrap.appendChild(input);
+        wrap.appendChild(label);
+        iatBoxGroup.appendChild(wrap);
+      });
+
+      iatBlock.appendChild(iatBoxGroup);
+
+      const coBlock = document.createElement('div');
+      coBlock.className = 'mb-3';
+      coBlock.innerHTML = `<label class="form-label fw-semibold">CO Mapping</label>`;
+
+      const coBoxGroup = document.createElement('div');
+      coBoxGroup.className = 'd-flex flex-wrap gap-3';
+
+      (coItems || []).forEach(item => {
+        const checkboxId = `exp-${expNo}-co-${item.id}`;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'form-check form-check-inline';
+
+        const input = document.createElement('input');
+        input.className = 'form-check-input co-checkbox';
+        input.type = 'checkbox';
+        input.id = checkboxId;
+        input.value = item.id;
+        input.dataset.expNo = String(expNo);
+
+        const selectedCos = practicalCOSelection[expNo] || [];
+        if (selectedCos.includes(Number(item.id))) {
+          input.checked = true;
+        }
+
+        const label = document.createElement('label');
+        label.className = 'form-check-label';
+        label.setAttribute('for', checkboxId);
+        label.textContent = item.name ? `${item.code} - ${item.name}` : `${item.code}`;
+
+        wrap.appendChild(input);
+        wrap.appendChild(label);
+        coBoxGroup.appendChild(wrap);
+      });
+
+      if (!coItems.length) {
+        coBoxGroup.innerHTML = `<div class="text-muted small">No COs available.</div>`;
+      }
+
+      coBlock.appendChild(coBoxGroup);
+
+      const bloomsBlock = document.createElement('div');
+      bloomsBlock.className = 'mb-3';
+      bloomsBlock.innerHTML = `<label class="form-label fw-semibold">Bloom's Mapping</label>`;
+
+      const bloomsBoxGroup = document.createElement('div');
+      bloomsBoxGroup.className = 'd-flex flex-wrap gap-3';
+
+      (bloomsItems || []).forEach(item => {
+        const checkboxId = `exp-${expNo}-blooms-${item.id}`;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'form-check form-check-inline';
+
+        const input = document.createElement('input');
+        input.className = 'form-check-input blooms-checkbox';
+        input.type = 'checkbox';
+        input.id = checkboxId;
+        input.value = item.id;
+        input.dataset.expNo = String(expNo);
+
+        const selectedBlooms = practicalBloomsSelection[expNo] || [];
+        if (selectedBlooms.includes(Number(item.id))) {
+          input.checked = true;
+        }
+
+        const label = document.createElement('label');
+        label.className = 'form-check-label';
+        label.setAttribute('for', checkboxId);
+        label.textContent = item.name ? `${item.code} - ${item.name}` : `${item.code}`;
+
+        wrap.appendChild(input);
+        wrap.appendChild(label);
+        bloomsBoxGroup.appendChild(wrap);
+      });
+
+      if (!bloomsItems.length) {
+        bloomsBoxGroup.innerHTML = `<div class="text-muted small">No Bloom's levels available.</div>`;
+      }
+
+      bloomsBlock.appendChild(bloomsBoxGroup);
+
+      const saveBtn = document.createElement('button');
+      saveBtn.type = 'button';
+      saveBtn.className = 'btn btn-sm btn-outline-primary';
+      saveBtn.innerHTML = `<i class="bi bi-save me-1"></i>Save mapping`;
+
+      saveBtn.addEventListener('click', async function() {
+        const chosenIAT = getChosenIATForExp(expNo);
+        if (!chosenIAT) {
+          showAlert(`Choose an IAT for Experiment ${expNo} first.`, 'warning');
+          return;
+        }
+
+        const selectedCOs = getChosenCOsForExp(expNo);
+        const selectedBlooms = getChosenBloomsForExp(expNo);
+
+        setLoading(saveBtn, true);
+        try {
+          const ok = await mapExperimentIAT(expNo, chosenIAT, selectedCOs, selectedBlooms);
+          if (ok) {
+            practicalIATSelection[expNo] = chosenIAT;
+            practicalCOSelection[expNo] = selectedCOs;
+            practicalBloomsSelection[expNo] = selectedBlooms;
+
+            let mappedBadge = header.querySelector('.mapped-badge');
+            if (!mappedBadge) {
+              mappedBadge = document.createElement('span');
+              mappedBadge.className = 'mapped-badge badge bg-success ms-auto';
+              header.appendChild(mappedBadge);
+            }
+            mappedBadge.textContent = `Mapped to ${chosenIAT}`;
+
+            showToast(`Experiment ${expNo} mapping saved.`, 'success');
+            saveBtn.innerHTML = `<i class="bi bi-check-circle me-1"></i>Saved`;
+
+            setTimeout(() => {
+              setLoading(saveBtn, false);
+              saveBtn.innerHTML = `<i class="bi bi-save me-1"></i>Save mapping`;
+            }, 1200);
+          } else {
+            setLoading(saveBtn, false);
+            showToast('Could not save mapping.', 'danger');
+          }
+        } catch {
+          setLoading(saveBtn, false);
+          showToast('Server error while saving mapping.', 'danger');
+        }
+      });
+
+      const footer = document.createElement('div');
+      footer.className = 'd-flex justify-content-end';
+      footer.appendChild(saveBtn);
+
+      row.appendChild(header);
+      row.appendChild(iatBlock);
+      row.appendChild(coBlock);
+      row.appendChild(bloomsBlock);
+      row.appendChild(footer);
+
+      wrapper.appendChild(row);
+    });
+
+    practicalMappingContainer.appendChild(wrapper);
+
+    practicalMappingContainer.querySelectorAll('.iat-checkbox').forEach(cb => {
+      cb.addEventListener('change', function() {
+        const expNo = this.dataset.expNo;
+        if (this.checked) {
+          practicalMappingContainer
+            .querySelectorAll(`.iat-checkbox[data-exp-no="${expNo}"]`)
+            .forEach(other => { if (other !== this) other.checked = false; });
+          practicalIATSelection[Number(expNo)] = this.value;
+        } else {
+          const anyChecked = Array.from(
+            practicalMappingContainer.querySelectorAll(`.iat-checkbox[data-exp-no="${expNo}"]`)
+          ).some(x => x.checked);
+          if (!anyChecked) delete practicalIATSelection[Number(expNo)];
+        }
+      });
+    });
+
+    function getChosenIATForExp(expNo) {
+      const cbs = practicalMappingContainer.querySelectorAll(`.iat-checkbox[data-exp-no="${expNo}"]`);
+      for (const cb of cbs) if (cb.checked) return cb.value;
+      return practicalIATSelection[Number(expNo)] || '';
+    }
+
+    function getChosenCOsForExp(expNo) {
+      return Array.from(
+        practicalMappingContainer.querySelectorAll(`.co-checkbox[data-exp-no="${expNo}"]:checked`)
+      ).map(cb => Number(cb.value));
+    }
+
+    function getChosenBloomsForExp(expNo) {
+      return Array.from(
+        practicalMappingContainer.querySelectorAll(`.blooms-checkbox[data-exp-no="${expNo}"]:checked`)
+      ).map(cb => Number(cb.value));
+    }
+
+    practicalMappingContainer.getChosenIATForExp = getChosenIATForExp;
+    practicalMappingContainer.getChosenCOsForExp = getChosenCOsForExp;
+    practicalMappingContainer.getChosenBloomsForExp = getChosenBloomsForExp;
+  }
+
+  cards.forEach(card => {
+    const selectBtn = card.querySelector('.select-subject-btn');
+    const practicalBtn = card.querySelector('.practical-btn');
+    const modelLabBtn = card.querySelector('.model-lab-btn');
+
+    selectBtn && selectBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      cards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      captureCardData(selectedSubject, card);
+
+      selectedTitle.innerHTML = `
+        <i class="bi bi-journal-text me-2"></i>
+        ${selectedSubject.course_code} - ${selectedSubject.course_title}
+      `;
+      populateIATOptions(selectedSubject.degree_id);
+
+      iatSection.style.display = 'block';
+      iatSelect.selectedIndex = 0;
+      iatSection.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    practicalBtn && practicalBtn.addEventListener('click', async function(e) {
+      e.stopPropagation();
+      cards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      captureCardData(selectedForPractical, card);
+
+      const subjectKey = `${selectedForPractical.course_code}|${selectedForPractical.department_id}|${selectedForPractical.batch}|${selectedForPractical.section}`;
+      if (!selectedForPractical.__subjectKey || selectedForPractical.__subjectKey !== subjectKey) {
+        selectedForPractical.__subjectKey = subjectKey;
+        practicalIATSelection = {};
+        practicalCOSelection = {};
+        practicalBloomsSelection = {};
+      }
+
+      const label = document.getElementById('practicalModalLabel');
+      if (label) {
+        label.textContent = `Experiment Mapping — ${selectedForPractical.course_code} ${selectedForPractical.course_title}`;
+      }
+
+      document.getElementById('experiment-number').value = '';
+      practicalExistingPlaceholder.innerHTML = '';
+
+      const exps = selectedForPractical.experiments || [];
+      const enoList = exps.slice().sort((a,b)=>a-b);
+      const infoLine = document.createElement('div');
+      infoLine.className = 'mb-3 text-muted small';
+      infoLine.id = 'practical-existing-exps';
+      infoLine.innerHTML = (enoList.length === 0)
+        ? 'Available experiments: None'
+        : 'Available experiments: <strong>' + enoList.join(', ') + '</strong>';
+      practicalExistingPlaceholder.appendChild(infoLine);
+
+      try {
+        const serverMap = await fetchExperimentIATMapping();
+        for (const [k, v] of Object.entries(serverMap)) {
+          const expNo = Number(k);
+          if (!v) continue;
+
+          if (v.iat_name) {
+            practicalIATSelection[expNo] = v.iat_name;
+          }
+
+          practicalCOSelection[expNo] = Array.isArray(v.co_ids) ? v.co_ids.map(Number) : [];
+          practicalBloomsSelection[expNo] = Array.isArray(v.blooms_ids) ? v.blooms_ids.map(Number) : [];
+        }
+      } catch (_) {}
+
+      buildPracticalIATMappingUI(selectedForPractical);
+      practicalModal.show();
+    });
+
+    modelLabBtn && modelLabBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      cards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+
+      captureCardData(selectedSubject, card);
+
+      modelLabModalLabel.textContent = `Select Model Lab — ${selectedSubject.course_code} ${selectedSubject.course_title}`;
+      populateModelLabModal(selectedSubject.degree_id);
+      modelLabIATSelect.selectedIndex = 0;
+      modelLabSelect.selectedIndex = 0;
+      onlyModelLabSelect.selectedIndex = 0;
+      submitModelLabBtn.disabled = true;
+      modelLabModal.show();
+    });
+  });
+
+  iatSelect.addEventListener('change', function() {
+    const selectedOpt = iatSelect.options[iatSelect.selectedIndex];
+    const isQP = selectedOpt && selectedOpt.dataset.qp === 'true';
+    document.getElementById('iat_qp').value = isQP ? '1' : '0';
+  });
+
+  document.getElementById('submit-selected-subject').addEventListener('click', function() {
+    const selectedIAT = iatSelect.value;
+    if (!selectedIAT) {
+      showAlert('Please select an assessment before submitting.', 'warning');
+      return;
+    }
+
+    const selectedOpt = iatSelect.options[iatSelect.selectedIndex];
+    const isQP = selectedOpt && selectedOpt.dataset.qp === 'true';
+
+    document.getElementById('course_id').value = selectedSubject.course_id;
+    document.getElementById('course_code').value = selectedSubject.course_code;
+    document.getElementById('course_title').value = selectedSubject.course_title;
+    document.getElementById('department').value = selectedSubject.department;
+    document.getElementById('department_id').value = selectedSubject.department_id;
+    document.getElementById('batch').value = selectedSubject.batch;
+    document.getElementById('section').value = selectedSubject.section;
+    document.getElementById('iat').value = selectedIAT;
+    document.getElementById('degree_id').value = selectedSubject.degree_id;
+    document.getElementById('degree_code').value = selectedSubject.degree_code;
+    document.getElementById('degree_name').value = selectedSubject.degree_name;
+    document.getElementById('iat_qp').value = isQP ? '1' : '0';
+
+    form.removeAttribute('action');
+    form.setAttribute('method', 'POST');
+    form.submit();
+  });
+
+  cancelBtn.addEventListener('click', function() {
+    iatSection.style.display = 'none';
+    cards.forEach(card => card.classList.remove('active'));
+  });
+
+  const mainEnterBtn = document.getElementById('enter-marks-main-btn');
+  if (mainEnterBtn) {
+    mainEnterBtn.addEventListener('click', function() {
+      const params = new URLSearchParams({
+        reg_no: mainEnterBtn.dataset.regNo || '',
+        student_name: mainEnterBtn.dataset.studentName || '',
+        course_code: mainEnterBtn.dataset.courseCode || '',
+        course_title: mainEnterBtn.dataset.courseTitle || '',
+        batch: mainEnterBtn.dataset.batch || '',
+        section: mainEnterBtn.dataset.section || '',
+        iat: mainEnterBtn.dataset.iat || '',
+        department_name: mainEnterBtn.dataset.deptName || '',
+        department_code: mainEnterBtn.dataset.deptCode || '',
+        department_id: mainEnterBtn.dataset.deptId || '',
+        degree_id: mainEnterBtn.dataset.degreeId || '',
+        degree_code: mainEnterBtn.dataset.degreeCode || '',
+        degree_name: mainEnterBtn.dataset.degreeName || ''
+      });
+      window.location.href = "{% url 'enter_marks_page' %}?" + params.toString();
+    });
+  }
+
+  const allPdfBtn = document.getElementById('btn-all-pdf');
+  if (allPdfBtn) {
+    allPdfBtn.addEventListener('click', function() {
+      const courseCode = "{{ selected_course_code|default_if_none:''|urlencode }}";
+      const iat = "{{ selected_iat|default_if_none:''|urlencode }}";
+      const batch = "{{ selected_batch|default_if_none:''|urlencode }}";
+      const section = "{{ selected_section|default_if_none:''|urlencode }}";
+      const departmentId = "{{ selected_department_id|default_if_none:''|urlencode }}";
+
+      if (!iat) {
+        showAlert('Select an assessment to generate the PDF.', 'warning');
+        return;
+      }
+
+      const url = "{% url 'student_mark_pdf_all' %}"
+                  + `?course_code=${courseCode}`
+                  + `&exam_name=${iat}`
+                  + `&batch=${batch}`
+                  + `&section=${section}`
+                  + `&departmentId=${departmentId}`;
+      window.open(url, "_blank");
+    });
+  }
+
+  document.getElementById('submit-experiment').addEventListener('click', function() {
+    const input = document.getElementById('experiment-number');
+    const expNoStr = (input.value || '').trim();
+    const expNo = Number(expNoStr);
+
+    if (!expNoStr || isNaN(expNo) || expNo <= 0) {
+      input.focus();
+      showAlert('Enter a valid experiment number (positive integer).', 'warning');
+      return;
+    }
+
+    let selectedIat = '';
+    if (practicalMappingContainer.getChosenIATForExp) {
+      selectedIat = practicalMappingContainer.getChosenIATForExp(expNo) || '';
+    }
+
+    const selectedCOs = practicalMappingContainer.getChosenCOsForExp
+      ? practicalMappingContainer.getChosenCOsForExp(expNo)
+      : [];
+
+    const selectedBlooms = practicalMappingContainer.getChosenBloomsForExp
+      ? practicalMappingContainer.getChosenBloomsForExp(expNo)
+      : [];
+
+    if (selectedIat) practicalIATSelection[expNo] = selectedIat;
+    if (selectedCOs.length) practicalCOSelection[expNo] = selectedCOs;
+    if (selectedBlooms.length) practicalBloomsSelection[expNo] = selectedBlooms;
+
+    const params = new URLSearchParams({
+      course_id: selectedForPractical.course_id || '',
+      course_code: selectedForPractical.course_code || '',
+      course_title: selectedForPractical.course_title || '',
+      department: selectedForPractical.department || '',
+      department_id: selectedForPractical.department_id || '',
+      batch: selectedForPractical.batch || '',
+      section: selectedForPractical.section || '',
+      degree_id: selectedForPractical.degree_id || '',
+      degree_code: selectedForPractical.degree_code || '',
+      degree_name: selectedForPractical.degree_name || '',
+      experiment_no: String(expNo),
+      iat: selectedIat,
+      co_ids: selectedCOs.join(','),
+      blooms_ids: selectedBlooms.join(',')
+    });
+
+    window.location.href = "{% url 'enter_practical_page' %}?" + params.toString();
+  });
+
+  document.getElementById('open-practical-statement').addEventListener('click', function() {
+    const courseCode = selectedForPractical.course_code || '';
+    const batch = selectedForPractical.batch || '';
+    const section = selectedForPractical.section || '';
+    const departmentId = selectedForPractical.department_id || '';
+
+    if (!courseCode) {
+      showAlert('Missing course code for this card.', 'warning');
+      return;
+    }
+
+    let url = "{% url 'practical_statement_pdf' %}"
+              + `?course_code=${encodeURIComponent(courseCode)}`
+              + `&batch=${encodeURIComponent(batch)}`
+              + `&section=${encodeURIComponent(section)}`
+              + `&department_id=${encodeURIComponent(departmentId)}`;
+
+    window.open(url, "_blank");
+  });
+
+  submitModelLabBtn && submitModelLabBtn.addEventListener('click', function() {
+    const val = modelLabSelect.value || onlyModelLabSelect.value;
+    const chosenIAT = (modelLabIATSelect.value || '').trim();
+
+    if (!chosenIAT) {
+      showAlert('Pick an Internal Assessment first.', 'warning');
+      return;
+    }
+    if (!val) {
+      showAlert('Choose a Model Lab.', 'warning');
+      return;
+    }
+
+    document.getElementById('course_id').value = selectedSubject.course_id || '';
+    document.getElementById('course_code').value = selectedSubject.course_code || '';
+    document.getElementById('course_title').value = selectedSubject.course_title || '';
+    document.getElementById('department').value = selectedSubject.department || '';
+    document.getElementById('department_id').value = selectedSubject.department_id || '';
+    document.getElementById('batch').value = selectedSubject.batch || '';
+    document.getElementById('section').value = selectedSubject.section || '';
+    document.getElementById('degree_id').value = selectedSubject.degree_id || '';
+    document.getElementById('degree_code').value = selectedSubject.degree_code || '';
+    document.getElementById('degree_name').value = selectedSubject.degree_name || '';
+    document.getElementById('model_lab_id').value = val;
+    document.getElementById('iat').value = chosenIAT;
+
+    modelLabModal.hide();
+    form.setAttribute('action', "{% url 'model_lab_entry_page' %}");
+    form.setAttribute('method', 'POST');
+    form.submit();
+  });
+
+  openModelLabStatementBtn.addEventListener('click', function() {
+    const courseCode = selectedSubject.course_code || '';
+    const batch = selectedSubject.batch || '';
+    const section = selectedSubject.section || '';
+    const departmentId = selectedSubject.department_id || '';
+    const chosenIAT = (modelLabIATSelect.value || '').trim();
+    const chosenModelLabId = (modelLabSelect.value || onlyModelLabSelect.value || '').trim();
+
+    if (!courseCode) {
+      showAlert('Missing course code for this card.', 'warning');
+      return;
+    }
+
+    let url = "{% url 'model_lab_statement_pdf' %}"
+              + `?course_code=${encodeURIComponent(courseCode)}`
+              + `&batch=${encodeURIComponent(batch)}`
+              + `&section=${encodeURIComponent(section)}`
+              + `&department_id=${encodeURIComponent(departmentId)}`;
+
+    if (chosenIAT) {
+      url += `&internal_iat=${encodeURIComponent(chosenIAT)}`;
+    }
+    if (chosenModelLabId) {
+      url += `&model_lab_id=${encodeURIComponent(chosenModelLabId)}`;
+    }
+
+    window.open(url, "_blank");
+  });
+
+  async function mapExperimentIAT(expNo, iatName, coIds = [], bloomsIds = []) {
+    const csrf = (document.querySelector('input[name=csrfmiddlewaretoken]') || {}).value || '';
+    const url = "{% url 'map_experiment_iat' %}";
+
+    const formData = new FormData();
+    formData.append('csrfmiddlewaretoken', csrf);
+    formData.append('course_code', selectedForPractical.course_code || '');
+    formData.append('department_id', selectedForPractical.department_id || '');
+    formData.append('batch', selectedForPractical.batch || '');
+    formData.append('section', selectedForPractical.section || '');
+    formData.append('degree_id', selectedForPractical.degree_id || '');
+    formData.append('experiment_no', String(expNo));
+    formData.append('iat_name', iatName);
+    formData.append('co_ids', coIds.join(','));
+    formData.append('blooms_ids', bloomsIds.join(','));
+
+    const res = await fetch(url, {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin'
+    });
+
+    const json = await res.json();
+    if (json && json.ok) {
+      practicalIATSelection[Number(expNo)] = iatName;
+      practicalCOSelection[Number(expNo)] = coIds;
+      practicalBloomsSelection[Number(expNo)] = bloomsIds;
+      return true;
+    }
+    return false;
+  }
+
+  async function fetchExperimentIATMapping() {
+    const url = "{% url 'get_experiment_iat_mapping' %}";
+    const params = new URLSearchParams({
+      course_code: selectedForPractical.course_code || '',
+      department_id: selectedForPractical.department_id || '',
+      batch: selectedForPractical.batch || '',
+      section: selectedForPractical.section || ''
+    });
+
+    const res = await fetch(`${url}?${params.toString()}`, {
+      method: 'GET',
+      credentials: 'same-origin'
+    });
+
+    if (!res.ok) return {};
+    const json = await res.json();
+    if (!json || !json.ok) return {};
+    return json.mapping || {};
+  }
+});
+</script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+<style>
+.subject-card.active {
+  border: 2px solid #0d6efd !important;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, .15);
+}
+
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+}
+
+.avatar-sm {
+  width: 36px;
+  height: 36px;
+}
+
+.mapped-badge {
+  font-size: 0.75rem;
+}
+</style>
+{% endblock %}

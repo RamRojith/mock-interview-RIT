@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .grade-page {
+        padding: 24px 0 40px;
+        font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    }
+
+    .grade-hero {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: #fff;
+        border-radius: 16px;
+        padding: 1.5rem 1.75rem;
+        box-shadow: 0 10px 24px rgba(26, 75, 140, .18);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .grade-hero::after {
+        content: "";
+        position: absolute;
+        right: -60px;
+        top: -60px;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .badge-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+    }
+
+    .compact-note {
+        color: rgba(255, 255, 255, 0.85);
+        max-width: 920px;
+        line-height: 1.7;
+    }
+
+    .panel-card {
+        margin-top: 18px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+        padding: 1.1rem 1.25rem;
+    }
+
+    .action-row .btn {
+        min-height: 46px;
+        border-radius: 10px;
+        padding: 0 18px;
+        font-weight: 800;
+    }
+
+    .btn-primary-soft {
+        background: #eff6ff;
+        border: 1px solid #dbeafe;
+        color: #1d4ed8;
+    }
+    .btn-primary-soft:hover {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .btn-primary-solid {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        border: none;
+        color: #fff;
+    }
+    .btn-primary-solid:hover {
+        opacity: .92;
+        color: #fff;
+    }
+
+    .table-wrap {
+        margin-top: 18px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .table thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        vertical-align: middle;
+        white-space: nowrap;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .table tbody td {
+        vertical-align: middle;
+    }
+
+    .table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .form-control {
+        min-height: 44px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        box-shadow: none;
+    }
+
+    .form-control:focus {
+        border-color: #1a4b8c;
+        box-shadow: 0 0 0 0.15rem rgba(26, 75, 140, 0.12);
+    }
+
+    .hint-box {
+        border: 1px dashed #dbeafe;
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 14px 16px;
+        color: #334155;
+        font-size: 14px;
+    }
+</style>
+
+<div class="container-fluid grade-page">
+    <div class="grade-hero">
+        <div class="badge-chip">
+            <i class="fas fa-id-badge"></i>
+            Internal Attendance Percentage Marks
+        </div>
+        <h1 class="mb-2 fw-bold">Attendance % to Mark (out of 5) Setup</h1>
+        <p class="compact-note mb-0">
+            Define the attendance percentage ranges and the corresponding attendance mark out of 5.
+            This mapping is used to calculate the Attendance Mark component of the Final Internal Mark
+            for every student, based on their attendance percentage.
+        </p>
+    </div>
+
+    {% if messages %}
+        <div class="mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} mb-2">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post" id="slabForm" class="panel-card">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save">
+
+        <div class="row g-3">
+            <div class="col-md-10">
+                <div class="hint-box mb-0">
+                    Enter one row per attendance band, e.g. 95% - 100% => 5, 90% - 94.99% => 4, and so on.
+                    Ranges should not overlap.
+                </div>
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+                <div class="w-100 d-flex gap-2 action-row">
+                    <button type="button" class="btn btn-primary-soft w-100" onclick="addRow()">
+                        Add Row
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-wrap mt-3">
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0" id="slabTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">S.No</th>
+                            <th style="display:none;">ID</th>
+                            <th>Percentage From (%)</th>
+                            <th>Percentage To (%)</th>
+                            <th>Attendance Mark (out of 5)</th>
+                            <th style="width: 110px;">Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if slabs %}
+                            {% for row in slabs %}
+                            <tr>
+                                <td class="serial-no">{{ forloop.counter }}</td>
+                                <td style="display:none;">
+                                    <input type="hidden" name="row_id[]" value="{{ row.id }}">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" name="percentage_from[]" class="form-control" value="{{ row.percentage_from }}">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" name="percentage_to[]" class="form-control" value="{{ row.percentage_to }}">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" name="attendance_mark[]" class="form-control" value="{{ row.attendance_mark }}">
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteExistingRow('{{ row.id }}')">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td class="serial-no">1</td>
+                                <td style="display:none;">
+                                    <input type="hidden" name="row_id[]" value="">
+                                </td>
+                                <td><input type="number" step="0.01" name="percentage_from[]" class="form-control"></td>
+                                <td><input type="number" step="0.01" name="percentage_to[]" class="form-control"></td>
+                                <td><input type="number" step="0.01" name="attendance_mark[]" class="form-control"></td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="removeNewRow(this)">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-3 text-end">
+            <button type="submit" class="btn btn-primary-solid px-4">
+                Save All
+            </button>
+        </div>
+    </form>
+
+    <form method="post" id="deleteForm" style="display:none;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete">
+        <input type="hidden" name="row_id" id="delete_row_id">
+    </form>
+</div>
+
+<script>
+function addRow() {
+    let tableBody = document.querySelector("#slabTable tbody");
+    let rowCount = tableBody.rows.length;
+
+    let row = `
+        <tr>
+            <td class="serial-no">${rowCount + 1}</td>
+            <td style="display:none;">
+                <input type="hidden" name="row_id[]" value="">
+            </td>
+            <td><input type="number" step="0.01" name="percentage_from[]" class="form-control"></td>
+            <td><input type="number" step="0.01" name="percentage_to[]" class="form-control"></td>
+            <td><input type="number" step="0.01" name="attendance_mark[]" class="form-control"></td>
+            <td class="text-center">
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeNewRow(this)">Delete</button>
+            </td>
+        </tr>
+    `;
+
+    tableBody.insertAdjacentHTML("beforeend", row);
+    refreshSerialNumbers();
+}
+
+function removeNewRow(btn) {
+    btn.closest("tr").remove();
+    refreshSerialNumbers();
+}
+
+function deleteExistingRow(rowId) {
+    if (confirm("Are you sure you want to delete this row?")) {
+        document.getElementById("delete_row_id").value = rowId;
+        document.getElementById("deleteForm").submit();
+    }
+}
+
+function refreshSerialNumbers() {
+    let rows = document.querySelectorAll("#slabTable tbody tr");
+    rows.forEach((row, index) => {
+        row.querySelector(".serial-no").innerText = index + 1;
+    });
+}
+</script>
+
+{% endblock content %}

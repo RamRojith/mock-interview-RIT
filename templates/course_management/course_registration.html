@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+ 
+{% block content %}
+
+<style>
+  .messages {
+    margin-bottom: 20px;
+  }
+
+  .alert {
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+
+  .course-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+
+  .course-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    text-align: center;
+    width: 300px;
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .course-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .course-card h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+
+  .register-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+  }
+
+  .register-btn:hover {
+    background-color: #0056b3;
+  }
+</style>
+
+{% if messages %}
+  <div class="messages">
+    {% for message in messages %}
+      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% if courses %}
+  <div class="course-container">
+    {% for course in courses %}
+      <div class="course-card">
+        <h3>{{ course.course_code }} - {{ course.title }}</h3>
+        <form method="POST" action="{% url 'register_course' course.course_code %}">
+          {% csrf_token %}
+          <button type="submit" class="register-btn">Register</button>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p style="text-align: center; font-size: 18px; color: #555;">All courses have been registered.</p>
+{% endif %}
+
+{% endblock content %}

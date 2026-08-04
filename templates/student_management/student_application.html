@@ -1,0 +1,1309 @@
+{% load static %}
+{% load sm_tags %}
+{% admissionreferences as admission_references %}
+{% load authorizer_tags %}
+<html lang="en">
+    <head>
+       
+        
+        
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+            <!-- Bootstrap CSS (Latest Version) -->
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        
+            <!-- Font Awesome (Latest Version) -->
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        
+            <!-- Bootstrap Icons (Latest Version) -->
+            <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+        
+            <!-- jQuery (Latest Version) -->
+            <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        
+            <!-- Bootstrap JS (Latest Version) -->
+            <link rel="stylesheet" href="{% static 'base.css' %}">
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+            <script src="{% static 'js/timer.js' %}"></script>
+            <script src="{% static 'js/scripts.js' %}"></script>
+            <link rel="website icon" type="png" href="{% static 'image/Edenberg.png' %}">
+
+        
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    background-color: #f8f9fa;
+                    margin: 0;
+                    padding: 0;
+                }
+                .message-alert {
+                    margin-bottom: 15px;
+                    opacity: 1;
+                    transition: opacity var(--transition-speed) ease;
+                }
+                 .message-alert .btn-close {
+                    margin-left: 10px;
+                }
+                .message-alert.fade-out{
+                     opacity:0;
+                 }
+                /* Main Container Styling */
+                form {
+                    max-width: 1100px;
+                    margin: 20px auto;
+                    padding: 30px;
+                    background-color: #ffffff;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                }
+                
+                /* Section Headings */
+                form h3 {
+                    font-size: 1.5rem;
+                    margin-bottom: 20px;
+                    color: #333;
+                    text-decoration: underline;
+                }
+                
+                /* Form Rows */
+                .row {
+                    display: flex;
+                    flex-wrap: wrap;
+                    margin: 0 -15px;
+                }
+                
+                .col-md-3, .col-md-4 {
+                    padding: 15px;
+                    flex: 1;
+                    min-width: 250px;
+                }
+                
+                /* Form Groups */
+                .form-group {
+                    display: flex;
+                    flex-direction: column;
+                    margin-bottom: 15px;
+                }
+                
+                .form-group label {
+                    font-weight: 600;
+                    margin-bottom: 5px;
+                    color:rgb(51, 91, 132);
+                }
+                
+                .form-control, .form-select, .form-control-file {
+                    border: 1px solid #ced4da;
+                    border-radius: 5px;
+                    padding: 10px;
+                    font-size: 14px;
+                    color: #495057;
+                }
+                
+                textarea.form-control {
+                    resize: none;
+                }
+                
+                /* Table Styling */
+                table {
+                    width: 100%;
+                    margin-top: 20px;
+                    border-collapse: collapse;
+                    background-color: #ffffff;
+                    border: 1px solid #dee2e6;
+                }
+                
+                table th, table td {
+                    text-align: left;
+                    padding: 10px;
+                    border: 1px solid #dee2e6;
+                }
+                
+                thead th {
+                    background-color: #f1f1f1;
+                    font-weight: bold;
+                    text-align: center;
+                }
+                
+                /* Add/Remove Buttons */
+                #add-education, #add-experience, .remove-education-row, .remove-experience-row {
+                    font-size: 14px;
+                    margin-top: 10px;
+                }
+                
+                .remove-education-row, .remove-experience-row {
+                    padding: 5px 10px;
+                    background-color: #e74c3c;
+                    color: #fff;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                }
+                
+                #add-education, #add-experience {
+                    background-color: #ffb84d;
+                    color: #fff;
+                    padding: 8px 12px;
+                    border-radius: 5px;
+                    border: none;
+                    cursor: pointer;
+                }
+                
+                /* Submit Button */
+                #submit-button {
+                    font-size: 16px;
+                    padding: 10px 20px;
+                    background-color: #28a745;
+                    color: #fff;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                }
+        
+                /* Custom checkbox styling */
+                .custom-checkbox-group {
+                    border: 1px solid #ccc;
+                    border-radius: 8px;
+                    padding: 10px;
+                    background-color: #f8f9fa;
+                }
+            
+                .custom-checkbox-group label {
+                    font-weight: bold;
+                    color: #333;
+                    margin-bottom: 8px;
+                    display: block;
+                }
+            
+                .form-check {
+                    display: flex;
+                    align-items: center;
+                    gap: 2px; /* Space between checkbox and label */
+                    padding: 5px 10px;
+                    margin-bottom: 5px;
+                    background-color: #fff;
+                    border-radius: 5px;
+                    transition: all 0.3s ease;
+                }
+            
+                .form-check:hover {
+                    background-color: #e9ecef;
+                }
+            
+                .form-check-input {
+                    width: 18px;
+                    height: 18px;
+                    margin-right: 8px;
+                    cursor: pointer;
+                }
+            
+                .form-check-label {
+                    font-size: 15px;
+                    cursor: pointer;
+                }
+                /* Ensure the select box dropdown appears above other elements */
+                    .input-field {
+                        position: relative; /* Establish a stacking context */
+                    }
+                    
+                    .input-field select {
+                        z-index: 10; /* Ensure the select box itself has a lower z-index than the dropdown */
+                        position: relative; /* Ensure the select box is positioned relative to its parent */
+                    }
+                    
+                    /* Target the multiselect dropdown container */
+                    .multiselect-dropdown {
+                        z-index: 1000; /* Ensure the dropdown has a high z-index */
+                        position: absolute; /* Position the dropdown absolutely */
+                    }
+                
+                /* Responsive Design */
+                @media (max-width: 768px) {
+                    .row {
+                        flex-direction: column;
+                    }
+                }
+            </style>
+
+            <style>
+                /* Custom styles for the form */
+                .container {
+                    max-width: 1200px;
+                    margin: auto;
+                    padding: 20px;
+                    background-color: #f9f9f9;
+                    border-radius: 10px;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }
+            
+                h2, h3 {
+                    color: #2c3e50;
+                    font-weight: bold;
+                }
+            
+                h2 {
+                    margin-bottom: 20px;
+                }
+            
+                h3 {
+                    margin-top: 30px;
+                    margin-bottom: 20px;
+                    border-bottom: 2px solid #2c3e50;
+                    padding-bottom: 10px;
+                }
+            
+                .form-group label {
+                    font-weight: bold;
+                    color: #34495e;
+                }
+            
+                .form-control, .form-select {
+                    border-radius: 5px;
+                    border: 1px solid #ced4da;
+                    padding: 10px;
+                    font-size: 14px;
+                }
+            
+                .form-control:focus, .form-select:focus {
+                    border-color: #2c3e50;
+                    box-shadow: 0 0 5px rgba(44, 62, 80, 0.5);
+                }
+            
+                .btn {
+                    border-radius: 5px;
+                    padding: 10px 20px;
+                    font-size: 14px;
+                    font-weight: bold;
+                }
+            
+                .btn-success {
+                    background-color: #28a745;
+                    border-color: #28a745;
+                }
+            
+                .btn-success:hover {
+                    background-color: #218838;
+                    border-color: #1e7e34;
+                }
+            
+                .btn-warning {
+                    background-color: #ffc107;
+                    border-color: #ffc107;
+                }
+            
+                .btn-warning:hover {
+                    background-color: #e0a800;
+                    border-color: #d39e00;
+                }
+            
+                .btn-danger {
+                    background-color: #dc3545;
+                    border-color: #dc3545;
+                }
+            
+                .btn-danger:hover {
+                    background-color: #c82333;
+                    border-color: #bd2130;
+                }
+            
+                .table {
+                    margin-top: 20px;
+                    border-radius: 5px;
+                    overflow: hidden;
+                }
+            
+                .table thead {
+                    background-color: #2c3e50;
+                    color: white;
+                }
+            
+                .table th, .table td {
+                    padding: 12px;
+                    text-align: center;
+                }
+            
+                .table tbody tr:nth-child(odd) {
+                    background-color: #f8f9fa;
+                }
+            
+                .table tbody tr:hover {
+                    background-color: #e9ecef;
+                }
+            
+                .custom-checkbox-group .form-check {
+                    margin-bottom: 10px;
+                }
+            
+                .custom-checkbox-group .form-check-label {
+                    margin-left: 5px;
+                }
+            
+                .checklist-checkbox-group .form-check {
+                    margin-bottom: 10px;
+                }
+            
+                .checklist-checkbox-group .form-check-label {
+                    margin-left: 5px;
+                }
+            
+                #passport-img {
+                    border: 2px solid #ced4da;
+                    border-radius: 5px;
+                    cursor: pointer;
+                }
+            
+                #passport-img:hover {
+                    border-color: #2c3e50;
+                }
+            
+                #file-error {
+                    display: none;
+                    margin-top: 5px;
+                }
+            
+                .remove-form, .remove-postgraduate-form {
+                    margin-top: 5px;
+                }
+
+                @keyframes blink {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                }
+                .animate-blink {
+                    animation: blink 1s infinite;
+                }
+
+                .cursor-pointer {
+                    cursor: pointer;
+                }
+                #signature-preview {
+                    transition: all 0.3s ease;
+                }
+                #signature-preview:hover {
+                    border-color: #0d6efd;
+                }
+              
+            </style>
+        
+            <title>UNIVERSITY OF EDENBERG</title>
+        
+        
+        </head>
+<body>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show text-center message-alert" role="alert" aria-live="assertive"
+                style="background-color:
+                {% if message.tags == 'success' %}#28a745; color: white;
+                {% elif message.tags == 'error' %}#dc3545; color: white;
+                {% elif message.tags == 'warning' %}#fff3cd; color: black;
+                {% elif message.tags == 'info' %}#d1ecf1; color: black;
+                {% else %}#f8f9fa; color: black;
+                {% endif %};">
+                <div class="d-flex justify-content-center align-items-center">
+                    <span>{{ message }}</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% block header %}
+<div class="container mt-5">
+    <div class="text-center">
+        <img src="{% static 'image/Edenberg-Horizontal-Color.png' %}" alt="University Logo" class="img-fluid mb-4">
+      </div>
+    
+    {% comment %} <h2 class="text-center mb-4">UNIVERSITY OF EDENBERG</h2> {% endcomment %}
+    <div class="mt-6 text-center p-4 bg-red-50 rounded-lg border border-red-200">
+        <h2 class="text-center mb-4">Student Application Form</h2>
+
+        <!-- Blinking text -->
+        <p class="text-red-600 font-medium mb-3 animate-pulse">⚠️ Already applied?
+        
+        <!-- Animated button -->
+        <a href="{% url 'check_application' %}" 
+           class="inline-block px-6 py-2 bg-red-600 text-red font-bold rounded-lg shadow-md 
+                  hover:bg-red-700 transition-all duration-300 transform hover:scale-105
+                  animate-[pulse_1.5s_infinite] border-2 border-red-700" style='color : red;'>
+              Click to verify your Application status </a>
+        </p>
+        
+        <!-- Small help text -->
+    </div>
+    <form method="POST" action="{% url 'student_applicant_view' %}" enctype="multipart/form-data" >
+        {% csrf_token %}
+
+        <!-- Programme Details -->
+        <h3 class="mt-4">Programme Details</h3>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="programme_of_study">Programme of Study<span style="color:red;">*</span></label>
+                    <select name="programme_of_study" id="programme_of_study" class="form-select" required onchange="fetchPrograms()">
+                        <option value="" disabled selected>Select Programme</option>
+                        <option value="Certificate">Certificate</option>
+                        <option value="Diploma">Diploma</option>
+                        <option value="Advanced Diploma">Advanced Diploma</option>
+                        <option value="Bachelor Degree">Bachelor Degree</option>
+                        <option value="Postgraduate Diploma">Postgraduate Diploma</option>
+                        <option value="Master Degree">Master Degree</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="col-md-4" id="firstChoiceContainer">
+                <div class="form-group">
+                    <label for="first_choice">First Choice<span style="color:red;">*</span></label>
+                    <select name="first_choice" id="first_choice" class="form-control" required>
+                        <option value="" disabled selected>Select Program</option>
+                    </select>
+                </div>
+            </div>
+            
+            {% comment %} <div class="col-md-4" id="secondChoiceContainer">
+                <div class="form-group">
+                    <label for="second_choice">Second Choice<span style="color:red;">*</span></label>
+                    <select name="second_choice" id="second_choice" class="form-control" required>
+                        <option value="" disabled selected>Select Program</option>
+                    </select>
+                </div>
+            </div> {% endcomment %}
+
+            <div class="col-md-4" id="certificateProgramContainer" style="display: none;">
+                <div class="form-group">
+                    <label for="certificate_program">Certificate Program</label>
+                    <select id="certificate_program" name="certificate_program" class="form-control" onchange="toggleOtherProgram()">
+                        <option selected disabled value="">Choose Program...</option>
+                        <option value="Cyber Security">Cyber Security</option>
+                        <option value="Artificial Intelligence">Artificial Intelligence</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+                <div class="col-md-4"  id="otherProgramContainer" style="display: none;">
+                    <div class="form-group">
+                        <label for="other_certificate_program">If any others</label>
+                        <input type="text" id="other_certificate_program" class="form-control" placeholder="Enter program name" oninput="updateCertificateProgram()">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="intake">Intake<span style="color:red;">*</span></label>
+                    <select name="Intake" id="intake" class="form-select" required>
+                        <option value="" disabled selected>Select Intake</option>
+                        <option value="January">January</option>
+                        <option value="April">April</option>
+                        <option value="July">July</option>
+                        <option value="October">October</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="year">Year<span style="color:red;">*</span></label>
+                    <select name="year" id="year" class="form-select" required>
+                        <option value="" disabled selected>Select Year</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="mode_of_study">Mode of Study<span style="color:red;">*</span></label>
+                    <select name="mode_of_study" id="mode_of_study" class="form-select" required>
+                        <option value="" disabled selected>Select Mode of Study</option>
+                        <option value="Regular">Regular</option>
+                        <option value="Evening">Evening</option>
+                        <option value="Weekend">Weekend</option>
+                        <option value="Term">Term</option>
+                        <option value="Blended/E-Learning">Blended/E-Learning</option>
+                        <option value="ODeL">ODeL</option>
+                    </select>
+                </div>
+            </div>            
+        </div>
+
+        <!-- Personal Details -->
+        <h3 class="mt-4">Personal Details</h3>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="title">Title<span style="color:red;">*</span></label>
+                    <select name="title" id="title" class="form-select" required>
+                        <option value="" disabled selected>Select Title</option>
+                        <option value="Mr.">Mr.</option>
+                        <option value="Ms.">Ms.</option>
+                        <option value="Mrs.">Mrs.</option>
+                        <option value="Dr.">Dr.</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="first_name">First Name<span style="color:red;">*</span></label>
+                    <input type="text" name="first_name" id="first_name" class="form-control" placeholder="Enter First Name" required>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="surname">Surname<span style="color:red;">*</span></label>
+                    <input type="text" name="surname" id="surname" class="form-control" placeholder="Enter Surname" required>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="other_names">Other Names</label>
+                    <input type="text" name="other_names" id="other_names" class="form-control" placeholder="Enter Other Names">
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="gender">Gender<span style="color:red;">*</span></label>
+                    <select name="gender" id="gender" class="form-select" required>
+                        <option value="" disabled selected>Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="date_of_birth">Date of Birth<span style="color:red;">*</span></label>
+                    <input type="date" name="date_of_birth" id="date_of_birth" class="form-control" required>
+                </div>
+            </div>
+            {% comment %} <div class="col-md-3">
+                <div class="form-group">
+                    <label for="age">Age<span style="color:red;">*</span></label>
+                    <input type="number" name="age" id="age" class="form-control" placeholder="Enter Age" required>
+                </div>
+            </div> {% endcomment %}
+            {% comment %} <div class="col-md-3">
+                <div class="form-group">
+                    <label for="marital_status">Marital Status<span style="color:red;">*</span></label>
+                    <select name="marital_status" id="marital_status" class="form-select" required>
+                        <option value="" disabled selected>Select Marital Status</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+            </div> {% endcomment %}
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="nrc_number">NRC Number<span style="color:red;">*</span></label>
+                    <input type="text" name="nrc_number" id="nrc_number" class="form-control" placeholder="Enter NRC Number" required>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="postal_address">Postal Address<span style="color:red;">*</span></label>
+                    <input type="text" name="postal_address" id="postal_address" class="form-control" required>
+                </div>
+            </div>
+        
+            <!-- Has Disability -->
+            {% comment %} <div class="col-md-3">
+                <div class="form-group">
+                    <label for="has_disability">Do you have a disability?<span style="color:red;">*</span></label>
+                    <select name="has_disability" id="has_disability" class="form-control" required>
+                        <option value="" selected disabled>Choose...</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="disability_description">Disability Description</label>
+                    <textarea name="disability_description" id="disability_description" class="form-control" rows="3"></textarea>
+                </div>
+            </div> {% endcomment %}
+        </div>
+        <div class="row mt-3">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="passport_size_photo" style="cursor: pointer;">
+                <img src="{% static 'image/student-profile-icon.jpg' %}" 
+                     alt="Passport Size Photo" 
+                     id="passport-img" 
+                     class="img-fluid" 
+                     style="width: 10rem; height: 12rem; object-fit: cover;">
+                Click here to upload
+            </label>
+            <input type="file" name="passport_size_photo" id="passport_size_photo" class="form-control" accept="image/*" onchange="validateImage()" style="display: none;">
+            <small id="file-error" style="color: red; display: none;">Only image files under 1MB are allowed.</small>
+        </div>
+    </div>
+</div>
+
+<script>
+function validateImage() {
+    const input = document.getElementById("passport_size_photo");
+    const error = document.getElementById("file-error");
+    const img = document.getElementById("passport-img");
+
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const fileType = file.type;
+        const fileSizeMB = file.size / (1024 * 1024); // Convert to MB
+
+        if (!fileType.startsWith('image/') || fileSizeMB > 1) {
+            error.style.display = "block";
+            input.value = ""; // Clear the input
+            img.src = "{% static 'image/student-profile-icon.jpg' %}"; // Reset image
+        } else {
+            error.style.display = "none";
+
+            // Preview the image
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+}
+</script>
+
+
+        <!-- Passport Details -->
+        <h3 class="mt-4">Passport Details (For Non-Zambians)</h3>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="passport_number">Passport Number</label>
+                    <input type="text" name="passport_number" id="passport_number" class="form-control" placeholder="Enter Passport Number">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="passport_issue_date">Passport Issue Date</label>
+                    <input type="date" name="passport_issue_date" id="passport_issue_date" class="form-control">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="passport_expiry_date">Passport Expiry Date</label>
+                    <input type="date" name="passport_expiry_date" id="passport_expiry_date" class="form-control">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="nationality">Nationality</label>
+                    <input type="text" name="nationality" id="nationality" class="form-control" placeholder="Enter Nationality">
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Details -->
+        <h3 class="mt-4">Contact Details</h3>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="mobile_number">Mobile Number<span style="color:red;">*</span></label>
+                    <input type="text" name="mobile_number" id="mobile_number" class="form-control" placeholder="Enter Mobile Number" required>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="alternate_mobile_number">Alternate Mobile Number</label>
+                    <input type="text" name="alternate_mobile_number" id="alternate_mobile_number" class="form-control" placeholder="Enter Alternate Mobile Number">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="email_address">Email Address<span style="color:red;">*</span></label>
+                    <input type="email" name="email_address" id="email_address" class="form-control" placeholder="Enter Email Address" required>
+                </div>
+            </div>
+        </div>
+
+        {% comment %} <h3 class="mt-4">ADDITIONAL CONTACT</h3> {% endcomment %}
+
+        {% comment %} <div class="row">
+            <!-- Next of Kin Name -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="next_of_kin_name">Next of Kin Name</label>
+                    <input type="text" name="next_of_kin_name" id="next_of_kin_name" class="form-control" >
+                </div>
+            </div>
+        
+            <!-- Next of Kin Phone -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="next_of_kin_phone">Next of Kin Phone</label>
+                    <input type="tel" name="next_of_kin_phone" id="next_of_kin_phone" class="form-control" >
+                </div>
+            </div>
+        
+        
+        
+            <!-- Next of Kin Email -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="next_of_kin_email">Next of Kin Email</label>
+                    <input type="email" name="next_of_kin_email" id="next_of_kin_email" class="form-control" >
+                </div>
+            </div>
+        </div> {% endcomment %}
+
+            <h3>List all High/Secondary/College/University Attended:</h3>
+            {{ formset.management_form }}  <!-- Required for formsets -->
+            <table id="educational-details-table" class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Previous Educational Institute Attended</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Qualification Obtained</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="formset-body">
+                    {% for form in formset %}
+                    <tr class="form-row">
+                        <td>{{ form.institute_university }}</td>
+                        <td>{{ form.from_year }}</td>
+                        <td>{{ form.to_year }}</td>
+                        <td>{{ form.qualification_obtained }}</td>
+                        <td>
+                            <button type="button" class="remove-form btn btn-sm btn-danger">Remove</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        
+            {% comment %} <button type="button" id="add-form" class="btn btn-success">Add More</button> {% endcomment %}
+            <button type="button" id="add-form" class="btn btn-sm btn-warning">+ Add More Education</button>
+
+
+            <div class="row">
+                <!-- 'O' Level Examination Passed -->
+                <div class="col-md-4">
+                    <div class="form-group custom-checkbox-group">
+                        <label>'O' Level or Equivalent Examination Passed and Grades attained in each subject<span style="color:red;">*</span></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="o_level_examination_body" value="Examination Council of Zambia" id="o_level_1">
+                            <label class="form-check-label" for="o_level_1">Examination Council of Zambia</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="o_level_examination_body" value="Cambridge and London General Certificate of Education" id="o_level_2">
+                            <label class="form-check-label" for="o_level_2">Cambridge and London General Certificate of Education</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="o_level_examination_body" value="International General Certificate of Secondary Education(IGCSE)" id="o_level_3">
+                            <label class="form-check-label" for="o_level_3">International General Certificate of Secondary Education (IGCSE)</label>
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- 'A' Level Subjects -->
+                <div class="col-md-4">
+                    <div class="form-group custom-checkbox-group">
+                        <label>'A' Level Subjects (if applicable)<span style="color:red;">*</span></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="a_level_examination_body" value="Cambridge International Examination(CIE)" id="a_level_1">
+                            <label class="form-check-label" for="a_level_1">Cambridge International Examination (CIE)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="a_level_examination_body" value="International General Certificate of Secondary Education(IGCSE)" id="a_level_2">
+                            <label class="form-check-label" for="a_level_2">International General Certificate of Secondary Education (IGCSE)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="a_level_examination_body" value="Others" id="a_level_3">
+                            <label class="form-check-label" for="a_level_3">Others</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="form-group checklist-checkbox-group">
+                    <label for="applicant_form">Applicant Form Checklist for Applicants<span style="color:red;">*</span></label>
+                    
+                    <!-- Checklist items -->
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="applicant_form" value="Grade 12 Certificate/Equivalent Statement of Results" id="toggleCheckbox0">
+                        <label class="form-check-label" for="applicant_1">1. Grade 12 Certificate/Equivalent Statement of Results</label>
+                        
+                        <input type="file" id="fileInput0" name="certificate12" style="display: none;" onchange="validateFileSize(this, 'fileError0')">
+                        <small id="fileError0" style="color: red; display: none;">File must be less than 1MB.</small>
+
+                        <script>
+                            document.getElementById("toggleCheckbox0").addEventListener("change", function () {
+                                let fileInput = document.getElementById("fileInput0");
+                                let errorMsg = document.getElementById("fileError0");
+                                
+                                if (this.checked) {
+                                    fileInput.style.display = "block";
+                                    fileInput.setAttribute("required", "required");
+                                } else {
+                                    fileInput.style.display = "none";
+                                    fileInput.removeAttribute("required");
+                                    fileInput.value = "";
+                                    errorMsg.style.display = "none"; // hide error if unchecked
+                                }
+                            });
+
+                            function validateFileSize(input, errorId) {
+                                const maxSizeMB = 1;
+                                const errorMsg = document.getElementById(errorId);
+
+                                if (input.files && input.files[0]) {
+                                    const fileSizeMB = input.files[0].size / (1024 * 1024);
+                                    if (fileSizeMB > maxSizeMB) {
+                                        errorMsg.style.display = "block";
+                                        input.value = ""; // clear file
+                                    } else {
+                                        errorMsg.style.display = "none";
+                                    }
+                                }
+                            }
+                        </script>
+                    </div>
+
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="applicant_form" value="National Registration Card / Passport / Driver's License" id="toggleCheckbox1"> 
+                        <label class="form-check-label" for="applicant_2">2. National Registration Card / Passport / Driver's License</label>
+                        
+                        <input type="file" id="fileInput1" name="card_or_license" style="display: none;" onchange="validateFileSize(this, 'fileError1')">
+                        <small id="fileError1" style="color: red; display: none;">File must be less than 1MB.</small>
+
+                        <script>
+                            document.getElementById("toggleCheckbox1").addEventListener("change", function () {
+                                let fileInput = document.getElementById("fileInput1");
+                                let errorMsg = document.getElementById("fileError1");
+
+                                if (this.checked) {
+                                    fileInput.style.display = "block";
+                                    fileInput.setAttribute("required", "required");
+                                } else {
+                                    fileInput.style.display = "none";
+                                    fileInput.removeAttribute("required");
+                                    fileInput.value = "";
+                                    errorMsg.style.display = "none"; // Hide error if unchecked
+                                }
+                            });
+
+                            function validateFileSize(input, errorId) {
+                                const maxSizeMB = 1;
+                                const errorMsg = document.getElementById(errorId);
+
+                                if (input.files && input.files[0]) {
+                                    const fileSizeMB = input.files[0].size / (1024 * 1024);
+                                    if (fileSizeMB > maxSizeMB) {
+                                        errorMsg.style.display = "block";
+                                        input.value = ""; // Clear file
+                                    } else {
+                                        errorMsg.style.display = "none";
+                                    }
+                                }
+                            }
+                        </script>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="applicant_form" value="Attach two (2) Passport Sized Photo"  id="toggleCheckbox2">
+                        <label class="form-check-label" for="applicant_3">3. Attach two (2) Passport Sized Photo</label>
+                       
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="applicant_form" value="Application form completely filled out accurately"  id="toggleCheckbox3">
+                        <label class="form-check-label" for="applicant_4">4. Application form completely filled out accurately</label>
+                        
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="applicant_form" value="Payment for application form attached (Deposit Slip)" id="toggleCheckbox4">
+                        <label class="form-check-label" for="applicant_5">5. Payment for application form attached (Deposit Slip)</label>
+                        
+                        <input type="file" id="fileInput4" name="deposit_slip" style="display: none;" onchange="validateFileSize(this, 'fileError4')">
+                        <small id="fileError4" style="color: red; display: none;">File must be less than 1MB.</small>
+
+                        <script>
+                            document.getElementById("toggleCheckbox4").addEventListener("change", function () {
+                                let fileInput = document.getElementById("fileInput4");
+                                let errorMsg = document.getElementById("fileError4");
+
+                                if (this.checked) {
+                                    fileInput.style.display = "block";
+                                    fileInput.setAttribute("required", "required");
+                                } else {
+                                    fileInput.style.display = "none";
+                                    fileInput.removeAttribute("required");
+                                    fileInput.value = "";
+                                    errorMsg.style.display = "none"; // Hide error if unchecked
+                                }
+                            });
+
+                            function validateFileSize(input, errorId) {
+                                const maxSizeMB = 1;
+                                const errorMsg = document.getElementById(errorId);
+
+                                if (input.files && input.files[0]) {
+                                    const fileSizeMB = input.files[0].size / (1024 * 1024);
+                                    if (fileSizeMB > maxSizeMB) {
+                                        errorMsg.style.display = "block";
+                                        input.value = ""; // Clear the file
+                                    } else {
+                                        errorMsg.style.display = "none";
+                                    }
+                                }
+                            }
+                        </script>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="applicant_form" value="Undergraduate degree certificate" id="toggleCheckbox5"> 
+                        <label class="form-check-label" for="applicant_2">6. Upload any undergraduate degree certificate</label>
+                        
+                        <input type="file" id="fileInput5" name="ug_certificate" style="display: none;" onchange="validateFileSize(this, 'fileError5')">
+                        <small id="fileError5" style="color: red; display: none;">File must be less than 1MB.</small>
+
+                        <script>
+                            document.getElementById("toggleCheckbox5").addEventListener("change", function () {
+                                let fileInput = document.getElementById("fileInput5");
+                                let errorMsg = document.getElementById("fileError5");
+
+                                if (this.checked) {
+                                    fileInput.style.display = "block";
+                                    fileInput.setAttribute("required", "required");
+                                } else {
+                                    fileInput.style.display = "none";
+                                    fileInput.removeAttribute("required");
+                                    fileInput.value = "";
+                                    errorMsg.style.display = "none"; // Hide error if unchecked
+                                }
+                            });
+
+                            function validateFileSize(input, errorId) {
+                                const maxSizeMB = 1;
+                                const errorMsg = document.getElementById(errorId);
+
+                                if (input.files && input.files[0]) {
+                                    const fileSizeMB = input.files[0].size / (1024 * 1024);
+                                    if (fileSizeMB > maxSizeMB) {
+                                        errorMsg.style.display = "block";
+                                        input.value = ""; // Clear the file
+                                    } else {
+                                        errorMsg.style.display = "none";
+                                    }
+                                }
+                            }
+                        </script>
+
+                    
+                </div>
+
+            </div>
+
+            <h3>Post-Graduate Educational Details (Optional)</h3>
+            {{ post_graduate_formset.management_form }}  <!-- Required for formsets -->
+            <table id="post-graduate-educational-details-table" class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Institute/University</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Qualification Obtained</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="post-graduate-formset-body">
+                    {% for form in post_graduate_formset %}
+                    <tr class="post-graduate-form-row">
+                        <td>{{ form.institute_university }}</td>
+                        <td>{{ form.from_year }}</td>
+                        <td>{{ form.to_year }}</td>
+                        <td>{{ form.qualification_obtained }}</td>
+                        <td>
+                            <button type="button" class="remove-postgraduate-form btn btn-danger">Remove</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Add More Button -->
+            <button type="button" id="add-postgraduate-form" class="btn btn-sm btn-warning">+ Add More Post-Graduate Education</button>
+
+
+        <h3>Clarification</h3>
+        <div class="row">
+            {% comment %} <div class="col-md-4">
+                <div class="form-group">
+                    <label for="admission_sourse">Admission Mode <span style="color:red;">*</span></label>
+                    <select name="admission_sourse" id="admission_sourse" class="form-select" required>
+                        <option value="" disabled selected>Select Admission Mode</option>
+                        <option value="Direct">Direct</option>
+                        <option value="Online">Online</option>
+                        <option value="Internal">Internal</option>
+                        <option value="External">External</option>
+                    </select>
+                </div>
+            </div> {% endcomment %}
+            
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="admission_reference">Admission Reference Name</label>
+                    <select name="admission_reference" id="admission_reference" class="form-select">
+                        <option value="" disabled selected>Select Admission Reference</option>
+                        {% for reference in admission_references %}
+                            <option value="{{ reference.user_id }}">{{ reference.admission_reference }}</option>
+                            
+                        {% endfor %}
+                        <option volue="Others">Others</option>
+                    </select>
+                </div>
+            {% comment %} </div> {% endcomment %}
+            
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="signature">Upload Signature<span style="color:red;">*</span></label>
+                    <input type="file" name="signature" id="signature" class="form-control" required>
+                </div>
+            </div>
+        </div>
+            {% comment %} <div class="col-md-6">
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" name="date" id="date" class="form-control" required>
+                </div>
+            </div> {% endcomment %}
+        </div>
+        <div class="row mt-4">
+            <div class="col text-center">
+                <button type="submit" id="submit-button" class="btn btn-success">Submit</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let formsetBody = document.getElementById("formset-body");
+        let addFormBtn = document.getElementById("add-form");
+        let totalForms = document.querySelector("#id_education-TOTAL_FORMS");  // Django's hidden form counter
+        let formNum = parseInt(totalForms.value);
+    
+        // Function to add new form row
+        addFormBtn.addEventListener("click", function () {
+            let newRow = document.querySelector(".form-row").cloneNode(true);  // Clone a row
+            let inputs = newRow.querySelectorAll("input, select");  // Get all inputs in the row
+    
+            inputs.forEach(input => {
+                let name = input.name.replace(/\d+/, formNum);  // Update index (e.g., education-1 -> education-2)
+                let id = input.id.replace(/\d+/, formNum);  // Update ID
+                input.name = name;
+                input.id = id;
+                input.value = "";  // Clear previous values
+            });
+    
+            formsetBody.appendChild(newRow);
+            formNum++;
+            totalForms.value = formNum;  // Update Django's form counter
+        });
+    
+        // Function to remove a form row
+        formsetBody.addEventListener("click", function (event) {
+            if (event.target.classList.contains("remove-form")) {
+                let row = event.target.closest(".form-row");
+                row.remove();
+                formNum--;
+                totalForms.value = formNum;  // Update Django's form counter
+            }
+        });
+    });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let totalForms = document.querySelector("#id_post_graduate_education-TOTAL_FORMS"); // Formset total forms count
+            let formsetBody = document.querySelector("#post-graduate-formset-body"); // Table body
+            let addButton = document.querySelector("#add-postgraduate-form"); // Add button
+            let emptyRow = document.querySelector(".post-graduate-form-row").cloneNode(true); // Clone empty row
+    
+            function updateFormIndexes() {
+                let rows = formsetBody.querySelectorAll(".post-graduate-form-row");
+                rows.forEach((row, index) => {
+                    row.querySelectorAll("input, select").forEach(input => {
+                        let name = input.getAttribute("name");
+                        if (name) {
+                            let newName = name.replace(/\d+/, index);
+                            input.setAttribute("name", newName);
+                            input.setAttribute("id", "id_" + newName);
+                        }
+                    });
+                });
+                totalForms.value = rows.length;
+            }
+    
+            // Add new row on button click
+            addButton.addEventListener("click", function() {
+                let newRow = emptyRow.cloneNode(true);
+                newRow.querySelectorAll("input").forEach(input => input.value = ""); // Clear input values
+                formsetBody.appendChild(newRow);
+                updateFormIndexes();
+            });
+    
+            // Remove row on button click
+            formsetBody.addEventListener("click", function(event) {
+                if (event.target.classList.contains("remove-postgraduate-form")) {
+                    event.target.closest("tr").remove();
+                    updateFormIndexes();
+                }
+            });
+    
+            updateFormIndexes(); // Initial update to correct indexes
+        });
+    </script>
+
+    <script>
+        function toggleProgrammeFields() {
+            var programme = document.getElementById("programme_of_study").value;
+            var certificateContainer = document.getElementById("certificateProgramContainer");
+            var firstChoiceContainer = document.getElementById("firstChoiceContainer");
+          //  var secondChoiceContainer = document.getElementById("secondChoiceContainer");
+    
+            if (programme === "Certificate") {
+                certificateContainer.style.display = "block";
+                firstChoiceContainer.style.display = "none";
+                //secondChoiceContainer.style.display = "none";
+            } else {
+                certificateContainer.style.display = "none";
+                firstChoiceContainer.style.display = "block";
+                //secondChoiceContainer.style.display = "block";
+            }
+        }
+    
+        function toggleOtherProgram() {
+            var certificateProgram = document.getElementById("certificate_program");
+            var otherContainer = document.getElementById("otherProgramContainer");
+            var otherInput = document.getElementById("other_certificate_program");
+    
+            if (certificateProgram.value === "Others") {
+                otherContainer.style.display = "block";
+                otherInput.required = true;
+            } else {
+                otherContainer.style.display = "none";
+                otherInput.required = false;
+                otherInput.value = "";  
+            }
+        }
+    
+        function updateCertificateProgram() {
+            var certificateProgram = document.getElementById("certificate_program");
+            var otherInput = document.getElementById("other_certificate_program");
+    
+            if (certificateProgram.value === "Others") {
+                certificateProgram.setAttribute("name", "certificate_program_other");
+                otherInput.setAttribute("name", "certificate_program");
+            } else {
+                certificateProgram.setAttribute("name", "certificate_program");
+                otherInput.removeAttribute("name");
+            }
+        }
+    </script>
+    <script>
+        function previewImage() {
+            var input = document.getElementById("passport_size_photo");
+            var img = document.getElementById("passport-img");
+    
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            setTimeout(function () {
+              const alerts = document.querySelectorAll('.message-alert');
+              alerts.forEach(alert => {
+                alert.classList.remove('show'); // Bootstrap hide animation
+                setTimeout(() => alert.remove(), 500); // Allow fade-out before removal
+              });
+            }, 5000); // 15 seconds
+          });
+    </script>
+
+    
+    <script>
+        function fetchPrograms() {
+            const selectedProgramType = document.getElementById('programme_of_study').value;
+    
+            fetch(`/student_management/get_programs/?type=${selectedProgramType}`)
+                .then(response => response.json())
+                .then(data => {
+                    const firstChoice = document.getElementById('first_choice');
+                    //const secondChoice = document.getElementById('second_choice');
+    
+                    // Clear existing options
+                    firstChoice.innerHTML = '<option value="" disabled selected>Select Department</option>';
+                    //secondChoice.innerHTML = '<option value="" disabled selected>Select Program</option>';
+    
+                    // Add new options
+                    data.forEach(program => {
+                        const option1 = new Option(program.program_name, program.program_code);
+                        //const option2 = new Option(program.program_name, program.program_code);
+                        firstChoice.add(option1);
+                        //secondChoice.add(option2);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching programs:', error);
+                });
+        }
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $('#admission_sourse').on('change', function () {
+        let selectedMode = $(this).val();
+        if (selectedMode === 'Internal' || selectedMode === 'External') {
+            $.ajax({
+                url: "/student_management/get-admission-references/", 
+                data: {
+                    'mode': selectedMode
+                },
+                success: function (data) {
+                    let $reference = $('#admission_reference');
+                    $reference.empty();
+                    $reference.append('<option value="">Select Admission Reference</option>');
+                    data.references.forEach(function (ref) {
+                        $reference.append(`<option value="${ref}">${ref}</option>`);
+                    });
+                }
+            });
+        } else {
+            $('#admission_reference').html('<option value="">Select Admission Reference</option>');
+        }
+    });
+</script>
+    
+        
+
+</body>
+</html>
+

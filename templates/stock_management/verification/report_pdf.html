@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+  @media print { .no-print{display:none;} .print-area{box-shadow:none!important;border:none!important;} }
+  .print-area{background:#fff;padding:1.5rem;border:1px solid #ddd;border-radius:8px;}
+  .stmt-head{text-align:center;border-bottom:2px solid #000;padding-bottom:.5rem;margin-bottom:1rem;}
+  .stmt-table th,.stmt-table td{font-size:.8rem;border:1px solid #333;padding:4px 6px;}
+  .sign{margin-top:2.5rem;display:flex;justify-content:space-between;}
+  .sign div{text-align:center;border-top:1px solid #333;padding-top:.4rem;min-width:180px;}
+</style>
+<div class="container py-4" style="max-width:1400px;">
+  <div class="no-print d-flex justify-content-between mb-3">
+    <a href="{% url 'verification_report_approvals' %}" class="btn btn-sm btn-outline-secondary">Back</a>
+    <button onclick="window.print()" class="btn btn-sm btn-primary"><i class="fas fa-print me-1"></i>Print</button>
+  </div>
+
+  <div class="print-area">
+    <div class="stmt-head">
+      <h4 class="mb-0 fw-bold">Ramco Institute of Technology</h4>
+      <div>Stock Register — Physical Verification Statement</div>
+    </div>
+    <div class="row mb-3">
+      <div class="col-6"><strong>Department:</strong> {{ lab.department.Department }}</div>
+      <div class="col-6 text-end"><strong>Lab:</strong> {{ lab.lab_code }} — {{ lab.name }}</div>
+      <div class="col-6"><strong>Financial Year:</strong> {{ cycle.financial_year }}</div>
+      <div class="col-6 text-end"><strong>Verification Date:</strong> {{ today }}</div>
+    </div>
+
+    <table class="table stmt-table">
+      <thead>
+        <tr>
+          <th>SL</th><th>Asset Tag</th><th>Item Description</th><th>Qty</th><th>Within Warranty</th>
+          <th>Condition</th><th>Qty Idle</th><th>Defect / Repair</th><th>Condemnation</th><th>Missing</th><th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in lines %}
+        <tr>
+          <td>{{ line.sl_no }}</td>
+          <td>{{ line.stock_item.asset_tag }}</td>
+          <td>{{ line.stock_item.entry.item_description }}</td>
+          <td>{{ line.qty_as_per_register }}</td>
+          <td>{% if line.within_warranty %}Yes{% else %}No{% endif %}</td>
+          <td>{{ line.get_physical_condition_display }}</td>
+          <td>{{ line.qty_idle }}</td>
+          <td>{{ line.defect_details|default:"-" }}</td>
+          <td>{{ line.condemnation_reason|default:"-" }}</td>
+          <td>{{ line.missing_details|default:"-" }}</td>
+          <td>{{ line.faculty_remarks|default:"-" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="11" class="text-center">No items.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if report.overall_remarks %}<p><strong>Overall Remarks:</strong> {{ report.overall_remarks }}</p>{% endif %}
+
+    <div class="sign">
+      <div>Verified By<br><small>{{ report.submitted_by.name|default:"Faculty" }}</small></div>
+      <div>Checked By (ISO)<br><small>{{ report.iso_approved_by.name|default:"ISO Coordinator" }}</small></div>
+      <div>Approved By<br><small>{{ report.principal_approved_by.name|default:"Principal" }}</small></div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

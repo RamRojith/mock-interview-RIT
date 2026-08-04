@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+    <h2 class="text-center mb-4">Public Examination Result</h2>
+    <a href="{% url "result_list" %}" class="btn btn-outline-primary" id="emptyResultPdf">
+            <i class="fas fa-file-pdf me-2"></i>Result Pdf 
+        </a>
+
+    <!-- Filter Form -->
+    <form method="get" class="card p-4 shadow-sm mb-5">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label for="programme_of_study" class="form-label">Programme of Study</label>
+                <select name="programme_of_study" id="programme_of_study" class="form-select">
+                    <option value="">-- Select --</option>
+                    {% for value in programme_of_study_list %}
+                        <option value="{{ value }}" {% if request.GET.programme_of_study == value %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="intake" class="form-label">Intake</label>
+                <select name="intake" id="intake" class="form-select">
+                    <option value="">-- Select --</option>
+                    {% for value in intake_list %}
+                        <option value="{{ value }}" {% if request.GET.intake == value %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="batch" class="form-label">Batch</label>
+                <select name="batch" id="batch" class="form-select">
+                    <option value="">-- Select --</option>
+                    {% for value in batch_list %}
+                        <option value="{{ value }}" {% if request.GET.batch == value %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="year" class="form-label">Year</label>
+                <select name="year" id="year" class="form-select">
+                    <option value="">-- Select --</option>
+                    {% for value in year_list %}
+                        <option value="{{ value }}" {% if request.GET.year == value|stringformat:"s" %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="semester" class="form-label">Semester</label>
+                <select name="semester" id="semester" class="form-select">
+                    <option value="">-- Select --</option>
+                    {% for value in semester_list %}
+                        <option value="{{ value }}" {% if request.GET.semester == value %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Results Table -->
+    {% if results %}
+        <!-- Publish Button -->
+        {% if results %}
+    <!-- Button aligned to top-right corner -->
+    <div class="d-flex justify-content-end mb-3">
+        <form method="post" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="programme_of_study" value="{{ request.GET.programme_of_study }}">
+            <input type="hidden" name="intake" value="{{ request.GET.intake }}">
+            <input type="hidden" name="batch" value="{{ request.GET.batch }}">
+            <input type="hidden" name="year" value="{{ request.GET.year }}">
+            <input type="hidden" name="semester" value="{{ request.GET.semester }}">
+            <button type="submit" name="publish" class="btn btn-success">Publish Result</button>
+        </form>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+           
+        </table>
+    </div>
+{% endif %}
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Register No</th>
+                        <th>Name</th>
+                        <th>Programme</th>
+                        <th>Department</th>
+                        <th>Program</th>
+                        <th>Course Code</th>
+                        <th>Total</th>
+                        <th>Grade</th>
+                        <th>Grade Point</th>
+                        <th>Class</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in results %}
+                        <tr>
+                            <td>{{ row.student_reg_no }}</td>
+                            <td>{{ row.student_name }}</td>
+                            <td>{{ row.programme_of_study }}</td>
+                            <td>{{ row.department }}</td>
+                            <td>{{ row.program }}</td>
+                            <td>{{ row.course_code }}</td>
+                            <td>{{ row.total }}</td>
+                            <td>{{ row.grade }}</td>
+                            <td>{{ row.grade_point }}</td>
+                            <td>{{ row.class_category }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% elif request.GET %}
+        <div class="alert alert-warning mt-4" role="alert">
+            No results found for the selected filters.
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

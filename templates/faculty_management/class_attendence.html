@@ -1,0 +1,1264 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load cm_tags %}
+
+{% block title %}Class Advisor Attendance - Ramco Institute of Technology{% endblock %}
+
+{% block content %}
+<style>
+.class-advisor-attendance {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.class-advisor-attendance .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.class-advisor-attendance .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.class-advisor-attendance .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.class-advisor-attendance .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.class-advisor-attendance .date-picker-container {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.class-advisor-attendance .date-picker-container form {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.class-advisor-attendance .date-picker-container label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.class-advisor-attendance .date-picker-container input[type="date"] {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1rem;
+  color: #374151;
+  background: white;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.class-advisor-attendance .date-picker-container input[type="date"]:focus {
+  outline: none;
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+}
+
+.class-advisor-attendance .date-picker-container button {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.class-advisor-attendance .date-picker-container button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.class-advisor-attendance .date-picker-container .current-date {
+  font-weight: 600;
+  color: #1a4b8c;
+  background: #f1f5f9;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.class-advisor-attendance .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.class-advisor-attendance .stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: transform 0.3s ease;
+  border-left: 4px solid;
+}
+
+.class-advisor-attendance .stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.class-advisor-attendance .stat-card.total-students { border-left-color: #1a4b8c; }
+.class-advisor-attendance .stat-card.present-count { border-left-color: #10b981; }
+.class-advisor-attendance .stat-card.absent-count { border-left-color: #ef4444; }
+.class-advisor-attendance .stat-card.onduty-count { border-left-color: #8b5cf6; }
+
+.class-advisor-attendance .stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.class-advisor-attendance .total-students .stat-icon {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+}
+
+.class-advisor-attendance .present-count .stat-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.class-advisor-attendance .absent-count .stat-icon {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.class-advisor-attendance .onduty-count .stat-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.class-advisor-attendance .stat-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1a4b8c;
+  line-height: 1;
+  display: block;
+}
+
+.class-advisor-attendance .stat-label {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.class-advisor-attendance .attendance-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.class-advisor-attendance .attendance-card .card-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #374151;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.class-advisor-attendance .attendance-card .card-header h5 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.class-advisor-attendance .attendance-card .card-header i {
+  margin-right: 0.75rem;
+  color: #1a4b8c;
+}
+
+.class-advisor-attendance .students-count-badge {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.class-advisor-attendance .bulk-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.class-advisor-attendance .btn-bulk {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.class-advisor-attendance .btn-bulk.present {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.class-advisor-attendance .btn-bulk.absent {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.class-advisor-attendance .btn-bulk.onduty {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+}
+
+.class-advisor-attendance .btn-bulk:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.class-advisor-attendance .card-body {
+  padding: 1.5rem;
+}
+
+.class-advisor-attendance .table-container {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.class-advisor-attendance .attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+}
+
+.class-advisor-attendance .attendance-table th {
+  background: #f8fafc;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+}
+
+.class-advisor-attendance .attendance-table td {
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.class-advisor-attendance .student-col {
+  width: 30%;
+  min-width: 250px;
+}
+
+.class-advisor-attendance .status-col {
+  width: 20%;
+  min-width: 150px;
+}
+
+.class-advisor-attendance .student-row:hover {
+  background-color: #f8fafc;
+}
+
+.class-advisor-attendance .student-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.class-advisor-attendance .student-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.class-advisor-attendance .student-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.class-advisor-attendance .student-id {
+  font-weight: 700;
+  color: #1a4b8c;
+  font-size: 1rem;
+}
+
+.class-advisor-attendance .student-name {
+  color: #374151;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.class-advisor-attendance .student-section {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.class-advisor-attendance .form-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #374151;
+  background-color: white;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.class-advisor-attendance .form-select:focus {
+  outline: none;
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+}
+
+.class-advisor-attendance .badge {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: inline-block;
+}
+
+.class-advisor-attendance .bg-success { background-color: #10b981 !important; color: white !important; }
+.class-advisor-attendance .bg-danger { background-color: #ef4444 !important; color: white !important; }
+.class-advisor-attendance .bg-warning { background-color: #f59e0b !important; color: white !important; }
+.class-advisor-attendance .bg-secondary { background-color: #6b7280 !important; color: white !important; }
+
+.class-advisor-attendance .form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.class-advisor-attendance .attendance-summary {
+  display: flex;
+  gap: 2rem;
+}
+
+.class-advisor-attendance .summary-item {
+  text-align: center;
+}
+
+.class-advisor-attendance .summary-label {
+  display: block;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.class-advisor-attendance .summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a4b8c;
+}
+
+.class-advisor-attendance .text-success { color: #10b981 !important; }
+.class-advisor-attendance .text-warning { color: #f59e0b !important; }
+.class-advisor-attendance .text-danger { color: #ef4444 !important; }
+
+.class-advisor-attendance .action-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.class-advisor-attendance .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.class-advisor-attendance .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+}
+
+.class-advisor-attendance .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.class-advisor-attendance .btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.class-advisor-attendance .btn-secondary:hover {
+  background: #4b5563;
+  transform: translateY(-2px);
+}
+
+.class-advisor-attendance .btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.class-advisor-attendance .btn-danger:hover {
+  transform: translateY(-2px);
+}
+
+.class-advisor-attendance .btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.class-advisor-attendance .btn-success:hover {
+  transform: translateY(-2px);
+}
+
+.class-advisor-attendance .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-top: 2rem;
+}
+
+.class-advisor-attendance .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.class-advisor-attendance .btn-outline-primary {
+  border: 1px solid #1a4b8c;
+  color: #1a4b8c;
+  border-radius: 12px;
+  padding: 0.875rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.class-advisor-attendance .btn-outline-primary:hover {
+  background: #1a4b8c;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.modal-custom {
+  border-radius: 20px;
+  overflow: hidden;
+  border: none;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.modal-header.modal-gradient {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  padding: 22px 26px;
+  border: none;
+}
+
+.modal-header .header-content {
+  margin-bottom: 0;
+  width: 100%;
+  justify-content: flex-start;
+  gap: 14px;
+}
+
+.modal-header .header-text {
+  flex: 1;
+}
+
+.modal-body-custom {
+  padding: 0;
+  background: #f8fafc;
+}
+
+#attendanceMsgArea {
+  padding: 14px 20px;
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.form-container {
+  padding: 22px;
+  background: #fff;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label-custom {
+  font-size: 14px;
+  font-weight: 700;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.select-custom,
+.input-custom {
+  width: 100%;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  background: #fff;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.select-custom:focus,
+.input-custom:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
+.note-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.alert {
+  padding: 14px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.alert-success {
+  background: #d1fae5;
+  color: #065f46;
+  border-left: 4px solid #10b981;
+}
+
+.alert-info {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-left: 4px solid #3b82f6;
+}
+
+.alert-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border-left: 4px solid #f59e0b;
+}
+
+.alert-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-left: 4px solid #ef4444;
+}
+
+@media (max-width: 768px) {
+  .class-advisor-attendance {
+    padding: 1rem;
+  }
+
+  .class-advisor-attendance .page-header {
+    padding: 0.75rem;
+  }
+
+  .class-advisor-attendance .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .class-advisor-attendance .header-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .class-advisor-attendance .date-picker-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .class-advisor-attendance .date-picker-container form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .class-advisor-attendance .date-picker-container input[type="date"] {
+    width: 100%;
+  }
+
+  .class-advisor-attendance .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .class-advisor-attendance .card-body {
+    padding: 1rem;
+  }
+
+  .class-advisor-attendance .form-actions {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .class-advisor-attendance .attendance-summary {
+    justify-content: center;
+  }
+
+  .class-advisor-attendance .student-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .class-advisor-attendance .action-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .class-advisor-attendance .btn {
+    justify-content: center;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<div class="class-advisor-attendance">
+  <div class="page-header">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div>
+        <h1><i class="fas fa-calendar-check me-2"></i>Class Advisor Attendance</h1>
+        <p class="header-subtitle">Mark and manage attendance for your assigned section</p>
+      </div>
+
+      <div class="d-flex gap-2">
+        {% if students %}
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#downloadPdfModal">
+          <i class="fas fa-file-pdf me-1"></i> Attendance Report
+        </button>
+        {% else %}
+        <button type="button" class="btn btn-secondary" disabled title="Available only for assigned Class Advisors">
+          <i class="fas fa-file-pdf me-1"></i> Attendance Report
+        </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="page-container">
+    <div class="date-picker-container">
+      <form method="get" id="date-form">
+        <label for="attendance_date">Select Date (MM/DD/YYYY):</label>
+        <input type="date" id="attendance_date" name="date" value="{{ selected_date|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}" required>
+        <button type="submit">
+          <i class="fas fa-sync-alt me-2"></i>Load Attendance
+        </button>
+      </form>
+
+      <div class="current-date">
+        <i class="fas fa-calendar-day me-2"></i>
+        Selected: {{ selected_date|date:"F d, Y" }}
+      </div>
+    </div>
+
+    {% if students %}
+    <div class="stats-grid">
+      <div class="stat-card total-students">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-content">
+          <span class="stat-number">{{ students|length }}</span>
+          <span class="stat-label">Total Students</span>
+        </div>
+      </div>
+
+      <div class="stat-card present-count">
+        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-content">
+          <span class="stat-number" id="present-count">0</span>
+          <span class="stat-label">Present Today</span>
+        </div>
+      </div>
+
+      <div class="stat-card absent-count">
+        <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+        <div class="stat-content">
+          <span class="stat-number" id="absent-count">0</span>
+          <span class="stat-label">Absent Today</span>
+        </div>
+      </div>
+
+      <div class="stat-card onduty-count">
+        <div class="stat-icon"><i class="fas fa-briefcase"></i></div>
+        <div class="stat-content">
+          <span class="stat-number" id="onduty-count">0</span>
+          <span class="stat-label">On Duty</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bulk-actions">
+      <button type="button" class="btn-bulk present" id="mark-all-present">
+        <i class="fas fa-check-circle me-1"></i> Mark All Present
+      </button>
+      <button type="button" class="btn-bulk absent" id="mark-all-absent">
+        <i class="fas fa-times-circle me-1"></i> Mark All Absent
+      </button>
+      <button type="button" class="btn-bulk onduty" id="mark-all-onduty">
+        <i class="fas fa-briefcase me-1"></i> Mark All On Duty
+      </button>
+    </div>
+
+    <div class="attendance-card">
+      <div class="card-header">
+        <div>
+          <h5><i class="fas fa-user-graduate me-2"></i>Student Attendance Management</h5>
+          <small class="text-muted">Academic Year: {{ academic_year }}</small>
+        </div>
+        <div class="students-count-badge">
+          <i class="fas fa-user-graduate me-1"></i>
+          <span id="students-count">{{ students|length }}</span> Students
+        </div>
+      </div>
+
+      <div class="card-body">
+        <form method="post" id="attendance-form" class="attendance-form">
+          {% csrf_token %}
+          <input type="hidden" name="attendance_date" value="{{ selected_date|date:'Y-m-d' }}">
+
+          <div class="table-container">
+            <table class="attendance-table">
+              <thead>
+                <tr>
+                  <th class="student-col">Student Information</th>
+                  <th class="status-col">Morning Session</th>
+                  <th class="status-col">Afternoon Session</th>
+                  <th class="status-col">Full Day Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for student in students %}
+                <tr class="student-row" data-student-id="{{ student.id }}">
+                  <td class="student-col">
+                    <div class="student-info">
+                      <div class="student-avatar">
+                        {% if student.profile_img %}
+                          <img src="{{ student.profile_img.url }}" alt="{{ student.name }}">
+                        {% else %}
+                          <i class="fas fa-user-graduate"></i>
+                        {% endif %}
+                      </div>
+                      <div>
+                        <div class="student-id">{{ student.reg_no }}</div>
+                        <div class="student-name">{{ student.name }}</div>
+                        <div class="student-section">{{ student.year }} Year - {{ student.section|default:"N/A" }}</div>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td class="status-col">
+                    <select name="morning_{{ student.id }}" class="form-select morning-select">
+                      <option value="Present" {% if student.morning_status == "Present" %}selected{% endif %}>Present</option>
+                      <option value="Absent" {% if student.morning_status == "Absent" %}selected{% endif %}>Absent</option>
+                      <option value="On Duty" {% if student.morning_status == "On Duty" %}selected{% endif %}>On Duty</option>
+                    </select>
+                  </td>
+
+                  <td class="status-col">
+                    <select name="afternoon_{{ student.id }}" class="form-select afternoon-select">
+                      <option value="Present" {% if student.afternoon_status == "Present" %}selected{% endif %}>Present</option>
+                      <option value="Absent" {% if student.afternoon_status == "Absent" %}selected{% endif %}>Absent</option>
+                      <option value="On Duty" {% if student.afternoon_status == "On Duty" %}selected{% endif %}>On Duty</option>
+                    </select>
+                  </td>
+
+                  <td class="status-col">
+                    <span class="badge full-day-badge" id="badge-{{ student.id }}">
+                      {% if student.full_day_status == 'Present' %}
+                        <i class="fas fa-check-circle me-1"></i> Present
+                      {% elif student.full_day_status == 'Absent' %}
+                        <i class="fas fa-times-circle me-1"></i> Absent
+                      {% elif student.full_day_status == 'Half Day' %}
+                        <i class="fas fa-clock me-1"></i> Half Day
+                      {% elif student.full_day_status == 'On Duty' %}
+                        <i class="fas fa-briefcase me-1"></i> On Duty
+                      {% else %}
+                        <i class="fas fa-question-circle me-1"></i> Not Marked
+                      {% endif %}
+                    </span>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="form-actions">
+            <div class="attendance-summary">
+              <div class="summary-item">
+                <span class="summary-label">Marked</span>
+                <span class="summary-value" id="marked-count">0/{{ students|length }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Completion</span>
+                <span class="summary-value" id="completion-rate">0%</span>
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              <button type="reset" class="btn btn-secondary" id="reset-form">
+                <i class="fas fa-undo me-2"></i>Reset All
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-2"></i>Save Attendance
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="fas fa-users-slash"></i>
+      <h3>No Students Found</h3>
+      <p>There are no students assigned to your section for the selected date ({{ selected_date|date:"F d, Y" }}).</p>
+      <a href="{% url 'class_attendence' %}" class="btn btn-outline-primary mt-3">
+        <i class="fas fa-calendar-alt me-2"></i>View Today's Attendance
+      </a>
+    </div>
+{% endif %}
+  </div>
+</div>
+
+{% if students %}
+<div class="modal fade" id="downloadPdfModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-custom">
+
+      <div class="modal-header modal-gradient">
+        <div class="header-content">
+          <div class="header-text">
+            <h5 class="modal-title text-white mb-1">
+              <i class="fas fa-file-export me-2"></i>Attendance Report
+            </h5>
+            <p class="text-white-50 mb-0">Class Advisor Daily Attendance Reports</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body-custom">
+        <div id="attendanceMsgArea"></div>
+
+        <div class="form-container">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label-custom">
+                <i class="fas fa-calendar-day"></i>
+                From Date
+              </label>
+              <input type="date"
+       class="input-custom"
+       id="attendance_from_date"
+       value="{{ selected_date|date:'Y-m-d' }}">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label-custom">
+                <i class="fas fa-calendar-check"></i>
+                To Date
+              </label>
+              <input type="date"
+       class="input-custom"
+       id="attendance_to_date"
+       value="{{ selected_date|date:'Y-m-d' }}">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label-custom">
+                <i class="fas fa-layer-group"></i>
+                Semester
+              </label>
+              <select class="select-custom" id="attendance_semester">
+                <option value="{{ semester }}" selected>{{ semester }}</option>
+                {% for sem in available_semesters %}
+                  {% if sem != semester %}
+                    <option value="{{ sem }}">{{ sem }}</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label-custom">
+                <i class="fas fa-file-alt"></i>
+                Report Type
+              </label>
+              <select class="select-custom" id="attendance_report_type">
+                <option value="view" selected>View Day-wise Attendance</option>
+                <option value="overall_pdf">Download Overall PDF</option>
+                <option value="datewise_pdf">Download Day-wise PDF</option>
+                <option value="datewise_excel">Download Day-wise Excel</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="note-box">
+            <i class="fas fa-info-circle mt-1"></i>
+            <span>
+              View opens the day-wise attendance page. PDF and Excel export the selected date range.
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button type="button" class="btn btn-success" id="openAttendanceReportBtn">
+          <i class="fas fa-download"></i> Open
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const dateInput = document.getElementById('attendance_date');
+  if (dateInput) {
+    dateInput.addEventListener('change', function() {
+      const selectedDate = new Date(this.value);
+      const today = new Date('{{ today|date:"Y-m-d" }}');
+
+      if (selectedDate > today) {
+        alert('Cannot select a future date. Please select today or a past date.');
+        this.value = '{{ selected_date|date:"Y-m-d" }}';
+        return;
+      }
+
+      const submitBtn = document.querySelector('#date-form button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+        submitBtn.disabled = true;
+      }
+
+      document.getElementById('date-form').submit();
+    });
+  }
+
+  function calculateFullDayStatus(morning, afternoon) {
+    if (morning === afternoon) {
+      return morning;
+    } else if (morning === "On Duty" || afternoon === "On Duty") {
+      return "On Duty";
+    } else {
+      return "Half Day";
+    }
+  }
+
+  function updateBadge(badge, status) {
+    badge.className = 'badge full-day-badge';
+
+    switch(status) {
+      case 'Present':
+        badge.classList.add('bg-success');
+        badge.innerHTML = '<i class="fas fa-check-circle me-1"></i> Present';
+        break;
+      case 'Absent':
+        badge.classList.add('bg-danger');
+        badge.innerHTML = '<i class="fas fa-times-circle me-1"></i> Absent';
+        break;
+      case 'On Duty':
+        badge.classList.add('bg-secondary');
+        badge.innerHTML = '<i class="fas fa-briefcase me-1"></i> On Duty';
+        break;
+      case 'Half Day':
+        badge.classList.add('bg-warning');
+        badge.innerHTML = '<i class="fas fa-clock me-1"></i> Half Day';
+        break;
+      default:
+        badge.classList.add('bg-secondary');
+        badge.innerHTML = '<i class="fas fa-question-circle me-1"></i> Not Marked';
+    }
+  }
+
+  function updateCounters() {
+    const morningSelects = document.querySelectorAll('.morning-select');
+
+    let presentCount = 0;
+    let absentCount = 0;
+    let ondutyCount = 0;
+    let halfDayCount = 0;
+
+    morningSelects.forEach((select) => {
+      const row = select.closest('tr');
+      const morningStatus = select.value;
+      const afternoonStatus = row.querySelector('.afternoon-select').value;
+      const fullDayStatus = calculateFullDayStatus(morningStatus, afternoonStatus);
+      const badge = row.querySelector('.full-day-badge');
+
+      updateBadge(badge, fullDayStatus);
+
+      if (fullDayStatus === 'Present') presentCount++;
+      else if (fullDayStatus === 'Absent') absentCount++;
+      else if (fullDayStatus === 'On Duty') ondutyCount++;
+      else if (fullDayStatus === 'Half Day') halfDayCount++;
+    });
+
+    const presentNode = document.getElementById('present-count');
+    const absentNode = document.getElementById('absent-count');
+    const odNode = document.getElementById('onduty-count');
+
+    if (presentNode) presentNode.textContent = presentCount;
+    if (absentNode) absentNode.textContent = absentCount;
+    if (odNode) odNode.textContent = ondutyCount;
+
+    const totalStudents = {{ students|length|default:0 }};
+    const markedCount = presentCount + absentCount + ondutyCount + halfDayCount;
+
+    const markedNode = document.getElementById('marked-count');
+    const completionNode = document.getElementById('completion-rate');
+
+    if (markedNode) {
+      markedNode.textContent = `${markedCount}/${totalStudents}`;
+    }
+
+    if (completionNode) {
+      const completionRate = totalStudents > 0 ? Math.round((markedCount / totalStudents) * 100) : 0;
+      completionNode.textContent = `${completionRate}%`;
+      completionNode.className = 'summary-value ' +
+        (completionRate === 100 ? 'text-success' :
+         completionRate >= 80 ? 'text-warning' : 'text-danger');
+    }
+  }
+
+  document.getElementById('mark-all-present')?.addEventListener('click', function() {
+    document.querySelectorAll('.morning-select, .afternoon-select').forEach(select => {
+      select.value = 'Present';
+    });
+    updateCounters();
+  });
+
+  document.getElementById('mark-all-absent')?.addEventListener('click', function() {
+    document.querySelectorAll('.morning-select, .afternoon-select').forEach(select => {
+      select.value = 'Absent';
+    });
+    updateCounters();
+  });
+
+  document.getElementById('mark-all-onduty')?.addEventListener('click', function() {
+    document.querySelectorAll('.morning-select, .afternoon-select').forEach(select => {
+      select.value = 'On Duty';
+    });
+    updateCounters();
+  });
+
+  document.querySelectorAll('.morning-select, .afternoon-select').forEach(select => {
+    select.addEventListener('change', updateCounters);
+  });
+
+  document.getElementById('attendance-form')?.addEventListener('submit', function(e) {
+    const markedCount = parseInt(document.getElementById('marked-count')?.textContent?.split('/')[0]) || 0;
+    const totalStudents = {{ students|length|default:0 }};
+
+    if (markedCount === 0) {
+      const confirmSubmit = confirm('No attendance has been marked. Are you sure you want to save empty attendance?');
+      if (!confirmSubmit) {
+        e.preventDefault();
+        return false;
+      }
+    } else if (markedCount < totalStudents) {
+      const confirmSubmit = confirm(`You have marked ${markedCount} out of ${totalStudents} students. Are you sure you want to save?`);
+      if (!confirmSubmit) {
+        e.preventDefault();
+        return false;
+      }
+    }
+
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+      submitBtn.disabled = true;
+    }
+
+    return true;
+  });
+
+  document.getElementById('reset-form')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (confirm('Are you sure you want to reset all attendance selections?')) {
+      document.querySelectorAll('.morning-select').forEach(select => {
+        select.value = 'Present';
+      });
+      document.querySelectorAll('.afternoon-select').forEach(select => {
+        select.value = 'Present';
+      });
+      updateCounters();
+    }
+  });
+
+  function showAttendanceMsg(type, text) {
+    const msgArea = document.getElementById("attendanceMsgArea");
+    if (!msgArea) return;
+
+    const alertClass = type === "success" ? "alert-success" :
+                       type === "info" ? "alert-info" :
+                       type === "warning" ? "alert-warning" : "alert-danger";
+
+    msgArea.innerHTML = `<div class="alert ${alertClass}">${text}</div>`;
+  }
+
+  function clearAttendanceMsg() {
+    const msgArea = document.getElementById("attendanceMsgArea");
+    if (msgArea) msgArea.innerHTML = "";
+  }
+
+  function buildReportUrl() {
+    const fromDate = document.getElementById("attendance_from_date")?.value?.trim() || "";
+    const toDate = document.getElementById("attendance_to_date")?.value?.trim() || "";
+    const selectedSemester = document.getElementById("attendance_semester")?.value?.trim() || "{{ semester }}";
+    const reportType = document.getElementById("attendance_report_type")?.value || "view";
+
+    clearAttendanceMsg();
+
+    if (!fromDate || !toDate) {
+      showAttendanceMsg("warning", "Please select both From Date and To Date.");
+      return null;
+    }
+
+    if (fromDate > toDate) {
+      showAttendanceMsg("warning", "From Date cannot be greater than To Date.");
+      return null;
+    }
+
+    let baseUrl = "";
+
+    if (reportType === "view") {
+      baseUrl = "{% url 'class_attendance_view' year semester course_id batch section regulation_id %}";
+    } else if (reportType === "overall_pdf") {
+      baseUrl = "{% url 'class_attendance_pdf' year semester course_id batch section regulation_id %}";
+    } else if (reportType === "datewise_pdf") {
+      baseUrl = "{% url 'class_attendance_datewise_pdf' year semester course_id batch section regulation_id %}";
+    } else if (reportType === "datewise_excel") {
+      baseUrl = "{% url 'class_attendance_datewise_excel' year semester course_id batch section regulation_id %}";
+    }
+
+    baseUrl = baseUrl.replace("/{{ semester }}/", "/" + encodeURIComponent(selectedSemester) + "/");
+
+    const params = new URLSearchParams();
+    params.append("from", fromDate);
+    params.append("to", toDate);
+
+    return baseUrl + "?" + params.toString();
+  }
+
+  document.getElementById("openAttendanceReportBtn")?.addEventListener("click", function() {
+    const finalUrl = buildReportUrl();
+    if (!finalUrl) return;
+
+    window.open(finalUrl, "_blank");
+
+    const modalEl = document.getElementById("downloadPdfModal");
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) {
+      modalInstance.hide();
+    }
+  });
+
+  document.getElementById("downloadPdfModal")?.addEventListener("shown.bs.modal", clearAttendanceMsg);
+
+  updateCounters();
+});
+</script>
+{% endblock %}

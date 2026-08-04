@@ -1,0 +1,108 @@
+<div class="p-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <div class="fw-bold fs-5">{{ student.reg_no }} - {{ student.name }}</div>
+      <div class="text-muted small">
+        Semesters included: <b>{{ sem_pair.0 }}</b>, <b>{{ sem_pair.1 }}</b>
+      </div>
+    </div>
+    <span class="badge bg-success p-2">
+      <i class="fa-solid fa-receipt me-1"></i> Receipts
+    </span>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Current Year Total</div>
+          <div class="fw-bold fs-4">{{ current_year_total }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Paid Total</div>
+          <div class="fw-bold fs-4 text-success">{{ paid_total }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Pending</div>
+          <div class="fw-bold fs-4 text-danger">{{ pending_total }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h6 class="fw-bold mb-2">Uploaded Receipts</h6>
+
+  {% if receipts %}
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Uploaded At</th>
+            <th>Semester</th>
+            <th>Status</th>
+            <th>Receipt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in receipts %}
+          <tr>
+            <td>{{ r.uploaded_at }}</td>
+            <td>{{ r.semester }}</td>
+            <td><span class="badge bg-secondary">{{ r.status }}</span></td>
+            <td>
+              {% if r.fee_receipt %}
+                <a class="btn btn-sm btn-outline-primary" href="{{ r.fee_receipt.url }}" target="_blank">
+                  <i class="fa-solid fa-eye me-1"></i> View
+                </a>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <h6 class="fw-bold mt-4 mb-2">Verified Payments (Manual Entries)</h6>
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Transaction ID</th>
+            <th>Entered By</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in manual_entries %}
+          <tr>
+            <td>{{ m.fee_receipt.uploaded_at }}</td>
+            <td class="fw-bold text-success">{{ m.entered_fee }}</td>
+            <td>{{ m.transaction_id|default:"-" }}</td>
+            <td>{{ m.entered_by|default:"-" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="text-muted text-center">No manual entries found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  {% else %}
+    <div class="alert alert-warning mb-0">
+      No receipts found for this academic year.
+    </div>
+  {% endif %}
+</div>

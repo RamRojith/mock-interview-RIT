@@ -1,0 +1,484 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load static %}
+<style>
+.document-management-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.document-management-portal .page-header {
+  max-width: 1200px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.document-management-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.document-management-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.document-management-portal .page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.document-management-portal .card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.document-management-portal .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.document-management-portal .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+}
+
+.document-management-portal .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.document-management-portal .card-body {
+  padding: 2rem;
+}
+
+/* Tool Cards Grid */
+.document-management-portal .tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.document-management-portal .tool-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.document-management-portal .tool-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 40px rgba(26, 75, 140, 0.2);
+  border-color: #1a4b8c;
+}
+
+.document-management-portal .tool-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.document-management-portal .tool-card:hover::before {
+  opacity: 1;
+}
+
+.document-management-portal .tool-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem auto;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  transition: all 0.3s ease;
+}
+
+.document-management-portal .tool-card:hover .tool-icon {
+  transform: scale(1.1);
+  background: linear-gradient(135deg, #153e75 0%, #1e429f 100%);
+}
+
+.document-management-portal .tool-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.75rem;
+}
+
+.document-management-portal .tool-description {
+  font-size: 0.95rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.document-management-portal .tool-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  color: #1a4b8c;
+  border-radius: 25px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid #bae6fd;
+}
+
+/* Information Alert */
+.document-management-portal .alert {
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-left: 4px solid #1a4b8c;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  color: #1e40af;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.document-management-portal .alert i {
+  font-size: 1.25rem;
+  color: #1a4b8c;
+}
+
+/* Summary Badges */
+.document-management-portal .summary-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.document-management-portal .badge {
+  padding: 0.75rem 1.25rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid;
+}
+
+.document-management-portal .badge-info {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+
+.document-management-portal .badge-success {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.document-management-portal .badge-warning {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border-color: #fbbf24;
+}
+
+/* Button Styling */
+.document-management-portal .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  justify-content: center;
+}
+
+.document-management-portal .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: 2px solid transparent;
+}
+
+.document-management-portal .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+  background: linear-gradient(135deg, #153e75 0%, #1e429f 100%);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .document-management-portal .page-header {
+    padding: 1rem;
+  }
+  
+  .document-management-portal .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .document-management-portal .card-body {
+    padding: 1.5rem;
+  }
+  
+  .document-management-portal .tools-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .document-management-portal {
+    padding: 1rem;
+  }
+  
+  .document-management-portal .page-header {
+    padding: 0.75rem;
+  }
+  
+  .document-management-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .document-management-portal .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .document-management-portal .card-body {
+    padding: 1.25rem;
+  }
+  
+  .document-management-portal .tools-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .document-management-portal .summary-badges {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .document-management-portal .tool-card {
+    padding: 1.5rem;
+  }
+  
+  .document-management-portal .tool-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+}
+
+/* Animation for cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.document-management-portal .card {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+.document-management-portal .tool-card {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+/* Hover effect for tool cards */
+.document-management-portal .tool-card:hover .tool-icon {
+  animation: pulse 1s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+</style>
+
+<div class="document-management-portal">
+  <div class="page-header">
+    <h1><i class="fa-solid fa-folder-open me-2"></i>Document Management</h1>
+    <p class="header-subtitle">
+      <i class="fa-solid fa-wrench me-1"></i>Resources
+    </p>
+  </div>
+
+  <div class="page-container">
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="fa-solid fa-tools me-2"></i>Document</h5>
+      </div>
+      <div class="card-body">
+        <div class="alert">
+          <i class="fa-solid fa-info-circle"></i>
+          <div>
+            <strong>Access your documents and assignments</strong>
+            <p class="mb-0">Use these resources to manage your Canva files and view assignment submissions. All resources are securely integrated with your account.</p>
+          </div>
+        </div>
+
+        <div class="tools-grid">
+          <!-- Canva Files Tool -->
+          <div class="tool-card" onclick="window.location.href='{% url 'view_uploaded_documents' %}'" style="animation-delay: 0.1s">
+            <div class="tool-icon">
+              <i class="fa-solid fa-book-open"></i>
+            </div>
+            <h3 class="tool-title">Use Canva Files</h3>
+            <p class="tool-description">
+              Access and manage your uploaded Canva documents. Create, edit, and organize your design files in one centralized location.
+            </p>
+            <span class="tool-badge">
+              <i class="fa-solid fa-cloud-upload-alt me-1"></i>Cloud Storage
+            </span>
+          </div>
+
+          <!-- View Assignment Tool -->
+          <div class="tool-card" onclick="window.location.href='#'" style="animation-delay: 0.2s">
+            <div class="tool-icon">
+              <i class="fa-solid fa-file-alt"></i>
+            </div>
+            <h3 class="tool-title">View Assignment</h3>
+            <p class="tool-description">
+              Review submitted assignments, check grades, and access feedback from instructors. Track your academic progress.
+            </p>
+            <span class="tool-badge">
+              <i class="fa-solid fa-graduation-cap me-1"></i>Academic
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add animation delays to cards
+    const cards = document.querySelectorAll('.document-management-portal .card');
+    cards.forEach((card, index) => {
+      card.style.animationDelay = `${index * 0.2}s`;
+    });
+
+    const toolCards = document.querySelectorAll('.document-management-portal .tool-card');
+    toolCards.forEach((card, index) => {
+      card.style.animationDelay = `${index * 0.1}s`;
+    });
+
+    // Add click effects to tool cards
+    toolCards.forEach(card => {
+      card.addEventListener('click', function() {
+        // Add ripple effect
+        const ripple = document.createElement('span');
+        const rect = this.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+        
+        ripple.style.cssText = `
+          position: absolute;
+          border-radius: 50%;
+          background: rgba(26, 75, 140, 0.3);
+          transform: scale(0);
+          animation: ripple 0.6s linear;
+          width: ${size}px;
+          height: ${size}px;
+          top: ${y}px;
+          left: ${x}px;
+          pointer-events: none;
+        `;
+        
+        this.appendChild(ripple);
+        
+        setTimeout(() => {
+          ripple.remove();
+        }, 600);
+      });
+    });
+
+    // Add keyboard navigation
+    toolCards.forEach(card => {
+      card.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.click();
+        }
+      });
+      
+      // Make cards focusable
+      card.setAttribute('tabindex', '0');
+    });
+  });
+
+  // Add CSS for ripple effect
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes ripple {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+</script>
+{% endblock %}

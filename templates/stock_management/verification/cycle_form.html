@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+    .verif-wrap { padding: 1rem 2rem; max-width: 900px; margin: 0 auto; }
+    .form-card { background:#fff; border-radius:16px; padding:1.75rem; box-shadow:0 4px 20px rgba(0,0,0,.08); border-left:4px solid #1a4b8c; }
+    .form-title { font-size:1.6rem; font-weight:700; color:#1a4b8c; margin-bottom:1.5rem; }
+    .form-label { font-weight:600; color:#374151; font-size:.9rem; }
+    .btn-submit { background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%); color:#fff; border:none; padding:.6rem 1.75rem; border-radius:10px; font-weight:600; }
+    .btn-submit:hover { color:#fff; }
+</style>
+
+<div class="verif-wrap">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="form-card">
+        <h2 class="form-title"><i class="fas fa-clipboard-check me-2"></i>New Verification Cycle</h2>
+
+        <form method="post" action="{% url 'verification_cycle_create' %}">
+            {% csrf_token %}
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Cycle Name</label>
+                    <input type="text" name="cycle_name" class="form-control"
+                           value="{{ form_data.cycle_name|default:'' }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Financial Year</label>
+                    <input type="text" name="financial_year" class="form-control"
+                           value="{{ form_data.financial_year|default:default_fy }}"
+                           placeholder="e.g. 2025-26" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control"
+                           value="{{ form_data.start_date|default:'' }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control"
+                           value="{{ form_data.end_date|default:'' }}" required>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn-submit"><i class="fas fa-save me-1"></i>Create Cycle</button>
+                <a href="{% url 'verification_cycle' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}

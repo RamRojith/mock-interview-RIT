@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+  .lab-wrap{padding:1.25rem 2rem 3rem;max-width:1650px;margin:0 auto;}
+
+  /* ---- Page header ---- */
+  .lab-header{
+    background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);
+    border-radius:16px;padding:1.75rem 2rem;margin-bottom:1.75rem;color:#fff;
+    box-shadow:0 8px 24px rgba(26,75,140,.18);position:relative;overflow:hidden;
+  }
+  .lab-header::after{
+    content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;
+    background:rgba(255,255,255,.08);
+  }
+  .lab-header h2{margin:0;font-weight:700;font-size:1.6rem;}
+  .lab-header p{margin:.35rem 0 0;color:rgba(255,255,255,.85);font-size:.92rem;}
+  .lab-header .dept-chip{
+    display:inline-flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.16);
+    border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:.3rem .85rem;
+    font-size:.8rem;font-weight:600;margin-top:.75rem;
+  }
+
+  /* ---- Selector card ---- */
+  .selector-card{
+    background:#fff;border-radius:16px;padding:1.5rem 1.75rem;margin-bottom:1.5rem;
+    box-shadow:0 4px 20px rgba(15,23,42,.06);border:1px solid #eef1f5;
+  }
+  .field-label{font-weight:600;color:#334155;font-size:.85rem;margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem;}
+  .field-label i{color:#1a4b8c;width:16px;text-align:center;}
+  .selector-card .form-select,.selector-card .form-control{
+    border-radius:10px;border:1.5px solid #e2e8f0;padding:.55rem .75rem;font-size:.9rem;
+  }
+  .selector-card .form-select:focus,.selector-card .form-control:focus{
+    border-color:#2c5aa0;box-shadow:0 0 0 .2rem rgba(44,90,160,.12);
+  }
+  .locked-field{
+    display:flex;align-items:center;gap:.5rem;background:#f1f5f9;border:1.5px solid #e2e8f0;
+    border-radius:10px;padding:.55rem .75rem;font-size:.9rem;color:#334155;font-weight:600;
+  }
+  .locked-field i{color:#94a3b8;}
+  .btn-view-tt{
+    background:linear-gradient(135deg,#1a4b8c,#2c5aa0);border:none;border-radius:10px;
+    padding:.6rem 1rem;font-weight:600;color:#fff;transition:transform .15s ease,box-shadow .15s ease;width:100%;
+  }
+  .btn-view-tt:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(26,75,140,.28);color:#fff;}
+
+  /* ---- Summary bar ---- */
+  .summary-bar{
+    background:#fff;border-radius:14px;padding:1.1rem 1.4rem;margin-bottom:1.25rem;
+    box-shadow:0 2px 10px rgba(15,23,42,.05);border:1px solid #eef1f5;
+    display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;justify-content:space-between;
+  }
+  .summary-pills{display:flex;flex-wrap:wrap;gap:.6rem;}
+  .summary-pill{
+    background:#f1f5fb;border:1px solid #dbe4f3;border-radius:999px;padding:.4rem .9rem;
+    font-size:.82rem;color:#1e3a5f;display:flex;align-items:center;gap:.4rem;
+  }
+  .summary-pill i{color:#2c5aa0;}
+  .summary-pill strong{color:#0f2c52;}
+  .summary-actions{display:flex;gap:.5rem;}
+  .btn-edit-tt{border-radius:8px;font-weight:600;font-size:.82rem;}
+  .btn-delete-tt-sm{
+    border-radius:8px;font-weight:600;font-size:.82rem;border:1.5px solid #ef4444;color:#ef4444;background:#fff;
+  }
+  .btn-delete-tt-sm:hover{background:#ef4444;color:#fff;}
+
+  /* ---- Grid ---- */
+  .grid-card{
+    background:#fff;border-radius:16px;padding:1.25rem;box-shadow:0 4px 20px rgba(15,23,42,.06);
+    border:1px solid #eef1f5;overflow:hidden;
+  }
+  .tt-scroll{overflow-x:auto;border-radius:12px;}
+  .tt-table{border-collapse:separate;border-spacing:0;width:100%;background:#fff;min-width:1100px;}
+  .tt-table th,.tt-table td{border:1px solid #e6ebf2;padding:8px;text-align:center;vertical-align:middle;}
+  .tt-table thead th{
+    background:linear-gradient(135deg,#1a4b8c,#2c5aa0);color:#fff;font-size:.78rem;font-weight:600;
+    padding:12px 8px;text-transform:uppercase;letter-spacing:.03em;
+  }
+  .tt-table thead th:first-child{border-top-left-radius:10px;}
+  .tt-table thead th:last-child{border-top-right-radius:10px;}
+  .tt-table tbody tr:nth-child(even){background:#fafbfd;}
+  .tt-table tbody tr:hover{background:#eef4fc;}
+  .tt-table td.day{
+    background:#eef2f9;font-weight:700;color:#1a4b8c;white-space:nowrap;font-size:.85rem;
+    border-right:2px solid #dbe4f3;
+  }
+  .tt-table tbody tr:hover td.day{background:#e1eaf7;}
+  .tt-cell{min-width:130px;}
+  .tt-cell.filled{background:#f2fbf6;}
+  .tt-cell .code{font-weight:700;color:#166534;font-size:.85rem;}
+  .tt-cell .title{font-size:.72rem;color:#64748b;margin-top:2px;}
+  .tt-cell .faculty{font-size:.82rem;font-weight:600;color:#1a4b8c;margin-top:4px;font-style:italic;border-top:1px dashed #dbe4f3;padding-top:3px;}
+  .tt-cell .faculty i{margin-right:3px;color:#2c5aa0;}
+  .tt-cell .free{color:#cbd5e1;font-size:.85rem;}
+  .tt-legend{display:flex;gap:1.25rem;align-items:center;font-size:.78rem;color:#64748b;margin-top:.85rem;flex-wrap:wrap;}
+  .tt-legend .dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:.35rem;}
+  .tt-legend .dot.filled{background:#86c9a3;}
+  .tt-legend .dot.empty{background:#e2e8f0;}
+
+  /* ---- Empty state ---- */
+  .empty-card{
+    background:#fff;border-radius:16px;padding:3rem 2rem;text-align:center;
+    box-shadow:0 4px 20px rgba(15,23,42,.06);border:1px solid #eef1f5;
+  }
+  .empty-card i{font-size:2.5rem;color:#cbd5e1;margin-bottom:1rem;}
+  .empty-card h5{color:#334155;font-weight:700;}
+  .empty-card p{color:#64748b;font-size:.9rem;}
+
+  @media (max-width:768px){
+    .lab-wrap{padding:1rem;}
+    .lab-header{padding:1.25rem 1.4rem;}
+    .selector-card{padding:1.25rem;}
+  }
+</style>
+
+<div class="lab-wrap">
+
+  <!-- ================= Header ================= -->
+  <div class="lab-header">
+    <h2><i class="fa-solid fa-table-cells me-2"></i>Lab Timetable — View</h2>
+    <p>Browse the weekly lab schedule mapped to your department.</p>
+    {% if lock_dept %}
+      <span class="dept-chip"><i class="fa-solid fa-building-lock"></i>Showing: {{ user_dept.Department }}</span>
+    {% endif %}
+  </div>
+
+  {% if messages %}{% for m in messages %}<div class="alert alert-{{ m.tags }} alert-dismissible fade show">{{ m }}<button class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}
+
+  <!-- ================= Filter selector ================= -->
+  <div class="selector-card">
+    <form method="get">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="field-label"><i class="fa-solid fa-building"></i>Department</label>
+          {% if lock_dept %}
+            <input type="hidden" name="dept" value="{{ sel_dept }}">
+            <div class="locked-field"><i class="fa-solid fa-lock"></i>{{ user_dept.Department }}</div>
+          {% else %}
+            <select name="dept" id="dept" class="form-select">
+              <option value="">-- Select --</option>
+              {% for d in departments %}<option value="{{ d.id }}" {% if sel_dept == d.id|stringformat:'s' %}selected{% endif %}>{{ d.Department }}</option>{% endfor %}
+            </select>
+          {% endif %}
+        </div>
+        <div class="col-md-3">
+          <label class="field-label"><i class="fa-solid fa-flask"></i>Lab</label>
+          <select name="lab" id="lab" class="form-select">
+            <option value="">-- Select --</option>
+            {% for l in labs %}<option value="{{ l.id }}" {% if sel_lab == l.id|stringformat:'s' %}selected{% endif %}>{{ l.lab_code }} — {{ l.lab_name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="field-label"><i class="fa-solid fa-layer-group"></i>Semester</label>
+          <select name="semester" class="form-select">
+            <option value="">--</option>
+            {% for s in semesters %}<option value="{{ s }}" {% if sel_sem == s %}selected{% endif %}>Sem {{ s }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="field-label"><i class="fa-solid fa-users-rectangle"></i>Section</label>
+          <select name="section" id="section" class="form-select">
+            <option value="">{% if sel_section %}{{ sel_section }}{% else %}-- Any --{% endif %}</option>
+            {% if sel_section %}<option value="{{ sel_section }}" selected>{{ sel_section }}</option>{% endif %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-view-tt"><i class="fas fa-eye me-1"></i>View</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  {% if timetable %}
+    <!-- ================= Summary ================= -->
+    <div class="summary-bar">
+      <div class="summary-pills">
+        <span class="summary-pill"><i class="fa-solid fa-flask"></i>Lab: <strong>{{ lab_obj.lab_code }} — {{ lab_obj.lab_name }}</strong></span>
+        <span class="summary-pill"><i class="fa-solid fa-building"></i>Dept: <strong>{{ timetable.department.Department }}</strong></span>
+        <span class="summary-pill"><i class="fa-solid fa-layer-group"></i>Semester: <strong>{{ timetable.semester }}</strong></span>
+        {% if timetable.section %}<span class="summary-pill"><i class="fa-solid fa-users-rectangle"></i>Section: <strong>{{ timetable.section }}</strong></span>{% endif %}
+        <span class="summary-pill"><i class="fa-solid fa-user-gear"></i>Technician: <strong>{{ lab_obj.technician.name|default:"Not assigned" }}</strong></span>
+        <span class="summary-pill"><i class="fa-solid fa-chart-pie"></i>Utilization: <strong>{{ scheduled_periods }}/{{ total_periods }} ({{ weekly_utilization_pct }}%)</strong></span>
+      </div>
+      <div class="summary-actions">
+        <a href="{% url 'lab_timetable_pdf' timetable.id %}" class="btn btn-outline-secondary btn-edit-tt"><i class="fas fa-file-pdf me-1"></i>Download PDF</a>
+        {% if request.session.permissions.lab_timetable_create or request.session.permissions.lab_timetable_edit %}
+          <a href="{% url 'lab_timetable_edit' timetable.id %}" class="btn btn-outline-primary btn-edit-tt"><i class="fas fa-pen me-1"></i>Edit</a>
+          <form method="post" action="{% url 'lab_timetable_delete' timetable.id %}" class="d-inline"
+                onsubmit="return confirm('Delete this lab timetable? This cannot be undone.');">
+            {% csrf_token %}
+            <button class="btn btn-delete-tt-sm"><i class="fas fa-trash me-1"></i>Delete</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ================= Grid ================= -->
+    <div class="grid-card">
+      <div class="tt-scroll">
+        <table class="tt-table">
+          <thead>
+            <tr><th style="min-width:120px;">Day \ Period</th>{% for p in periods %}<th>Period {{ p }}</th>{% endfor %}</tr>
+          </thead>
+          <tbody>
+            {% for row in grid_rows %}
+            <tr>
+              <td class="day">{{ row.label }}</td>
+              {% for cell in row.cells %}
+              <td class="tt-cell {% if cell.course %}filled{% endif %}">
+                {% if cell.course %}
+                  <div class="code">{{ cell.course.course_code }}</div>
+                  <div class="title">{{ cell.course.title }}</div>
+                  <div class="faculty">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                    {% if cell.faculty %}{{ cell.faculty.name }}{% else %}<span class="text-muted">No faculty assigned</span>{% endif %}
+                  </div>
+                {% else %}<span class="free">— Free —</span>{% endif %}
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="tt-legend">
+        <span><span class="dot filled"></span>Course scheduled</span>
+        <span><span class="dot empty"></span>Free period</span>
+      </div>
+    </div>
+  {% elif sel_lab and sel_sem %}
+    <div class="empty-card">
+      <i class="fa-solid fa-calendar-xmark"></i>
+      <h5>No timetable found</h5>
+      <p>There is no lab timetable yet for this lab / semester{% if sel_section %} / section{% endif %}.</p>
+      {% if request.session.permissions.lab_timetable_create %}
+        <a href="{% url 'lab_timetable_create' %}?lab={{ sel_lab }}&semester={{ sel_sem }}&section={{ sel_section }}" class="btn btn-primary mt-2">
+          <i class="fas fa-plus me-1"></i>Create one now
+        </a>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="empty-card">
+      <i class="fa-solid fa-filter-circle-xmark"></i>
+      <h5>Select a lab and semester</h5>
+      <p>Choose a lab, semester and section above to view its weekly timetable.</p>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var dept = document.getElementById("dept");   // absent (hidden) when department is locked
+  var lab = document.getElementById("lab");
+  var section = document.getElementById("section");
+  var preLab = "{{ sel_lab|escapejs }}";
+  var preSection = "{{ sel_section|escapejs }}";
+  var lockedDeptId = "{{ sel_dept|escapejs }}";
+
+  function loadLabs(deptId, keepValue) {
+    lab.innerHTML = '<option value="">-- Select --</option>';
+    if (!deptId) return;
+    fetch("{% url 'lab_get_labs' %}?dept=" + encodeURIComponent(deptId))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        (d.labs || []).forEach(function (l) {
+          var o = document.createElement("option");
+          o.value = l.id;
+          o.textContent = l.lab_code + " — " + l.lab_name;
+          if (String(l.id) === keepValue) o.selected = true;
+          lab.appendChild(o);
+        });
+      });
+  }
+
+  function loadSections(deptId, keepValue) {
+    if (!section) return;
+    section.innerHTML = '<option value="">-- Loading... --</option>';
+    if (!deptId) {
+      section.innerHTML = '<option value="">-- Any --</option>';
+      return;
+    }
+    fetch("{% url 'lab_get_sections' %}?dept=" + encodeURIComponent(deptId))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var secs = (d && d.sections) ? d.sections : [];
+        section.innerHTML = '<option value="">-- Any --</option>';
+        secs.forEach(function (sec) {
+          var o = document.createElement("option");
+          o.value = sec;
+          o.textContent = sec;
+          if (keepValue && sec === keepValue) o.selected = true;
+          section.appendChild(o);
+        });
+      })
+      .catch(function () {
+        section.innerHTML = '<option value="">-- Unable to load --</option>';
+      });
+  }
+
+  if (dept) {
+    // Department is editable (superuser / no department profile).
+    dept.addEventListener("change", function () {
+      loadLabs(this.value, null);
+      loadSections(this.value, null);
+    });
+    if (dept.value) {
+      loadSections(dept.value, preSection);
+    }
+  } else if (lockedDeptId) {
+    // Department is locked/mapped to the logged-in person's own department.
+    // The lab list is already correctly filtered server-side — only sections need fetching.
+    loadSections(lockedDeptId, preSection);
+  }
+});
+</script>
+{% endblock content %}

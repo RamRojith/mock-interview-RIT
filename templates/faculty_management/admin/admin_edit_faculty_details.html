@@ -1,0 +1,479 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="d-flex align-items-center mb-4">
+        <a href="{% url 'employee_details' %}" class="btn btn-outline-secondary btn-sm me-3">
+            <i class="bi bi-arrow-left"></i> back
+        </a>
+        <div>
+            <h1 class="h3 mb-1">Edit Faculty Details</h1>
+            <p class="text-muted mb-0">Update information for {{ faculty.name }}</p>
+        </div>
+        <div class="ms-auto">
+            <span class="badge bg-light text-dark border">
+                ID: {{ faculty.faculty_id }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Display Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-flex align-items-center" role="alert">
+                <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %} me-2"></i>
+                <div>{{ message }}</div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Main Form -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="card-title mb-0 d-flex align-items-center">
+                        <i class="bi bi-person-gear me-2"></i>
+                        Faculty Information
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data" class="row g-4">
+                        {% csrf_token %}
+                        <!-- Profile Image Upload -->
+<div class="col-12 mt-4">
+    <h6 class="section-title mb-3 pb-2 border-bottom">
+        <i class="bi bi-image me-2 text-primary"></i>
+        Profile Photo
+    </h6>
+
+    <div class="row align-items-center">
+
+        <div class="col-md-3 text-center">
+            {% load static %}
+
+            {% if faculty.profile_photo %}
+                <img src="{{ faculty.profile_photo.url }}"
+                     class="rounded-circle"
+                     width="80"
+                     height="80"
+                     style="object-fit:cover;"
+                     onerror="this.onerror=null;this.src='{% static 'images/profile.jpg' %}';">
+            {% else %}
+                <img src="{% static 'images/profile.jpg' %}"
+                     class="rounded-circle"
+                     width="80"
+                     height="80"
+                     style="object-fit:cover;">
+            {% endif %}
+        </div>
+
+        <div class="col-md-9">
+
+            <input type="file"
+                   name="profile_photo"
+                   class="form-control">
+
+            {% if faculty.profile_photo %}
+            <div class="form-check mt-2">
+                <input class="form-check-input"
+                       type="checkbox"
+                       name="remove_photo"
+                       value="1"
+                       id="removePhoto">
+                <label class="form-check-label text-danger" for="removePhoto">
+                    Remove current photo
+                </label>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+</div>
+                        <!-- Personal Information Section -->
+                        <div class="col-12">
+                            <h6 class="section-title mb-3 pb-2 border-bottom">
+                                <i class="bi bi-person-vcard me-2 text-primary"></i>
+                                Personal Information
+                            </h6>
+                        </div>
+                        
+                        <!-- Name -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-person text-muted"></i>
+                                </span>
+                                <input type="text" name="name" value="{{ faculty.name }}" class="form-control" placeholder="Enter full name" required>
+                            </div>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Phone Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-telephone text-muted"></i>
+                                </span>
+                                <input type="text" name="phone" value="{{ faculty.phone }}" class="form-control" placeholder="10-digit phone number" maxlength="10">
+                            </div>
+                        </div>
+
+                        <!-- Date of Birth -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Date of Birth</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-calendar-event text-muted"></i>
+                                </span>
+                                <input type="date" name="dob" value="{{ faculty.dob|date:'Y-m-d' }}" class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light align-items-start">
+                                    <i class="bi bi-geo-alt text-muted mt-1"></i>
+                                </span>
+                                <textarea name="address" class="form-control" rows="2" placeholder="Enter complete address">{{ faculty.address }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Professional Information Section -->
+                        <div class="col-12 mt-4">
+                            <h6 class="section-title mb-3 pb-2 border-bottom">
+                                <i class="bi bi-briefcase me-2 text-primary"></i>
+                                Professional Information
+                            </h6>
+                        </div>
+
+                        <!-- Department -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Department <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-building text-muted"></i>
+                                </span>
+                                <select name="department" class="form-select" required>
+                                    <option value="">Select Department</option>
+                                    {% for dept in departments %}
+                                        <option value="{{ dept.id }}" {% if faculty.department_id == dept.id %}selected{% endif %}>
+                                            {{ dept.Department }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Designation -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Designation <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-person-badge text-muted"></i>
+                                </span>
+                                <select name="designation" class="form-select" required>
+                                    <option value="">Select Designation</option>
+                                    {% for desig in designations %}
+                                        <option value="{{ desig.id }}" {% if faculty.designation_id == desig.id %}selected{% endif %}>
+                                            {{ desig.designation_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-layers text-muted"></i>
+                                </span>
+                                <select name="category" class="form-select" required>
+                                    <option value="">Select Category</option>
+                                    {% for cat in categories %}
+                                        <option value="{{ cat.id }}" {% if faculty.category_id == cat.id %}selected{% endif %}>
+                                            {{ cat.category_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Shift -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Shift</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-clock text-muted"></i>
+                                </span>
+                                <select name="shift" class="form-select">
+                                    <option value="">No Shift</option>
+                                    {% for shift in shifts %}
+                                        <option value="{{ shift.id }}" {% if faculty.shift_id == shift.id %}selected{% endif %}>
+                                            {{ shift.shift_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Date of Joining -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Date of Joining</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-calendar-check text-muted"></i>
+                                </span>
+                                <input type="date" name="doj" value="{{ faculty.doj|date:'Y-m-d' }}" class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- Contact Information Section -->
+                        <div class="col-12 mt-4">
+                            <h6 class="section-title mb-3 pb-2 border-bottom">
+                                <i class="bi bi-envelope me-2 text-primary"></i>
+                                Contact Information
+                            </h6>
+                        </div>
+
+                        <!-- Personal Email -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Personal Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-envelope-at text-muted"></i>
+                                </span>
+                                <input type="email" name="personal_email" value="{{ faculty.personal_email }}" class="form-control" placeholder="personal@example.com">
+                            </div>
+                        </div>
+
+                        <!-- College Email -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">College Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-building text-muted"></i>
+                                </span>
+                                <input type="email" name="college_email" value="{{ faculty.college_email }}" class="form-control" placeholder="name@college.edu">
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="col-12 mt-4 pt-3 border-top">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{% url 'employee_details' %}" class="btn btn-outline-secondary px-4">
+                                    <i class="bi bi-x-circle me-2"></i>Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-check-circle me-2"></i>Save Changes
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar - Faculty Summary -->
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <!-- Faculty Profile Card -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body text-center p-4">
+                    <div class="avatar-lg mx-auto mb-3">
+
+    {% if faculty.profile_photo %}
+        <img src="{{ faculty.profile_photo.url }}"
+             class="rounded-circle"
+             width="80"
+             height="80"
+             style="object-fit:cover;"
+             onerror="this.onerror=null;this.src='{% static 'images/profile.jpg' %}';">
+    {% else %}
+        <img src="{% static 'images/profile.jpg' %}"
+             class="rounded-circle"
+             width="80"
+             height="80"
+             style="object-fit:cover;">
+    {% endif %}
+
+</div>
+                    <h5 class="card-title mb-1">{{ faculty.name }}</h5>
+                    <p class="text-muted mb-2">{{ faculty.designation.designation_name }}</p>
+                    <p class="text-muted mb-2">{{ faculty.category.category_name|default:"No Category" }}</p>
+                    <div class="badge bg-light text-dark border mb-3">
+                        {{ faculty.department.Department }}
+                    </div>
+                    <div class="text-muted mb-2">
+                        <i class="bi bi-clock me-1"></i>{{ faculty.shift.shift_name|default:"No Shift" }}
+                    </div>
+                    
+                    <div class="faculty-stats row g-2 mt-3">
+                        <div class="col-6">
+                            <div class="stat-item p-2 bg-light rounded">
+                                <small class="text-muted d-block">Faculty ID</small>
+                                <strong>{{ faculty.faculty_id }}</strong>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+           
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+<style>
+:root {
+    --primary-color: #4361ee;
+    --secondary-color: #6c757d;
+    --success-color: #4cc9f0;
+    --border-radius: 12px;
+}
+
+.card {
+    border-radius: var(--border-radius);
+    border: none;
+}
+
+.card-header {
+    border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+}
+
+.avatar-lg {
+    width: 80px;
+    height: 80px;
+}
+
+.avatar-initial {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.input-group-text {
+    border-right: none;
+    transition: all 0.2s;
+}
+
+.form-control, .form-select {
+    border-left: none;
+    padding-left: 0;
+    transition: all 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15);
+    border-color: #4361ee;
+}
+
+.input-group:focus-within .input-group-text {
+    border-color: #4361ee;
+    background-color: rgba(67, 97, 238, 0.05);
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #3a56d4;
+    border-color: #3a56d4;
+    transform: translateY(-1px);
+}
+
+.alert {
+    border-radius: 10px;
+    border: none;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.faculty-stats .stat-item {
+    transition: all 0.2s;
+}
+
+.faculty-stats .stat-item:hover {
+    background-color: #e9ecef !important;
+    transform: translateY(-1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    
+    .avatar-lg {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .avatar-initial {
+        font-size: 1.5rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .d-flex.justify-content-end {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .faculty-stats .col-6 {
+        margin-bottom: 10px;
+    }
+}
+</style>
+
+{% endblock %}

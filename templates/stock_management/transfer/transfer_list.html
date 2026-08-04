@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+    .transfer-wrap { padding: 1rem 2rem; }
+    .panel {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+    .panel-head {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: #fff;
+        padding: 0.85rem 1.25rem;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .panel table { margin-bottom: 0; }
+    .panel thead th {
+        background: #f1f5f9;
+        color: #334155;
+        font-size: 0.85rem;
+        text-align: center;
+        vertical-align: middle;
+    }
+    .panel tbody td { vertical-align: middle; text-align: center; font-size: 0.9rem; }
+    .panel tbody tr { cursor: pointer; }
+</style>
+
+<div class="transfer-wrap">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="fw-bold text-primary mb-0">
+            <i class="fas fa-right-left me-2"></i>
+            {% if is_approvals %}Transfer Approvals{% else %}Inter-departmental Transfers{% endif %}
+        </h2>
+        {% if not is_approvals %}
+        <a href="{% url 'transfer_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>New Transfer
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <span><i class="fas fa-list me-2"></i>Transfer Requests</span>
+            <span class="badge bg-light text-dark">{{ transfers|length }}</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Transfer No</th>
+                        <th>From Lab</th>
+                        <th>To Lab</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tr in transfers %}
+                    <tr onclick="window.location='{% url 'transfer_detail' tr.id %}';">
+                        <td>{{ forloop.counter }}</td>
+                        <td class="fw-semibold">{{ tr.transfer_number }}</td>
+                        <td>{{ tr.from_lab.lab_code }} - {{ tr.from_lab.name }}</td>
+                        <td>{{ tr.to_lab.lab_code }} - {{ tr.to_lab.name }}</td>
+                        <td>
+                            {% if tr.status == "DRAFT" %}<span class="badge bg-secondary">Draft</span>
+                            {% elif tr.status == "SUBMITTED" %}<span class="badge bg-warning text-dark">Submitted</span>
+                            {% elif tr.status == "APPROVED_HOD_SENDER" %}<span class="badge bg-info text-dark">Sender HOD Approved</span>
+                            {% elif tr.status == "APPROVED_HOD_RECEIVER" %}<span class="badge bg-primary">Receiver HOD Approved</span>
+                            {% elif tr.status == "COMPLETED" %}<span class="badge bg-success">Completed</span>
+                            {% elif tr.status == "REJECTED" %}<span class="badge bg-danger">Rejected</span>
+                            {% else %}<span class="badge bg-light text-dark">{{ tr.status }}</span>{% endif %}
+                        </td>
+                        <td>{{ tr.created_at|date:"d M Y, h:i A" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-muted">No transfer requests found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content %}

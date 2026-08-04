@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Main Container */
+    .leave-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Header Styles */
+    .leave-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+        position: relative;
+    }
+
+    .leave-header h2 {
+        font-weight: 700;
+        color: #2b2d42;
+        margin-bottom: 0.5rem;
+        font-size: 2rem;
+    }
+
+    .leave-header::after {
+        content: "";
+        display: block;
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #4361ee 0%, #3a0ca3 100%);
+        margin: 0.75rem auto 0;
+        border-radius: 2px;
+    }
+
+    /* Form Styles */
+    .leave-form {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        margin-bottom: 3rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.75rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control {
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #4361ee;
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+    }
+
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    /* Button Styles */
+    .submit-btn {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        border: none;
+        border-radius: 10px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(67, 97, 238, 0.2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(67, 97, 238, 0.3);
+    }
+
+    /* History Section */
+    .history-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    }
+
+    .history-header {
+        font-weight: 700;
+        color: #2b2d42;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        font-size: 1.5rem;
+        position: relative;
+    }
+
+    .history-header::after {
+        content: "";
+        display: block;
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(90deg, #4361ee 0%, #3a0ca3 100%);
+        margin: 0.75rem auto 0;
+        border-radius: 2px;
+    }
+
+    /* Table Styles */
+    .leave-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .leave-table thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #e9ecef;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        padding: 1rem;
+        text-align: left;
+    }
+
+    .leave-table tbody td {
+        padding: 1.25rem 1rem;
+        vertical-align: middle;
+        border-top: 1px solid #f1f3f5;
+        color: #495057;
+    }
+
+    .leave-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.8rem;
+        display: inline-block;
+    }
+
+    .status-pending {
+        color: #e67700;
+        background-color: rgba(230, 119, 0, 0.1);
+    }
+
+    .status-approved {
+        color: #2a9d8f;
+        background-color: rgba(42, 157, 143, 0.1);
+    }
+
+    .status-rejected {
+        color: #e76f51;
+        background-color: rgba(231, 111, 81, 0.1);
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #dee2e6;
+    }
+
+    .empty-state p {
+        font-size: 1.1rem;
+        margin-bottom: 0;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .leave-container {
+            padding: 0 0.75rem;
+        }
+        
+        .leave-form, .history-section {
+            padding: 1.5rem;
+        }
+        
+        .leave-table thead th,
+        .leave-table tbody td {
+            padding: 0.75rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .leave-header h2 {
+            font-size: 1.75rem;
+        }
+        
+        .history-header {
+            font-size: 1.25rem;
+        }
+        
+        .leave-form, .history-section {
+            padding: 1.25rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+    }
+</style>
+
+<div class="leave-container">
+    <!-- Header -->
+    <div class="leave-header">
+        <h2><i class="fas fa-calendar-alt me-2"></i>Leave Application</h2>
+    </div>
+
+    <!-- Application Form -->
+    <form method="post" action="{% url 'leave_application' %}" enctype="multipart/form-data" onsubmit="hideButton()" class="leave-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="from_date" class="form-label">From Date</label>
+            <input type="date" name="from_date" id="from_date" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+            <label for="to_date" class="form-label">To Date</label>
+            <input type="date" name="to_date" id="to_date" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+            <label for="reason_for_leave" class="form-label">Reason for Leave</label>
+            <textarea name="reason_for_leave" id="reason_for_leave" class="form-control" rows="4" required></textarea>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-paper-plane me-1"></i> Submit Application
+            </button>
+        </div>
+    </form>
+
+    <!-- Leave History -->
+    <div class="history-section">
+        <h3 class="history-header"><i class="fas fa-history me-2"></i>Previous Leave Applications</h3>
+        
+        {% if leave_applications %}
+            <div class="table-responsive">
+                <table class="leave-table">
+                    <thead>
+                        <tr>
+                            <th>From Date</th>
+                            <th>To Date</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in leave_applications %}
+                        <tr>
+                            <td>{{ leave.from_date|date:"d M Y" }}</td>
+                            <td>{{ leave.to_date|date:"d M Y" }}</td>
+                            <td>{{ leave.reason_for_leave }}</td>
+                            <td>
+                                {% if leave.status == "Pending" %}
+                                    <span class="status-badge status-pending">Pending</span>
+                                {% elif leave.status == "Approved" %}
+                                    <span class="status-badge status-approved">Approved</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Rejected</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-calendar-times"></i>
+                <p>No leave applications submitted yet</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Set minimum date for from_date to today
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('from_date').min = today;
+        
+        // Update to_date min when from_date changes
+        document.getElementById('from_date').addEventListener('change', function() {
+            document.getElementById('to_date').min = this.value;
+        });
+    });
+
+    function hideButton() {
+        const btn = document.querySelector('.submit-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Submitting...';
+    }
+</script>
+{% endblock content %}

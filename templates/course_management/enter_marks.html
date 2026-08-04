@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+ 
+{% block content %}
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enter Marks</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>Enter Marks for Dummy Number</h2>
+    <form id="markForm">
+        {% csrf_token %}  <!-- Add CSRF Token inside the form -->
+        
+        <label for="dummy_no">Dummy Number:</label>
+        <input type="text" id="dummy_no" name="dummy_no" required>
+        
+        <label for="mark">Mark:</label>
+        <input type="number" id="mark" name="mark" required>
+        
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="message"></div>
+
+    <script>
+        $(document).ready(function() {
+            $("#markForm").submit(function(event) {
+                event.preventDefault();
+                
+                let dummy_no = $("#dummy_no").val();
+                let mark = $("#mark").val();
+                let csrf_token = $("input[name='csrfmiddlewaretoken']").val();  // Get CSRF token
+
+                $.ajax({
+                    url: "{% url 'save_end_semester_marks' %}",
+                    type: "POST",
+                    data: JSON.stringify({ dummy_no: dummy_no, mark: mark }),
+                    contentType: "application/json",
+                    headers: { "X-CSRFToken": csrf_token },  // Send CSRF token in headers
+                    success: function(response) {
+                        $("#message").html("<p style='color:green;'>" + response.message + "</p>");
+                    },
+                    error: function(xhr) {
+                        let error = JSON.parse(xhr.responseText);
+                        $("#message").html("<p style='color:red;'>" + error.error + "</p>");
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
+{% endblock content %}

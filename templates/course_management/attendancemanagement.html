@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'admin_dashboard_css.css' %}" />
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="dashboard-header text-right ">
+    <h2 class="display-5 fw-bold">Attendance Management</h2>
+    <form method="post" action="{% url 'student_present' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Programme Details -->
+        <h3 class="mt-4">Programme Details</h3>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="department" class="form-label fw-semibold">Department</label>
+                    <input type="text" class="form-control" value="{{ department.name }}" readonly> 
+                    <input type="hidden" name="department_id" value="{{ department.id }}">
+                </div>
+            </div>
+
+                <div class="col-md-4">
+                    <div class="form-group" id="program_group" style="display:none;">
+                        <label for="program" class="control-label">Program</label>
+                        <select class="form-control" id="program" name="program" required>
+                            <option selected disabled value="">Choose Program...</option>
+                        </select>
+                    </div>
+                    </div>
+
+        </div>
+
+                <div class="row mt-3">
+                    
+                    
+
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="present_designation" class="form-label fw-semibold">Year</label>
+                            <input type="number" name="year" id="year" class="form-control" placeholder="Enter Year" required>
+                        </div>
+                    </div>
+
+
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="intake" class="form-label fw-semibold">Semester</label>
+                            <select name="semester" id="semester" class="form-select" required>
+                                <option value="" disabled selected>Select Semester</option>
+                                <option value="1">Semester I</option>
+                                <option value="2">Semester II</option>
+                                <option value="3">Semester III</option>
+                                <option value="4">Semester IV</option>
+                                <option value="5">Semester V</option>
+                                <option value="6">Semester VI</option>
+                                <option value="7">Semester VII</option>
+                                <option value="8">Semester VIII</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="present_designation" class="form-label fw-semibold">Day</label>
+                            <select name="day" id="day" class="form-select" required>
+                                <option value="" disabled selected>Select Semester</option>
+                                <option value="Monday">Monday</option>
+                                <option value="Tuesday">Tuesday</option>
+                                <option value="Wednesday">Wednesday</option>
+                                <option value="Thursday">Thursday</option>
+                                <option value="Friday">Friday</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="present_designation" class="form-label fw-semibold">Day</label>
+                            <select name="period_number" id="period_number" class="form-select" required>
+                                <option value="" disabled selected>Select period_number</option>
+                                <option value="first_period">first_period</option>
+                                <option value="second_period">second_period</option>
+                                <option value="third_period">third_period</option>
+                                <option value="fourth_period">fourth_period</option>
+                                <option value="fifth_period">fifth_period</option>
+                                <option value="sixth_period">sixth_period</option>
+                                <option value="seventh_period">seventh_period</option>
+                                <option value="eighth_period">eighth_period</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+                    <h2 class="text-center">Course List</h2>
+
+                                       <table class="table table-bordered" id="courseTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Student Name</th>
+                                <th>Reg No</th>
+                                <th>Course_Name</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="courseTableBody">
+                            <!-- Rows will be dynamically generated here -->
+                        </tbody>
+                    </table>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Submit</button>
+
+        </form>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        function fetchFilteredStudents() {
+            let departmentId = $("#department").val();
+            let programId = $("#program").val();
+            let year = $("#year").val();
+            let semester = $("#semester").val();
+            let day = $("#day").val();
+            let periodNumber = $("#period_number").val();
+
+            if (departmentId && programId && year && semester && day && periodNumber) {
+                $.ajax({
+                    url: '{% url "filter_students" %}',  // Ensure this matches your Django URL pattern
+                    method: 'GET',
+                    data: {
+                        'department': departmentId,
+                        'program': programId,
+                        'year': year,
+                        'semester': semester,
+                        'day': day,
+                        'period_number': periodNumber
+                    },
+                    success: function (response) {
+                        let courseTableBody = $("#courseTableBody");
+                        courseTableBody.empty();  // Clear previous content
+
+                        if (response.students && response.students.length > 0) {
+                            response.students.forEach((student, index) => {
+                                let row = `
+                                    <tr>
+                                        <td>${index + 1}</td>
+                                        <td>${student.name}</td>
+                                        <td>${student.reg_number}</td>
+                                        <td>${student.course_name}</td>
+                                        <td>
+                                            <input type="hidden" name="student_id[]" value="${student.id}">
+                                            <input type="hidden" name="student_name[]" value="${student.name}">
+                                            <input type="hidden" name="reg_number[]" value="${student.reg_number}">
+                                            <input type="hidden" name="course_name[]" value="${student.course_name}">
+                                            <select class="form-control" name="status[]" required>
+                                                <option value="Present" ${student.status === "Present" ? "selected" : ""}>Present</option>
+                                                <option value="Absent" ${student.status === "Absent" ? "selected" : ""}>Absent</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `;
+                                courseTableBody.append(row);
+                            });
+                        } else {
+                            courseTableBody.append("<tr><td colspan='5' class='text-center'>No students found.</td></tr>");
+                        }
+                    },
+                    error: function (error) {
+                        console.error("Error fetching students:", error);
+                    }
+                });
+            } else {
+                console.log("Please select all filters.");
+            }
+        }
+
+        // Trigger filtering when dropdowns change
+        $("#department, #program, #year, #semester, #day, #period_number").on("change", fetchFilteredStudents);
+    });
+</script>
+
+
+
+<script>
+    $(document).ready(function() {
+        // When the department is changed
+        $('#department').change(function() {
+            var departmentId = $(this).val();  // Get selected department ID
+
+            // If a department is selected, make an AJAX call to fetch programs
+            if (departmentId) {
+                $.ajax({
+                    url: '{% url "get_programs" %}',  // URL to get programs
+                    data: {
+                        'department_id': departmentId  // Send the department ID
+                    },
+                    success: function(data) {
+                        // Clear any previous program options
+                        $('#program').empty();
+                        $('#program').append('<option selected disabled value="">Choose Program...</option>');
+
+                        // Populate the programs dropdown with the response data
+                        data.forEach(function(program) {
+                            $('#program').append('<option value="' + program.id + '">' + program.program_name + '</option>');
+                        });
+
+                        // Show the program dropdown
+                        $('#program_group').show();
+                    }
+                });
+            } else {
+                // Hide the program dropdown if no department is selected
+                $('#program_group').hide();
+            }
+        });
+    });
+</script>
+
+
+{% endblock content %}

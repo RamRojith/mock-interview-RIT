@@ -1,0 +1,1074 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="la-page">
+
+  <!-- Important Alert -->
+  <div class="la-alert">
+    <div class="title">
+      <span>⚠ Important</span>
+      <span class="sub-title">Cross-department approvals (New approvals only)</span>
+    </div>
+    <ul>
+      <li>If the approver is not from the creator’s department, enable <b>Cross Dept</b> and select department.</li>
+      <li>This update applies only for <b>new data center approvals</b>.</li>
+    </ul>
+  </div>
+
+  <!-- Title -->
+  <div class="la-title-row">
+    <div>
+      <h2>Data Center Approvers</h2>
+      <p class="page-sub">Configure approval hierarchy by dragging roles from left to right.</p>
+    </div>
+  </div>
+
+  <!-- Saved approval flows (read-only summary) -->
+  <div class="la-card saved-flows-card">
+    <div class="la-col-head">
+      <div>
+        <h5>Saved Approval Flows</h5>
+        <span class="sub">Approval routes already configured. Click <b>Edit</b> to load a flow into the builder below.</span>
+      </div>
+      <span class="flow-count-pill">{{ existing_flows|length }} flow(s)</span>
+    </div>
+
+    <div class="la-col-body">
+      {% if existing_flows %}
+        <div class="flow-list">
+          {% for flow in existing_flows %}
+            <div class="flow-item">
+              <div class="flow-head">
+                <div class="flow-creator">
+                  <span class="flow-creator-label">Creator</span>
+                  <span class="flow-creator-name">{{ flow.creator_role_name }}</span>
+                </div>
+                <button type="button" class="edit-flow-btn"
+                        onclick="loadFlow('{{ flow.creator_role_id }}')">
+                  ✎ Edit
+                </button>
+              </div>
+
+              <div class="flow-chain">
+                {% for lvl in flow.levels %}
+                  <span class="flow-step">
+                    <span class="flow-step-level">L{{ lvl.approver_level }}</span>
+                    <span class="flow-step-role">{{ lvl.approver_role_name }}</span>
+                    {% if lvl.is_cross_department %}
+                      <span class="flow-step-dept">↪ {{ lvl.department_name|default:"Cross Dept" }}</span>
+                    {% endif %}
+                  </span>
+                  {% if not forloop.last %}<span class="flow-arrow">→</span>{% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="ghost-note">No approval flows configured yet. Build one below and click Submit.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Creator Role -->
+  <div class="la-card la-creator">
+    <div class="rowx">
+      <div>
+        <label for="creatorRole">Select Creator Role</label>
+        <select id="creatorRole" class="form-select">
+          <option value="">-- Select Role --</option>
+          {% for r in roles %}
+            <option value="{{ r.id }}">{{ r.role }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button class="btn btn-outline-secondary" id="clearBtn" type="button">
+        Clear
+      </button>
+    </div>
+  </div>
+
+  <!-- Columns -->
+  <div class="la-columns">
+
+    <!-- Available Roles -->
+    <div class="la-card">
+      <div class="la-col-head">
+        <div>
+          <h5>Available Roles</h5>
+          <span class="sub">Drag roles into hierarchy</span>
+        </div>
+      </div>
+
+      <div class="la-col-body">
+        <div class="la-search-wrap">
+          <input id="searchAvailable" class="form-control" placeholder="Search available roles...">
+        </div>
+        <div id="availableZone" class="la-dropzone"></div>
+      </div>
+    </div>
+
+    <!-- Hierarchy -->
+    <div class="la-card">
+      <div class="la-col-head">
+        <div>
+          <h5>Approval Hierarchy</h5>
+          <span class="sub">Drop roles here and reorder as needed</span>
+        </div>
+      </div>
+
+      <div class="la-col-body">
+        <div class="la-search-wrap">
+          <input id="searchHierarchy" class="form-control" placeholder="Search hierarchy roles...">
+        </div>
+        <div id="hierarchyZone" class="la-dropzone">
+          <div id="emptyHint" class="ghost-note">
+            Drag roles here...
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Message -->
+  <div id="msgBox" class="mt-3"></div>
+
+  <!-- Submit -->
+  <div class="la-bottom">
+    <div class="left">
+      <div class="la-check">✓</div>
+      <div>Click Submit to save hierarchy</div>
+    </div>
+
+    <button class="btn btn-primary" id="submitBtn" type="button">
+      Submit Hierarchy
+    </button>
+  </div>
+
+</div>
+
+<script>
+/* =========================
+   DATA
+========================= */
+
+const ROLES = [
+  {% for r in roles %}
+    { id: "{{ r.id }}", name: "{{ r.role|escapejs }}" },
+  {% endfor %}
+];
+
+const DEPARTMENTS = [
+  {% for d in departments %}
+    { id: "{{ d.id }}", name: "{{ d.Department|escapejs }}" },
+  {% endfor %}
+];
+
+const FLOWS = {{ existing_flows_json|safe }};
+
+let hierarchy = [];
+let availableIds = ROLES.map(r => String(r.id));
+
+let searchAvailableText = "";
+let searchHierarchyText = "";
+let draggedData = null;
+
+/* =========================
+   ELEMENTS
+========================= */
+
+const availableZone = document.getElementById("availableZone");
+const hierarchyZone = document.getElementById("hierarchyZone");
+const creatorRole = document.getElementById("creatorRole");
+const msgBox = document.getElementById("msgBox");
+const searchAvailable = document.getElementById("searchAvailable");
+const searchHierarchy = document.getElementById("searchHierarchy");
+const clearBtn = document.getElementById("clearBtn");
+
+/* =========================
+   HELPERS
+========================= */
+
+function getRoleById(id) {
+  return ROLES.find(x => String(x.id) === String(id));
+}
+
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function matchesSearch(name, query) {
+  return name.toLowerCase().includes(query.trim().toLowerCase());
+}
+
+/* =========================
+   RENDER
+========================= */
+
+function render() {
+  renderAvailable();
+  renderHierarchy();
+}
+
+function renderAvailable() {
+  availableZone.innerHTML = "";
+
+  const filteredIds = availableIds.filter(id => {
+    const role = getRoleById(id);
+    return role && matchesSearch(role.name, searchAvailableText);
+  });
+
+  if (!filteredIds.length) {
+    availableZone.innerHTML = `<div class="ghost-note">No available roles found</div>`;
+    return;
+  }
+
+  filteredIds.forEach(id => {
+    const r = getRoleById(id);
+    if (!r) return;
+
+    const card = document.createElement("div");
+    card.className = "role-card available-card";
+    card.draggable = true;
+    card.dataset.id = r.id;
+    card.dataset.source = "available";
+
+    card.innerHTML = `
+      <div class="drag-handle">⋮⋮</div>
+      <div class="role-name">${escapeHtml(r.name)}</div>
+      <button type="button" class="add-btn" onclick="addToHierarchy('${r.id}')">Add</button>
+    `;
+
+    card.addEventListener("dragstart", (e) => {
+      draggedData = { source: "available", id: r.id };
+      card.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+
+    card.addEventListener("dragend", () => {
+      card.classList.remove("dragging");
+      draggedData = null;
+      removeDropHighlights();
+    });
+
+    availableZone.appendChild(card);
+  });
+}
+
+function renderHierarchy() {
+  hierarchyZone.innerHTML = "";
+
+  const filteredHierarchy = hierarchy
+    .map((item, index) => ({ ...item, originalIndex: index }))
+    .filter(item => {
+      const role = getRoleById(item.id);
+      return role && matchesSearch(role.name, searchHierarchyText);
+    });
+
+  if (!filteredHierarchy.length) {
+    hierarchyZone.innerHTML = `<div class="ghost-note">Drag roles here...</div>`;
+  }
+
+  filteredHierarchy.forEach((item, visibleIndex) => {
+    const r = getRoleById(item.id);
+    const actualIndex = item.originalIndex;
+    if (!r) return;
+
+    const card = document.createElement("div");
+    card.className = "role-card hierarchy-card";
+    card.draggable = true;
+    card.dataset.index = actualIndex;
+    card.dataset.source = "hierarchy";
+
+    card.innerHTML = `
+      <div class="role-pill">Level ${actualIndex + 1}</div>
+      <div class="role-main">
+        <div class="role-title-row">
+          <span class="drag-handle">⋮⋮</span>
+          <div class="role-name">${escapeHtml(r.name)}</div>
+        </div>
+
+        <div class="role-tools">
+          <label class="cross-wrap">
+            <input type="checkbox" ${item.isCrossDepartment ? "checked" : ""} onchange="toggleCross(${actualIndex}, this)">
+            Cross Dept
+          </label>
+
+          <select class="form-select dept-select" onchange="setDept(${actualIndex}, this)">
+            <option value="">Select Dept</option>
+            ${DEPARTMENTS.map(d =>
+              `<option value="${d.id}" ${String(item.departmentId) === String(d.id) ? "selected" : ""}>${escapeHtml(d.name)}</option>`
+            ).join("")}
+          </select>
+
+          <button type="button" class="remove-btn" onclick="removeFromHierarchy(${actualIndex})">Remove</button>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener("dragstart", (e) => {
+      draggedData = { source: "hierarchy", index: actualIndex };
+      card.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+
+    card.addEventListener("dragend", () => {
+      card.classList.remove("dragging");
+      draggedData = null;
+      removeDropHighlights();
+    });
+
+    card.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      card.classList.add("drag-over-card");
+    });
+
+    card.addEventListener("dragleave", () => {
+      card.classList.remove("drag-over-card");
+    });
+
+    card.addEventListener("drop", (e) => {
+      e.preventDefault();
+      card.classList.remove("drag-over-card");
+
+      if (!draggedData) return;
+
+      if (draggedData.source === "available") {
+        addToHierarchyAt(draggedData.id, actualIndex);
+      } else if (draggedData.source === "hierarchy") {
+        reorderHierarchy(draggedData.index, actualIndex);
+      }
+    });
+
+    hierarchyZone.appendChild(card);
+  });
+}
+
+/* =========================
+   ACTIONS
+========================= */
+
+function addToHierarchy(id) {
+  if (hierarchy.some(x => String(x.id) === String(id))) return;
+
+  hierarchy.push({
+    id: String(id),
+    isCrossDepartment: false,
+    departmentId: null
+  });
+
+  availableIds = availableIds.filter(x => String(x) !== String(id));
+  render();
+}
+
+function addToHierarchyAt(id, index) {
+  if (hierarchy.some(x => String(x.id) === String(id))) return;
+
+  const newItem = {
+    id: String(id),
+    isCrossDepartment: false,
+    departmentId: null
+  };
+
+  hierarchy.splice(index, 0, newItem);
+  availableIds = availableIds.filter(x => String(x) !== String(id));
+  render();
+}
+
+function removeFromHierarchy(index) {
+  const removed = hierarchy.splice(index, 1)[0];
+  if (removed) {
+    availableIds.push(String(removed.id));
+  }
+  render();
+}
+
+function reorderHierarchy(fromIndex, toIndex) {
+  if (fromIndex === toIndex) return;
+  if (fromIndex < 0 || toIndex < 0) return;
+
+  const moved = hierarchy.splice(fromIndex, 1)[0];
+  hierarchy.splice(toIndex, 0, moved);
+  render();
+}
+
+function toggleCross(index, el) {
+  hierarchy[index].isCrossDepartment = el.checked;
+
+  if (!el.checked) {
+    hierarchy[index].departmentId = null;
+  }
+
+  render();
+}
+
+function setDept(index, el) {
+  hierarchy[index].departmentId = el.value || null;
+}
+
+function clearAll() {
+  hierarchy = [];
+  availableIds = ROLES.map(r => String(r.id));
+  creatorRole.value = "";
+  searchAvailable.value = "";
+  searchHierarchy.value = "";
+  searchAvailableText = "";
+  searchHierarchyText = "";
+  msgBox.innerHTML = "";
+  render();
+}
+
+/* Load an already-saved flow into the builder for editing. */
+function loadFlow(creatorId) {
+  const flow = FLOWS.find(f => String(f.creator_role_id) === String(creatorId));
+  if (!flow) return;
+
+  creatorRole.value = String(flow.creator_role_id);
+
+  const levels = (flow.levels || [])
+    .slice()
+    .sort((a, b) => a.approver_level - b.approver_level);
+
+  hierarchy = levels.map(lvl => ({
+    id: String(lvl.approver_role_id),
+    isCrossDepartment: !!lvl.is_cross_department,
+    departmentId: lvl.department_id != null ? String(lvl.department_id) : null
+  }));
+
+  const usedIds = new Set(hierarchy.map(h => String(h.id)));
+  availableIds = ROLES.map(r => String(r.id)).filter(id => !usedIds.has(id));
+
+  searchAvailable.value = "";
+  searchHierarchy.value = "";
+  searchAvailableText = "";
+  searchHierarchyText = "";
+
+  render();
+  showMsg("success", `Editing flow for "${flow.creator_role_name}". Update and click Submit to save changes.`);
+
+  const builder = document.querySelector(".la-columns");
+  if (builder && builder.scrollIntoView) {
+    builder.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+/* =========================
+   DROP ZONES
+========================= */
+
+function removeDropHighlights() {
+  availableZone.classList.remove("drag-over");
+  hierarchyZone.classList.remove("drag-over");
+}
+
+availableZone.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  availableZone.classList.add("drag-over");
+});
+
+availableZone.addEventListener("dragleave", () => {
+  availableZone.classList.remove("drag-over");
+});
+
+availableZone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  availableZone.classList.remove("drag-over");
+
+  if (!draggedData) return;
+
+  if (draggedData.source === "hierarchy") {
+    removeFromHierarchy(draggedData.index);
+  }
+});
+
+hierarchyZone.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  hierarchyZone.classList.add("drag-over");
+});
+
+hierarchyZone.addEventListener("dragleave", () => {
+  hierarchyZone.classList.remove("drag-over");
+});
+
+hierarchyZone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  hierarchyZone.classList.remove("drag-over");
+
+  if (!draggedData) return;
+
+  if (draggedData.source === "available") {
+    addToHierarchy(draggedData.id);
+  }
+});
+
+/* =========================
+   SEARCH
+========================= */
+
+searchAvailable.addEventListener("input", function () {
+  searchAvailableText = this.value || "";
+  renderAvailable();
+});
+
+searchHierarchy.addEventListener("input", function () {
+  searchHierarchyText = this.value || "";
+  renderHierarchy();
+});
+
+/* =========================
+   BUTTONS
+========================= */
+
+clearBtn.addEventListener("click", clearAll);
+
+/* =========================
+   SUBMIT
+========================= */
+
+document.getElementById("submitBtn").onclick = function () {
+
+  if (!creatorRole.value) {
+    showMsg("danger", "Select creator role");
+    return;
+  }
+
+  if (!hierarchy.length) {
+    showMsg("danger", "Add at least one approver role");
+    return;
+  }
+
+  for (const item of hierarchy) {
+    if (item.isCrossDepartment && !item.departmentId) {
+      showMsg("danger", "Select department for all cross-department approvers");
+      return;
+    }
+  }
+
+  fetch(window.location.href, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": "{{ csrf_token }}"
+    },
+    body: JSON.stringify({
+      creatorRole: creatorRole.value,
+      roleHierarchy: hierarchy
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.error) {
+      showMsg("danger", data.error);
+    } else {
+      showMsg("success", data.message);
+    }
+  })
+  .catch(() => {
+    showMsg("danger", "Something went wrong while saving hierarchy");
+  });
+};
+
+/* =========================
+   MESSAGE
+========================= */
+
+function showMsg(type, text) {
+  msgBox.innerHTML = `
+    <div class="alert alert-${type}">
+      ${escapeHtml(text)}
+    </div>
+  `;
+}
+
+/* =========================
+   INIT
+========================= */
+
+render();
+
+</script>
+
+<style>
+/* ===== Page layout ===== */
+.la-page {
+  padding: 28px 20px 40px;
+  max-width: 1240px;
+  margin: 0 auto;
+  background: linear-gradient(180deg, #f8fbff 0%, #f3f7fc 100%);
+  min-height: 100vh;
+}
+
+.la-alert {
+  border: 1px solid #f6d1d1;
+  background: linear-gradient(135deg, #fff6f6 0%, #fff1f1 100%);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 22px;
+  box-shadow: 0 8px 24px rgba(180, 35, 24, 0.06);
+}
+
+.la-alert .title {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-weight: 800;
+  color: #b42318;
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+
+.la-alert .sub-title {
+  color: #7b8794;
+  font-weight: 700;
+}
+
+.la-alert ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #7a1f1f;
+}
+
+.la-alert li {
+  margin: 6px 0;
+}
+
+.la-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0 16px;
+}
+
+.la-title-row h2 {
+  margin: 0;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  color: #0f172a;
+  font-size: 28px;
+}
+
+.page-sub {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.la-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #e8edf5;
+  border-radius: 18px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(6px);
+}
+
+.la-creator {
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.la-creator .rowx {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.la-creator label {
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.la-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+@media (max-width: 992px) {
+  .la-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .la-creator .rowx {
+    grid-template-columns: 1fr;
+  }
+
+  .la-bottom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.la-col-head {
+  padding: 16px 18px;
+  border-bottom: 1px solid #edf2f7;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.la-col-head h5 {
+  margin: 0;
+  font-weight: 900;
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.la-col-head .sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.la-col-body {
+  padding: 14px 16px 16px;
+}
+
+.la-search-wrap {
+  margin-bottom: 14px;
+}
+
+.la-search-wrap .form-control {
+  border-radius: 14px;
+  border: 1px solid #dbe5f0;
+  min-height: 46px;
+  padding: 10px 14px;
+  background: #f8fbff;
+  box-shadow: none;
+}
+
+.la-search-wrap .form-control:focus,
+.form-select:focus {
+  border-color: #5b9cff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+.la-dropzone {
+  border: 2px dashed #d7deea;
+  border-radius: 16px;
+  min-height: 320px;
+  padding: 12px;
+  background: linear-gradient(180deg, #fcfdff 0%, #f8fbff 100%);
+  transition: all 0.2s ease;
+}
+
+.la-dropzone.drag-over {
+  background: #eef6ff;
+  border-color: #5b9cff;
+}
+
+.role-card {
+  border: 1px solid #e8edf5;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.role-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+}
+
+.role-card.dragging {
+  opacity: 0.65;
+}
+
+.role-card.drag-over-card {
+  border-color: #5b9cff;
+  background: #f3f8ff;
+}
+
+.available-card {
+  justify-content: space-between;
+}
+
+.hierarchy-card {
+  align-items: flex-start;
+}
+
+.drag-handle {
+  font-size: 18px;
+  color: #94a3b8;
+  cursor: grab;
+  user-select: none;
+  line-height: 1;
+}
+
+.role-pill {
+  font-size: 11px;
+  font-weight: 900;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #eaf3ff;
+  color: #1d4ed8;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.role-main {
+  flex: 1;
+}
+
+.role-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.role-name {
+  font-weight: 800;
+  color: #334155;
+  font-size: 14px;
+}
+
+.role-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cross-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  user-select: none;
+  white-space: nowrap;
+  background: #f8fafc;
+  border: 1px solid #e8edf5;
+  border-radius: 999px;
+  padding: 8px 10px;
+}
+
+.dept-select {
+  min-width: 180px;
+  border-radius: 12px;
+}
+
+.ghost-note {
+  color: #64748b;
+  font-size: 14px;
+  padding: 18px 8px;
+  text-align: center;
+}
+
+.add-btn,
+.remove-btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-weight: 800;
+  font-size: 13px;
+  transition: 0.2s ease;
+}
+
+.add-btn {
+  background: #e8f3ff;
+  color: #1d4ed8;
+}
+
+.add-btn:hover {
+  background: #d8ebff;
+}
+
+.remove-btn {
+  background: #fff1f2;
+  color: #dc2626;
+}
+
+.remove-btn:hover {
+  background: #ffe2e6;
+}
+
+/* Bottom sticky bar */
+.la-bottom {
+  position: sticky;
+  bottom: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.94);
+  border: 1px solid #e8edf5;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.la-bottom .left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.la-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: #22c55e;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.btn {
+  border-radius: 12px !important;
+  font-weight: 800 !important;
+  min-height: 44px;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+/* Messages */
+#msgBox .alert {
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-weight: 700;
+}
+
+/* Saved flows */
+.saved-flows-card {
+  margin-bottom: 18px;
+}
+
+.flow-count-pill {
+  align-self: center;
+  background: #eaf3ff;
+  color: #1d4ed8;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.flow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.flow-item {
+  border: 1px solid #e8edf5;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: #fbfdff;
+}
+
+.flow-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.flow-creator-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #94a3b8;
+  margin-right: 8px;
+}
+
+.flow-creator-name {
+  font-size: 15px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.edit-flow-btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-weight: 800;
+  font-size: 13px;
+  background: #e8f3ff;
+  color: #1d4ed8;
+  transition: 0.2s ease;
+}
+
+.edit-flow-btn:hover {
+  background: #d8ebff;
+}
+
+.flow-chain {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.flow-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+.flow-step-level {
+  font-size: 11px;
+  font-weight: 900;
+  color: #1d4ed8;
+  background: #eaf3ff;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.flow-step-role {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.flow-step-dept {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9a3412;
+  background: #ffedd5;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.flow-arrow {
+  color: #94a3b8;
+  font-weight: 900;
+}
+</style>
+
+{% endblock %}

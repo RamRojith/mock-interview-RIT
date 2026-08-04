@@ -1,0 +1,512 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="faculty-timetable-container">
+    <!-- Header Section -->
+    <div class="timetable-header">
+        <h1>Faculty Timetable</h1>
+        <p class="subtitle">View your assigned subjects and teaching schedule</p>
+    </div>
+
+    <!-- Assigned Subjects Card -->
+    <div class="card assigned-subjects-card">
+        <div class="card-header">
+            <div class="header-content">
+                <i class="fas fa-book-open header-icon"></i>
+                <h2>Assigned Subjects</h2>
+            </div>
+            <span class="badge badge-count">{{ assigned_subjects|length }}</span>
+        </div>
+        <div class="card-body">
+            {% if assigned_subjects %}
+            <div class="table-responsive">
+                <table class="subjects-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Course Code</th>
+                            <th>Department</th>
+                            <th>Section</th>
+                            <th>Year</th>
+                            <th>Semester</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subject in assigned_subjects %}
+                        <tr>
+                            <td class="subject-name">{{ subject.subject }}</td>
+                            <td class="course-code">{{ subject.course_code }}</td>
+                            <td><span class="dept-badge">{{ subject.department }}</span></td>
+                            <td><span class="section-badge">{{ subject.section }}</span></td>
+                            <td><span class="year-badge">Year {{ subject.year }}</span></td>
+                            <td><span class="semester-badge">Sem {{ subject.semester }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox empty-icon"></i>
+                <p>No assigned subjects</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Timetable Section -->
+    {% if grouped_timetable %}
+    <div class="timetable-section">
+        <h2 class="section-title">Weekly Schedule</h2>
+        
+        {% for key, rows in grouped_timetable.items %}
+        {% with dept=key.0 batch=key.1 section=key.2 year=key.3 sem=key.4 %}
+        <div class="timetable-card">
+            <div class="timetable-header">
+                <div class="timetable-info">
+                    <h3>{{ dept }} Department</h3>
+                    <div class="class-details">
+                        <span class="detail-item">Section: {{ section }}</span>
+                        <span class="detail-item">Year: {{ year }}</span>
+                        <span class="detail-item">Semester: {{ sem }}</span>
+                    </div>
+                </div>
+                <button class="expand-button" onclick="toggleTimetable(this)">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            
+            <div class="timetable-content">
+                <div class="timetable-grid">
+                    <!-- Header row -->
+                    <div class="timetable-row header-row">
+                        <div class="time-cell">Day/Period</div>
+                        <div class="period-cell">1st</div>
+                        <div class="period-cell">2nd</div>
+                        <div class="period-cell">3rd</div>
+                        <div class="period-cell">4th</div>
+                        <div class="period-cell">5th</div>
+                        <div class="period-cell">6th</div>
+                        <div class="period-cell">7th</div>
+                        <div class="period-cell">8th</div>
+                    </div>
+                    
+                    <!-- Data rows -->
+                    {% for row in rows %}
+                    <div class="timetable-row">
+                        <div class="day-cell">{{ row.day }}</div>
+                        <div class="period-slot {% if row.first_period %}has-class{% endif %}">
+                            {{ row.first_period|default:"" }}
+                        </div>
+                        <div class="period-slot {% if row.second_period %}has-class{% endif %}">
+                            {{ row.second_period|default:"" }}
+                        </div>
+                        <div class="period-slot {% if row.third_period %}has-class{% endif %}">
+                            {{ row.third_period|default:"" }}
+                        </div>
+                        <div class="period-slot {% if row.fourth_period %}has-class{% endif %}">
+                            {{ row.fourth_period|default:"" }}
+                        </div>
+                        <div class="period-slot {% if row.fifth_period %}has-class{% endif %}">
+                            {{ row.fifth_period|default:"" }}
+                        </div>
+                        <div class="period-slot {% if row.sixth_period %}has-class{% endif %}">
+                            {{ row.sixth_period|default:"" }}
+                        </div>
+                        <div class="period-slot {% if row.seventh_period %}has-class{% endif %}">
+                            {{ row.seventh_period|default:"" }}
+                        </div>
+                        <div class="period-slot {% if row.eighth_period %}has-class{% endif %}">
+                            {{ row.eighth_period|default:"" }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-timetable">
+        <i class="fas fa-calendar-times empty-icon"></i>
+        <h3>No timetable data available</h3>
+        <p>Your schedule will appear here once available</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    /* Base styles */
+    .faculty-timetable-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .timetable-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .timetable-header h1 {
+        color: #2c3e50;
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+    
+    .subtitle {
+        color: #7f8c8d;
+        font-size: 16px;
+    }
+    
+    /* Card styles */
+    .card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .header-icon {
+        font-size: 24px;
+    }
+    
+    .card-header h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+    }
+    
+    .badge-count {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    
+    .card-body {
+        padding: 20px;
+    }
+    
+    /* Table styles */
+    .table-responsive {
+        overflow-x: auto;
+        width: 100%;
+    }
+    
+    .subjects-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .subjects-table th {
+        background-color: #f8f9fa;
+        padding: 16px 12px;
+        text-align: left;
+        font-weight: 600;
+        color: #2c3e50;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .subjects-table td {
+        padding: 16px 12px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .subjects-table tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .subject-name {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .course-code {
+        color: #6c757d;
+        font-family: monospace;
+        font-size: 14px;
+    }
+    
+    .dept-badge, .section-badge, .year-badge, .semester-badge {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .dept-badge {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+    
+    .section-badge {
+        background-color: #e3f2fd;
+        color: #1565c0;
+    }
+    
+    .year-badge {
+        background-color: #fff3e0;
+        color: #ef6c00;
+    }
+    
+    .semester-badge {
+        background-color: #f3e5f5;
+        color: #7b1fa2;
+    }
+    
+    /* Timetable styles */
+    .timetable-section {
+        margin-top: 40px;
+    }
+    
+    .section-title {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+    
+    .timetable-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+        overflow: hidden;
+    }
+    
+    .timetable-card .timetable-header {
+        background: #f8f9fa;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .timetable-info h3 {
+        margin: 0 0 8px 0;
+        color: #2c3e50;
+        font-size: 18px;
+    }
+    
+    .class-details {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    
+    .detail-item {
+        background: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        color: #6c757d;
+        border: 1px solid #e9ecef;
+    }
+    
+    .expand-button {
+        background: none;
+        border: none;
+        font-size: 18px;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        transition: all 0.3s;
+    }
+    
+    .expand-button:hover {
+        background: #e9ecef;
+    }
+    
+    .timetable-content {
+        padding: 20px;
+    }
+    
+    .timetable-grid {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .timetable-row {
+        display: flex;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .timetable-row:last-child {
+        border-bottom: none;
+    }
+    
+    .header-row {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    
+    .time-cell, .day-cell, .period-cell, .period-slot {
+        padding: 16px 8px;
+        text-align: center;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 60px;
+    }
+    
+    .time-cell, .day-cell {
+        flex: 0 0 120px;
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+    
+    .day-cell {
+        background-color: white;
+        justify-content: flex-start;
+        padding-left: 16px;
+    }
+    
+    .period-slot {
+        border-left: 1px solid #e9ecef;
+        position: relative;
+    }
+    
+    .period-slot.has-class {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        font-weight: 500;
+    }
+    
+    /* Empty states */
+    .empty-state, .empty-timetable {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+    }
+    
+    .empty-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+    
+    .empty-timetable h3 {
+        color: #2c3e50;
+        margin-bottom: 8px;
+    }
+    
+    /* Responsive styles */
+    @media (max-width: 992px) {
+        .timetable-grid {
+            overflow-x: auto;
+        }
+        
+        .timetable-row {
+            min-width: 800px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .faculty-timetable-container {
+            padding: 16px;
+        }
+        
+        .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .badge-count {
+            align-self: flex-start;
+        }
+        
+        .class-details {
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .subjects-table {
+            min-width: 700px;
+        }
+        
+        .time-cell, .day-cell {
+            flex: 0 0 100px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .timetable-header h1 {
+            font-size: 24px;
+        }
+        
+        .card-header {
+            padding: 16px;
+        }
+        
+        .card-body {
+            padding: 16px;
+        }
+        
+        .timetable-content {
+            padding: 16px;
+        }
+        
+        .time-cell, .day-cell, .period-cell, .period-slot {
+            padding: 12px 6px;
+            min-height: 50px;
+            font-size: 14px;
+        }
+        
+        .time-cell, .day-cell {
+            flex: 0 0 80px;
+        }
+    }
+</style>
+
+<script>
+    function toggleTimetable(button) {
+        const timetableCard = button.closest('.timetable-card');
+        const content = timetableCard.querySelector('.timetable-content');
+        const icon = button.querySelector('i');
+        
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            content.style.display = 'none';
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+    
+    // Initialize all timetables as expanded
+    document.addEventListener('DOMContentLoaded', function() {
+        const expandButtons = document.querySelectorAll('.expand-button');
+        expandButtons.forEach(button => {
+            const icon = button.querySelector('i');
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        });
+    });
+</script>
+
+{% endblock %}

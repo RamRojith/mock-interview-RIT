@@ -1,0 +1,468 @@
+{% extends "base.html" %}
+{% load static %}
+ {% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Faculty Management</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <style>
+        .buttons-container { 
+            margin-top: 20px; 
+            display: none; 
+        }
+        .attendance-container, .marks-container { 
+            display: none; 
+            margin-top: 20px; 
+        }
+        .btn { 
+            padding: 10px 15px; 
+            margin: 5px; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 5px; 
+        }
+        .btn-attendance { 
+            background-color: #007bff; 
+            color: white; 
+        }
+        .btn-assessment { 
+            background-color: #ffc107; 
+            color: black; 
+        }
+        .btn-submit { 
+            background-color: #28a745; 
+            color: white; 
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Course Selection -->
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="course-select" class="form-label">Select a Course:</label>
+            <select id="course-select" class="form-control">
+                <option value="">-- Select Course --</option>
+                {% for course in courses %}
+                    <option value="{{ course.course_code }}" data-intake="{{ course.intake_batch }}">
+                        {{ course.course_code }} - {{ course.intake_batch }} - {{course.course_title}}
+                    </option>
+                {% empty %}
+                    <option>No courses assigned</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Action Buttons (Initially Hidden) -->
+    <div class="buttons-container">
+        <button class="btn btn-attendance">Attendance</button>
+        <button class="btn btn-assessment">Assessment</button>
+        <button class="btn btn-dashboard"></button>
+    </div>
+
+    <!-- Attendance Section (Already implemented) -->
+    <!-- Attendance Section (Initially Hidden) -->
+    <div class="row attendance-container" style="display: none;">
+        <main class="table" id="attendance_table">
+            <h3>Mark Attendance</h3>
+            <form id="attendance-form">
+                <input type="hidden" name="course_code" id="selected-course">
+                <input type="hidden" name="intake_batch" id="selected-intake">
+                <!-- ✅ Add a Date Picker -->
+                <label for="attendance-date">Select Date:</label>
+                <input type="date" id="attendance-date" name="attendance_date" required>
+
+                <!-- ✅ Period Dropdown (Dynamically Populated) -->
+                <label for="period-select">Select Period:</label>
+                <select id="period-select" name="period_number" required>
+                    <option value="">Select a period</option>
+                    <!-- Periods will be added dynamically based on the selected date -->
+                </select>
+
+                <div class="table-responsive scrollable-table">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr class="table-active table-info">
+                                <th>Reg Number</th>
+                                <th>Student Name</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-table-body"></tbody>
+                    </table>
+                </div>
+                <button type="submit" class="btn btn-submit">Submit</button>
+            </form>
+        </main>
+    </div>
+    
+
+
+    <!-- Marks (Assessment) Section -->
+    <div class="marks-container">
+        <h3>Enter Marks</h3>
+        <!-- Dropdown to select an assessment -->
+        <div class="exams-dropdown">
+            <label for="exam-select" class="form-label">Select Assessment:</label>
+            <select id="exam-select" class="form-control">
+                <option value="">-- Select Assessment --</option>
+            </select>
+        </div>
+        <!-- Marks entry form -->
+        <form id="marks-form">
+            <input type="hidden" name="course_code" id="marks-selected-course">
+            <input type="hidden" name="intake_batch" id="marks-selected-intake">
+            <!-- Hidden field to store the selected assessment -->
+            <input type="hidden" name="assessment" id="selected-assessment">
+            
+            <div class="table-responsive scrollable-table">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr class="table-active table-info">
+                            <th>Reg Number</th>
+                            <th>Student Name</th>
+                            <th>Mark</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marks-student-table-body"></tbody>
+                </table>
+            </div>
+            
+            <button type="submit" class="btn btn-submit">Submit Marks</button>
+        </form>
+    </div>
+    
+
+    <script>
+        $(document).ready(function () {
+            var maxMark = 100; // Default max mark, updated dynamically
+        
+            // Show action buttons when a course is selected
+            $("#course-select").change(function () {
+                var selectedCourse = $(this).val();
+                $(".buttons-container").toggle(!!selectedCourse);
+                $(".attendance-container, .marks-container").hide();
+            });
+        
+            // Handle Assessment (Marks) Button Click
+            $(".btn-assessment").click(function () {
+                var courseCode = $("#course-select").val();
+                var intakeBatch = $("#course-select option:selected").data("intake");
+        
+                $("#marks-selected-course").val(courseCode);
+                $("#marks-selected-intake").val(intakeBatch);
+        
+                // Load available examinations into the assessment dropdown
+                $.ajax({
+                    url: "{% url 'fetch_exams' %}",
+                    data: { course_code: $("#course-select").val() },  // Send selected course
+                    success: function(data) {
+                        var examSelect = $("#exam-select");
+                        examSelect.empty();
+                        examSelect.append('<option value="">-- Select Assessment --</option>');
+                        data.forEach(function(exam){
+                            examSelect.append(`<option value="${exam.exams}">${exam.exams}</option>`);
+                        });
+                    }
+                });
+        
+                // Load student data
+                $.ajax({
+                    url: "{% url 'fetch_students' %}",
+                    data: { course_code: courseCode, intake_batch: intakeBatch },
+                    success: function (data) {
+                        var tableBody = $("#marks-student-table-body").empty();
+                        data.forEach(function (student) {
+                            tableBody.append(`
+                                <tr>
+                                    <td><input type="hidden" name="students[]" value="${student.reg_number}">${student.reg_number}</td>
+                                    <td>${student.first_name}</td>
+                                    <td><input type="number" name="marks[]" class="mark-input" step="0.01" min="0" placeholder="Enter mark"></td>
+                                </tr>
+                            `);
+                        });
+                        $(".marks-container").fadeIn();
+                    },
+                    error: function () {
+                        alert("Error fetching student data. Please try again.");
+                    }
+                });
+            });
+        
+            // Store selected assessment in hidden field and update max mark
+            $("#exam-select").change(function () {
+                $("#selected-assessment").val($(this).val());
+                maxMark = parseFloat($("#exam-select option:selected").data("max-mark")) || 100;
+            });
+        
+            // Validate marks input
+            $(document).on("input", ".mark-input", function () {
+                var enteredMark = parseFloat($(this).val());
+                if (enteredMark > maxMark) {
+                    alert(`Mark cannot exceed ${maxMark}`);
+                    $(this).val(maxMark);
+                }
+            });
+        
+            // Submit Marks Form via AJAX (With Validation)
+            $("#marks-form").submit(function (e) {
+                e.preventDefault();
+        
+                var courseCode = $("#marks-selected-course").val();
+                var assessment = $("#exam-select").val();
+        
+                if (!courseCode || !assessment) {
+                    alert("Please select a course and an assessment.");
+                    return;
+                }
+        
+                // Collect student marks & validate
+                // Collect student marks & validate
+                var marksData = [];
+                var isValid = true; // Track validation
+                $("#marks-student-table-body tr").each(function () {
+                    var studentRegNo = $(this).find("input[name='students[]']").val();
+                    var mark = parseFloat($(this).find("input[name='marks[]']").val());
+
+                    if (studentRegNo && !isNaN(mark)) {
+                        if (mark > maxMark) {
+                            alert(`Error: Mark for student ${studentRegNo} cannot exceed ${maxMark}`);
+                            isValid = false;
+                            return false; // Exit loop
+                        }
+                        marksData.push({
+                            student_reg_no: studentRegNo,
+                            course_code: courseCode,  // ✅ Include course_code here
+                            assessment: assessment,  // ✅ Include assessment here
+                            mark: mark
+                        });
+                    }
+                });
+
+                if (!isValid) return; // Prevent submission if validation fails
+
+                if (marksData.length === 0) {
+                    alert("Please enter marks for at least one student.");
+                    return;
+                }
+
+                // ✅ Now, `assessment` and `course_code` are correctly inside each mark object
+                var postData = JSON.stringify({
+                    marks: marksData
+                });
+
+                console.log("Post Data:", postData); // Debugging to verify correct format
+
+                // Send AJAX request
+                $.ajax({
+                    type: "POST",
+                    url: "{% url 'save_marks' %}",
+                    data: postData,
+                    contentType: "application/json",
+                    dataType: "json",
+                    headers: { "X-CSRFToken": "{{ csrf_token }}" },
+                    success: function (response) {
+                        alert(response.message);
+                        $(".marks-container").fadeOut();
+                    },
+                    error: function (xhr) {
+                        alert("Error: " + (xhr.responseJSON?.error || "Unknown error"));
+                    }
+                });
+
+            });
+        });
+        
+        $(document).ready(function () {
+            // Show the attendance form only when clicking "Attendance"
+            $(".btn-attendance").click(function () {
+                var courseCode = $("#course-select").val();
+                var intakeBatch = $("#course-select option:selected").data("intake");
+        
+                if (!courseCode || !intakeBatch) {
+                    alert("Please select a course first.");
+                    return;
+                }
+        
+                $("#selected-course").val(courseCode);
+                $("#selected-intake").val(intakeBatch);
+        
+                // Fetch students based on course and intake
+                $.ajax({
+                    url: "{% url 'fetch_students' %}",
+                    data: { course_code: courseCode, intake_batch: intakeBatch },
+                    success: function (data) {
+                        var tableBody = $("#student-table-body").empty();
+        
+                        if (data.length === 0) {
+                            alert("No students found for this course and intake.");
+                            return;
+                        }
+        
+                        // Populate student list with default "Present" status
+                        data.forEach(function (student) {
+                            tableBody.append(`
+                                <tr>
+                                    <td>${student.reg_number} 
+                                        <input type="hidden" name="students[]" value="${student.reg_number}">
+                                    </td>
+                                    <td>${student.first_name}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-success status-toggle" data-status="Present">Present</button>
+                                        <input type="hidden" name="statuses[]" value="Present">
+                                    </td>
+                                </tr>
+                            `);
+                        });
+        
+                        $(".attendance-container").fadeIn(); // Show the attendance table
+                    },
+                    error: function () {
+                        alert("Error fetching student data. Please try again.");
+                    }
+                });
+            });
+
+            $(document).ready(function () {
+                // Initialize Flatpickr Datepicker
+                $("#attendance-date").flatpickr({
+                    dateFormat: "Y-m-d",
+                    onChange: function (selectedDates, dateStr) {
+                        if (dateStr) {
+                            fetchPeriods(dateStr);
+                        }
+                    }
+                });
+            
+                function fetchPeriods(selectedDate) {
+                    $.ajax({
+                        url: "{% url 'fetch_periods_for_date' %}",
+                        data: { selected_date: selectedDate },
+                        success: function (response) {
+                            let periodDropdown = $("#period-select").empty();
+                            periodDropdown.append('<option value="">Select a Period</option>');
+            
+                            if (response.periods.length === 0) {
+                                alert("No periods available for this date.");
+                                return;
+                            }
+            
+                            // Populate dropdown with available periods
+                            response.periods.forEach(period => {
+                                periodDropdown.append(`<option value="${period.period_number}">Period ${period.period_number} - ${period.course_code}</option>`);
+                            });
+                        },
+                        error: function () {
+                            alert("Error fetching periods. Please try again.");
+                        }
+                    });
+                }
+            });
+            
+        
+            // Toggle between "Present" and "Absent" when clicking the status button
+            $(document).on("click", ".status-toggle", function () {
+                var button = $(this);
+                var hiddenInput = button.siblings("input[name='statuses[]']");
+        
+                if (button.data("status") === "Present") {
+                    button.removeClass("btn-success").addClass("btn-danger").text("Absent").data("status", "Absent");
+                    hiddenInput.val("Absent");
+                } else {
+                    button.removeClass("btn-danger").addClass("btn-success").text("Present").data("status", "Present");
+                    hiddenInput.val("Present");
+                }
+            });
+        
+            // Submit Attendance via AJAX
+            $("#attendance-form").submit(function (e) {
+                e.preventDefault();  // Prevent page reload
+            
+                var courseCode = $("#selected-course").val();
+                var intakeBatch = $("#selected-intake").val();
+                var attendanceDate = $("#attendance-date").val();  // ✅ Get date value
+                var periodNumber = $("#period-select").val();  // ✅ Get selected period
+
+            
+                if (!courseCode || !intakeBatch) {
+                    alert("Please select a course and intake.");
+                    return;
+                }
+            
+                if (!attendanceDate) {  // ✅ Check if date is selected
+                    alert("Please select an attendance date.");
+                    return;
+                }
+
+                if (!periodNumber) {  // ✅ Check if period is selected
+                    alert("Please select a period.");
+                    return;
+                }
+            
+                var students = [];
+                var statuses = [];
+            
+                $("#student-table-body tr").each(function () {
+                    var studentRegNo = $(this).find("input[name='students[]']").val();
+                    var status = $(this).find("input[name='statuses[]']").val();
+            
+                    if (studentRegNo) {
+                        students.push(studentRegNo);
+                        statuses.push(status);
+                    }
+                });
+            
+                if (students.length === 0) {
+                    alert("No students found for attendance submission.");
+                    return;
+                }
+            
+                var postData = {
+                    course_code: courseCode,
+                    intake_batch: intakeBatch,
+                    attendance_date: attendanceDate,  // ✅ Include date
+                    period_number: periodNumber,  // ✅ Include period
+                    "students[]": students,
+                    "statuses[]": statuses,
+                };
+            
+                $.ajax({
+                    type: "POST",
+                    url: "{% url 'save_attendance' %}",
+                    data: postData,
+                    headers: { "X-CSRFToken": "{{ csrf_token }}" },
+                    success: function (response) {
+                        alert(response.message);
+                        $(".attendance-container").fadeOut();
+                    },
+                    error: function (xhr) {
+                        alert("Error: " + (xhr.responseJSON?.error || "Unknown error"));
+                    }
+                });
+            });                  
+        });
+             
+        document.addEventListener("DOMContentLoaded", function () {
+            flatpickr("#attendance-date", {
+                dateFormat: "Y-m-d", // Format as YYYY-MM-DD for Django
+                allowInput: true,
+                altInput: true,
+                altFormat: "F j, Y", // Display format (e.g., March 18, 2025)
+                defaultDate: new Date(), // Pre-select today’s date
+            });
+        });
+        
+    </script>
+
+</body>
+</html>
+{% endblock content %}

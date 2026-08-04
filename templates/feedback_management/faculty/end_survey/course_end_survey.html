@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+  :root{
+    --card:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --soft:#f8fafc;
+    --pri:#2563eb;
+    --success:#16a34a;
+    --r:16px;
+  }
+
+  .cfp{
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--ink);
+  }
+  .cfp *{ box-sizing: border-box; }
+
+  .cfp .wrap{ max-width: 1600px; margin: 18px auto; padding: 0 12px; }
+  .cfp .hero{
+    background: linear-gradient(135deg, rgba(37,99,235,.14), rgba(99,102,241,.08));
+    border:1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px 18px;
+  }
+  .cfp .hero h3{ margin:0; font-weight:600; color:var(--ink); text-align:left; }
+  .cfp .sub{ color:var(--muted); margin-top:4px; text-align:left; }
+
+  .cfp .cardx{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius: var(--r);
+    box-shadow: 0 8px 24px rgba(0,0,0,.06);
+  }
+  .cfp .pad{ padding:16px; }
+
+  .cfp .filters{
+    display:grid;
+    grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr 1.6fr;
+    gap:12px;
+    align-items:end;
+    text-align:left;
+  }
+  @media (max-width: 1200px){
+    .cfp .filters{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 700px){
+    .cfp .filters{ grid-template-columns: 1fr; }
+  }
+
+  .cfp .filters label{
+    font-weight:600;
+    color:var(--ink);
+    font-size:13px;
+    margin-bottom:6px;
+    display:block;
+  }
+
+  .cfp .filters select{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:#fff;
+    font-weight:400;
+  }
+
+  .cfp .filters select:disabled{
+    background:#f1f5f9;
+    cursor:not-allowed;
+    color:#94a3b8;
+  }
+
+  .cfp .btnx{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 14px;
+    border-radius:12px;
+    border:none;
+    font-weight:600;
+    cursor:pointer;
+    text-decoration:none;
+  }
+  .cfp .btn-pri{ background:var(--pri); color:#fff; }
+  .cfp .btn-soft{ background:#e5e7eb; color:#111827; }
+  .cfp .btn-pdf{ background:#0f172a; color:#fff; }
+
+  .cfp .stats{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:10px;
+    text-align:left;
+  }
+  .cfp .pill{
+    background:var(--soft);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:6px 10px;
+    font-size:13px;
+    color:var(--ink);
+    font-weight:500;
+  }
+
+  .cfp .table-wrap{
+    overflow: visible;
+    border-radius: 12px;
+    border:1px solid var(--border);
+    margin-top:12px;
+    background:#fff;
+  }
+
+  .cfp table.matrix{
+    width:100%;
+    border-collapse:collapse;
+    min-width: 1500px;
+  }
+  .cfp .matrix th, .cfp .matrix td{
+    border:1px solid var(--border);
+    padding:8px 10px;
+    vertical-align:middle;
+    text-align:center;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+  .cfp .matrix thead th{
+    background:var(--soft);
+    font-weight:600;
+    font-size:12px;
+  }
+
+  .cfp .qhead{
+    white-space:normal !important;
+    min-width:220px;
+    max-width:260px;
+    font-weight:600;
+    text-align:left !important;
+    vertical-align:top !important;
+  }
+
+  .cfp .totalcol{
+    background:#f8fafc;
+    font-weight:700;
+  }
+
+  .cfp .selected-info{
+    margin-top:14px;
+    padding:12px 14px;
+    background:#f8fafc;
+    border:1px solid var(--border);
+    border-radius:12px;
+    font-size:13px;
+    color:#334155;
+  }
+
+  .cfp .note{
+    color:var(--muted);
+    margin-top:8px;
+    text-align:left;
+  }
+
+  .cfp .submitted-tag{
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+  }
+  .cfp .tag-yes{
+    background:#dcfce7;
+    color:#166534;
+  }
+  .cfp .tag-no{
+    background:#fee2e2;
+    color:#991b1b;
+  }
+
+  .cfp .dataTables_wrapper .dataTables_length,
+  .cfp .dataTables_wrapper .dataTables_filter{
+    padding: 10px 0;
+  }
+  .cfp .dataTables_wrapper .dataTables_filter{
+    text-align:right;
+  }
+
+  .cfp .dataTables_wrapper .dataTables_filter input,
+  .cfp .dataTables_wrapper .dataTables_length select{
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:8px 10px;
+    outline:none;
+  }
+
+  .cfp .dataTables_wrapper .dataTables_paginate{
+    padding:10px 0;
+    text-align:right;
+  }
+  .cfp .dataTables_wrapper .dataTables_paginate .paginate_button{
+    border:1px solid var(--border) !important;
+    border-radius:10px !important;
+    padding:6px 10px !important;
+    margin:0 2px !important;
+    background:#fff !important;
+    color:var(--ink) !important;
+  }
+  .cfp .dataTables_wrapper .dataTables_paginate .paginate_button.current{
+    background: var(--pri) !important;
+    color: #fff !important;
+    border-color: var(--pri) !important;
+  }
+
+  .cfp .dt-buttons .dt-button{
+    border:1px solid var(--border) !important;
+    border-radius:10px !important;
+    background:#fff !important;
+    color:var(--ink) !important;
+    padding:8px 10px !important;
+    margin-right:6px !important;
+  }
+</style>
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="cfp">
+  <div class="wrap">
+
+    <div class="hero cardx">
+      <h3>View End Survey - Faculty Report</h3>
+      <div class="sub">
+        Department: {{ department.Department|default:department }}
+        &nbsp; | &nbsp;
+        Faculty: {{ faculty.name|default:faculty }}
+      </div>
+      <div class="stats">
+        <span class="pill">Total Students: {{ total_students }}</span>
+        <span class="pill">Submitted: {{ submitted_students }}</span>
+        <span class="pill">Not Submitted: {{ not_submitted_students }}</span>
+      </div>
+    </div>
+
+    <div class="cardx pad mt-3">
+
+      <form method="GET">
+        <div class="filters">
+
+          <div>
+            <label>Department</label>
+            {% if can_view_all_end_survey_data %}
+              <select name="department_id" id="departmentSelect">
+                <option value="">Select Department</option>
+                {% for d in departments %}
+                  <option value="{{ d.id }}" {% if sel_department_id == d.id|stringformat:"s" %}selected{% endif %}>
+                    {{ d.Department }}
+                  </option>
+                {% endfor %}
+              </select>
+            {% else %}
+              <select disabled>
+                <option>{{ department.Department|default:department }}</option>
+              </select>
+              <input type="hidden" name="department_id" value="{{ department.id }}">
+            {% endif %}
+          </div>
+
+          <div>
+            <label>Batch</label>
+            <select name="batch">
+              <option value="">All</option>
+              {% for b in batches %}
+                <option value="{{ b }}" {% if sel_batch == b|stringformat:"s" %}selected{% endif %}>{{ b }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label>Year</label>
+            <select name="year" id="yearSelect">
+              <option value="">All</option>
+              {% for y in years %}
+                <option value="{{ y }}" {% if sel_year == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label>Semester</label>
+            <select name="semester" id="semesterSelect">
+              <option value="">All</option>
+              {% for s in semesters %}
+                <option value="{{ s }}" {% if sel_sem == s|stringformat:"s" %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label>Section</label>
+            <select name="section">
+              <option value="">All</option>
+              {% for s in sections %}
+                <option value="{{ s }}" {% if sel_section == s|stringformat:"s" %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label>Course Title</label>
+            <select name="course_id" id="courseSelect" {% if not filters_applied %}disabled{% endif %}>
+              <option value="">
+                {% if not filters_applied %}
+                  Select Year & Semester to load courses
+                {% else %}
+                  Select Course
+                {% endif %}
+              </option>
+
+              {% if filters_applied %}
+                {% for c in courses %}
+                  <option value="{{ c.id }}" {% if sel_course_id == c.id|stringformat:"s" %}selected{% endif %}>
+                    {{ c.course_code }} - {{ c.title }}
+                  </option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end mt-3">
+          <button type="submit" class="btnx btn-pri">Apply Filter</button>
+          <a href="{% url 'view_end_survey' %}" class="btnx btn-soft">Reset</a>
+
+          {% if sel_year and sel_sem %}
+            <a class="btnx btn-pdf" target="_blank"
+               href="{% url 'view_end_survey_bulk_pdf' %}?department_id={{ sel_department_id }}&batch={{ sel_batch }}&year={{ sel_year }}&semester={{ sel_sem }}&section={{ sel_section }}">
+              <i class="fa-solid fa-file-pdf"></i> Bulk PDF
+            </a>
+          {% endif %}
+        </div>
+      </form>
+
+      {% if sel_course_id %}
+        <div class="selected-info">
+          <strong>Selected Subject:</strong>
+          {% if selected_course %}
+            {{ selected_course.course_code }} - {{ selected_course.title }}
+          {% else %}
+            Selected Course
+          {% endif %}
+          &nbsp; | &nbsp;
+          <strong>Year:</strong> {{ sel_year|default:"-" }}
+          &nbsp; | &nbsp;
+          <strong>Semester:</strong> {{ sel_sem|default:"-" }}
+          &nbsp; | &nbsp;
+          <strong>Section:</strong> {{ sel_section|default:"-" }}
+          &nbsp; | &nbsp;
+          <strong>Batch:</strong> {{ sel_batch|default:"-" }}
+        </div>
+
+        <div class="table-wrap">
+          <table class="matrix" id="endSurveyTable">
+            <thead>
+              <tr>
+                <th rowspan="2">S.No</th>
+             
+
+                {% for mapping in co_po_mappings %}
+                  <th>{{ mapping.display_co }}</th>
+                {% endfor %}
+
+                <th rowspan="2" class="totalcol">Total</th>
+                {% comment %} <th rowspan="2">Status</th> {% endcomment %}
+              </tr>
+              <tr>
+                {% for mapping in co_po_mappings %}
+                  <th class="qhead">{{ mapping.saved_desc }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+
+            <tbody>
+              {% if rows %}
+                {% for r in rows %}
+                  <tr>
+                    <td>{{ r.sno }}</td>
+                 
+
+                    {% for val in r.mark_list %}
+                      <td>{{ val }}</td>
+                    {% endfor %}
+
+                    <td class="totalcol">{{ r.total }}</td>
+                    {% comment %} <td>
+                      {% if r.is_submitted %}
+                        <span class="submitted-tag tag-yes">Submitted</span>
+                      {% else %}
+                        <span class="submitted-tag tag-no">Not Submitted</span>
+                      {% endif %}
+                    </td> {% endcomment %}
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="{{ co_po_mappings|length|add:'4' }}">No students found.</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          * CO descriptions are taken from CourseOutcomeDescription and scores are taken from CourseOutcomeSubmission.
+        </div>
+
+      {% else %}
+        <div class="note mt-3">
+          Select a Course Title and click Apply Filter to view end survey question-wise score details.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.colVis.min.js"></script>
+
+<script>
+$(document).ready(function() {
+  {% if sel_course_id and rows %}
+    $('#endSurveyTable').DataTable({
+      pageLength: 25,
+      lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+      dom: '<"row"<"col-md-6"B><"col-md-6"f>>' +
+           '<"row"<"col-md-12"tr>>' +
+           '<"row"<"col-md-6"l><"col-md-6"p>>',
+      buttons: [
+        { extend: 'excelHtml5', text: 'Excel' },
+        { extend: 'print', text: 'Print' },
+        { extend: 'colvis', text: 'Columns' }
+      ],
+      language: {
+        search: "Search:",
+        lengthMenu: "Show _MENU_",
+        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+        paginate: { first:"First", last:"Last", next:"Next", previous:"Previous" }
+      },
+      scrollX: true,
+      autoWidth: false,
+      responsive: false,
+      order: [[0, 'asc']]
+    });
+  {% endif %}
+
+  $('#departmentSelect').change(function() {
+    $('select[name="batch"]').val('');
+    $('#yearSelect').val('');
+    $('#semesterSelect').val('');
+    $('select[name="section"]').val('');
+    $('#courseSelect').val('');
+    $(this).closest('form').submit();
+  });
+
+  $('#yearSelect, #semesterSelect').change(function() {
+    var year = $('#yearSelect').val();
+    var semester = $('#semesterSelect').val();
+
+    if (year && semester) {
+      $('#courseSelect').prop('disabled', false);
+    } else {
+      $('#courseSelect').prop('disabled', true);
+      $('#courseSelect').val('');
+    }
+  });
+});
+</script>
+
+{% endblock %}

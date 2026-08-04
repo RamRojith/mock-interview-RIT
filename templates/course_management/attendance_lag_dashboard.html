@@ -1,0 +1,525 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Attendance Lag Dashboard{% endblock %}
+
+{% block content %}
+
+<style>
+.ald-wrap{
+  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+.ald-header{
+  background: linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);
+  color:#fff;
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 10px 24px rgba(26,75,140,.18);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.ald-header h1{ margin:0; font-size:1.5rem; font-weight:800; display:flex; align-items:center; gap:.6rem; }
+.ald-header p{ margin:.3rem 0 0; opacity:.85; font-size:.92rem; }
+.ald-badge{
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.3);
+  padding: .5rem .9rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .85rem;
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  white-space: nowrap;
+}
+
+.ald-card{
+  background:#fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(15,23,42,.05);
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+}
+.ald-card-header{
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.ald-card-header h5{ margin:0; font-weight:800; color:#0f172a; font-size:1.02rem; }
+.ald-card-body{ padding: 1.1rem 1.25rem; }
+
+.ald-filter-grid{
+  display:grid;
+  grid-template-columns: repeat(7, 1fr) 1.2fr auto;
+  gap: .75rem;
+  align-items: end;
+}
+@media (max-width: 1100px){
+  .ald-filter-grid{ grid-template-columns: repeat(2, 1fr); }
+}
+.ald-label{ font-weight: 800; font-size: .8rem; color: #334155; margin-bottom: .3rem; display:block; }
+.ald-select, .ald-input{
+  width:100%;
+  padding: .55rem .75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background:#fff;
+  font-weight: 600;
+  color:#0f172a;
+}
+.ald-select:disabled{ background:#f1f5f9; color:#94a3b8; cursor:not-allowed; }
+
+.ald-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+  border-radius: 10px;
+  padding: .55rem .9rem;
+  font-weight: 800;
+  font-size: .85rem;
+  border: 1px solid #dbeafe;
+  background:#eff6ff;
+  color:#1d4ed8;
+  text-decoration:none;
+  cursor:pointer;
+}
+.ald-btn:hover{ background:#dbeafe; }
+.ald-btn.gray{ border-color:#e2e8f0; background:#f8fafc; color:#0f172a; }
+.ald-btn.gray:hover{ background:#f1f5f9; }
+.ald-btn.red{ border-color:#fee2e2; background:#fef2f2; color:#b91c1c; }
+.ald-btn.red:hover{ background:#fee2e2; }
+.ald-btn.green{ border-color:#d1fae5; background:#ecfdf5; color:#047857; }
+.ald-btn.green:hover{ background:#d1fae5; }
+
+.ald-actions{ display:flex; gap:.5rem; }
+
+.ald-table-wrap{ border:1px solid #e2e8f0; border-radius: 12px; overflow:auto; }
+.ald-table{ margin:0; width:100%; border-collapse:collapse; }
+.ald-table th{
+  background:#f8fafc; padding:.8rem .9rem; font-size:.8rem; text-transform: uppercase;
+  letter-spacing:.4px; color:#475569; border-bottom:1px solid #e2e8f0; white-space: nowrap; text-align:left;
+}
+.ald-table td{ padding:.75rem .9rem; border-bottom:1px solid #e2e8f0; font-size:.9rem; color:#0f172a; vertical-align: middle; }
+.ald-table tbody tr:hover{ background:#f8fafc; }
+.ald-course-code{ font-weight:800; color:#1a4b8c; }
+.ald-lag-count{ font-weight:800; }
+.ald-lag-count.has-lag{ color:#dc2626; }
+.ald-lag-count.no-lag{ color:#059669; }
+
+.ald-pager{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap:.6rem;
+  flex-wrap:wrap;
+  margin-top: 12px;
+}
+.ald-pager .small-muted{ color:#64748b; font-weight:700; font-size:.85rem; }
+
+.ald-modal-table th, .ald-modal-table td{ font-size:.88rem; }
+.ald-pct-low{ color:#dc2626; font-weight:800; }
+</style>
+
+<div class="ald-wrap">
+
+  <div class="ald-header">
+    <div>
+      <h1><i class="fa-solid fa-user-clock"></i> Attendance Lag Dashboard</h1>
+      <p>Regulation &rarr; Degree &rarr; Department &rarr; Year &rarr; Semester &rarr; Academic Year</p>
+    </div>
+    <div class="ald-badge">
+      <i class="fa-solid fa-user"></i>
+      {% if mode == "principal" %}Global User (All Courses)
+      {% elif mode == "hod" %}HOD &mdash; {{ hod_dept.Department }}
+      {% elif mode == "faculty" %}Faculty &mdash; {{ faculty.name }}
+      {% else %}No Profile Found{% endif %}
+    </div>
+  </div>
+
+  {% if mode == "none" %}
+  <div class="ald-card">
+    <div class="ald-card-body text-center text-muted py-4">
+      <i class="fa-solid fa-ban fa-2x mb-2"></i>
+      <h5 class="fw-bold">No faculty profile found for your account.</h5>
+      <div>Please contact admin.</div>
+    </div>
+  </div>
+  {% else %}
+
+  <div class="ald-card">
+    <div class="ald-card-header">
+      <h5><i class="fa-solid fa-filter me-2"></i>Filters</h5>
+      <div style="display:flex; align-items:center; gap:.9rem; flex-wrap:wrap;">
+        {% if min_required_percentage is not None %}
+          <span class="small-muted">Students at or below <b>{{ min_required_percentage }}%</b> attendance are flagged as lagging (per Attendance % Master)</span>
+        {% endif %}
+        <a id="pdfDownloadLink" href="{% url 'attendance_lag_dashboard_pdf' %}" target="_blank" class="ald-btn green">
+          <i class="fa-solid fa-file-pdf"></i> Download PDF
+        </a>
+      </div>
+    </div>
+    <div class="ald-card-body">
+      <form method="get" id="aldFilterForm" class="ald-filter-grid">
+
+        <div>
+          <label class="ald-label">Regulation</label>
+          <select name="regulation" id="regulationSelect" class="ald-select">
+            <option value="">All Regulations</option>
+            {% for r in regulations %}
+              <option value="{{ r.id }}" {% if selected_regulation_id == r.id|stringformat:'s' %}selected{% endif %}>{{ r }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="ald-label">Degree</label>
+          <select name="degree" id="degreeSelect" class="ald-select" {% if mode == "hod" %}disabled{% endif %}>
+            {% if mode == "hod" %}
+              <option value="{{ selected_degree_id }}" selected>{{ hod_dept.degree.degree|default:"-" }}</option>
+            {% else %}
+              <option value="">All Degrees</option>
+              {% for d in degree_options %}
+                <option value="{{ d.id }}" {% if selected_degree_id == d.id|stringformat:'s' %}selected{% endif %}>
+                  {{ d.degree }}{% if d.degree_code %} ({{ d.degree_code }}){% endif %}
+                </option>
+              {% endfor %}
+            {% endif %}
+          </select>
+        </div>
+
+        <div>
+          <label class="ald-label">Department</label>
+          <select name="department" id="departmentSelect" class="ald-select" {% if mode == "hod" %}disabled{% endif %}>
+            {% if mode == "hod" %}
+              <option value="{{ hod_dept.id }}" selected>{{ hod_dept.Department }}</option>
+            {% else %}
+              <option value="">All Departments</option>
+              {% for d in department_options %}
+                <option value="{{ d.id }}" {% if selected_department_id == d.id|stringformat:'s' %}selected{% endif %}>
+                  {{ d.Department }}{% if d.Department_code %} ({{ d.Department_code }}){% endif %}
+                </option>
+              {% endfor %}
+            {% endif %}
+          </select>
+        </div>
+
+        <div>
+          <label class="ald-label">Year</label>
+          <select name="year" id="yearSelect" class="ald-select" {% if not year_options %}disabled{% endif %}>
+            <option value="">All Years</option>
+            {% for y in year_options %}
+              <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="ald-label">Semester</label>
+          <select name="semester" id="semesterSelect" class="ald-select" {% if not semester_options %}disabled{% endif %}>
+            <option value="">All Semesters</option>
+            {% for s in semester_options %}
+              <option value="{{ s }}" {% if selected_semester == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="ald-label">Section</label>
+          <select name="section" id="sectionSelect" class="ald-select" {% if not section_options %}disabled{% endif %}>
+            <option value="">All Sections</option>
+            {% for s in section_options %}
+              <option value="{{ s }}" {% if selected_section == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="ald-label">Academic Year</label>
+          <select name="academic_year" id="academicYearSelect" class="ald-select">
+            {% for ay in academic_year_options %}
+              <option value="{{ ay }}" {% if selected_academic_year == ay %}selected{% endif %}>{{ ay }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="ald-label">Search</label>
+          <input type="text" name="q" value="{{ q }}" class="ald-input" placeholder="Course code / name">
+        </div>
+
+        <div class="ald-actions">
+          <button type="submit" class="ald-btn"><i class="fa-solid fa-magnifying-glass"></i> Apply</button>
+          <a class="ald-btn gray" href="{% url 'attendance_lag_dashboard' %}"><i class="fa-solid fa-rotate-left"></i> Reset</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="ald-card">
+    <div class="ald-card-header">
+      <h5><i class="fa-solid fa-table me-2"></i>Course Offerings</h5>
+      <span class="small-muted">Total: {{ total_groups }}</span>
+    </div>
+    <div class="ald-card-body">
+      <div class="ald-table-wrap">
+        <table class="ald-table">
+          <thead>
+            <tr>
+              <th>Course Code</th>
+              <th>Course Name</th>
+              <th>Batch</th>
+              <th>Section</th>
+              <th>Year</th>
+              <th>Sem</th>
+              <th style="text-align:center;">Enrolled</th>
+              <th style="text-align:center;">Hours Held</th>
+              <th style="text-align:center;">Lagging</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in rows %}
+            <tr>
+              <td class="ald-course-code">{{ r.course.course_code|default:"-" }}</td>
+              <td>{{ r.course.title|default:"-" }}</td>
+              <td>{{ r.batch|default:"-" }}</td>
+              <td>{{ r.section|default:"-" }}</td>
+              <td>{{ r.year|default:"-" }}</td>
+              <td>{{ r.semester|default:"-" }}</td>
+              <td style="text-align:center;">{{ r.total_students }}</td>
+              <td style="text-align:center;">{{ r.total_hours }}</td>
+              <td style="text-align:center;">
+                <span class="ald-lag-count {% if r.lag_count > 0 %}has-lag{% else %}no-lag{% endif %}">{{ r.lag_count }}</span>
+              </td>
+              <td>
+                {% if r.lag_count > 0 %}
+                <button type="button" class="ald-btn"
+                        data-lag-title="{{ r.course.course_code }} - {{ r.batch }} / {{ r.section }}"
+                        data-lag-json="{{ r.lagging_students_json }}">
+                  <i class="fa-solid fa-eye"></i> View
+                </button>
+                {% else %}
+                <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="10" class="text-center text-muted py-4">No course offerings found for the selected filters.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="ald-pager">
+        <span class="small-muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        <div class="ald-actions">
+          {% with base_qs=request.GET.urlencode %}
+          {% if page_obj.has_previous %}
+            <a class="ald-btn gray" href="?{{ base_qs }}&page={{ page_obj.previous_page_number }}">Prev</a>
+          {% endif %}
+          {% if page_obj.has_next %}
+            <a class="ald-btn gray" href="?{{ base_qs }}&page={{ page_obj.next_page_number }}">Next</a>
+          {% endif %}
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% endif %}
+</div>
+
+<!-- Lagging students modal -->
+<div class="modal fade" id="lagModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-user-clock me-2"></i><span id="lagModalTitle">Lagging Students</span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-sm ald-modal-table">
+            <thead>
+              <tr>
+                <th>Reg No</th>
+                <th>Name</th>
+                <th class="text-center">Present</th>
+                <th class="text-center">Absent</th>
+                <th class="text-center">OD</th>
+                <th class="text-center">Total Hrs</th>
+                <th class="text-center">%</th>
+                <th class="text-center">Mark</th>
+              </tr>
+            </thead>
+            <tbody id="lagModalBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const mode = "{{ mode }}";
+  const regulationSelect = document.getElementById("regulationSelect");
+  if (!regulationSelect) return; // mode == "none": nothing to wire up
+
+  const degreeSelect = document.getElementById("degreeSelect");
+  const departmentSelect = document.getElementById("departmentSelect");
+  const yearSelect = document.getElementById("yearSelect");
+  const semesterSelect = document.getElementById("semesterSelect");
+  const sectionSelect = document.getElementById("sectionSelect");
+  const pdfLink = document.getElementById("pdfDownloadLink");
+
+  async function fetchJSON(url) {
+    const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+    return await res.json();
+  }
+
+  function fillSelect(select, options, placeholder, valueKey, labelFn) {
+    const current = select.value;
+    select.innerHTML = `<option value="">${placeholder}</option>`;
+    options.forEach(opt => {
+      const el = document.createElement("option");
+      el.value = opt[valueKey];
+      el.textContent = labelFn(opt);
+      select.appendChild(el);
+    });
+    if ([...select.options].some(o => o.value === String(current))) {
+      select.value = current;
+    }
+  }
+
+  async function loadDegrees() {
+    if (mode === "hod") return;
+    const url = new URL("{% url 'api_al_degrees' %}", window.location.origin);
+    if (regulationSelect.value) url.searchParams.set("regulation_id", regulationSelect.value);
+    const data = await fetchJSON(url.toString());
+    fillSelect(degreeSelect, data.results, "All Degrees", "id", d => `${d.degree}${d.degree_code ? " (" + d.degree_code + ")" : ""}`);
+  }
+
+  async function loadDepartments() {
+    if (mode === "hod") return;
+    const url = new URL("{% url 'api_al_departments' %}", window.location.origin);
+    if (regulationSelect.value) url.searchParams.set("regulation_id", regulationSelect.value);
+    if (degreeSelect.value) url.searchParams.set("degree_id", degreeSelect.value);
+    const data = await fetchJSON(url.toString());
+    fillSelect(departmentSelect, data.results, "All Departments", "id", d => `${d.Department}${d.Department_code ? " (" + d.Department_code + ")" : ""}`);
+  }
+
+  async function loadYears() {
+    const url = new URL("{% url 'api_al_years' %}", window.location.origin);
+    if (regulationSelect.value) url.searchParams.set("regulation_id", regulationSelect.value);
+    if (degreeSelect.value) url.searchParams.set("degree_id", degreeSelect.value);
+    if (departmentSelect.value) url.searchParams.set("department_id", departmentSelect.value);
+    const data = await fetchJSON(url.toString());
+    fillSelect(yearSelect, data.results.map(y => ({ year: y })), "All Years", "year", y => y.year);
+    yearSelect.disabled = data.results.length === 0;
+  }
+
+  async function loadSemesters() {
+    const url = new URL("{% url 'api_al_semesters' %}", window.location.origin);
+    if (regulationSelect.value) url.searchParams.set("regulation_id", regulationSelect.value);
+    if (degreeSelect.value) url.searchParams.set("degree_id", degreeSelect.value);
+    if (departmentSelect.value) url.searchParams.set("department_id", departmentSelect.value);
+    if (yearSelect.value) url.searchParams.set("year", yearSelect.value);
+    const data = await fetchJSON(url.toString());
+    fillSelect(semesterSelect, data.results.map(s => ({ sem: s })), "All Semesters", "sem", s => s.sem);
+    semesterSelect.disabled = data.results.length === 0;
+  }
+
+  async function loadSections() {
+    const url = new URL("{% url 'api_al_sections' %}", window.location.origin);
+    const data = await fetchJSON(url.toString());
+    fillSelect(sectionSelect, data.results.map(s => ({ sec: s })), "All Sections", "sec", s => s.sec);
+    sectionSelect.disabled = data.results.length === 0;
+  }
+
+  async function refreshFrom(level) {
+    if (mode !== "hod") {
+      if (level <= 1) await loadDegrees();
+      if (level <= 2) await loadDepartments();
+    }
+    if (level <= 3) await loadYears();
+    if (level <= 4) await loadSemesters();
+    await loadSections();
+  }
+
+  regulationSelect.addEventListener("change", () => refreshFrom(1));
+  if (degreeSelect) degreeSelect.addEventListener("change", () => refreshFrom(2));
+  if (departmentSelect) departmentSelect.addEventListener("change", () => refreshFrom(3));
+  yearSelect.addEventListener("change", () => refreshFrom(4));
+  semesterSelect.addEventListener("change", () => refreshFrom(5));
+
+  // Keep the PDF link's querystring in sync with the current filters
+  function syncPdfLink() {
+    if (!pdfLink) return;
+    const params = new URLSearchParams(new FormData(document.getElementById("aldFilterForm")));
+    pdfLink.href = "{% url 'attendance_lag_dashboard_pdf' %}?" + params.toString();
+  }
+  document.getElementById("aldFilterForm").addEventListener("change", syncPdfLink);
+  syncPdfLink();
+
+  // Lagging students modal
+  const lagModalEl = document.getElementById("lagModal");
+  const lagModal = new bootstrap.Modal(lagModalEl);
+  const lagModalTitle = document.getElementById("lagModalTitle");
+  const lagModalBody = document.getElementById("lagModalBody");
+
+  function escapeHTML(s) {
+    return (s == null ? "" : String(s)).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  }
+
+  document.querySelectorAll("[data-lag-json]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      lagModalTitle.textContent = btn.getAttribute("data-lag-title") || "Lagging Students";
+      let students = [];
+      try {
+        students = JSON.parse(btn.getAttribute("data-lag-json") || "[]");
+      } catch (e) {
+        students = [];
+      }
+      lagModalBody.innerHTML = "";
+      if (!students.length) {
+        lagModalBody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-3">No lagging students.</td></tr>`;
+      } else {
+        students.forEach(s => {
+          const pctClass = (parseFloat(s.percentage) < 75) ? "ald-pct-low" : "";
+          lagModalBody.insertAdjacentHTML("beforeend", `
+            <tr>
+              <td>${escapeHTML(s.reg_no)}</td>
+              <td>${escapeHTML(s.name)}</td>
+              <td class="text-center">${escapeHTML(s.present)}</td>
+              <td class="text-center">${escapeHTML(s.absent)}</td>
+              <td class="text-center">${escapeHTML(s.od)}</td>
+              <td class="text-center">${escapeHTML(s.total_hours)}</td>
+              <td class="text-center ${pctClass}">${escapeHTML(s.percentage)}%</td>
+              <td class="text-center">${escapeHTML(s.mark)}</td>
+            </tr>
+          `);
+        });
+      }
+      lagModal.show();
+    });
+  });
+});
+</script>
+
+{% endblock %}

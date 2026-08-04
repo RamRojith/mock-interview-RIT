@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+  <form method="POST" id="filterForm">
+    {% csrf_token %}
+
+    <div class="row g-3">
+
+      <!-- Degree -->
+      <div class="col-md-3">
+        <label class="form-label fw-semibold">Degree</label>
+        <select name="degree" id="degree" class="form-control">
+          <option value="">Select Degree</option>
+          {% for d in degrees %}
+            <option value="{{ d.id }}">{{ d.degree }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Department -->
+      <div class="col-md-3">
+        <label class="form-label fw-semibold">Department</label>
+        <select name="department" id="department" class="form-control">
+          <option value="">Select Department</option>
+        </select>
+      </div>
+
+      <!-- Batch -->
+      <div class="col-md-3">
+        <label class="form-label fw-semibold">Batch</label>
+        <select name="batch" id="batch" class="form-control">
+          <option value="">Select Batch</option>
+        </select>
+      </div>
+
+      <!-- Generate Button -->
+      <!-- Generate Button -->
+<div class="col-md-2 d-flex align-items-end">
+  <button type="submit" class="btn btn-primary w-100">
+    Generate
+  </button>
+</div>
+
+<!-- ✅ View Generated Button -->
+<div class="col-md-2 d-flex align-items-end">
+  <a href="{% url 'view_generated_halltickets' %}" class="btn btn-success w-100">
+    View Generated
+  </a>
+</div>
+
+
+    </div>
+  </form>
+
+  <hr>
+
+  {% if students %}
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <input type="text"
+               id="studentSearch"
+               class="form-control"
+               placeholder="Search by Name or Reg No"
+               autocomplete="off">
+      </div>
+      <div class="col-md-8 d-flex align-items-center">
+        <small class="text-muted ms-2">
+          Showing <span id="visibleCount"></span> / <span id="totalCount"></span>
+        </small>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Student Cards -->
+  {% if students %}
+    <div class="row mt-4" id="studentCardsWrap">
+
+      {% for s in students %}
+        <div class="col-md-4 mb-4 student-card"
+             data-name="{{ s.name|default_if_none:''|lower }}"
+             data-reg="{{ s.reg_no|default_if_none:''|lower }}">
+
+          <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body d-flex flex-column">
+
+              <h5 class="fw-bold text-primary mb-3">
+                {{ s.name }}
+              </h5>
+
+              <p class="mb-1"><strong>Reg No:</strong> {{ s.reg_no }}</p>
+              <p class="mb-1"><strong>Semester:</strong> {{ s.semester }}</p>
+              <p class="mb-1"><strong>Date of Birth:</strong> {{ s.date_of_birth|date:"d-m-Y" }}</p>
+              <p class="mb-1"><strong>Degree:</strong> {{ s.department.degree.degree }}</p>
+              <p class="mb-3"><strong>Department:</strong> {{ s.department.Department }}</p>
+
+              <!-- ✅ VIEW BUTTON -->
+              <div class="mt-auto">
+                <button type="button"
+                        class="btn btn-outline-primary w-100 view-btn"
+                        data-bs-toggle="modal"
+                        data-bs-target="#viewModal"
+
+                        data-degree-id="{{ s.department.degree_id }}"
+                        data-department-id="{{ s.department_id }}"
+                        data-batch="{{ s.batch }}"
+                        data-semester="{{ s.semester }}"
+                        data-regulation-id="{% if s.regulation_id %}{{ s.regulation_id }}{% else %}{% endif %}"
+                        data-student-id="{{ s.id }}"
+                        data-student-name="{{ s.name }}"
+                        data-reg-no="{{ s.reg_no }}"
+                >
+                  View
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      {% endfor %}
+
+    </div>
+  {% endif %}
+
+</div>
+
+<!-- ================= VIEW MODAL ================= -->
+<div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content border-0 shadow rounded-4">
+
+      <div class="modal-header bg-primary text-white rounded-top-4">
+        <div>
+          <h5 class="modal-title mb-0">Hall Ticket Course</h5>
+          <small class="opacity-75" id="modalStudentMeta"></small>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- loader / message -->
+        <div id="modalMsg" class="text-muted mb-3"></div>
+
+        <!-- ✅ RESULTS TABLE -->
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:90px;">Semester</th>
+                <th style="width:140px;">Course Code</th>
+                <th>Course Name</th>
+                <th style="width:140px;">Exam Date</th>
+                <th style="width:90px;">Session</th>
+                <th style="width:160px;">Exam Session</th>
+              </tr>
+            </thead>
+            <tbody id="hallCourseTbody">
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">Click View to load courses…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+  $(document).ready(function () {
+
+    $("#degree").on("change", function () {
+      let degree_id = $(this).val();
+
+      $.ajax({
+        url: "{% url 'hall_departments' %}",
+        data: { degree_id: degree_id },
+        success: function (data) {
+          let html = '<option value="">Select Department</option>';
+          data.forEach(function (item) {
+            html += `<option value="${item.id}">${item.Department}</option>`;
+          });
+          $("#department").html(html);
+          $("#batch").html('<option value="">Select Batch</option>');
+        }
+      });
+    });
+
+    $("#department").on("change", function () {
+      let department_id = $(this).val();
+
+      $.ajax({
+        url: "{% url 'hall_batches' %}",
+        data: { department_id: department_id },
+        success: function (data) {
+          let html = '<option value="">Select Batch</option>';
+          data.forEach(function (batch) {
+            html += `<option value="${batch}">${batch}</option>`;
+          });
+          $("#batch").html(html);
+        }
+      });
+    });
+
+    function updateCounts() {
+      $("#totalCount").text($(".student-card").length);
+      $("#visibleCount").text($(".student-card:visible").length);
+    }
+
+    updateCounts();
+
+    $(document).on("keyup", "#studentSearch", function () {
+      let value = ($(this).val() || "").toLowerCase().trim();
+
+      $(".student-card").each(function () {
+        let name = String($(this).data("name") || "");
+        let reg  = String($(this).data("reg") || "");
+        $(this).toggle(name.includes(value) || reg.includes(value));
+      });
+
+      updateCounts();
+    });
+
+
+    // ===================== LOAD HALLTICKET COURSES IN MODAL =====================
+    $(document).on("click", ".view-btn", function () {
+
+      const btn = $(this);
+
+      const degree_id = btn.data("degree-id");
+      const department_id = btn.data("department-id");
+      const batch = btn.data("batch");
+      const semester = btn.data("semester");
+      const regulation_id = btn.data("regulation-id") || "";
+      const student_id = btn.data("student-id");
+      const student_name = btn.data("student-name") || "";
+      const reg_no = btn.data("reg-no") || "";
+
+      $("#modalStudentMeta").text(`${student_name} (${reg_no}) | Sem ${semester} | Batch ${batch}`);
+      $("#modalMsg").text("Loading courses...");
+      $("#hallCourseTbody").html(`
+        <tr><td colspan="6" class="text-center text-muted py-4">Loading…</td></tr>
+      `);
+
+      $.ajax({
+        url: "{% url 'hallticket_courses' %}",
+        data: {
+          degree_id: degree_id,
+          department_id: department_id,
+          batch: batch,
+          semester: semester,
+          regulation_id: regulation_id,
+          student_id: student_id
+        },
+        success: function (resp) {
+          if (!resp.ok) {
+            $("#modalMsg").text("Failed to load.");
+            $("#hallCourseTbody").html(`
+              <tr><td colspan="6" class="text-center text-danger py-4">Error loading courses</td></tr>
+            `);
+            return;
+          }
+
+          const items = resp.items || [];
+
+          if (items.length === 0) {
+            $("#modalMsg").text("No timetable / failed courses found for this student.");
+            $("#hallCourseTbody").html(`
+              <tr><td colspan="6" class="text-center text-muted py-4">No data to display</td></tr>
+            `);
+            return;
+          }
+
+          $("#modalMsg").text("");
+
+          let rows = "";
+          items.forEach(function (it) {
+            rows += `
+              <tr>
+                <td>${it.semester || ""}</td>
+                <td>${it.course_code || ""}</td>
+                <td>${it.course_name || ""}</td>
+                <td>${it.exam_date || ""}</td>
+                <td>${it.session || ""}</td>
+                <td>${it.examsession || ""}</td>
+              </tr>
+            `;
+          });
+
+          $("#hallCourseTbody").html(rows);
+        },
+        error: function () {
+          $("#modalMsg").text("");
+          $("#hallCourseTbody").html(`
+            <tr><td colspan="6" class="text-center text-danger py-4">Server error</td></tr>
+          `);
+        }
+      });
+
+    });
+
+  });
+</script>
+
+{% endblock %}

@@ -1,0 +1,686 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.ticket-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.ticket-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.ticket-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.ticket-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.ticket-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.ticket-portal .custom-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.ticket-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a4b8c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.ticket-portal .card-body-custom {
+  padding: 1.5rem;
+}
+
+.ticket-portal .alert-success-custom {
+  max-width: 1400px;
+  margin: 0 auto 1rem auto;
+  background: #dcfce7;
+  color: #166534;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  font-weight: 700;
+  border: 1px solid #bbf7d0;
+}
+
+.ticket-portal .alert-error-custom {
+  max-width: 1400px;
+  margin: 0 auto 1rem auto;
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  font-weight: 700;
+  border: 1px solid #fecaca;
+}
+
+.ticket-portal .form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.ticket-portal .form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.ticket-portal label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.ticket-portal input,
+.ticket-portal select,
+.ticket-portal textarea {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.ticket-portal input[readonly] {
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 700;
+}
+
+.ticket-portal textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.ticket-portal input:focus,
+.ticket-portal select:focus,
+.ticket-portal textarea:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26,75,140,0.1);
+  outline: none;
+}
+
+.ticket-portal .btn-primary-custom {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ticket-portal .btn-secondary-custom {
+  background: #64748b;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.ticket-portal .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.ticket-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.ticket-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.ticket-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.85rem;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.ticket-portal .search-box {
+  width: 260px;
+}
+
+.ticket-portal .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.ticket-portal .badge-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.ticket-portal .badge-progressing {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.ticket-portal .badge-solved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.ticket-portal .badge-accomplished {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.ticket-portal .action-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.ticket-portal .action-btn.update {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.ticket-portal .empty-row {
+  text-align: center;
+  padding: 2rem !important;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.ticket-portal .user-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media(max-width: 992px) {
+  .ticket-portal .form-grid-2,
+  .ticket-portal .form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media(max-width: 768px) {
+  .ticket-portal {
+    padding: 1rem;
+  }
+
+  .ticket-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .ticket-portal .card-header-custom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ticket-portal .search-box,
+  .ticket-portal .btn-primary-custom,
+  .ticket-portal .btn-secondary-custom {
+    width: 100%;
+  }
+}
+</style>
+
+<div class="ticket-portal">
+
+  <div class="page-header">
+    <h1>
+      <i class="fas fa-ticket-alt me-2"></i>
+      Ticket Management
+    </h1>
+
+    <p class="header-subtitle">
+      Raise and track support tickets
+    </p>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+
+      {% if message.tags == "error" %}
+        <div class="alert-error-custom">
+          <i class="fas fa-circle-xmark me-2"></i>
+          {{ message }}
+        </div>
+      {% else %}
+        <div class="alert-success-custom">
+          <i class="fas fa-circle-check me-2"></i>
+          {{ message }}
+        </div>
+      {% endif %}
+
+    {% endfor %}
+  {% endif %}
+
+  <div class="page-container">
+
+    {% if update_ticket %}
+
+    <div class="custom-card">
+
+      <div class="card-header-custom">
+        <span>
+          <i class="fas fa-pen-to-square me-2"></i>
+          Update Ticket Status
+        </span>
+      </div>
+
+      <div class="card-body-custom">
+
+        <form method="POST">
+
+          {% csrf_token %}
+
+          <div class="form-grid-3">
+
+            <div>
+              <label>Issue</label>
+              <input type="text" value="{{ update_ticket.issue }}" readonly>
+            </div>
+
+            <div>
+              <label>Location</label>
+              <input type="text" value="{{ update_ticket.location }}" readonly>
+            </div>
+
+            <div>
+              <label>Status</label>
+
+              <select name="status" required>
+
+                <option value="Pending"
+                  {% if update_ticket.status == "Pending" %}selected{% endif %}>
+                  Pending
+                </option>
+
+                <option value="Progressing"
+                  {% if update_ticket.status == "Progressing" %}selected{% endif %}>
+                  Progressing
+                </option>
+
+                <option value="Solved"
+                  {% if update_ticket.status == "Solved" %}selected{% endif %}>
+                  Solved
+                </option>
+
+                {% if update_ticket.status == "Solved" or update_ticket.status == "Accomplished" %}
+                <option value="Accomplished"
+                  {% if update_ticket.status == "Accomplished" %}selected{% endif %}>
+                  Accomplished
+                </option>
+                {% endif %}
+
+              </select>
+
+            </div>
+
+          </div>
+
+          <button type="submit" class="btn-primary-custom">
+            <i class="fas fa-circle-check me-2"></i>
+            Update Status
+          </button>
+
+          <a href="{% url 'ticket_raise' %}" class="btn-secondary-custom">
+            Cancel
+          </a>
+
+        </form>
+
+      </div>
+
+    </div>
+
+    {% endif %}
+
+    <div class="custom-card">
+
+      <div class="card-header-custom">
+        <span>
+          <i class="fas fa-plus-circle me-2"></i>
+          Raise New Ticket
+        </span>
+      </div>
+
+      <div class="card-body-custom">
+
+        {% if logged_student or logged_faculty %}
+
+        <div class="user-box">
+
+          <div class="form-grid-3">
+
+            <div>
+              <label>User Type</label>
+              <input type="text" value="{{ logged_user_type }}" readonly>
+            </div>
+
+            <div>
+              <label>Name</label>
+
+              {% if logged_student %}
+                <input type="text" value="{{ logged_student.name }}" readonly>
+              {% elif logged_faculty %}
+                <input type="text" value="{{ logged_faculty.name }}" readonly>
+              {% endif %}
+
+            </div>
+
+            <div>
+              <label>ID / Register No</label>
+
+              {% if logged_student %}
+                <input type="text" value="{{ logged_student.reg_no }}" readonly>
+              {% elif logged_faculty %}
+                <input type="text" value="{{ logged_faculty.faculty_id }}" readonly>
+              {% endif %}
+
+            </div>
+
+          </div>
+
+          <div class="form-grid-3">
+
+            <div>
+              <label>Department</label>
+
+              {% if logged_student %}
+                <input type="text" value="{{ logged_student.department }}" readonly>
+              {% elif logged_faculty %}
+                <input type="text" value="{{ logged_faculty.department }}" readonly>
+              {% endif %}
+
+            </div>
+
+            <div>
+              <label>Email</label>
+
+              {% if logged_student %}
+                <input type="text" value="{{ logged_student.email }}" readonly>
+              {% elif logged_faculty %}
+                <input type="text" value="{{ logged_faculty.college_email }}" readonly>
+              {% endif %}
+
+            </div>
+
+            <div>
+              <label>Mobile</label>
+
+              {% if logged_student %}
+                <input type="text" value="{{ logged_student.mobile_no }}" readonly>
+              {% elif logged_faculty %}
+                <input type="text" value="{{ logged_faculty.phone }}" readonly>
+              {% endif %}
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <form method="POST">
+
+          {% csrf_token %}
+
+          <div class="form-grid-2">
+
+            <div>
+              <label>Issue</label>
+              <input type="text" name="issue" placeholder="Enter issue" required>
+            </div>
+
+            <div>
+              <label>Location</label>
+              <input type="text" name="location" placeholder="Block / Lab / Room" required>
+            </div>
+
+          </div>
+
+          <br>
+
+          <div>
+            <label>Description</label>
+            <textarea name="description" placeholder="Describe your issue clearly" required></textarea>
+          </div>
+
+          <br>
+
+          <button type="submit" class="btn-primary-custom">
+            <i class="fas fa-paper-plane me-2"></i>
+            Submit Ticket
+          </button>
+
+        </form>
+
+        {% else %}
+
+        <div class="empty-row">
+          <i class="fas fa-user-xmark me-2"></i>
+          Logged-in user details not found.
+        </div>
+
+        {% endif %}
+
+      </div>
+
+    </div>
+
+    <div class="custom-card">
+
+      <div class="card-header-custom">
+
+        <span>
+          <i class="fas fa-list-check me-2"></i>
+          Ticket List
+        </span>
+
+        <input type="text"
+               id="ticketSearch"
+               class="search-box"
+               placeholder="Search ticket...">
+
+      </div>
+
+      <div class="card-body-custom">
+
+        <div class="table-responsive">
+
+          <table id="ticketTable" class="data-table">
+
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>User Type</th>
+                <th>User Name</th>
+                <th>Issue</th>
+                <th>Location</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              {% for ticket in tickets %}
+
+              <tr>
+
+                <td>
+                  <strong>{{ forloop.counter }}</strong>
+                </td>
+
+                <td>
+                  {% if ticket.student %}
+                    Student
+                  {% elif ticket.faculty %}
+                    Faculty
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if ticket.student %}
+                    {{ ticket.student.name }} - {{ ticket.student.reg_no }}
+                  {% elif ticket.faculty %}
+                    {{ ticket.faculty.name }}
+                  {% endif %}
+                </td>
+
+                <td>{{ ticket.issue }}</td>
+                <td>{{ ticket.location }}</td>
+                <td>{{ ticket.description }}</td>
+
+                <td>
+
+                  {% if ticket.status == "Pending" %}
+
+                    <span class="badge-status badge-pending">
+                      <i class="fas fa-clock"></i>
+                      Pending
+                    </span>
+
+                  {% elif ticket.status == "Progressing" %}
+
+                    <span class="badge-status badge-progressing">
+                      <i class="fas fa-spinner"></i>
+                      Progressing
+                    </span>
+
+                  {% elif ticket.status == "Solved" %}
+
+                    <span class="badge-status badge-solved">
+                      <i class="fas fa-circle-check"></i>
+                      Solved
+                    </span>
+
+                  {% elif ticket.status == "Accomplished" %}
+
+                    <span class="badge-status badge-accomplished">
+                      <i class="fas fa-award"></i>
+                      Accomplished
+                    </span>
+
+                  {% endif %}
+
+                </td>
+
+                <td>{{ ticket.created_at }}</td>
+
+                <td>
+                  <a href="{% url 'ticket_raise_update' ticket.id %}"
+                     class="action-btn update">
+                    Update
+                  </a>
+                </td>
+
+              </tr>
+
+              {% empty %}
+
+              <tr>
+                <td colspan="9" class="empty-row">
+                  <i class="fas fa-inbox me-2"></i>
+                  No tickets found.
+                </td>
+              </tr>
+
+              {% endfor %}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+document.getElementById("ticketSearch").addEventListener("input", function() {
+
+  const value = this.value.toLowerCase();
+
+  const rows = document.querySelectorAll("#ticketTable tbody tr");
+
+  rows.forEach(row => {
+    row.style.display = row.innerText.toLowerCase().includes(value)
+      ? ""
+      : "none";
+  });
+
+});
+</script>
+
+{% endblock %}

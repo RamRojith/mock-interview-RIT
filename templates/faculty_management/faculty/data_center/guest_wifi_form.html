@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <h3 class="text-center mb-4">GUEST WI-FI ACCESS REQUEST FORM</h3>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- ================= MASTER FORM ================= -->
+    <form method="POST" id="guestWifiForm">
+        {% csrf_token %}
+
+        <!-- FACULTY INFO -->
+        <h5>I. FACULTY INFORMATION</h5>
+        <hr>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Faculty Name</label>
+                <input type="text" class="form-control"
+                       value="{{ faculty.name|upper|default:'' }}" readonly>
+            </div>
+            <div class="col-md-6">
+                <label>Department</label>
+                <input type="text" class="form-control"
+                       value="{{ faculty.department|default:'' }}" readonly>
+            </div>
+        </div>
+
+        <!-- GUEST INFO -->
+        <h5 class="mt-4">II. GUEST INFORMATION</h5>
+        <hr>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Guest Name</label>
+                <input type="text" name="guest_name" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label>Designation</label>
+                <input type="text" name="designation" class="form-control" required>
+            </div>
+            <div class="col-md-12 mt-2">
+                <label>Address</label>
+                <textarea name="address" class="form-control" rows="2" required></textarea>
+            </div>
+            <div class="col-md-6 mt-2">
+                <label>From Date</label>
+                <input type="date" name="from_date" class="form-control" required>
+            </div>
+            <div class="col-md-6 mt-2">
+                <label>To Date</label>
+                <input type="date" name="to_date" class="form-control" required>
+            </div>
+        </div>
+
+        <!-- Hidden control fields -->
+        <input type="hidden" name="request_id" id="request_id">
+        <input type="hidden" name="update_request" id="update_request">
+
+        <div class="text-center mt-3">
+            <button type="submit" name="create_request" class="btn btn-primary">
+                Submit Request
+            </button>
+        </div>
+
+        <!-- ================= LIST REQUESTS ================= -->
+        <hr>
+        <h5 class="mt-4">My Guest WiFi Requests</h5>
+
+        <table class="table table-bordered mt-2">
+            <thead>
+                <tr>
+                    <th>Guest Name</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for req in guest_requests %}
+                <tr>
+                    <td>{{ req.guest_name }}</td>
+                    <td>{{ req.from_date }}</td>
+                    <td>{{ req.to_date }}</td>
+                    <td>{{ req.status }}</td>
+                    <td>
+                        <!-- EDIT BUTTON -->
+                        <button type="button" class="btn btn-sm btn-warning"
+                            onclick="editGuest('{{req.id}}',
+                                                '{{req.guest_name}}',
+                                                '{{req.designation}}',
+                                                '{{req.address}}',
+                                                '{{req.from_date|date:'Y-m-d'}}',
+                                                '{{req.to_date|date:'Y-m-d'}}')">
+                            Edit
+                        </button>
+
+                        <!-- DELETE BUTTON -->
+                        <button type="button" class="btn btn-sm btn-danger"
+                                onclick="deleteGuest('{{req.id}}')">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No Guest WiFi Requests Found</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </form>
+</div>
+
+<!-- ================= JAVASCRIPT ================= -->
+<script>
+function editGuest(id, name, designation, address, fromDate, toDate){
+    document.querySelector('[name=guest_name]').value = name;
+    document.querySelector('[name=designation]').value = designation;
+    document.querySelector('[name=address]').value = address;
+    document.querySelector('[name=from_date]').value = fromDate;
+    document.querySelector('[name=to_date]').value = toDate;
+
+    document.getElementById("request_id").value = id;
+    document.getElementById("update_request").value = "1";
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function deleteGuest(id){
+    if(confirm("Delete this request?")){
+        document.getElementById("request_id").value = id;
+
+        // remove old delete flag if exists
+        let old = document.querySelector('input[name="delete_request"]');
+        if(old){ old.remove(); }
+
+        // add delete flag
+        let del = document.createElement("input");
+        del.type = "hidden";
+        del.name = "delete_request";
+        del.value = "1";
+        document.getElementById("guestWifiForm").appendChild(del);
+
+        document.getElementById("guestWifiForm").submit();
+    }
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,707 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Parent Dashboard - Ramco Institute of Technology</title>
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="website icon" type="png" href="{% static 'images/ritlogo.png' %}">
+    <link rel="stylesheet" href="{% static 'DataTables/datatables.min.css' %}">
+    <script src="{% static 'DataTables/datatables.min.js' %}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="{% static 'js/timer.js' %}"></script>
+    <script src="{% static 'js/scripts.js' %}"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        .parent-dashboard {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .dashboard-header {
+            background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .institute-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .institute-logo {
+            height: 50px;
+            width: auto;
+        }
+
+        .institute-text h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .institute-text p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
+
+        .profile-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .profile-img:hover {
+            transform: scale(1.05);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .profile-info {
+            text-align: right;
+        }
+
+        .profile-name {
+            font-weight: 600;
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .profile-role {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        /* Content */
+        .dashboard-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1a4b8c;
+            margin-bottom: 0.5rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(135deg, #1a4b8c, #2c5aa0);
+            border-radius: 2px;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+            font-weight: 400;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .welcome-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .welcome-text h2 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .welcome-text p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #f1f5f9;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+        }
+
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(135deg, #1a4b8c, #2c5aa0);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #1a4b8c, #2c5aa0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 80px;
+            width: 80px;
+            border-radius: 50%;
+            background-color: rgba(26, 75, 140, 0.1);
+            margin: 0 auto 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-card:hover .card-icon {
+            transform: scale(1.1);
+            background-color: rgba(26, 75, 140, 0.15);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #1a4b8c;
+        }
+
+        .card-description {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+
+        .btn-card {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-card:hover::before {
+            left: 100%;
+        }
+
+        .btn-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+        }
+
+        /* Profile Popup */
+        .profile-popup {
+            position: absolute;
+            top: 70px;
+            right: 0;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 1.5rem;
+            width: 280px;
+            z-index: 1050;
+            display: none;
+            animation: slideDown 0.3s ease;
+            border: 1px solid #f1f5f9;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .profile-popup.show {
+            display: block;
+        }
+
+        .popup-header {
+            text-align: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .popup-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 0.75rem;
+            border: 3px solid #1a4b8c;
+        }
+
+        .popup-name {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            font-size: 1.1rem;
+            color: #1a4b8c;
+        }
+
+        .popup-role, .popup-department {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .popup-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .btn-popup {
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Alerts */
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+        }
+
+        .custom-alert {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            animation: slideInRight 0.5s, fadeOut 0.5s 4.5s forwards;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+        .alert-error { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
+        .alert-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+        .alert-info { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateX(100%); }
+        }
+
+        /* Vision/Mission Modal */
+        #visionMissionModal .modal-content {
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        #visionMissionModal .modal-header {
+            background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-bottom: none;
+        }
+
+        #visionMissionModal .modal-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        #visionMissionModal .modal-body {
+            padding: 2rem;
+            color: #374151;
+        }
+
+        #visionMissionModal .section-block {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #1a4b8c;
+        }
+
+        #visionMissionModal .section-block h6 {
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #1a4b8c;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #visionMissionModal .section-block p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #374151;
+            margin-bottom: 0;
+        }
+
+        #visionMissionModal .modal-footer {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 1.25rem 2rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .cards-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header { padding: 1rem; flex-direction: column; gap: 1rem; }
+            .dashboard-content { padding: 1rem; }
+            .page-title { font-size: 2rem; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .profile-info { display: none; }
+            .alert-container { left: 1rem; right: 1rem; max-width: none; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-card:nth-child(1) { animation-delay: 0.1s; }
+        .dashboard-card:nth-child(2) { animation-delay: 0.2s; }
+        .dashboard-card:nth-child(3) { animation-delay: 0.3s; }
+        .dashboard-card:nth-child(4) { animation-delay: 0.4s; }
+        .dashboard-card:nth-child(5) { animation-delay: 0.5s; }
+    </style>
+</head>
+<body class="parent-dashboard">
+
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="institute-info">
+            <img src="{% static 'images/ritlogo.png' %}" alt="RIT Logo" class="institute-logo">
+            <div class="institute-text">
+                <h1>Ramco Institute of Technology</h1>
+                <p>Parent Dashboard</p>
+            </div>
+        </div>
+        <div class="profile-section">
+            <div class="profile-info">
+                <p class="profile-name">{{ request.user.username }}</p>
+                <p class="profile-role">{{ request.user.role.role }}</p>
+            </div>
+            <img 
+                src="{% if request.user.profile_img %}{{ request.user.profile_img.url }}{% else %}{% static 'images/profile.jpg' %}{% endif %}"
+                onerror="this.onerror=null; this.src='{% static 'images/profile.jpg' %}';"
+                alt="Profile Image"
+                class="profile-img"
+                id="profileImage">
+        </div>
+    </header>
+
+    <!-- Profile Popup -->
+    <div class="profile-popup" id="profilePopup">
+        <div class="popup-header">
+            <img 
+                src="{% if request.user.profile_img %}{{ request.user.profile_img.url }}{% else %}{% static 'images/profile.jpg' %}{% endif %}"
+                onerror="this.onerror=null; this.src='{% static 'images/profile.jpg' %}';"
+                alt="Profile Image"
+                class="popup-img">
+            <h4 class="popup-name">{{ request.user.username }}</h4>
+            <p class="popup-role">{{ request.user.role.role }}</p>
+            {% if request.user.student_set.all %}
+                <p class="popup-department">Ward: {{ request.user.student_set.first.get_full_name }}</p>
+            {% endif %}
+        </div>
+        <div class="popup-actions">
+            <button class="btn btn-popup btn-logout" onclick="window.location.href='{% url 'logout' %}'">
+                <i class="fas fa-sign-out-alt me-2"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+                <div class="custom-alert alert-{{ message.tags }}">
+                    <i class="fas 
+                        {% if message.tags == 'success' %}fa-check-circle 
+                        {% elif message.tags == 'error' %}fa-exclamation-circle 
+                        {% elif message.tags == 'warning' %}fa-exclamation-triangle 
+                        {% else %}fa-info-circle{% endif %}">
+                    </i>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="dashboard-content">
+        <div class="page-header">
+            <h1 class="page-title">Parent Dashboard</h1>
+            <p class="page-subtitle">Monitor your child's academic progress and campus activities</p>
+        </div>
+
+        <!-- Welcome Section -->
+        <section class="welcome-section">
+            <div class="welcome-content">
+                <div class="welcome-text">
+                    <h2>Hello, {{ request.user.username }}!</h2>
+                    <p>Stay connected with your child's education journey</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cards Grid -->
+        <div class="cards-grid">
+            <div class="dashboard-card">
+                <div class="card-icon"><i class="fas fa-clipboard-list"></i></div>
+                <h3 class="card-title">Course & Examination</h3>
+                <p class="card-description">View courses, exam schedules, and academic performance.</p>
+                <button class="btn btn-card" onclick="window.location.href='{% url 'cm_home' %}'">
+                    View Courses & Exams <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+                <h3 class="card-title">Academic Progress</h3>
+                <p class="card-description">Track attendance, internal marks, and overall performance.</p>
+                <button class="btn btn-card" onclick="window.location.href='{% url 'sm_home' %}'">
+                    View Progress <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-icon"><i class="fas fa-money-check-alt"></i></div>
+                <h3 class="card-title">Fee Management</h3>
+                <p class="card-description">View fee structure, payment history, and outstanding dues.</p>
+                <button class="btn btn-card" onclick="window.location.href='{% url 'fee_home' %}'">
+                    View Fees <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-icon"><i class="fas fa-user-edit"></i></div>
+                <h3 class="card-title">Update Contact</h3>
+                <p class="card-description">Keep your contact details up to date for important notifications.</p>
+                <button class="btn btn-card" onclick="window.location.href='{% url 'edit_address' %}'">
+                    Edit Details <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-icon"><i class="fas fa-calendar-alt"></i></div>
+                <h3 class="card-title">Academic Calendar</h3>
+                <p class="card-description">Stay informed about exams, holidays, and college events.</p>
+                <button class="btn btn-card" onclick="window.location.href='{% url 'student_academic_calendar' %}'">
+                    View Calendar <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Vision/Mission Modal (Optional) -->
+    {% if vision or mission %}
+    <div class="modal fade" id="visionMissionModal" tabindex="-1" aria-labelledby="visionMissionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="visionMissionModalLabel">
+                        <i class="fas fa-bullseye me-2"></i> Department Vision & Mission
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if vision %}
+                    <div class="section-block">
+                        <h6><i class="fas fa-lightbulb"></i> Vision ({{ vision.year }})</h6>
+                        <p>{{ vision.vision_statement|linebreaksbr }}</p>
+                    </div>
+                    {% endif %}
+                    {% if mission %}
+                    <div class="section-block">
+                        <h6><i class="fas fa-flag-checkered"></i> Mission ({{ mission.year }})</h6>
+                        <p>{{ mission.mission_statement|linebreaksbr }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer d-flex justify-content-between align-items-center">
+                    <small class="text-muted fst-italic">
+                        Empowering Excellence • {{ vision.department.Department|default:"Department" }}
+                    </small>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        Close <i class="fas fa-times ms-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+        // Profile Popup
+        document.getElementById('profileImage').addEventListener('click', function() {
+            const popup = document.getElementById('profilePopup');
+            popup.classList.toggle('show');
+        });
+
+        document.addEventListener('click', function(event) {
+            const popup = document.getElementById('profilePopup');
+            const profileImage = document.getElementById('profileImage');
+            if (!popup.contains(event.target) && event.target !== profileImage) {
+                popup.classList.remove('show');
+            }
+        });
+
+        // Vision/Mission Modal
+        {% if vision or mission %}
+        document.addEventListener("DOMContentLoaded", function () {
+            const showPopup = {{ show_popup|yesno:"true,false" }};
+            if (!showPopup) return;
+            setTimeout(() => {
+                const modalEl = document.getElementById("visionMissionModal");
+                if (modalEl) {
+                    const modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+                }
+            }, 1500);
+        });
+        {% endif %}
+
+        // Auto-dismiss alerts
+        document.addEventListener("DOMContentLoaded", function () {
+            setTimeout(function () {
+                const alerts = document.querySelectorAll('.custom-alert');
+                alerts.forEach(alert => {
+                    alert.style.animation = 'fadeOut 0.5s forwards';
+                    setTimeout(() => alert.remove(), 500);
+                });
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

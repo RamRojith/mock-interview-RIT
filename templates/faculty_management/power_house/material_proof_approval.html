@@ -1,0 +1,625 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.proof-approval-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.proof-approval-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.proof-approval-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.proof-approval-portal .header-subtitle {
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.proof-approval-portal .page-container,
+.proof-approval-portal .alert-custom {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.proof-approval-portal .alert-custom {
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.proof-approval-portal .alert-success-custom {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.proof-approval-portal .alert-error-custom {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.proof-approval-portal .custom-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.proof-approval-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.proof-approval-portal .card-body-custom {
+  padding: 1.5rem;
+}
+
+.proof-approval-portal .search-box {
+  width: 260px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+}
+
+.proof-approval-portal .search-box:focus,
+.proof-approval-portal textarea:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26,75,140,0.1);
+  outline: none;
+}
+
+.proof-approval-portal .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.proof-approval-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.proof-approval-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.proof-approval-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 0.85rem;
+  vertical-align: top;
+}
+
+.proof-approval-portal .data-table tbody tr:hover {
+  background: rgba(26,75,140,0.03);
+}
+
+.proof-approval-portal textarea {
+  width: 100%;
+  min-width: 220px;
+  min-height: 80px;
+  resize: vertical;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+}
+
+.proof-approval-portal .btn-primary-custom {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.65rem 1.2rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.proof-approval-portal .small-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 0.55rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.proof-approval-portal .small-btn.success {
+  background: #16a34a;
+  color: white;
+}
+
+.proof-approval-portal .small-btn.danger {
+  background: #dc2626;
+  color: white;
+}
+
+.proof-approval-portal .action-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.proof-approval-portal .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.proof-approval-portal .badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.proof-approval-portal .badge-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.proof-approval-portal .badge-pending,
+.proof-approval-portal .badge-level {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.proof-approval-portal .badge-info {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.proof-approval-portal .item-line,
+.proof-approval-portal .ticket-line,
+.proof-approval-portal .scrap-line {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 0.35rem 0.6rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.proof-approval-portal .item-line strong,
+.proof-approval-portal .ticket-line strong,
+.proof-approval-portal .scrap-line strong {
+  color: #1a4b8c;
+}
+
+.proof-approval-portal .empty-row {
+  text-align: center;
+  padding: 2rem !important;
+  color: #64748b;
+  font-weight: 700;
+}
+
+@media(max-width: 768px) {
+  .proof-approval-portal {
+    padding: 1rem;
+  }
+
+  .proof-approval-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .proof-approval-portal .card-header-custom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .proof-approval-portal .search-box,
+  .proof-approval-portal .btn-primary-custom,
+  .proof-approval-portal .small-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+</style>
+
+<div class="proof-approval-portal">
+
+  <div class="page-header">
+    <h1><i class="fas fa-file-circle-check me-2"></i> Material Proof Approval</h1>
+    <p class="header-subtitle">
+      Final proof verification updates stock ledger and solves linked ticket
+    </p>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert-custom {% if message.tags == 'error' %}alert-error-custom{% else %}alert-success-custom{% endif %}">
+        {% if message.tags == 'error' %}
+          <i class="fas fa-circle-xmark me-2"></i>
+        {% else %}
+          <i class="fas fa-circle-check me-2"></i>
+        {% endif %}
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="page-container">
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-hourglass-half me-2"></i> Pending Proof Approvals</span>
+        <input type="text" id="pendingProofSearch" class="search-box" placeholder="Search pending proofs...">
+      </div>
+
+      <div class="card-body-custom">
+        <div class="table-responsive">
+          <table id="pendingProofTable" class="data-table">
+            <thead>
+              <tr>
+                <th>Request No</th>
+                <th>Ticket</th>
+                <th>User</th>
+                <th>Department</th>
+                <th>Uploaded By</th>
+                <th>Items</th>
+                <th>Scrap Items</th>
+                <th>Proof</th>
+                <th>Description</th>
+                <th>Remarks</th>
+                <th>Stock Status</th>
+                <th>Level</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for entry in actionable_entries %}
+              <tr>
+                <td>
+                  <strong>{{ entry.proof.material_request.request_no }}</strong>
+                </td>
+
+                <td>
+                  {% if entry.proof.material_request.ticket %}
+                    <div class="ticket-line">
+                      <strong>Ticket #{{ entry.proof.material_request.ticket.id }}</strong>
+                    </div>
+                    <div class="ticket-line">
+                      <strong>Issue:</strong> {{ entry.proof.material_request.ticket.issue }}
+                    </div>
+                    <div class="ticket-line">
+                      <strong>Location:</strong> {{ entry.proof.material_request.ticket.location }}
+                    </div>
+                    <div class="ticket-line">
+                      <strong>Status:</strong> {{ entry.proof.material_request.ticket.status }}
+                    </div>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if entry.proof.material_request.ticket.student %}
+                    <div class="ticket-line">
+                      <strong>Student:</strong> {{ entry.proof.material_request.ticket.student.name }}
+                    </div>
+                    <div class="ticket-line">
+                      <strong>Reg No:</strong> {{ entry.proof.material_request.ticket.student.reg_no }}
+                    </div>
+                  {% elif entry.proof.material_request.ticket.faculty %}
+                    <div class="ticket-line">
+                      <strong>Faculty:</strong> {{ entry.proof.material_request.ticket.faculty.name }}
+                    </div>
+                    <div class="ticket-line">
+                      <strong>Faculty ID:</strong> {{ entry.proof.material_request.ticket.faculty.faculty_id }}
+                    </div>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>
+                  {{ entry.proof.material_request.department.Department|default:"-" }}
+                </td>
+
+                <td>
+                  {{ entry.proof.uploaded_by.name|default:"-" }}
+                </td>
+
+                <td>
+                  {% for item in entry.proof.material_request.request_items.all %}
+                    <div class="item-line">
+                      <strong>{{ item.item.item_name }}</strong><br>
+                      Requested: {{ item.requested_qty }} {{ item.item.unit }}<br>
+                      Issued: {{ item.issued_qty }} {{ item.item.unit }}<br>
+                      Available: {{ item.item.stock_qty }} {{ item.item.unit }}
+                    </div>
+                  {% empty %}
+                    -
+                  {% endfor %}
+                </td>
+
+                <td>
+                  {% for scrap in entry.proof.scrap_items.all %}
+                    <div class="scrap-line">
+                      <strong>Type:</strong> {{ scrap.scrap_type }}<br>
+                      <strong>Name:</strong> {{ scrap.name }}<br>
+                      <strong>Count:</strong> {{ scrap.count }}
+                    </div>
+                  {% empty %}
+                    -
+                  {% endfor %}
+                </td>
+
+                <td>
+                  <a href="{{ entry.proof.proof_file.url }}" target="_blank" class="btn-primary-custom">
+                    <i class="fas fa-eye"></i> View
+                  </a>
+                </td>
+
+                <td>{{ entry.proof.description|default:"-" }}</td>
+
+                <td>{{ entry.proof.remarks|default:"-" }}</td>
+
+                <td>
+                  {% if entry.proof.stock_updated %}
+                    <span class="badge-status badge-success">
+                      <i class="fas fa-check-circle"></i> Updated
+                    </span>
+                  {% else %}
+                    <span class="badge-status badge-pending">
+                      <i class="fas fa-clock"></i> Pending
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <span class="badge-status badge-level">
+                    <i class="fas fa-layer-group"></i> Level {{ entry.approver_level }}
+                  </span>
+                </td>
+
+                <td>
+                  <form method="post" onsubmit="return confirmProofAction(this);">
+                    {% csrf_token %}
+                    <input type="hidden" name="entry_id" value="{{ entry.id }}">
+
+                    <textarea name="remarks" placeholder="Verification remarks"></textarea>
+
+                    <div class="action-row">
+                      <button name="action" value="verify" class="small-btn success">
+                        <i class="fas fa-check me-1"></i> Verify
+                      </button>
+
+                      <button name="action" value="reject" class="small-btn danger">
+                        <i class="fas fa-times me-1"></i> Reject
+                      </button>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+
+              {% empty %}
+              <tr>
+                <td colspan="13" class="empty-row">
+                  <i class="fas fa-inbox me-2"></i> No pending proof approvals.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-clock-rotate-left me-2"></i> My Proof Approval History</span>
+        <input type="text" id="historyProofSearch" class="search-box" placeholder="Search history...">
+      </div>
+
+      <div class="card-body-custom">
+        <div class="table-responsive">
+          <table id="historyProofTable" class="data-table">
+            <thead>
+              <tr>
+                <th>Request No</th>
+                <th>Ticket</th>
+                <th>User</th>
+                <th>Uploaded By</th>
+                <th>Proof</th>
+                <th>Scrap Items</th>
+                <th>Description</th>
+                <th>Level</th>
+                <th>Status</th>
+                <th>Stock Status</th>
+                <th>Reason</th>
+                <th>Acted On</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for entry in my_actions %}
+              <tr>
+                <td>
+                  <strong>{{ entry.proof.material_request.request_no }}</strong>
+                </td>
+
+                <td>
+                  {% if entry.proof.material_request.ticket %}
+                    #{{ entry.proof.material_request.ticket.id }} -
+                    {{ entry.proof.material_request.ticket.issue }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if entry.proof.material_request.ticket.student %}
+                    Student: {{ entry.proof.material_request.ticket.student.name }}
+                  {% elif entry.proof.material_request.ticket.faculty %}
+                    Faculty: {{ entry.proof.material_request.ticket.faculty.name }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>{{ entry.proof.uploaded_by.name|default:"-" }}</td>
+
+                <td>
+                  <a href="{{ entry.proof.proof_file.url }}" target="_blank" class="btn-primary-custom">
+                    <i class="fas fa-eye"></i> View
+                  </a>
+                </td>
+
+                <td>
+                  {% for scrap in entry.proof.scrap_items.all %}
+                    <div class="scrap-line">
+                      <strong>Type:</strong> {{ scrap.scrap_type }}<br>
+                      <strong>Name:</strong> {{ scrap.name }}<br>
+                      <strong>Count:</strong> {{ scrap.count }}
+                    </div>
+                  {% empty %}
+                    -
+                  {% endfor %}
+                </td>
+
+                <td>{{ entry.proof.description|default:"-" }}</td>
+
+                <td>
+                  <span class="badge-status badge-level">
+                    <i class="fas fa-layer-group"></i> Level {{ entry.approver_level }}
+                  </span>
+                </td>
+
+                <td>
+                  {% if entry.status == "APPROVED" %}
+                    <span class="badge-status badge-success">
+                      <i class="fas fa-check-circle"></i> Approved
+                    </span>
+                  {% elif entry.status == "REJECTED" %}
+                    <span class="badge-status badge-danger">
+                      <i class="fas fa-times-circle"></i> Rejected
+                    </span>
+                  {% else %}
+                    <span class="badge-status badge-pending">
+                      <i class="fas fa-clock"></i> {{ entry.status }}
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if entry.proof.stock_updated %}
+                    <span class="badge-status badge-success">
+                      <i class="fas fa-check-circle"></i> Updated
+                    </span>
+                  {% else %}
+                    <span class="badge-status badge-pending">
+                      <i class="fas fa-clock"></i> Pending
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td>{{ entry.reason|default:"-" }}</td>
+
+                <td>{{ entry.acted_on|default:"-" }}</td>
+              </tr>
+
+              {% empty %}
+              <tr>
+                <td colspan="12" class="empty-row">
+                  <i class="fas fa-inbox me-2"></i> No approval history.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function confirmProofAction(form) {
+  const clicked = document.activeElement;
+  const action = clicked.value;
+
+  if (action === "reject") {
+    const remarks = form.querySelector("textarea[name='remarks']").value.trim();
+
+    if (!remarks) {
+      alert("Rejection reason is required.");
+      return false;
+    }
+
+    return confirm("Reject this proof?");
+  }
+
+  return confirm("Verify this proof? If this is the final approval level, stock ledger will be updated.");
+}
+
+function setupTableSearch(inputId, tableId) {
+  const input = document.getElementById(inputId);
+  const table = document.getElementById(tableId);
+
+  if (!input || !table) return;
+
+  input.addEventListener("input", function() {
+    const value = this.value.toLowerCase();
+
+    table.querySelectorAll("tbody tr").forEach(row => {
+      if (row.querySelector(".empty-row")) return;
+      row.style.display = row.innerText.toLowerCase().includes(value) ? "" : "none";
+    });
+  });
+}
+
+setupTableSearch("pendingProofSearch", "pendingProofTable");
+setupTableSearch("historyProofSearch", "historyProofTable");
+</script>
+
+{% endblock %}

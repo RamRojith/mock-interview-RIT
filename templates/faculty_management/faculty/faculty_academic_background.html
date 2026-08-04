@@ -1,0 +1,446 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Background - Ramco Institute of Technology</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+
+        <link rel="website icon" type="png" href="{% static 'images/ritlogo.png' %}">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .academic-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .section-header {
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-custom:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+        }
+        
+        .academic-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .academic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+        
+        .degree-badge {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .academic-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .detail-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 600;
+        }
+        
+        .detail-value {
+            font-weight: 500;
+            color: var(--secondary-color);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-action {
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-edit {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: var(--secondary-color);
+        }
+        
+        .btn-edit:hover {
+            background-color: #e9ecef;
+        }
+        
+        .btn-delete {
+            background-color: #fff5f5;
+            border: 1px solid #f8d7da;
+            color: var(--accent-color);
+        }
+        
+        .btn-delete:hover {
+            background-color: #f8d7da;
+        }
+        
+        .modal-header {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 8px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 6px;
+            padding: 10px;
+            border: 1px solid #ced4da;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #dee2e6;
+        }
+        
+        .certificate-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .certificate-link:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .academic-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="academic-container">
+        
+        <div class="section-header">
+            <div class="mb-4 text-end">
+    <a href="{% url 'faculty_dashboard' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i> Go to Dashboard
+    </a>
+</div>
+
+
+            <h2><i class="fas fa-graduation-cap me-2"></i>Academic Background</h2>
+            <button type="button" class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#academicModal">
+                <i class="fas fa-plus me-2"></i>Add Academic Record
+            </button>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="academicModal" tabindex="-1" aria-labelledby="academicModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <form id="academic-form" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="record_id" id="record_id">
+                        <input type="hidden" name="action" id="action" value="save">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="academicModalLabel"><i class="fas fa-plus-circle me-2"></i>Add Academic Record</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="degree" class="form-label">Degree</label>
+                                    <select name="degree" id="degree" class="form-select" required>
+                                        <option value="">Select Degree</option>
+                                        {% for code, name in DEGREE_CHOICES %}
+                                            <option value="{{ code }}">{{ name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="title" class="form-label">Title</label>
+                                    <input type="text" name="title" id="title" class="form-control" placeholder="e.g., Bachelor of Science in Computer Science">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="board_university" class="form-label">Board/University</label>
+                                <input type="text" name="board_university" id="board_university" class="form-control" placeholder="e.g., University of Example">
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="year_of_passing" class="form-label">Year of Passing</label>
+                                    <input type="number" name="year_of_passing" id="year_of_passing" class="form-control" placeholder="e.g., 2020" min="1900" max="2030">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="marks_percentage" class="form-label">Marks (%)</label>
+                                    <input type="number" step="0.01" name="marks_percentage" id="marks_percentage" class="form-control" placeholder="e.g., 85.5" min="0" max="100">
+                                </div>
+                            </div>
+
+                            <!-- File Uploads (Dynamic Label & Name) -->
+                            <div class="mb-3" id="certificate-upload" style="display:none;">
+                                <label for="certificate" id="certificate-label" class="form-label">Certificate (PDF only)</label>
+                                <input type="file" id="certificate" class="form-control" accept=".pdf" name="">
+                                <div class="form-text">Maximum file size: 5MB</div>
+                                <div id="current-certificate" class="mt-2"></div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary-custom"><i class="fas fa-save me-2"></i>Save</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Display Existing Academic Backgrounds -->
+        <h4 class="mb-4"><i class="fas fa-list-alt me-2"></i>Your Academic Records</h4>
+        
+        {% if academic_records %}
+            <div class="academic-list">
+                {% for record in academic_records %}
+                <div class="academic-card p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="degree-badge">{{ record.degree }}</span>
+                            <h5 class="mt-2 mb-1">{{ record.title }}</h5>
+                            <p class="text-muted mb-0">{{ record.board_university }}</p>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-muted">{{ record.year_of_passing }}</span>
+                            <div class="mt-1">
+                                <span class="fw-bold">{{ record.marks_percentage }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="academic-details mt-3">
+                        <div class="detail-item">
+                            <span class="detail-label">Board/University</span>
+                            <span class="detail-value">{{ record.board_university }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Year of Passing</span>
+                            <span class="detail-value">{{ record.year_of_passing }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Marks/Percentage</span>
+                            <span class="detail-value">{{ record.marks_percentage }}%</span>
+                        </div>
+                        {% if record.get_certificate %}
+                        <div class="detail-item">
+                            <span class="detail-label">Certificate</span>
+                            <a href="{{ record.get_certificate.url }}" target="_blank" class="certificate-link">
+                                <i class="fas fa-file-pdf me-1"></i>View PDF
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-action btn-edit edit-btn" data-id="{{ record.id }}">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </button>
+                        <button class="btn btn-action btn-delete delete-btn" data-id="{{ record.id }}">
+                            <i class="fas fa-trash me-1"></i>Delete
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-graduation-cap"></i>
+                <h4>No Academic Records Yet</h4>
+                <p>Add your first academic record to get started.</p>
+                <button type="button" class="btn btn-primary-custom mt-2" data-bs-toggle="modal" data-bs-target="#academicModal">
+                    <i class="fas fa-plus me-2"></i>Add Academic Record
+                </button>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const degreeToFieldName = {
+                'SSLC': 'sslc_certificate',
+                'High School': 'hsc_certificate',
+                'Graduation': 'ug_certificate',
+                'Post-Graduation': 'pg_certificate',
+                'MPhil': 'mphil_certificate',
+                'PhD': 'phd_certificate',
+                'PostDoc': 'postDoc_certificate'
+            };
+
+            const degreeInput = document.getElementById('degree');
+            const certificateInput = document.getElementById('certificate');
+            const certificateLabel = document.getElementById('certificate-label');
+            const uploadDiv = document.getElementById('certificate-upload');
+            const currentCert = document.getElementById('current-certificate');
+            const modalTitle = document.getElementById('academicModalLabel');
+
+            const fetchUrl = "{% url 'faculty_academic_background' %}";
+
+            // ✅ Update certificate upload dynamically when degree changes
+            function updateCertificateSection(degree, certificateUrl = '') {
+                if (degree) {
+                    uploadDiv.style.display = 'block';
+                    certificateInput.name = degreeToFieldName[degree] || '';
+                    certificateLabel.textContent = `${degree} Certificate`;
+
+                    if (certificateUrl) {
+                        currentCert.innerHTML = `<div class="alert alert-info p-2"><i class="fas fa-file-pdf me-2"></i><a href="${certificateUrl}" target="_blank">Current Certificate</a></div>`;
+                    } else {
+                        currentCert.innerHTML = '';
+                    }
+                } else {
+                    uploadDiv.style.display = 'none';
+                    certificateInput.name = '';
+                    certificateLabel.textContent = 'Certificate (PDF only)';
+                    currentCert.innerHTML = '';
+                }
+            }
+
+            degreeInput.addEventListener('change', function() {
+                const selectedDegree = this.value;
+                updateCertificateSection(selectedDegree);
+            });
+
+            // ✅ Handle Edit Button
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const recordId = this.dataset.id;
+                    fetch(`${fetchUrl}?edit_id=${recordId}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            // Fill modal fields
+                            document.getElementById('degree').value = data.degree;
+                            document.getElementById('title').value = data.title;
+                            document.getElementById('board_university').value = data.board_university;
+                            document.getElementById('year_of_passing').value = data.year_of_passing;
+                            document.getElementById('marks_percentage').value = data.marks_percentage;
+                            document.getElementById('record_id').value = data.id;
+
+                            // Update certificate area dynamically
+                            updateCertificateSection(data.degree, data.certificate_url);
+
+                            // Update modal title and button visibility
+                            modalTitle.innerHTML = '<i class="fas fa-edit me-2"></i>Edit Academic Record';
+                            document.getElementById('action').value = 'save';
+
+                            // Show modal
+                            const modal = new bootstrap.Modal(document.getElementById('academicModal'));
+                            modal.show();
+                        })
+                        .catch(err => {
+                            console.error("Error fetching academic record:", err);
+                            alert("Failed to load record data. Please try again.");
+                        });
+                });
+            });
+
+            
+
+            // ✅ Handle Delete
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const recordId = this.dataset.id;
+                    if (confirm('Are you sure you want to delete this record?')) {
+                        document.getElementById('record_id').value = recordId;
+                        document.getElementById('action').value = 'delete';
+                        document.getElementById('academic-form').submit();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

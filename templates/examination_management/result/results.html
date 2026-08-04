@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card shadow-sm">
+   <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Students</h5>
+   </div>
+   <div class="card-body">
+    <div class="row mb-3">
+   <div class="col-md-4">
+      <input type="text" id="searchInput" class="form-control" 
+             placeholder="Search Reg No / Name / Department / Batch / Section">
+   </div>
+</div>
+      <!-- FILTERS -->
+      <div class="row g-2 mb-3">
+         <div class="col-md-2">
+            <select id="degree" class="form-select">
+               <option value="">Degree</option>
+               {% for d in degrees %}
+               <option value="{{ d.id }}">{{ d.degree_code }}</option>
+               {% endfor %}
+            </select>
+         </div>
+         <div class="col-md-2">
+            <select id="department" class="form-select">
+               <option value="">Department</option>
+            </select>
+         </div>
+         <div class="col-md-2">
+            <select id="regulation" class="form-select">
+               <option value="">Regulation</option>
+               {% for r in regulations %}
+               <option value="{{ r.id }}">{{ r }}</option>
+               {% endfor %}
+            </select>
+         </div>
+         <div class="col-md-2">
+            <select id="year" class="form-select">
+               <option value="">Year</option>
+            </select>
+         </div>
+         <div class="col-md-2">
+            <select id="semester" class="form-select">
+               <option value="">Semester</option>
+            </select>
+         </div>
+         <div class="col-md-2">
+            <select id="batch" class="form-select">
+               <option value="">Batch</option>
+               {% for batch in batches %}
+               <option value="{{ batch }}">{{ batch }}</option>
+               {% endfor %}
+            </select>
+         </div>
+         <div class="col-md-2">
+            <select id="section" class="form-select">
+               <option value="">Section</option>
+               {% for section in sections %}
+               <option value="{{ section }}">{{ section }}</option>
+               {% endfor %}
+            </select>
+         </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-responsive">
+        <a id="exportExcel" class="btn btn-success mb-3">
+Export Result Analysis
+</a>
+         <table class="table table-striped table-hover" id="studentsTable">
+            <thead class="table-light">
+               <tr>
+                  <th>#</th>
+                  <th>Reg No</th>
+                  <th>Name</th>
+                  <th>Department</th>
+                  <th>Section</th>
+                  <th>Batch</th>
+                  <th>Regulation</th>
+                  <th>Year</th>
+                  <th>Semester</th>
+                  <th>SGPA</th>
+                  <th>CGPA</th>
+                  <th>Semesters</th>
+               </tr>
+            </thead>
+            <tbody id="studentsBody">
+               <tr>
+                  <td colspan="12" class="text-center py-4">Loading...</td>
+               </tr>
+            </tbody>
+         </table>
+      </div>
+
+      <!-- PAGINATION CONTROLS -->
+      <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2" id="paginationControls" style="display:none;">
+         <div>
+            <span id="showingInfo"></span>
+         </div>
+         <nav aria-label="Student pagination">
+            <ul class="pagination mb-0" id="pagination">
+               <!-- Filled by JS -->
+            </ul>
+         </nav>
+         <div class="d-flex align-items-center gap-2">
+            <label for="pageSize" class="form-label mb-0">Rows per page:</label>
+            <select id="pageSize" class="form-select form-select-sm" style="width: auto;">
+               <option value="10">10</option>
+               <option value="25" selected>25</option>
+               <option value="50">50</option>
+               <option value="100">100</option>
+               <option value="150">150</option>
+               <option value="200">200</option>
+            </select>
+         </div>
+      </div>
+
+   </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function(){
+
+   let currentPage = 1;
+   let pageSize = 25;
+   let totalPages = 1;
+
+   // ── Load students ───────────────────────────────────────
+   window.loadStudents = function(page = 1) {
+      currentPage = page;
+
+      $.ajax({
+         url: "{% url 'results_data' %}",
+         data: {
+            search:     $("#searchInput").val(),
+            degree:     $("#degree").val(),
+            department: $("#department").val(),
+            regulation: $("#regulation").val(),
+            year:       $("#year").val(),
+            semester:   $("#semester").val(),
+            section:    $("#section").val(),
+            batch:      $("#batch").val(),
+            page:       page,
+            page_size:  pageSize
+         },
+         success: function(response) {
+            renderTable(response.data);
+            updatePagination(
+               response.current_page,
+               response.pages,
+               response.total,
+               response.has_previous,
+               response.has_next
+            );
+            $("#paginationControls").show();
+         },
+         error: function() {
+            $("#studentsBody").html(`
+               <tr>
+                  <td colspan="12" class="text-center text-danger py-4">
+                     Failed to load students
+                  </td>
+               </tr>
+            `);
+            $("#paginationControls").hide();
+         }
+      });
+   }
+let searchTimer;
+
+$("#searchInput").on("keyup", function(){
+
+   clearTimeout(searchTimer);
+
+   searchTimer = setTimeout(function(){
+      loadStudents(1);
+   }, 400);
+
+});
+   // ── Render table rows ────────────────────────────────────
+   function renderTable(data) {
+      let rows = "";
+
+      if (data.length === 0) {
+         rows = `
+            <tr>
+               <td colspan="12" class="text-center text-muted py-4">
+                  No students found
+               </td>
+            </tr>`;
+      } else {
+         data.forEach(function(item, index) {
+            let semButtons = "";
+            item.semesters.forEach(function(sem) {
+               semButtons += `
+                  <a href="${sem.url}" target="_blank"
+                     class="btn btn-sm btn-outline-primary me-1 mb-1">
+                     Sem ${sem.sem}
+                  </a>`;
+            });
+
+            rows += `
+               <tr>
+                  <td>${(currentPage-1)*pageSize + index + 1}</td>
+                  <td><strong>${item.reg_no}</strong></td>
+                  <td>${item.name}</td>
+                  <td>${item.department}</td>
+                  <td>${item.section || '-'}</td>
+                  <td>${item.batch || '-'}</td>
+                  <td>${item.regulation || '-'}</td>
+                  <td>${item.year || '-'}</td>
+                  <td>${item.semester || '-'}</td>
+                  <td><span class="badge bg-info">${item.sgpa}</span></td>
+                  <td><span class="badge bg-success">${item.cgpa}</span></td>
+                  <td>${semButtons || '-'}</td>
+               </tr>`;
+         });
+      }
+
+      $("#studentsBody").html(rows);
+   }
+
+   // ── Update pagination UI ─────────────────────────────────
+   function updatePagination(curr, total, count, hasPrev, hasNext) {
+      totalPages = total;
+      const start = (curr - 1) * pageSize + 1;
+      const end   = Math.min(start + pageSize - 1, count);
+
+      $("#showingInfo").text(`Showing ${start}–${end} of ${count} students`);
+
+      let html = '';
+
+      // Previous
+      html += `
+         <li class="page-item ${!hasPrev ? 'disabled' : ''}">
+            <button class="page-link" ${!hasPrev ? '' : `onclick="loadStudents(${curr-1})"`}>Previous</button>
+         </li>`;
+
+      // Pages (simple version — show all or truncate if many pages)
+      const maxVisible = 7;
+      let startPage = Math.max(1, curr - Math.floor(maxVisible/2));
+      let endPage   = Math.min(total, startPage + maxVisible - 1);
+
+      if (endPage - startPage + 1 < maxVisible) {
+         startPage = Math.max(1, endPage - maxVisible + 1);
+      }
+
+      if (startPage > 1) {
+         html += `<li class="page-item"><button class="page-link" onclick="loadStudents(1)">1</button></li>`;
+         if (startPage > 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+         html += `
+            <li class="page-item ${i === curr ? 'active' : ''}">
+               <button class="page-link" onclick="loadStudents(${i})">${i}</button>
+            </li>`;
+      }
+
+      if (endPage < total) {
+         if (endPage < total - 1) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+         html += `<li class="page-item"><button class="page-link" onclick="loadStudents(${total})">${total}</button></li>`;
+      }
+
+      // Next
+      html += `
+         <li class="page-item ${!hasNext ? 'disabled' : ''}">
+            <button class="page-link" ${!hasNext ? '' : `onclick="loadStudents(${curr+1})"`}>Next</button>
+         </li>`;
+
+      $("#pagination").html(html);
+   }
+
+   // ── Event listeners ──────────────────────────────────────
+   $("#degree").change(function(){
+      let degree = $(this).val();
+      const DepartmentUrl = "{% url 'get_result_departments' %}";
+      const DegreeStructureUrl = "{% url 'get_result_degree_structure' %}";
+
+      // Load departments
+      $.get(DepartmentUrl, {degree: degree}, function(data){
+         let dept = '<option value="">Department</option>';
+         data.forEach(d => {
+            dept += `<option value="${d.id}">${d.Department}</option>`;
+         });
+         $("#department").html(dept);
+      });
+
+      // Load year + semester
+      $.get(DegreeStructureUrl, {degree: degree}, function(data){
+         let yearHTML = '<option value="">Year</option>';
+         data.years.forEach(y => yearHTML += `<option value="${y}">${y}</option>`);
+         $("#year").html(yearHTML);
+
+         let semHTML = '<option value="">Semester</option>';
+         data.semesters.forEach(s => semHTML += `<option value="${s}">Sem ${s}</option>`);
+         $("#semester").html(semHTML);
+      });
+
+      loadStudents(1);
+   });
+
+   // All other filters + page size
+   $("#pageSize").change(function(){
+      pageSize = parseInt($(this).val());
+      loadStudents(1);
+   });
+
+   $("select:not(#pageSize)").change(function(){
+      loadStudents(1);
+   });
+
+   // Initial load
+   loadStudents(1);
+});
+
+
+$("#exportExcel").click(function(){
+
+    const params = new URLSearchParams({
+        degree: $("#degree").val(),
+        department: $("#department").val(),
+        regulation: $("#regulation").val(),
+        year: $("#year").val(),
+        semester: $("#semester").val(),
+        section: $("#section").val(),
+        batch: $("#batch").val()
+    });
+
+    window.location =
+    "/examination_management/result/export_result_analysis/?"
+    + params.toString();
+
+});y
+</script>
+{% endblock %}

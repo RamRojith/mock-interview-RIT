@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% block content %}
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        .table th {
+            background-color: #f1f5f9;
+            color: #334155;
+            font-weight: 600;
+        }
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.4em 0.6em;
+        }
+        .student-img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .modal-img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .action-btn {
+            min-width: 80px;
+        }
+        .search-box {
+            border-radius: 20px;
+            padding-left: 20px;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+    </style>
+
+    <div class="container mt-4">
+        <div class="card p-4 mb-4">
+            <h2 class="mb-4 text-secondary"><i class="fas fa-user-check me-2"></i>Admission Verification</h2>
+
+            <!-- Search form -->
+            <form method="get" class="mb-4">
+                <div class="row g-2">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" name="search" class="form-control search-box border-start-0" 
+                                   placeholder="Search by name, NRC, email, or programme" value="{{ search_query }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill">Search</button>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{% url 'admission_verify' %}" class="btn btn-outline-secondary w-100 rounded-pill">Clear</a>
+                    </div>
+                </div>
+            </form>
+
+            {% if page_obj %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Photo</th>
+                                <th>First Name</th>
+                                <th>Surname</th>
+                                <th>Programme</th>
+                                <th>NRC</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in page_obj %}
+                                <tr>
+                                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                                    <td>
+                                        {% if student.passport_size_photo %}
+                                            <img src="{{ MEDIA_URL }}{{ student.passport_size_photo }}" 
+                                                alt="Student Photo" 
+                                                class="student-img"
+                                                onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                        {% endif %}
+                                        
+                                        <!-- Font Awesome user-circle icon -->
+                                        <i class="fa fa-user-circle text-secondary" 
+                                           style="font-size: 2rem; {% if student.passport_size_photo %}display: none;{% else %}display: block;{% endif %}"></i>
+                                    </td>
+
+                                    <td>{{ student.first_name }}</td>
+                                    <td>{{ student.surname }}</td>
+                                    <td>{{ student.programme_of_study }}</td>
+                                    <td>{{ student.nrc_number }}</td>
+                                    <td>
+                                        {% if student.admission_verify %}
+                                            <span class="badge bg-success">Verified</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-sm btn-info action-btn" data-bs-toggle="modal" data-bs-target="#studentModal{{ student.id }}">
+                                                <i class="fas fa-eye me-1"></i> View
+                                            </button>
+                                            {% if not student.admission_verify %}
+                                                <form method="post" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="student_id" value="{{ student.id }}">
+                                                    <button type="submit" class="btn btn-sm btn-success action-btn">
+                                                        <i class="fas fa-check me-1"></i> Verify
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <span class="badge bg-success">
+    <i class="fas fa-check-circle me-1"></i> Verified
+</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Modal for student details -->
+                                <div class="modal fade" id="studentModal{{ student.id }}" tabindex="-1" aria-labelledby="studentModalLabel{{ student.id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-light">
+                                                <h5 class="modal-title" id="studentModalLabel{{ student.id }}">Student Details</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-4 text-center mb-3">
+                                                        {% if student.passport_size_photo %}
+                                                            <img src="{{ MEDIA_URL }}{{ student.passport_size_photo }}" 
+                                                                alt="Student Photo" 
+                                                                class="modal-img"
+                                                                onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                        {% endif %}
+                                                        <i class="fa fa-user-circle text-secondary" 
+                                                           style="font-size: 5rem; {% if student.passport_size_photo %}display: none;{% else %}display: block; margin: 0 auto;{% endif %}"></i>
+                                                        <h5 class="mt-3">{{ student.first_name }} {{ student.surname }}</h5>
+                                                        <p class="text-muted">{{ student.programme_of_study }}</p>
+                                                    </div>
+                                                    <div class="col-md-8">
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <p><strong>Registration Number:</strong><br> {{ student.reg_number|default:"Not Assigned" }}</p>
+                                                                <p><strong>NRC Number:</strong><br> {{ student.nrc_number|default:"Not Provided" }}</p>
+                                                                <p><strong>Email:</strong><br> {{ student.email_address|default:"Not Provided" }}</p>
+                                                                <p><strong>Mobile Number:</strong><br> {{ student.mobile_number|default:"Not Provided" }}</p>
+                                                                <p><strong>Gender:</strong><br> {{ student.gender|default:"Not Provided" }}</p>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <p><strong>Date of Birth:</strong><br> {{ student.date_of_birth|default:"Not Provided" }}</p>
+                                                                <p><strong>Intake:</strong><br> {{ student.Intake|default:"Not Provided" }}</p>
+                                                                <p><strong>Mode of Study:</strong><br> {{ student.mode_of_study|default:"Not Provided" }}</p>
+                                                                <p><strong>Department:</strong><br> {{ student.department_name|default:"Not Provided" }}</p>
+                                                                <p><strong>Verification Status:</strong><br> 
+                                                                    {% if student.admission_verify %}
+                                                                        <span class="badge bg-success">Verified</span>
+                                                                    {% else %}
+                                                                        <span class="badge bg-warning text-dark">Pending</span>
+                                                                    {% endif %}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link" aria-hidden="true">&laquo;</span>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?page={{ num }}&search={{ search_query }}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search_query }}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link" aria-hidden="true">&raquo;</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% else %}
+                <div class="alert alert-info text-center py-4">
+                    <i class="fas fa-info-circle display-4 d-block mb-3"></i>
+                    <h4>No students found</h4>
+                    <p class="mb-0">No students match your search criteria</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock %}

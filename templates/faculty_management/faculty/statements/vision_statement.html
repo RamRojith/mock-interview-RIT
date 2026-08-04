@@ -1,0 +1,845 @@
+{% extends 'base.html' %}
+{% block title %}Vision Statement{% endblock %}
+
+{% block content %}
+<style>
+  /* ===========================
+     Global Page Styling
+  ============================ */
+  body {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    color: #1f2937;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1400px;
+  }
+
+  /* ===========================
+     Header Section
+  ============================ */
+  .page-header {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  .page-header-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .page-title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .page-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 0;
+  }
+
+  /* ===========================
+     Action Buttons
+  ============================ */
+  .action-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .btn {
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-success {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  }
+
+  .btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  }
+
+  .btn-warning {
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+  }
+
+  .btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4);
+    background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  }
+
+  .btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+    background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+    background: linear-gradient(135deg, #153a70 0%, #1a4b8c 100%);
+  }
+
+  .btn-secondary {
+    background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+  }
+
+  .btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4);
+    background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
+  }
+
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  /* ===========================
+     Table Styling
+  ============================ */
+  .table-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+
+  .table {
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .table thead th {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: none;
+    padding: 1.25rem 1rem;
+    vertical-align: middle;
+    position: relative;
+  }
+
+  .table thead th::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .table tbody td {
+    vertical-align: middle;
+    font-size: 0.9rem;
+    padding: 1.25rem 1rem;
+    border-color: #f1f5f9;
+    background: white;
+    transition: all 0.2s ease;
+  }
+
+  .table tbody tr {
+    transition: all 0.2s ease;
+  }
+
+  .table tbody tr:hover td {
+    background: #f8fafc;
+  }
+
+  /* ===========================
+     Badge Styling
+  ============================ */
+  .badge {
+    border-radius: 20px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .bg-success {
+    background: linear-gradient(135deg, #059669, #10b981) !important;
+  }
+
+  .bg-secondary {
+    background: linear-gradient(135deg, #6b7280, #9ca3af) !important;
+  }
+
+  .bg-info {
+    background: linear-gradient(135deg, #0ea5e9, #38bdf8) !important;
+  }
+
+  .bg-primary {
+    background: linear-gradient(135deg, #1a4b8c, #2c5aa0) !important;
+  }
+
+  /* ===========================
+     Modal Styling
+  ============================ */
+  .modal-content {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+  }
+
+  .modal-header {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+    border-bottom: none;
+    padding: 1.5rem 2rem;
+  }
+
+  .modal-title {
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.3rem;
+  }
+
+  .modal-body {
+    padding: 2rem;
+  }
+
+  .modal-footer {
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    padding: 1.25rem 2rem;
+  }
+
+  .btn-close {
+    filter: invert(1);
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+  }
+
+  .btn-close:hover {
+    opacity: 1;
+  }
+
+  /* ===========================
+     Form Controls
+  ============================ */
+  .form-control {
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    background: #f8fafc;
+  }
+
+  .form-control:focus {
+    border-color: #1a4b8c;
+    box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+    background: white;
+  }
+
+  .form-control:read-only {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-check-input:checked {
+    background-color: #1a4b8c;
+    border-color: #1a4b8c;
+  }
+
+  /* ===========================
+     Vision Text Styling
+  ============================ */
+  .vision-preview {
+    max-width: 400px;
+    line-height: 1.5;
+    color: #64748b;
+  }
+
+  .vision-full {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    font-size: 15px;
+    color: #374151;
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 10px;
+    border-left: 4px solid #1a4b8c;
+  }
+
+  .view-vision-btn {
+    background: transparent;
+    border: none;
+    color: #1a4b8c;
+    font-weight: 600;
+    padding: 0;
+    margin-top: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: color 0.2s ease;
+  }
+
+  .view-vision-btn:hover {
+    color: #153a70;
+    text-decoration: underline;
+  }
+
+  /* ===========================
+     Empty State
+  ============================ */
+  .empty-state {
+    padding: 3rem 2rem;
+    text-align: center;
+    color: #64748b;
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .empty-state h4 {
+    color: #475569;
+    margin-bottom: 0.5rem;
+  }
+
+  /* ===========================
+     Animations
+  ============================ */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .table tbody tr {
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+  }
+
+  .table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+  .table tbody tr:nth-child(2) { animation-delay: 0.2s; }
+  .table tbody tr:nth-child(3) { animation-delay: 0.3s; }
+  .table tbody tr:nth-child(4) { animation-delay: 0.4s; }
+  .table tbody tr:nth-child(5) { animation-delay: 0.5s; }
+
+  /* ===========================
+     Responsive Adjustments
+  ============================ */
+  @media (max-width: 1200px) {
+    .container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (max-width: 992px) {
+    .page-title {
+      font-size: 1.8rem;
+    }
+    
+    .table-responsive {
+      border-radius: 12px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .page-header {
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .page-title {
+      font-size: 1.5rem;
+      flex-direction: column;
+      gap: 0.5rem;
+      text-align: center;
+    }
+    
+    .action-section {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .table thead th,
+    .table tbody td {
+      padding: 1rem 0.75rem;
+      font-size: 0.85rem;
+    }
+    
+    .modal-body {
+      padding: 1.5rem;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    
+    .page-header {
+      padding: 1.25rem;
+    }
+    
+    .page-title {
+      font-size: 1.3rem;
+    }
+    
+    .page-subtitle {
+      font-size: 0.95rem;
+    }
+    
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+    }
+    
+    .modal-title {
+      font-size: 1.1rem;
+    }
+    
+    .btn-group {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .btn-group .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+
+<div class="container mt-4">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-content">
+      <h1 class="page-title">
+        <i class="fas fa-eye"></i>
+        Vision Statements Management
+      </h1>
+      <p class="page-subtitle">Create and manage departmental vision statements for academic years</p>
+    </div>
+  </div>
+
+  <!-- Action Section -->
+  <div class="action-section">
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#visionModal">
+      <i class="fas fa-plus-circle"></i>
+      {% if vision_to_edit %}Edit Vision{% else %}Add New Vision{% endif %}
+    </button>
+    
+    <div class="d-flex gap-2">
+      <span class="badge bg-info">
+        <i class="fas fa-info-circle me-1"></i>
+        {{ visions|length }} Vision{{ visions|length|pluralize }} Found
+      </span>
+    </div>
+  </div>
+
+  <!-- Vision Statements Table -->
+  <div class="table-container">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Department</th>
+            <th>Year</th>
+            <th>Vision Statement</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Updated</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for vision in visions %}
+          <tr>
+            <td>
+              <strong>#{{ forloop.counter }}</strong>
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                <i class="fas fa-building text-primary me-2"></i>
+                <span>{{ vision.department.Department }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <span class="fw-bold">{{ vision.year }}</span>
+                {% if vision.year|add:'0' == current_year %}
+                  <span class="badge bg-info">
+                    <i class="fas fa-star me-1"></i>Current
+                  </span>
+                {% endif %}
+              </div>
+            </td>
+            <td style="max-width: 300px;">
+              <div class="vision-preview">
+                {{ vision.vision_statement|truncatewords:15 }}
+                <button type="button"
+                  class="view-vision-btn"
+                  data-bs-toggle="modal"
+                  data-bs-target="#viewVisionModal"
+                  data-department="{{ vision.department.Department }}"
+                  data-year="{{ vision.year }}"
+                  data-vision="{{ vision.vision_statement|escape }}">
+                  <i class="fas fa-expand-alt"></i> View Full Vision
+                </button>
+              </div>
+            </td>
+            <td>
+              {% if vision.is_active %}
+                <span class="badge bg-success">
+                  <i class="fas fa-check-circle me-1"></i>Active
+                </span>
+              {% else %}
+                <span class="badge bg-secondary">
+                  <i class="fas fa-pause-circle me-1"></i>Inactive
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              <small class="text-muted">
+                <i class="fas fa-calendar-plus me-1"></i>
+                {{ vision.created_at|date:"d M Y" }}
+              </small>
+            </td>
+            <td>
+              <small class="text-muted">
+                <i class="fas fa-calendar-check me-1"></i>
+                {{ vision.updated_at|date:"d M Y" }}
+              </small>
+            </td>
+            <td>
+              <div class="btn-group" role="group">
+                <a href="?edit={{ vision.id }}" class="btn btn-warning btn-sm">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteModal"
+                  data-id="{{ vision.id }}"
+                  data-label="Vision #{{ vision.id }} — {{ vision.department.Department }} ({{ vision.year }})"
+                >
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="empty-state">
+              <i class="fas fa-eye-slash"></i>
+              <h4>No Vision Statements Found</h4>
+              <p>Get started by creating your first vision statement for your department.</p>
+              <button class="btn btn-success mt-2" data-bs-toggle="modal" data-bs-target="#visionModal">
+                <i class="fas fa-plus-circle me-2"></i>Create First Vision
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Vision Modal -->
+<div class="modal fade" id="visionModal" tabindex="-1" aria-labelledby="visionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <form method="POST">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="visionModalLabel">
+            <i class="fas {% if vision_to_edit %}fa-edit{% else %}fa-plus-circle{% endif %} me-2"></i>
+            {% if vision_to_edit %}Edit Vision Statement{% else %}Add New Vision Statement{% endif %}
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          {% if vision_to_edit %}
+            <input type="hidden" name="vision_id" value="{{ vision_to_edit.id }}">
+          {% endif %}
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group mb-4">
+                <label class="form-label">Department</label>
+                {% if faculty_department %}
+                  <input type="hidden" name="department" value="{{ faculty_department.id }}">
+                  <input type="text" class="form-control" value="{{ faculty_department.Department }} - {{ faculty_department.Department_code }}" readonly>
+                  <small class="text-muted mt-1">Your assigned department</small>
+                {% else %}
+                  <input type="text" class="form-control is-invalid" value="No department assigned" readonly>
+                  <div class="invalid-feedback">Please contact administrator to assign a department</div>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="form-group mb-4">
+                <label class="form-label">Academic Year</label>
+                <select name="year" class="form-control" required>
+                  <option value="">-- Select Academic Year --</option>
+                  {% for y in year_choices %}
+                    <option value="{{ y }}"
+                      {% if vision_to_edit and vision_to_edit.year == y %}
+                        selected
+                      {% elif not vision_to_edit and y == current_year %}
+                        selected
+                      {% endif %}
+                    >{{ y }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group mb-4">
+            <label for="vision_statement" class="form-label fw-bold">
+              Vision Statement Content
+            </label>
+            <textarea
+              name="vision_statement"
+              id="vision_statement"
+              class="form-control"
+              rows="12"
+              style="min-height: 350px; resize: vertical; font-size: 15px; line-height: 1.6;"
+              placeholder="Enter a comprehensive vision statement that outlines the department's goals, values, and aspirations for the selected academic year..."
+              required
+            >{{ vision_to_edit.vision_statement|default:'' }}</textarea>
+            <small class="text-muted">This field supports multiple paragraphs and will auto-expand as you type.</small>
+          </div>
+
+          <div class="form-check form-switch mt-2">
+            <input type="checkbox" class="form-check-input" id="is_active" name="is_active"
+                   {% if vision_to_edit and vision_to_edit.is_active %}checked{% endif %}>
+            <label class="form-check-label fw-bold" for="is_active">
+              Set as Active Vision
+            </label>
+            <small class="text-muted d-block">Active visions are highlighted throughout the system</small>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas {% if vision_to_edit %}fa-save{% else %}fa-plus{% endif %} me-2"></i>
+            {% if vision_to_edit %}Update Vision{% else %}Create Vision{% endif %}
+          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- View Vision Modal -->
+<div class="modal fade" id="viewVisionModal" tabindex="-1" aria-labelledby="viewVisionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewVisionModalLabel">
+          <i class="fas fa-eye me-2"></i>Vision Statement Details
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <p><strong><i class="fas fa-building me-2"></i>Department:</strong><br>
+            <span id="viewDepartment" class="text-primary fw-bold"></span></p>
+          </div>
+          <div class="col-md-6">
+            <p><strong><i class="fas fa-calendar me-2"></i>Academic Year:</strong><br>
+            <span id="viewYear" class="text-primary fw-bold"></span></p>
+          </div>
+        </div>
+        <hr>
+        <h6 class="mb-3"><i class="fas fa-file-alt me-2"></i>Vision Statement:</h6>
+        <div id="viewVisionText" class="vision-full"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-2"></i>Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form method="POST" class="modal-content">
+      {% csrf_token %}
+      <input type="hidden" name="delete_id" id="delete_id">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteModalLabel">
+          <i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">You are about to permanently delete this vision statement:</p>
+        <div class="alert alert-warning border-0">
+          <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong id="deleteItemLabel">—</strong>
+          </div>
+        </div>
+        <p class="text-danger mb-0">
+          <i class="fas fa-info-circle me-1"></i>
+          This action cannot be undone and will permanently remove the vision statement from the system.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-2"></i>Cancel
+        </button>
+        <button type="submit" class="btn btn-danger">
+          <i class="fas fa-trash me-2"></i>Yes, Delete Permanently
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if vision_to_edit %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  var editModal = new bootstrap.Modal(document.getElementById('visionModal'));
+  editModal.show();
+});
+</script>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Delete modal
+  const deleteModalEl = document.getElementById('deleteModal');
+  deleteModalEl.addEventListener('show.bs.modal', event => {
+    const button = event.relatedTarget;
+    const id = button.getAttribute('data-id');
+    const label = button.getAttribute('data-label') || `Vision #${id}`;
+    deleteModalEl.querySelector('#delete_id').value = id;
+    deleteModalEl.querySelector('#deleteItemLabel').textContent = label;
+  });
+
+  // View Vision modal
+  const viewModalEl = document.getElementById('viewVisionModal');
+  viewModalEl.addEventListener('show.bs.modal', event => {
+    const button = event.relatedTarget;
+    const department = button.getAttribute('data-department');
+    const year = button.getAttribute('data-year');
+    const visionRaw = button.getAttribute('data-vision');
+
+    // Decode escaped text (\u002D etc.)
+    const decoded = visionRaw
+      .replace(/\\u002D/g, "-")
+      .replace(/\\u000A/g, "\n")
+      .replace(/\\u000D/g, "")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&");
+
+    viewModalEl.querySelector('#viewDepartment').textContent = department;
+    viewModalEl.querySelector('#viewYear').textContent = year;
+    viewModalEl.querySelector('#viewVisionText').textContent = decoded;
+  });
+
+  // Auto-expand textarea
+  const textarea = document.getElementById('vision_statement');
+  if (textarea) {
+    const resize = () => {
+      textarea.style.height = 'auto';
+      textarea.style.height = (textarea.scrollHeight) + 'px';
+    };
+    textarea.addEventListener('input', resize);
+    resize();
+  }
+});
+</script>
+{% endblock %}

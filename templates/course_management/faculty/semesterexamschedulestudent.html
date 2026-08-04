@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid py-4" style="max-width:1200px;">
+
+<div class="card shadow rounded-4 border-0">
+
+<div class="card-header bg-primary text-white">
+    <h4 class="mb-0">
+        Semester Exam Schedule
+    </h4>
+</div>
+
+<div class="card-body">
+
+<!-- Semester Icons -->
+<h6 class="fw-bold mb-3">Semesters</h6>
+
+<div class="d-flex flex-wrap gap-3">
+
+{% for sem in semester_list %}
+
+<a href="?semester={{ sem }}"
+   class="semester-box text-decoration-none
+   {% if sem == current_sem %}active-sem{% endif %}">
+
+    Semester {{ sem }}
+
+</a>
+
+{% endfor %}
+
+</div>
+
+<hr class="mt-4">
+
+<!-- Schedule Table -->
+{% if schedules %}
+
+<div class="table-responsive">
+
+<table class="table table-bordered table-hover">
+
+<thead class="table-primary">
+<tr>
+<th>#</th>
+<th>Course Code</th>
+<th>Course Title</th>
+<th>Exam Date</th>
+<th>Session</th>
+<th>Semester</th>
+</tr>
+</thead>
+
+<tbody>
+
+    <tbody>
+
+        {% for s in schedules %}
+        <tr class="{% if s.is_failed %}table-danger{% endif %}">
+            
+            <td>{{ forloop.counter }}</td>
+        
+            <!-- ✅ Semester Column -->
+            <td>
+                {% if s.is_failed %}
+                    <span class="text-danger fw-bold">{{ s.semester }}</span>
+                {% else %}
+                    {{ s.semester }}
+                {% endif %}
+            </td>
+        
+            <td>
+                {% if s.is_failed %}
+                    <span class="text-danger fw-bold">{{ s.course.course_code }}</span>
+                {% else %}
+                    {{ s.course.course_code }}
+                {% endif %}
+            </td>
+        
+            <td>
+                {% if s.is_failed %}
+                    <span class="text-danger fw-bold">{{ s.course.title }}</span>
+                {% else %}
+                    {{ s.course.title }}
+                {% endif %}
+            </td>
+        
+            <td>
+                {% if s.is_failed %}
+                    <span class="text-danger fw-bold">{{ s.exam_date|date:"d-m-Y" }}</span>
+                {% else %}
+                    {{ s.exam_date|date:"d-m-Y" }}
+                {% endif %}
+            </td>
+        
+            <td>
+                {% if s.is_failed %}
+                    <span class="text-danger fw-bold">{{ s.session }}</span>
+                {% else %}
+                    {{ s.session }}
+                {% endif %}
+            </td>
+        
+        </tr>
+        {% endfor %}
+        
+        </tbody>
+        
+
+</tbody>
+
+</table>
+
+</div>
+
+{% else %}
+
+<div class="text-muted text-center py-4">
+No schedule available for selected semester.
+</div>
+
+{% endif %}
+
+</div>
+</div>
+</div>
+
+<style>
+
+.semester-box {
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 1px solid #dcdcdc;
+    background: #f8f9fa;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    min-width: 120px;
+    text-align: center;
+}
+
+.semester-box:hover {
+    background: #e9ecef;
+}
+
+.active-sem {
+    background: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+
+</style>
+
+{% endblock %}

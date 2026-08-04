@@ -1,0 +1,889 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="marks-portal">
+  <div class="page-header">
+    <h1><i class="fas fa-chart-bar me-2"></i>Academic Performance Dashboard</h1>
+    <p class="header-subtitle">Track your grades and academic performance across all semesters</p>
+  </div>
+
+  <div class="page-container">
+    <!-- CGPA Summary Card -->
+    <div class="summary-card cgpa-display">
+      <div class="cgpa-content">
+        <div class="cgpa-icon">
+          <i class="fas fa-trophy"></i>
+        </div>
+        <div class="cgpa-details">
+          <div class="cgpa-label">Overall Cumulative GPA</div>
+          <div class="cgpa-value">{{ overall_cgpa|floatformat:2|default:"N/A" }}</div>
+          <div class="cgpa-subtitle">All semesters combined</div>
+        </div>
+      </div>
+      <div class="cgpa-progress">
+        <div class="progress" style="height: 8px;">
+          {% with cgpa=overall_cgpa|default:0 %}
+          <div class="progress-bar" 
+               style="width: {% widthratio cgpa 10 100 %}%;
+                      background: {% if cgpa >= 8.5 %}#10b981
+                                 {% elif cgpa >= 7 %}#f59e0b
+                                 {% elif cgpa >= 5.5 %}#3b82f6
+                                 {% else %}#ef4444{% endif %};">
+          </div>
+          {% endwith %}
+        </div>
+        <div class="progress-scale">
+          <span>0</span>
+          <span>10</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Semester Cards Grid -->
+    <div class="semester-grid" id="semester-grid">
+      {% for sem in semester_data %}
+      <div class="semester-card {% if forloop.first %}active{% endif %}"
+           data-sem="{{ sem.number }}"
+           role="button">
+           
+        <div class="semester-header">
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <div class="semester-icon">
+              <i class="fas fa-university"></i>
+            </div>
+            <h3 class="semester-title">Semester {{ sem.number }}</h3>
+          </div>
+          <div style="display:flex; align-items:center; gap:1rem;">
+  <a href="{% url 'semester_grade_pdf' sem.number %}" target="_blank"
+     class="btn-pdf" 
+     title="Download Semester Grade Card PDF"
+     onclick="event.stopPropagation();">
+    <i class="fas fa-file-pdf"></i> PDF
+  </a>
+  
+</div>
+          <i class="fas fa-chevron-right semester-arrow"></i>
+        </div>
+
+        <div class="semester-stats">
+          <div class="stat-row">
+            <div class="stat-item">
+              <div class="stat-label">GPA</div>
+              <div class="stat-value 
+                {% if sem.gpa >= 8.5 %}grade-excellent
+                {% elif sem.gpa >= 7 %}grade-good
+                {% elif sem.gpa >= 5.5 %}grade-moderate
+                {% else %}grade-low{% endif %}">
+                {{ sem.gpa|floatformat:2|default:"—" }}
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Courses</div>
+              <div class="stat-value">
+                {{ sem.results|length|default:0 }}
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">CGPA</div>
+              <div class="stat-value">
+                {{ sem.cum_gpa|floatformat:2|default:"—" }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-label">
+            <span>Academic Progress</span>
+            <span>{% widthratio sem.gpa|default:0 10 100 %}%</span>
+          </div>
+          <div class="progress">
+            {% with gpa=sem.gpa|default:0 %}
+            <div class="progress-bar"
+                 style="width: {% widthratio gpa 10 100 %}%;
+                        background: {% if gpa >= 8.5 %}#10b981
+                                   {% elif gpa >= 7 %}#f59e0b
+                                   {% elif gpa >= 5.5 %}#3b82f6
+                                   {% else %}#ef4444{% endif %};"
+                 aria-valuenow="{% widthratio gpa 10 100 %}"
+                 aria-valuemin="0" aria-valuemax="100"></div>
+            {% endwith %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Results Table Panel -->
+    <div class="detail-panel">
+      <div class="card">
+        <div class="card-header" id="detail-header">
+          <h5><i class="fas fa-list-alt me-2"></i>Select a semester to view results</h5>
+        </div>
+        <div class="card-body" id="detail-body">
+          <div class="empty-state">
+            <i class="fas fa-table fs-1 mb-3 d-block"></i>
+            <p>Click a semester above to see course-wise results</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden data for each semester -->
+{% for sem in semester_data %}
+<div id="sem-data-{{ sem.number }}" class="d-none">
+  {% if sem.results %}
+  <div class="table-responsive">
+    <table class="marks-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Course Code</th>
+          <th>Course Title</th>
+          <th>Credit</th>
+          <th>Grade</th>
+          <th>Grade Points</th>
+          <th>Grade Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for res in sem.results %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td><span class="course-code">{{ res.course.course_code|default:"—" }}</span></td>
+          <td class="course-name">{{ res.course.title|default:"Not specified" }}</td>
+          <td class="text-center">{{ res.credit|default:"—" }}</td>
+          <td>
+            <span class="badge 
+              {% if res.grade in 'A+,A' %}badge-excellent
+              {% elif res.grade in 'B+,B' %}badge-good
+              {% elif res.grade in 'C+,C' %}badge-moderate
+              {% elif res.grade in 'D+,D' %}badge-low
+              {% elif res.grade == 'F' %}badge-fail
+              {% else %}badge-na{% endif %}">
+              {{ res.grade|default:"—" }}
+            </span>
+          </td>
+          <td class="text-center fw-bold">{{ res.grade_points|default:"—" }}</td>
+          <td class="text-center fw-bold 
+            {% if res.grade_total and res.grade_total >= 80 %}text-success
+            {% elif res.grade_total and res.grade_total >= 60 %}text-warning
+            {% elif res.grade_total and res.grade_total >= 40 %}text-info
+            {% elif res.grade_total %}text-danger
+            {% endif %}">
+            {{ res.grade_total|default:0|floatformat:0 }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="summary-row">
+          <td colspan="4" class="text-end fw-bold">Semester GPA:</td>
+          <td colspan="3" class="text-center fw-bold semester-gpa">
+            {{ sem.gpa|floatformat:2|default:"—" }}
+          </td>
+        </tr>
+        <tr class="summary-row cum-gpa">
+          <td colspan="4" class="text-end fw-bold">Cumulative GPA (up to Sem {{ sem.number }}):</td>
+          <td colspan="3" class="text-center fw-bold cum-gpa-value">
+            {{ sem.cum_gpa|floatformat:2|default:"—" }}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- Performance Summary -->
+  <div class="performance-summary">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="summary-card small">
+          <div class="summary-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value">{{ sem.gpa|floatformat:2|default:"—" }}</div>
+            <div class="summary-label">Semester GPA</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="summary-card small">
+          <div class="summary-icon">
+            <i class="fas fa-calculator"></i>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value">{{ sem.cum_gpa|floatformat:2|default:"—" }}</div>
+            <div class="summary-label">Cumulative GPA</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="summary-card small">
+          <div class="summary-icon">
+            <i class="fas fa-book"></i>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value">{{ sem.results|length }}</div>
+            <div class="summary-label">Courses</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-book-open fs-1 mb-3 d-block"></i>
+    <p>No marks or grades available for Semester {{ sem.number }} yet.</p>
+  </div>
+  {% endif %}
+</div>
+{% endfor %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const cards = document.querySelectorAll('.semester-card');
+  const headerEl = document.getElementById('detail-header');
+  const bodyEl = document.getElementById('detail-body');
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      // Remove active class from all cards
+      cards.forEach(c => {
+        c.classList.remove('active');
+        c.querySelector('.semester-arrow').style.transform = 'rotate(0deg)';
+      });
+      
+      // Add active class to clicked card
+      card.classList.add('active');
+      card.querySelector('.semester-arrow').style.transform = 'rotate(90deg)';
+
+      const semNum = card.dataset.sem;
+      const contentDiv = document.getElementById(`sem-data-${semNum}`);
+
+      // Update header
+      headerEl.innerHTML = `<h5><i class="fas fa-list-alt me-2"></i>Semester ${semNum} – Course Results</h5>`;
+
+      // Update body content
+      if (contentDiv && contentDiv.innerHTML.trim()) {
+        bodyEl.innerHTML = contentDiv.innerHTML;
+      } else {
+        bodyEl.innerHTML = `<div class="empty-state">
+          <i class="fas fa-exclamation-triangle fs-1 mb-3 d-block"></i>
+          <p><strong>No data available</strong><br>
+          <small>for Semester ${semNum}</small></p>
+        </div>`;
+      }
+
+      // Scroll to details on mobile
+      if (window.innerWidth < 992) {
+        document.querySelector('.detail-panel').scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    });
+  });
+
+  // Auto-click first card on load
+  if (cards.length > 0) {
+    cards[0].click();
+  }
+});
+</script>
+
+<style>
+.marks-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.marks-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.marks-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.marks-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.marks-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* CGPA Display */
+.cgpa-display {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(26, 75, 140, 0.2);
+}
+
+.cgpa-content {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.cgpa-icon {
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+}
+
+.cgpa-details {
+  flex: 1;
+}
+
+.cgpa-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+}
+
+.cgpa-value {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.cgpa-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.cgpa-progress {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.progress-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* Semester Cards */
+.marks-portal .semester-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.marks-portal .semester-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.marks-portal .semester-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+}
+
+.marks-portal .semester-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.marks-portal .semester-card.active {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  border: 2px solid #1a4b8c;
+  box-shadow: 0 8px 25px rgba(26, 75, 140, 0.2);
+}
+
+.marks-portal .semester-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.marks-portal .semester-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.marks-portal .semester-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.marks-portal .semester-arrow {
+  color: #1a4b8c;
+  font-size: 1.1rem;
+  transition: transform 0.3s ease;
+}
+
+.marks-portal .semester-card.active .semester-arrow {
+  transform: rotate(90deg);
+}
+
+/* Semester Stats */
+.semester-stats {
+  margin-bottom: 1.5rem;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 0.75rem;
+  background: rgba(26, 75, 140, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(26, 75, 140, 0.1);
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Grade colors */
+.grade-excellent { color: #10b981; }
+.grade-good { color: #3b82f6; }
+.grade-moderate { color: #f59e0b; }
+.grade-low { color: #ef4444; }
+
+/* Progress Bar */
+.marks-portal .progress-container {
+  margin-top: 1rem;
+}
+
+.marks-portal .progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.marks-portal .progress {
+  height: 10px;
+  border-radius: 10px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.marks-portal .progress-bar {
+  border-radius: 10px;
+  transition: width 1s ease-in-out;
+}
+
+/* Table Styling */
+.marks-portal .detail-panel {
+  margin-top: 2rem;
+}
+
+.marks-portal .card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.marks-portal .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.marks-portal .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+}
+
+.marks-portal .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.marks-portal .card-body {
+  padding: 2rem;
+}
+
+.marks-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+}
+
+.marks-table th {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.marks-table th:last-child {
+  border-right: none;
+}
+
+.marks-table td {
+  padding: 1rem 0.75rem;
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+  color: #374151;
+  font-weight: 500;
+}
+
+.marks-table tbody tr {
+  transition: all 0.3s ease;
+}
+
+.marks-table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.03);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.marks-table .course-code {
+  background: rgba(26, 75, 140, 0.1);
+  color: #1a4b8c;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.marks-table .course-name {
+  text-align: left !important;
+  font-weight: 500;
+}
+
+/* Badge Styles */
+.badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+}
+
+.badge-excellent {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.badge-good {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+}
+
+.badge-moderate {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.badge-low {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.badge-fail {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+}
+
+.badge-na {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+/* Summary Rows */
+.summary-row {
+  background: rgba(26, 75, 140, 0.05) !important;
+  font-weight: 600;
+}
+
+.cum-gpa {
+  background: rgba(16, 185, 129, 0.1) !important;
+}
+
+.semester-gpa,
+.cum-gpa-value {
+  font-size: 1.1rem;
+  color: #1a4b8c;
+}
+
+.cum-gpa-value {
+  color: #10b981;
+}
+
+/* Performance Summary */
+.performance-summary {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #f1f5f9;
+}
+
+.summary-card.small {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  border: 1px solid rgba(26, 75, 140, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: center;
+  height: 100%;
+}
+
+.summary-icon {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin: 0 auto 1rem auto;
+}
+
+.summary-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.summary-label {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Empty State */
+.empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+  color: #1a4b8c;
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .marks-portal .page-header {
+    padding: 1rem;
+  }
+  
+  .marks-portal .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .marks-portal .card-body {
+    padding: 1.5rem;
+  }
+  
+  .marks-portal .semester-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .cgpa-value {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .marks-portal {
+    padding: 1rem;
+  }
+  
+  .marks-portal .page-header {
+    padding: 0.75rem;
+  }
+  
+  .marks-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .marks-portal .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .marks-portal .card-body {
+    padding: 1.25rem;
+  }
+  
+  .marks-portal .semester-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .cgpa-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .cgpa-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.75rem;
+  }
+  
+  .stat-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .marks-table {
+    font-size: 0.85rem;
+  }
+  
+  .marks-table th,
+  .marks-table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .cgpa-value {
+    font-size: 2rem;
+  }
+  
+  .stat-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .stat-item {
+    padding: 0.5rem;
+  }
+  
+  .stat-value {
+    font-size: 1rem;
+  }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.marks-portal .semester-card,
+.marks-portal .card,
+.cgpa-display {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+.marks-portal .semester-card:nth-child(1) { animation-delay: 0.1s; }
+.marks-portal .semester-card:nth-child(2) { animation-delay: 0.2s; }
+.marks-portal .semester-card:nth-child(3) { animation-delay: 0.3s; }
+.marks-portal .semester-card:nth-child(4) { animation-delay: 0.4s; }
+.marks-portal .semester-card:nth-child(5) { animation-delay: 0.5s; }
+</style>
+
+{% endblock %}

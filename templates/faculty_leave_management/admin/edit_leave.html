@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  :root {
+    --brand: #0d6efd;
+    --brand-dark: #0b5ed7;
+    --soft-bg: #f8faff;
+    --border-soft: #e6ebf2;
+  }
+  .el-card {
+    background: #fff;
+    border: 1px solid var(--border-soft);
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  }
+  .el-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .el-title {
+    font-weight: 700;
+    color: var(--brand);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+  .el-table thead th {
+    background: var(--soft-bg);
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: #64748b;
+    border-bottom: 2px solid var(--border-soft);
+    white-space: nowrap;
+  }
+  .el-table td { vertical-align: middle; }
+  .el-total-input {
+    max-width: 72px;
+    text-align: center;
+  }
+  .el-total-input.el-custom {
+    border-color: #0d6efd;
+    background: #f0f6ff;
+    font-weight: 600;
+  }
+  .el-usednote {
+    font-size: .7rem;
+    color: #94a3b8;
+    line-height: 1;
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+  .el-table th, .el-table td { white-space: nowrap; }
+</style>
+
+<div class="container-fluid py-4">
+  <div class="el-card p-4 mb-4">
+    <div class="el-header">
+      <h4 class="el-title"><i class="fas fa-user-clock"></i> Employee Leave Allotment</h4>
+      <div class="d-flex gap-2">
+        <a href="{% url 'upload_carry_forward' %}" class="btn btn-outline-success btn-sm">
+          <i class="fas fa-file-excel me-1"></i> Upload Carry-Forward (Excel)
+        </a>
+        <a href="{% url 'faculty_leave_allotments_list' %}" class="btn btn-outline-primary btn-sm">
+          <i class="fas fa-layer-group me-1"></i> Category / Role Allotments
+        </a>
+      </div>
+    </div>
+    <p class="text-muted mb-0 mt-2">
+      Set the <strong>total leave days</strong> each employee is allowed. Remaining is
+      calculated as total minus days already used. Employees can only apply for leave
+      up to their remaining balance.
+    </p>
+  </div>
+
+  <!-- Filters -->
+  <div class="el-card p-3 mb-4">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label fw-semibold">Academic Year</label>
+        <select name="year" class="form-select">
+          {% for y in academic_years %}
+            <option value="{{ y }}" {% if y == sel_year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Search Employee</label>
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Name or Employee ID">
+      </div>
+      <div class="col-md-2 d-grid">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i> Apply</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div class="el-card p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 el-table">
+        <thead>
+          <tr>
+            <th class="ps-3">Emp ID</th>
+            <th>Employee</th>
+            <th>Designation</th>
+            <th>Category</th>
+            <th>Shift</th>
+            {% for lt in leave_types %}
+              <th class="text-center" title="{{ lt.name }}">{{ lt.code|default:lt.name }}</th>
+            {% endfor %}
+            <th class="text-center pe-3">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td class="ps-3">
+              <form id="lb-form-{{ row.faculty.id }}" method="post" class="mb-0 d-none">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="save_balance">
+                <input type="hidden" name="faculty_id" value="{{ row.faculty.id }}">
+                <input type="hidden" name="academic_year" value="{{ sel_year }}">
+                <input type="hidden" name="q" value="{{ q }}">
+                <input type="hidden" name="page" value="{{ page_obj.number }}">
+              </form>
+              {{ row.faculty.faculty_id|default:"—" }}
+            </td>
+            <td class="fw-semibold">{{ row.faculty.name|default:"—" }}</td>
+            <td>{{ row.faculty.designation.designation_name|default:"—" }}</td>
+            <td>{{ row.faculty.category.category_name|default:"—" }}</td>
+            <td>{{ row.faculty.shift.shift_name|default:"—" }}</td>
+
+            {% for cell in row.cells %}
+            <td class="text-center">
+              <input type="hidden" name="orig_{{ cell.lt.id }}" value="{{ cell.total|floatformat:1 }}"
+                     class="el-row-input" data-fid="{{ row.faculty.id }}">
+              <input type="number" name="total_{{ cell.lt.id }}" min="0" step="any"
+                     value="{{ cell.total|floatformat:1 }}" data-fid="{{ row.faculty.id }}"
+                     class="form-control form-control-sm el-total-input el-row-input d-inline-block
+                            {% if cell.source == 'custom' %}el-custom{% endif %}">
+              <div class="el-usednote">
+                {% if cell.used %}used {{ cell.used|floatformat:1 }}{% else %}&nbsp;{% endif %}
+              </div>
+            </td>
+            {% endfor %}
+
+            <td class="text-center pe-3">
+              <div class="d-flex gap-1 justify-content-center">
+                <button type="button" class="btn btn-sm btn-primary js-save-row" data-fid="{{ row.faculty.id }}" title="Save leave days">
+                  <i class="fas fa-save"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary js-edit-profile"
+                        data-bs-toggle="modal" data-bs-target="#profileModal"
+                        data-faculty-id="{{ row.faculty.id }}"
+                        data-name="{{ row.faculty.name|default:'' }}"
+                        data-emp="{{ row.faculty.faculty_id|default:'' }}"
+                        data-designation="{{ row.faculty.designation_id|default:'' }}"
+                        data-category="{{ row.faculty.category_id|default:'' }}"
+                        data-shift="{{ row.faculty.shift_id|default:'' }}"
+                        data-gender="{{ row.faculty.gender|default:'' }}"
+                        title="Edit designation / category / shift / gender">
+                  <i class="fas fa-user-pen"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="{{ leave_types|length|add:6 }}" class="text-center text-muted py-4">No employees found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="px-3 py-2 border-top small text-muted">
+      Each column is a leave type — edit the <strong>total days</strong> and click
+      <i class="fas fa-save"></i> to save that employee's row. Highlighted cells are custom values;
+      the rest come from the category/role allotment. "used" shows days already taken.
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.paginator.num_pages > 1 %}
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?year={{ sel_year }}&q={{ q }}&page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+      {% endif %}
+
+      <li class="page-item disabled">
+        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      </li>
+
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?year={{ sel_year }}&q={{ q }}&page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">Next</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+
+<!-- Edit Profile Modal (designation / category / shift) -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_profile">
+        <input type="hidden" name="faculty_id" id="pm-faculty-id">
+        <input type="hidden" name="academic_year" value="{{ sel_year }}">
+        <input type="hidden" name="q" value="{{ q }}">
+        <input type="hidden" name="page" value="{{ page_obj.number }}">
+
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-user-pen me-2"></i>Edit Employee</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted mb-3"><strong id="pm-name"></strong> <span id="pm-emp" class="text-secondary"></span></p>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Designation</label>
+            <select name="designation" id="pm-designation" class="form-select">
+              <option value="">— None —</option>
+              {% for d in all_designations %}
+                <option value="{{ d.id }}">{{ d.designation_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Category</label>
+            <select name="category" id="pm-category" class="form-select">
+              <option value="">— None —</option>
+              {% for c in all_categories %}
+                <option value="{{ c.id }}">{{ c.category_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Shift</label>
+            <select name="shift" id="pm-shift" class="form-select">
+              <option value="">— None —</option>
+              {% for s in all_shifts %}
+                <option value="{{ s.id }}">{{ s.shift_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Gender</label>
+            <select name="gender" id="pm-gender" class="form-select">
+              <option value="">— None —</option>
+              {% for value, label in gender_choices %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="alert alert-warning py-2 mb-0 small">
+            <i class="fas fa-triangle-exclamation me-1"></i>
+            Changing designation or category may change which leave allotment applies to this employee.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Save a row: copy that faculty's total_/orig_ inputs into its hidden form
+    // and submit. (Relying on the cross-cell form="" attribute inside a table is
+    // unreliable, so we inject the values directly before submitting.)
+    document.querySelectorAll('.js-save-row').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var fid = btn.dataset.fid;
+        var form = document.getElementById('lb-form-' + fid);
+        if (!form) return;
+        document.querySelectorAll('.el-row-input[data-fid="' + fid + '"]').forEach(function (inp) {
+          var hidden = document.createElement('input');
+          hidden.type = 'hidden';
+          hidden.name = inp.name;
+          hidden.value = inp.value;
+          form.appendChild(hidden);
+        });
+        form.submit();
+      });
+    });
+
+    document.querySelectorAll('.js-edit-profile').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.getElementById('pm-faculty-id').value = btn.dataset.facultyId || '';
+        document.getElementById('pm-name').textContent = btn.dataset.name || '';
+        document.getElementById('pm-emp').textContent = btn.dataset.emp ? '(' + btn.dataset.emp + ')' : '';
+        document.getElementById('pm-designation').value = btn.dataset.designation || '';
+        document.getElementById('pm-category').value = btn.dataset.category || '';
+        document.getElementById('pm-shift').value = btn.dataset.shift || '';
+        document.getElementById('pm-gender').value = btn.dataset.gender || '';
+      });
+    });
+  });
+</script>
+{% endblock content %}

@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Course Enrollment</h2>
+
+  <!-- Filters -->
+  <form method="get" class="mb-3 d-flex gap-2">
+    <select name="batch" class="form-select w-auto">
+      <option value="">All Batches</option>
+      {% for batch in batches %}
+        <option value="{{ batch }}" {% if batch|stringformat:"s" == request.GET.batch|stringformat:"s" %}selected{% endif %}>
+          {{ batch }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <select name="semester" class="form-select w-auto">
+      <option value="">All Semesters</option>
+      {% for sem in semesters %}
+        <option value="{{ sem }}" {% if sem|stringformat:"s" == request.GET.semester|stringformat:"s" %}selected{% endif %}>
+          {{ sem }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <button type="submit" class="btn btn-primary">Filter</button>
+  </form>
+
+  <!-- Enrollment Form -->
+  <form method="post">
+    {% csrf_token %}
+    <table class="table table-bordered table-striped align-middle">
+      <thead>
+        <tr>
+          <th style="width:48px;"><input type="checkbox" id="select_all_students"></th>
+          <th>Student ID</th>
+          <th>Batch</th>
+          <th>Semester</th>
+          <th style="min-width:360px;">Select Courses</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <td>
+            <!-- IMPORTANT: give the checkbox a NAME so backend can detect selection -->
+            <input
+              type="checkbox"
+              class="student_checkbox"
+              name="student_{{ student.student_id }}"
+              value="1"
+              data-row="{{ forloop.counter0 }}"
+            >
+          </td>
+          <td>{{ student.student_id }}</td>
+          <td>{{ student.batch }}</td>
+          <td>{{ student.semester }}</td>
+          <td>
+            <select
+              name="course_{{ student.student_id }}"
+              class="form-select course_select"
+              data-row="{{ forloop.counter0 }}"
+              multiple
+              size="6"
+            >
+              {% for course in courses %}
+                {% if course.semester|stringformat:"s" == student.semester|stringformat:"s" %}
+                  <option value="{{ course.id }}">{{ course.course_code }} - {{ course.title }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+            <div class="form-text">Hold Ctrl/Cmd to multi-select.</div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center text-muted">No students match the current filter.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-success">Enroll Selected Students</button>
+  </form>
+</div>
+
+<script>
+  // Select / Deselect all students and courses in their row
+  (function() {
+    const selectAll = document.getElementById("select_all_students");
+    if (selectAll) {
+      selectAll.addEventListener("change", function() {
+        const checked = this.checked;
+        document.querySelectorAll('.student_checkbox').forEach(function(cb) {
+          cb.checked = checked;
+          const row = cb.getAttribute('data-row');
+          const select = document.querySelector('.course_select[data-row="' + row + '"]');
+          if (select) {
+            for (let i = 0; i < select.options.length; i++) {
+              select.options[i].selected = checked;
+            }
+          }
+        });
+      });
+    }
+
+    // Per-row checkbox toggles the row's course multiselect
+    document.querySelectorAll('.student_checkbox').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        const row = cb.getAttribute('data-row');
+        const select = document.querySelector('.course_select[data-row="' + row + '"]');
+        if (select) {
+          const selectAll = cb.checked;
+          for (let i = 0; i < select.options.length; i++) {
+            select.options[i].selected = selectAll;
+          }
+        }
+      });
+    });
+  })();
+</script>
+{% endblock content %}

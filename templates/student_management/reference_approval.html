@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+{% load crispy_forms_tags %}
+{% load crispy_forms_filters %}
+
+
+<div class="container mt-4">
+    <h2 class="mb-4">Student Applications Approval Dashboard</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Dashboard Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <a href="?filter=total" class="text-decoration-none">
+                <div class="card text-white bg-primary mb-3 {% if current_filter == 'total' %}border border-3 border-info{% endif %}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Total Applications</h5>
+                                <h6 class="card-title">Click here to view your applications</h6>
+                                <h2 class="mb-0">{{ total_count }}</h2>
+                            </div>
+                            <i class="fas fa-file-alt fa-3x"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Approved</h5>
+                            <h2 class="mb-0">{{ approved_count }}</h2>
+                        </div>
+                        <i class="fas fa-check-circle fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Pending Approval</h5>
+                            <h2 class="mb-0">{{ pending_count }}</h2>
+                        </div>
+                        <i class="fas fa-clock fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Progress Bar -->
+    <!-- Progress Bar -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Approval Progress</h5>
+        <div class="progress" style="height: 25px;">
+            <div class="progress-bar bg-success" role="progressbar" 
+                 style="width: {% widthratio approved_count total_count 100 %}%" 
+                 aria-valuenow="{{ approved_count }}" 
+                 aria-valuemin="0" 
+                 aria-valuemax="{{ total_count }}">
+                {{ approved_count }} Approved
+            </div>
+            <div class="progress-bar bg-warning" role="progressbar" 
+                 style="width: {% widthratio pending_count total_count 100 %}%" 
+                 aria-valuenow="{{ pending_count }}" 
+                 aria-valuemin="0" 
+                 aria-valuemax="{{ total_count }}">
+                {{ pending_count }} Pending
+            </div>
+        </div>
+    </div>
+</div>
+    
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Programme</th>
+                    <th>Intake</th>
+                    <th>NRC</th>
+                    <th>Gender</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for applicant in applicants %}
+                <tr>
+                    <td>{{ applicant.title }} {{ applicant.first_name }} {{ applicant.surname }}</td>
+                    <td>{{ applicant.programme_of_study }}</td>
+                    <td>{{ applicant.Intake }} {{ applicant.year }}</td>
+                    <td>{{ applicant.nrc_number }}</td>
+                    <td>{{ applicant.gender }}</td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#detailsModal{{ applicant.id }}">
+                            View Details
+                        </button>
+                        <form method="post" action="{% url 'approval_page' %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="applicant_id" value="{{ applicant.id }}">
+                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                        </form>
+                    </td>
+                </tr>
+                
+                <!-- Details Modal -->
+                <div class="modal fade" id="detailsModal{{ applicant.id }}" tabindex="-1" aria-labelledby="detailsModalLabel{{ applicant.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="detailsModalLabel{{ applicant.id }}">Application Details</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        {% if applicant.passport_size_photo %}
+                                            <img src="{{ applicant.passport_size_photo.url }}" alt="Passport Photo" class="img-fluid mb-3">
+                                        {% else %}
+                                            <div class="text-center py-4 bg-light">
+                                                <i class="fas fa-user-circle fa-5x text-secondary"></i>
+                                                <p class="mt-2">No photo available</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <p><strong>Full Name:</strong> {{ applicant.title }} {{ applicant.first_name }} {{ applicant.surname }} {{ applicant.other_names|default:"" }}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Date of Birth:</strong> {{ applicant.date_of_birth }} (Age: {{ applicant.age }})</p>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <p><strong>Gender:</strong> {{ applicant.gender }}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Marital Status:</strong> {{ applicant.marital_status }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <p><strong>Programme:</strong> {{ applicant.programme_of_study }}</p>
+                                                <p><strong>First Choice:</strong> {{ applicant.first_choice|default:"N/A" }}</p>
+                                                <p><strong>Second Choice:</strong> {{ applicant.second_choice|default:"N/A" }}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Certificate Program:</strong> {{ applicant.certificate_program|default:"N/A" }}</p>
+                                                <p><strong>Intake:</strong> {{ applicant.Intake }} {{ applicant.year }}</p>
+                                                <p><strong>Mode of Study:</strong> {{ applicant.mode_of_study }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <p><strong>Admission Reference:</strong> {{ applicant.admission_reference }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No applications pending your approval.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

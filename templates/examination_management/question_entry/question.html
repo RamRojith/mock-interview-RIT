@@ -1,0 +1,919 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <form id="filter-form" method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="parts_json" id="parts_json">
+
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-primary text-white py-3">
+        <h4 class="mb-0"><i class="fas fa-filter me-2"></i>Question Paper Generator</h4>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <!-- Regulation -->
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body">
+            <label for="regulation" class="form-label fw-semibold text-primary">
+              <i class="fas fa-gavel me-2"></i>Regulation
+            </label>
+            <select id="regulation" name="regulation" class="form-select form-select-lg" required>
+              <option value="" selected hidden>-- Select Regulation --</option>
+              {% for reg in regulations %}
+                <option value="{{ reg.id }}" {% if selected.regulation_id == reg.id|stringformat:"s" %}selected{% endif %}>{{ reg.year }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Degree -->
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body">
+            <label for="degree" class="form-label fw-semibold text-primary">
+              <i class="fas fa-graduation-cap me-2"></i>Degree
+            </label>
+            <select id="degree" name="degree" class="form-select form-select-lg" required {% if not selected.regulation_id %}disabled{% endif %}>
+              <option value="" selected hidden>-- Select Degree --</option>
+              {% for deg in degrees %}
+                <option
+                  value="{{ deg.id }}"
+                  data-duration="{{ deg.duration|default:0 }}"
+                  {% if selected.degree_id == deg.id|stringformat:"s" %}selected{% endif %}
+                >{{ deg.degree }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Year -->
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body">
+            <label for="year" class="form-label fw-semibold text-primary">
+              <i class="fas fa-calendar-alt me-2"></i>Year
+            </label>
+            <select id="year" name="year" class="form-select form-select-lg" required {% if not selected.degree_id %}disabled{% endif %}>
+              <option value="" selected hidden>-- Select Year --</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Semester -->
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body">
+            <label for="semester" class="form-label fw-semibold text-primary">
+              <i class="fas fa-book me-2"></i>Semester
+            </label>
+            <select id="semester" name="semester" class="form-select form-select-lg" required {% if not selected.year %}disabled{% endif %}>
+              <option value="" selected hidden>-- Select Semester --</option>
+              {% if selected.semester %}
+                <option value="{{ selected.semester }}" selected>{{ selected.semester }}</option>
+              {% endif %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exam -->
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body">
+            <label for="exam" class="form-label fw-semibold text-primary">
+              <i class="fas fa-file-alt me-2"></i>Exam
+            </label>
+            <select id="exam" name="exam" class="form-select form-select-lg" required {% if not selected.semester %}disabled{% endif %}>
+              <option value="" selected hidden>-- Select Exam --</option>
+              {% if exam_choices %}
+                {% for e in exam_choices %}
+                  <option value="{{ e }}" {% if selected.exam == e %}selected{% endif %}>{{ e }}</option>
+                {% endfor %}
+              {% elif selected.exam %}
+                <option value="{{ selected.exam }}" selected>{{ selected.exam }}</option>
+              {% endif %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Academic Year -->
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body">
+            <label for="academic_year" class="form-label fw-semibold text-primary">
+              <i class="fas fa-university me-2"></i>Academic Year
+            </label>
+            <input type="text" id="academic_year" name="academic_year" class="form-control form-control-lg"
+                   placeholder="YYYY-YYYY" value="{{ selected.academic_year|default_if_none:'' }}"
+                   {% if not selected.exam %}disabled{% endif %} required>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pattern Combination -->
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body">
+            <label for="pattern_id" class="form-label fw-semibold text-primary">
+              <i class="fas fa-sitemap me-2"></i>Pattern Combination
+            </label>
+            <select id="pattern_id" name="pattern_id" class="form-select form-select-lg" {% if not selected.exam %}disabled{% endif %}>
+              <option value="" {% if not selected.pattern_id %}selected{% endif %}>— New Pattern —</option>
+              {% if pattern_options %}
+                {% for p in pattern_options %}
+                  <option value="{{ p.id }}" {% if selected.pattern_id == p.id|stringformat:"s" %}selected{% endif %}>
+                    {{ p.label }}
+                  </option>
+                {% endfor %}
+              {% endif %}
+            </select>
+            <small class="text-muted">Choose an existing combo to edit, or keep "New Pattern".</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-end gap-2 flex-wrap">
+          <button type="button" id="btn-create-pattern" class="btn btn-lg btn-outline-primary px-4">
+            <i class="fas fa-sitemap me-2"></i>Create Pattern
+          </button>
+          <button type="submit" name="action" value="save" class="btn btn-lg btn-success px-4">
+            <i class="fas fa-save me-2"></i>Save Paper
+          </button>
+          <button type="button" id="clear-all" class="btn btn-lg btn-outline-danger px-4">
+            <i class="fas fa-broom me-2"></i>Clear All
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Parts Summary -->
+    <div id="pattern-summary" class="mb-3" style="display:none;">
+      <div class="alert alert-info d-flex align-items-center" role="alert">
+        <i class="fas fa-layer-group me-2"></i>
+        <div>
+          <strong>Current Parts:</strong>
+          <span id="pattern-summary-text" class="ms-1"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rendered Pattern -->
+    <div id="part-sections" class="mt-4"></div>
+  </form>
+</div>
+
+<!-- Pattern Modal -->
+<div class="modal fade" id="patternModal" tabindex="-1" aria-labelledby="patternModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="patternModalLabel"><i class="fas fa-sitemap me-2"></i>Build Your Pattern</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="selection-summary" class="alert alert-secondary" style="display:none;"></div>
+
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Part Label</label>
+            <input type="text" id="part-label" class="form-control" placeholder="e.g., A or B" maxlength="3">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Marks per Question</label>
+            <input type="number" id="part-marks" class="form-control" placeholder="e.g., 2 or 16 or 13" min="1" step="1">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold"># of Questions</label>
+            <input type="number" id="part-count" class="form-control" placeholder="e.g., 10" min="1" step="1">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Start Q No. (optional)</label>
+            <input type="number" id="part-start" class="form-control" placeholder="auto" min="1" step="1">
+          </div>
+          <div class="col-12">
+            <small class="text-muted">
+              Add multiple entries with the same Part label to mix marks (e.g., Part B with 16-mark and 13-mark groups).<br>
+              Questions with marks &lt; 5 (e.g., 2, 3, 4) render as single questions. 5+ marks render A/B options with i/ii splits.
+            </small>
+          </div>
+          <div class="col-12">
+            <button type="button" id="btn-add-part" class="btn btn-outline-primary">
+              <i class="fas fa-plus me-2"></i>Add Part
+            </button>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div>
+          <h6 class="fw-semibold mb-2"><i class="fas fa-layer-group me-2"></i>Queued Parts</h6>
+          <div id="parts-list" class="d-flex flex-wrap gap-2"></div>
+          <small class="text-muted d-block mt-2">Tip: Add multiple parts, then click "Build Paper".</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button id="btn-build-paper" class="btn btn-success">
+          <i class="fas fa-hammer me-2"></i>Build Paper
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .pattern-section .card { transition: transform .2s; }
+  .pattern-section .card:hover { transform: translateY(-2px); }
+  .question-card { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-left: 4px solid #007bff; border-radius: 8px; }
+  .question-card h6 { color: #2c3e50; font-weight: 600; }
+  .option-group { background: #fff; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e9ecef; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .btn { border-radius: 8px; font-weight: 500; transition: all .3s; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,.2); }
+  .card-header { border-radius: 8px 8px 0 0 !important; }
+  .form-select, .form-control { border-radius: 8px; border: 1px solid #dee2e6; transition: border-color .3s; }
+  .form-select:focus, .form-control:focus { border-color: #007bff; box-shadow: 0 0 0 .2rem rgba(0,123,255,.25); }
+  .badge-part { background:#eef6ff; color:#0b5ed7; border:1px solid #cfe2ff; padding:.4rem .6rem; border-radius:8px; }
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.2/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Configuration
+  const SPLIT_THRESHOLD = 5; // Questions with 5+ marks get A/B splits
+  
+  // Elements
+  const regulationSelect = document.getElementById("regulation");
+  const degreeSelect     = document.getElementById("degree");
+  const yearSelect       = document.getElementById("year");
+  const semesterSelect   = document.getElementById("semester");
+  const examSelect       = document.getElementById("exam");
+  const academicInput    = document.getElementById("academic_year");
+  const patternSelect    = document.getElementById("pattern_id");
+  const partSections     = document.getElementById("part-sections");
+  const partsJsonInput   = document.getElementById("parts_json");
+
+  const patternModal    = new bootstrap.Modal(document.getElementById('patternModal'));
+  const partLabelInput  = document.getElementById('part-label');
+  const partMarksInput  = document.getElementById('part-marks');
+  const partCountInput  = document.getElementById('part-count');
+  const partStartInput  = document.getElementById('part-start');
+  const partsList       = document.getElementById('parts-list');
+  const btnCreate       = document.getElementById('btn-create-pattern');
+  const btnAddPart      = document.getElementById('btn-add-part');
+  const btnBuildPaper   = document.getElementById('btn-build-paper');
+  const patternSummary  = document.getElementById('pattern-summary');
+  const patternSummaryText = document.getElementById('pattern-summary-text');
+  const selectionSummary = document.getElementById('selection-summary');
+
+  // Helper functions
+  function getSelectedDegreeDuration() {
+    const opt = degreeSelect.options[degreeSelect.selectedIndex];
+    return opt ? parseInt(opt.getAttribute("data-duration") || "0", 10) : 0;
+  }
+  
+  function clearSelect(sel, placeholder) {
+    sel.innerHTML = `<option value="" selected hidden>${placeholder}</option>`;
+    sel.value = "";
+  }
+  
+  function populateYears(duration) {
+    clearSelect(yearSelect, "-- Select Year --");
+    if (!duration || duration < 1) return;
+    const selectedYear = "{{ selected.year|default_if_none:'' }}";
+    for (let y=1; y<=duration; y++) {
+      const opt = document.createElement("option");
+      opt.value = String(y); opt.textContent = String(y);
+      if (selectedYear && selectedYear === String(y)) opt.selected = true;
+      yearSelect.appendChild(opt);
+    }
+  }
+  
+  function populateSemestersForYear(yearVal, duration) {
+    clearSelect(semesterSelect, "-- Select Semester --");
+    const y = parseInt(yearVal || "0", 10);
+    if (!y || y < 1 || y > duration) return;
+    const pair = [2*y - 1, 2*y];
+    const selectedSem = "{{ selected.semester|default_if_none:'' }}";
+    pair.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = String(s); opt.textContent = String(s);
+      if (selectedSem && selectedSem === String(s)) opt.selected = true;
+      semesterSelect.appendChild(opt);
+    });
+  }
+
+  function normalizeAcademicYear(val) {
+    if (typeof val !== "string") return "";
+    return val.replace(/[\u2012\u2013\u2014\u2212]/g, "-").replace(/\s+/g, "");
+  }
+  
+  function isValidAcademicYear(val) {
+    const v = normalizeAcademicYear(val);
+    if (!/^\d{4}-\d{4}$/.test(v)) return false;
+    const [y1, y2] = v.split("-").map(Number);
+    return y2 === y1 + 1 && y1 >= 1900 && y2 <= 2999;
+  }
+  
+  function expandYearToRange(val) {
+    const v = normalizeAcademicYear(val || "");
+    const m = v.match(/^(\d{4})$/);
+    if (!m) return v;
+    const y1 = Number(m[1]);
+    if (y1 >= 1900 && y1 <= 2998) return `${y1}-${y1 + 1}`;
+    return v;
+  }
+  
+  function allKeysChosen() {
+    return Boolean(
+      regulationSelect.value &&
+      degreeSelect.value &&
+      yearSelect.value &&
+      semesterSelect.value &&
+      examSelect.value &&
+      academicInput.value &&
+      isValidAcademicYear(academicInput.value)
+    );
+  }
+
+  async function refreshExamChoices() {
+    clearSelect(examSelect, "-- Select Exam --");
+    examSelect.disabled = true;
+
+    if (!degreeSelect.value) return;
+
+    const form = new FormData();
+    form.append("action", "preview");
+    form.append("regulation", regulationSelect.value || "");
+    form.append("degree", degreeSelect.value || "");
+    form.append("year", yearSelect.value || "");
+    form.append("semester", semesterSelect.value || "");
+    form.append("exam", examSelect.value || "");
+    form.append("academic_year", academicInput.value || "");
+    form.append("pattern_id", patternSelect.value || "");
+    form.append("csrfmiddlewaretoken", document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+    try {
+      const resp = await fetch(window.location.href, {
+        method: "POST",
+        headers: {"X-Requested-With": "XMLHttpRequest"},
+        body: form
+      });
+      const data = await resp.json();
+
+      if (Array.isArray(data.exam_choices)) {
+        data.exam_choices.forEach(txt => {
+          const o = document.createElement("option");
+          o.value = txt;
+          o.textContent = txt;
+          if ("{{ selected.exam|default_if_none:'' }}" === txt) o.selected = true;
+          examSelect.appendChild(o);
+        });
+      }
+      examSelect.disabled = examSelect.options.length <= 1;
+    } catch (e) {
+      console.error("Failed to load exam choices:", e);
+    }
+  }
+
+  async function refreshPatternOptions() {
+    if (!allKeysChosen()) {
+      patternSelect.innerHTML = '<option value="" selected>— New Pattern —</option>';
+      patternSelect.disabled = true;
+      return;
+    }
+
+    const form = new FormData();
+    form.append("action", "preview");
+    form.append("regulation", regulationSelect.value);
+    form.append("degree", degreeSelect.value);
+    form.append("year", yearSelect.value);
+    form.append("semester", semesterSelect.value);
+    form.append("exam", examSelect.value);
+    form.append("academic_year", normalizeAcademicYear(academicInput.value));
+    form.append("pattern_id", patternSelect.value || "");
+    form.append("csrfmiddlewaretoken", document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+    try {
+      const resp = await fetch(window.location.href, {
+        method: "POST",
+        headers: {"X-Requested-With": "XMLHttpRequest"},
+        body: form
+      });
+      const data = await resp.json();
+
+      patternSelect.innerHTML = '<option value="">— New Pattern —</option>';
+      if (Array.isArray(data.pattern_options) && data.pattern_options.length > 0) {
+        data.pattern_options.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = String(p.id);
+          opt.textContent = p.label;
+          patternSelect.appendChild(opt);
+        });
+      }
+      patternSelect.disabled = false;
+    } catch (e) {
+      console.error("Failed to refresh pattern options:", e);
+      patternSelect.innerHTML = '<option value="" selected>— New Pattern —</option>';
+      patternSelect.disabled = false;
+    }
+  }
+
+  function resetDownstream(after) {
+    if (after === "regulation") {
+      degreeSelect.disabled = !regulationSelect.value;
+      yearSelect.disabled = true; semesterSelect.disabled = true; examSelect.disabled = true; academicInput.disabled = true;
+      patternSelect.disabled = true; patternSelect.innerHTML = '<option value="" selected>— New Pattern —</option>';
+      degreeSelect.value = ""; clearSelect(yearSelect, "-- Select Year --"); clearSelect(semesterSelect, "-- Select Semester --");
+      clearSelect(examSelect, "-- Select Exam --"); academicInput.value = ""; partSections.innerHTML = ""; showSummary([]); partsJsonInput.value = ""; parts.length = 0; renderPartsList();
+    } else if (after === "degree") {
+      yearSelect.disabled = !degreeSelect.value; semesterSelect.disabled = true; examSelect.disabled = true; academicInput.disabled = true;
+      patternSelect.disabled = true; patternSelect.innerHTML = '<option value="" selected>— New Pattern —</option>';
+      clearSelect(yearSelect, "-- Select Year --"); clearSelect(semesterSelect, "-- Select Semester --");
+      clearSelect(examSelect, "-- Select Exam --"); academicInput.value = ""; partSections.innerHTML = ""; showSummary([]); partsJsonInput.value = ""; parts.length = 0; renderPartsList();
+    } else if (after === "year") {
+      semesterSelect.disabled = !yearSelect.value; examSelect.disabled = true; academicInput.disabled = true;
+      patternSelect.disabled = true; patternSelect.innerHTML = '<option value="" selected>— New Pattern —</option>';
+      clearSelect(semesterSelect, "-- Select Semester --"); clearSelect(examSelect, "-- Select Exam --");
+      academicInput.value = ""; partSections.innerHTML = ""; showSummary([]); partsJsonInput.value = ""; parts.length = 0; renderPartsList();
+    } else if (after === "semester") {
+      clearSelect(examSelect, "-- Select Exam --"); academicInput.disabled = true;
+      patternSelect.disabled = true; patternSelect.innerHTML = '<option value="" selected>— New Pattern —</option>';
+      partSections.innerHTML = ""; showSummary([]); partsJsonInput.value = ""; parts.length = 0; renderPartsList();
+    }
+  }
+
+  // Event listeners for form controls
+  regulationSelect.addEventListener("change", () => resetDownstream("regulation"));
+  degreeSelect.addEventListener("change", () => {
+    resetDownstream("degree");
+    populateYears(getSelectedDegreeDuration());
+    if (degreeSelect.value) refreshExamChoices();
+  });
+  yearSelect.addEventListener("change", () => {
+    resetDownstream("year");
+    populateSemestersForYear(yearSelect.value, getSelectedDegreeDuration());
+  });
+  semesterSelect.addEventListener("change", () => {
+    resetDownstream("semester");
+    if (semesterSelect.value) {
+      refreshExamChoices();
+    } else {
+      clearSelect(examSelect, "-- Select Exam --");
+      examSelect.disabled = true;
+    }
+  });
+
+  examSelect.addEventListener("change", () => {
+    academicInput.disabled = !examSelect.value;
+    academicInput.value = "";
+    partSections.innerHTML = ""; showSummary([]); partsJsonInput.value = "";
+    patternSelect.disabled = true;
+    patternSelect.innerHTML = '<option value="" selected>— New Pattern —</option>';
+  });
+
+  patternSelect.addEventListener("change", () => {
+    if (!patternSelect.value) {
+      parts.length = 0;
+      partsJsonInput.value = "";
+      prefilledQuestions = {};
+      partSections.innerHTML = "";
+      renderPartsList();
+      showSummary(parts);
+    }
+  });
+
+  academicInput.addEventListener("input", () => {
+    const v = normalizeAcademicYear(academicInput.value || "");
+    const m = v.match(/^(\d{4})$/);
+    if (m) {
+      const y1 = Number(m[1]);
+      if (y1 >= 1900 && y1 <= 2998) {
+        academicInput.value = `${y1}-${y1 + 1}`;
+        try { academicInput.setSelectionRange(academicInput.value.length, academicInput.value.length); } catch(_) {}
+      }
+    }
+  });
+
+  academicInput.addEventListener("blur", async () => {
+    const raw = academicInput.value.trim();
+    if (raw === "") return;
+    const expanded = expandYearToRange(raw);
+    academicInput.value = expanded;
+    if (!isValidAcademicYear(expanded)) {
+      alert("Academic year must be in the format YYYY-YYYY (e.g., 2024-2025).");
+      academicInput.value = normalizeAcademicYear(expanded);
+      academicInput.focus();
+      patternSelect.disabled = true;
+      patternSelect.innerHTML = '<option value="" selected>— New Pattern —</option>';
+      return;
+    }
+    academicInput.value = normalizeAcademicYear(expanded);
+    await refreshPatternOptions();
+  });
+
+  document.getElementById("clear-all").addEventListener("click", () => {
+    regulationSelect.value = ""; degreeSelect.value = ""; yearSelect.value = ""; semesterSelect.value = "";
+    examSelect.value = ""; academicInput.value = ""; degreeSelect.disabled = true; yearSelect.disabled = true;
+    semesterSelect.disabled = true; examSelect.disabled = true; academicInput.disabled = true;
+    patternSelect.disabled = true; patternSelect.innerHTML = '<option value="" selected>— New Pattern —</option>';
+    clearSelect(yearSelect, "-- Select Year --"); clearSelect(semesterSelect, "-- Select Semester --");
+    clearSelect(examSelect, "-- Select Exam --"); partSections.innerHTML = ""; showSummary([]); partsJsonInput.value = ""; parts.length = 0; renderPartsList();
+  });
+
+  // Parts management
+  const parts = [];
+  let prefilledQuestions = {{ prefilled_questions|default:"{}"|safe }};
+
+  function showSummary(items) {
+    if (!items || !items.length) {
+      patternSummary.style.display = "none";
+      patternSummaryText.innerHTML = "";
+      return;
+    }
+    const byLabel = new Map();
+    items.forEach(p => {
+      if (!byLabel.has(p.label)) byLabel.set(p.label, new Map());
+      const m = byLabel.get(p.label);
+      m.set(p.marks, (m.get(p.marks) || 0) + p.count);
+    });
+
+    const bits = [];
+    byLabel.forEach((marksMap, label) => {
+      const segs = [];
+      marksMap.forEach((cnt, mk) => segs.push(`${cnt}×${mk}`));
+      bits.push(`<span class="badge-part me-2">${label}: ${segs.join(" + ")}</span>`);
+    });
+
+    patternSummary.style.display = "block";
+    patternSummaryText.innerHTML = bits.join("");
+  }
+
+  function renderPartsList() {
+    partsList.innerHTML = "";
+    if (!parts.length) {
+      partsList.innerHTML = '<span class="text-muted">No parts added yet.</span>';
+      return;
+    }
+    parts.forEach((p, idx) => {
+      const chip = document.createElement("div");
+      chip.className = "badge-part";
+      chip.innerHTML = `${p.label}: ${p.count} × ${p.marks}${p.start ? ` (Q${p.start})` : ""} 
+        <button type="button" class="btn btn-sm btn-link text-danger ms-2 p-0" data-idx="${idx}"><i class="fas fa-times"></i></button>`;
+      partsList.appendChild(chip);
+    });
+    partsList.querySelectorAll("button[data-idx]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const i = parseInt(btn.getAttribute("data-idx"), 10);
+        parts.splice(i,1);
+        renderPartsList(); showSummary(parts);
+        partsJsonInput.value = JSON.stringify(parts || []);
+      });
+    });
+  }
+
+  // Question rendering logic
+  function shouldSplitMarks(marks) {
+    return marks >= SPLIT_THRESHOLD;
+  }
+
+  function generateOptionHTMLInteger(opt, totalMarks, qNum) {
+    const key_i = `q${qNum}_${opt}_i`;
+    const key_ii = `q${qNum}_${opt}_ii`;
+    const val_i = prefilledQuestions[key_i] ?? "";
+    const val_ii = prefilledQuestions[key_ii] ?? "";
+    return `
+      <div class="option-group mb-4">
+        <h6 class="text-primary mb-3">${opt.toUpperCase()}) Option</h6>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="border rounded p-3 h-100">
+              <label class="form-label small fw-semibold">Marks for ${opt}) i</label>
+              <input type="number" name="q${qNum}_${opt}_i" min="0" max="${totalMarks}"
+                     oninput="adjustMarksInteger(this, ${totalMarks})" value="${val_i}"
+                     class="form-control form-control-sm mb-2">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="border rounded p-3 h-100">
+              <label class="form-label small fw-semibold">Marks for ${opt}) ii</label>
+              <input type="number" name="q${qNum}_${opt}_ii" min="0" max="${totalMarks}"
+                     oninput="adjustMarksInteger(this, ${totalMarks})" value="${val_ii}"
+                     class="form-control form-control-sm mb-2">
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  window.adjustMarksInteger = function(inputElem, totalMarks) {
+    const grp = inputElem.closest(".option-group");
+    const inputs = Array.from(grp.querySelectorAll("input[type='number']"));
+    const other = inputs.find(i => i !== inputElem);
+    let val = Math.round(Number(inputElem.value) || 0);
+    val = Math.max(0, Math.min(val, totalMarks));
+    inputElem.value = val;
+    other.value = totalMarks - val;
+  };
+
+  function partHeaderHtml(colorClass, label, marksArray, totalCount) {
+    const uniqueMarks = Array.from(new Set(marksArray));
+    const title = (uniqueMarks.length === 1)
+      ? `Part ${label} - ${uniqueMarks[0]} Marks Questions (${totalCount} Questions)`
+      : `Part ${label} - Mixed Marks Questions (${totalCount} Questions)`;
+    return `
+      <div class="card border-${colorClass} shadow-sm mb-4">
+        <div class="card-header bg-${colorClass} text-white py-3">
+          <h5 class="mb-0"><i class="fas fa-list-ol me-2"></i>${title}</h5>
+        </div>
+        <div class="card-body">
+          <div id="part-${label}-questions" class="row g-3"></div>
+        </div>
+      </div>`;
+  }
+
+  let lastRenderedQ = 0;
+  function autoNextQuestionNumber() { return lastRenderedQ + 1; }
+
+  function renderPaperFromParts(defs) {
+    lastRenderedQ = 0;
+
+    const order = [];
+    const grouped = new Map();
+    defs.forEach(seg => {
+      if (!grouped.has(seg.label)) { 
+        grouped.set(seg.label, []); 
+        order.push(seg.label); 
+      }
+      grouped.get(seg.label).push({ 
+        marks: seg.marks, 
+        count: seg.count, 
+        start: seg.start 
+      });
+    });
+
+    const colors = ["primary", "success", "warning", "danger", "info", "secondary"];
+    partSections.innerHTML = "";
+    let sectionHtml = `<div class="pattern-section">`;
+
+    order.forEach((label, idx) => {
+      const segments = grouped.get(label);
+      const marksArray = segments.map(s => s.marks);
+      const totalCount = segments.reduce((t, s) => t + s.count, 0);
+      sectionHtml += partHeaderHtml(colors[idx % colors.length], label, marksArray, totalCount);
+    });
+
+    sectionHtml += `</div>`;
+    partSections.innerHTML = sectionHtml;
+
+    order.forEach(label => {
+      const container = document.getElementById(`part-${label}-questions`);
+      container.innerHTML = "";
+      const segments = grouped.get(label);
+
+      segments.forEach(seg => {
+        let start = seg.start ? seg.start : autoNextQuestionNumber();
+
+        if (!shouldSplitMarks(seg.marks)) {
+          // Single question format (no A/B splits)
+          for (let i = 0; i < seg.count; i++) {
+            const qNum = start + i;
+            const div = document.createElement("div");
+            // Adjust column width based on marks
+            if (seg.marks === 2) {
+              div.className = "col-md-6 col-lg-4";
+            } else if (seg.marks <= 4) {
+              div.className = "col-md-6";
+            } else {
+              div.className = "col-12";
+            }
+            div.innerHTML = `
+              <div class="question-card p-3 h-100">
+                <h6 class="border-bottom pb-2">Q${qNum} (${seg.marks} Marks)</h6>
+              </div>`;
+            container.appendChild(div);
+          }
+        } else {
+          // Split format with A/B options (for marks >= 5)
+          for (let i = 0; i < seg.count; i++) {
+            const qNum = start + i;
+            const div = document.createElement("div");
+            div.className = "col-12";
+            div.innerHTML = `
+              <div class="question-card p-4">
+                <h6 class="border-bottom pb-2 mb-3">Q${qNum} (Total Marks: ${seg.marks})</h6>
+                <div class="sub-questions">
+                  ${generateOptionHTMLInteger("a", seg.marks, qNum)}
+                  ${generateOptionHTMLInteger("b", seg.marks, qNum)}
+                </div>
+              </div>`;
+            container.appendChild(div);
+          }
+        }
+
+        lastRenderedQ = Math.max(lastRenderedQ, start + seg.count - 1);
+      });
+    });
+  }
+
+  // Pattern modal handlers
+  document.getElementById("btn-create-pattern").addEventListener("click", async () => {
+    const missing = !regulationSelect.value || !degreeSelect.value || !yearSelect.value ||
+                    !semesterSelect.value || !examSelect.value || !academicInput.value;
+    if (missing) {
+      alert("Complete all filters (Regulation → Academic Year) before creating a pattern.");
+      return;
+    }
+
+    if (!academicInput.disabled) {
+      const raw = academicInput.value.trim();
+      const expanded = expandYearToRange(raw);
+      academicInput.value = expanded;
+      if (!isValidAcademicYear(expanded)) {
+        alert("Academic year must be in the format YYYY-YYYY (e.g., 2024-2025).");
+        academicInput.value = normalizeAcademicYear(expanded);
+        academicInput.focus();
+        return;
+      }
+      academicInput.value = normalizeAcademicYear(expanded);
+    }
+
+    const form = new FormData();
+    form.append("action", "preview");
+    form.append("regulation", regulationSelect.value || "");
+    form.append("degree", degreeSelect.value || "");
+    form.append("year", yearSelect.value || "");
+    form.append("semester", semesterSelect.value || "");
+    form.append("exam", examSelect.value || "");
+    form.append("academic_year", academicInput.value || "");
+    form.append("pattern_id", patternSelect.value || "");
+    form.append("csrfmiddlewaretoken", document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+    try {
+      const resp = await fetch(window.location.href, {
+        method: "POST",
+        headers: {"X-Requested-With": "XMLHttpRequest"},
+        body: form
+      });
+      const data = await resp.json();
+
+      const s = data.selected || {};
+      const lines = [
+        `<strong>Regulation Year</strong>: ${s.regulation_year || '-'}`,
+        `<strong>Degree ID</strong>: ${s.degree_id || '-'}`,
+        `<strong>Year</strong>: ${s.year || '-'}`,
+        `<strong>Semester</strong>: ${s.semester || '-'}`,
+        `<strong>Exam</strong>: ${s.exam || '-'}`,
+        `<strong>Academic Year</strong>: ${s.academic_year || '-'}`,
+        `<strong>Pattern</strong>: ${s.pattern_id ? '#' + s.pattern_id : 'New Pattern'}`
+      ];
+      selectionSummary.innerHTML = lines.join('<br>');
+      selectionSummary.style.display = 'block';
+
+      const allFiltersChosen = Boolean(
+        (s.regulation_id || regulationSelect.value) &&
+        (s.degree_id || degreeSelect.value) &&
+        (s.year || yearSelect.value) &&
+        (s.semester || semesterSelect.value) &&
+        (s.exam || examSelect.value) &&
+        (s.academic_year || academicInput.value)
+      );
+
+      if (allFiltersChosen && Array.isArray(data.pattern_options) && data.pattern_options.length > 0) {
+        const current = s.pattern_id ? String(s.pattern_id) : (patternSelect.value || "");
+        patternSelect.innerHTML = '<option value="">— New Pattern —</option>';
+        data.pattern_options.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = String(p.id);
+          opt.textContent = p.label;
+          if (String(p.id) === current) opt.selected = true;
+          patternSelect.appendChild(opt);
+        });
+        patternSelect.disabled = false;
+      } else {
+        patternSelect.innerHTML = '<option value="" selected>— New Pattern —</option>';
+        patternSelect.disabled = false;
+      }
+
+      prefilledQuestions = data.prefilled_questions || {};
+      if (Array.isArray(data.parts_segments) && data.parts_segments.length) {
+        parts.length = 0;
+        data.parts_segments.forEach(seg => {
+          const label = String(seg.label || "").toUpperCase();
+          const marks = parseInt(seg.marks || 0, 10);
+          const count = parseInt(seg.count || 0, 10);
+          const start = seg.start != null ? parseInt(seg.start, 10) : undefined;
+          if (label && marks > 0 && count > 0) {
+            const one = { label, marks, count };
+            if (start && start > 0) one.start = start;
+            parts.push(one);
+          }
+        });
+        renderPartsList();
+        showSummary(parts);
+        patternModal.show();
+        renderPaperFromParts(parts);
+      } else {
+        parts.length = 0;
+        partsJsonInput.value = "";
+        prefilledQuestions = {};
+        renderPartsList();
+        showSummary(parts);
+        partLabelInput.value = ""; partMarksInput.value = ""; partCountInput.value = ""; partStartInput.value = "";
+        selectionSummary.style.display = 'block';
+        patternModal.show();
+      }
+    } catch (e) {
+      console.error("Preview fetch failed", e);
+      parts.length = 0;
+      partsJsonInput.value = "";
+      prefilledQuestions = {};
+      selectionSummary.style.display = 'none';
+      partLabelInput.value = ""; partMarksInput.value = ""; partCountInput.value = ""; partStartInput.value = "";
+      renderPartsList();
+      showSummary(parts);
+      patternModal.show();
+    }
+  });
+
+  document.getElementById('btn-add-part').addEventListener("click", () => {
+    const label = (partLabelInput.value || "").trim().toUpperCase();
+    const marks = parseInt(partMarksInput.value || "0", 10);
+    const count = parseInt(partCountInput.value || "0", 10);
+    const startRaw = partStartInput.value;
+    const start = startRaw && !isNaN(parseInt(startRaw, 10)) ? parseInt(startRaw, 10) : undefined;
+
+    if (!label) { alert("Enter a Part label (e.g., A)."); return; }
+    if (!marks || marks < 1) { alert("Enter valid marks per question."); return; }
+    if (!count || count < 1) { alert("Enter how many questions."); return; }
+
+    const partDef = { label, marks, count };
+    if (start && start > 0) partDef.start = start;
+    parts.push(partDef);
+
+    renderPartsList(); showSummary(parts);
+  });
+
+  document.getElementById('btn-build-paper').addEventListener("click", (e) => {
+    e.preventDefault();
+    if (!parts.length) { alert("Add at least one Part."); return; }
+    document.getElementById("parts_json").value = JSON.stringify(parts);
+    patternModal.hide();
+    renderPaperFromParts(parts);
+  });
+
+  // Save button handler
+  const saveBtn = document.querySelector('button[name="action"][value="save"]');
+  saveBtn.addEventListener('click', () => {
+    if (!partsJsonInput.value) partsJsonInput.value = JSON.stringify(parts || []);
+  });
+
+  // Initial page load
+  window.addEventListener("load", () => {
+    if (degreeSelect.value) {
+      const duration = getSelectedDegreeDuration();
+      populateYears(duration);
+      const selectedYear = "{{ selected.year|default_if_none:'' }}";
+      if (selectedYear) {
+        yearSelect.disabled = false;
+        populateSemestersForYear(selectedYear, duration);
+        semesterSelect.disabled = false;
+
+        const presetSemester = "{{ selected.semester|default_if_none:'' }}";
+        if (presetSemester) {
+          const hasPreset = Array.from(semesterSelect.options).some(o => o.value === presetSemester);
+          if (!hasPreset) {
+            const opt = document.createElement("option");
+            opt.value = presetSemester; opt.textContent = presetSemester; opt.selected = true;
+            semesterSelect.appendChild(opt);
+          } else {
+            semesterSelect.value = presetSemester;
+          }
+        }
+      }
+      refreshExamChoices();
+    }
+
+    {% if pattern_options %}
+      patternSelect.disabled = true;
+    {% endif %}
+
+    if (allKeysChosen()) {
+      refreshPatternOptions();
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,360 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+.subject-requests-management {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+.subject-requests-management .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.subject-requests-management .page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 2.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 20px;
+  color: white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+.subject-requests-management .page-header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+.subject-requests-management .card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  margin-bottom: 2rem;
+}
+.subject-requests-management .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-radius: 20px 20px 0 0;
+}
+.subject-requests-management .card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.subject-requests-management .report-btn {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+  padding: 0.7rem 1.15rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+.subject-requests-management .report-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.24);
+  color: white;
+}
+.subject-requests-management .table thead {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+.subject-requests-management .table th {
+  color: white !important;
+  font-weight: 700;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  border: none;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+.subject-requests-management .table td {
+  padding: 1.25rem 1rem;
+  border-bottom: 2px solid #f1f5f9;
+  font-weight: 500;
+  color: #1e293b;
+  text-align: center;
+  vertical-align: middle;
+}
+.subject-requests-management .badge {
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: white !important;
+}
+.bg-success { background: #059669 !important; }
+.bg-danger { background: #dc2626 !important; }
+.bg-warning { background: #f59e0b !important; }
+.bg-info { background: #0284c7 !important; }
+.bg-secondary { background: #64748b !important; }
+.btn-success, .btn-danger {
+  padding: 0.6rem 1.25rem;
+  border-radius: 12px;
+  border: none;
+  color: white;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin: 0.25rem;
+}
+.btn-success { background: #059669; }
+.btn-danger { background: #dc2626; }
+.table tbody tr:hover {
+  background: #e0f2fe;
+  transform: scale(1.01);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+}
+.filter-section {
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 1.5rem 2rem;
+}
+.filter-section .form-label {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+.filter-section .form-select {
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+  padding: 0.65rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+.filter-section .form-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+.filter-section .btn-primary {
+  border-radius: 10px;
+  font-weight: 700;
+  padding: 0.65rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border: none;
+  transition: all 0.3s ease;
+}
+.filter-section .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+}
+.action-form {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+.action-form .form-select {
+  min-width: 200px;
+  margin-bottom: 0.5rem;
+}
+</style>
+
+<div class="subject-requests-management">
+  <div class="page-container">
+    <div class="page-header">
+      <h1><i class="bi bi-journal-check"></i> Subject Requests Management</h1>
+      <p class="subtitle">Department: {{ department.Department }}</p>
+    </div>
+    {% if messages %}
+    <div class="mb-3">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if schedule_state %}
+    <div class="alert {% if schedule_state.can_act %}alert-success{% else %}alert-warning{% endif %}">
+      {{ schedule_state.status_message }}
+    </div>
+    {% endif %}
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="bi bi-list-check"></i> Subject Requests Review</div>
+        <a href="{% url 'download_hod_subject_request_pdf' %}?academic_year={{ filter_academic_year }}&regulation={{ filter_regulation }}&semester={{ filter_semester }}&batch={{ filter_batch }}&section={{ filter_section }}" class="report-btn">
+          <i class="bi bi-download"></i> Download Approval Report
+        </a>
+      </div>
+      <div class="filter-section">
+        <form method="GET" action="{% url 'approve_subject_requests' %}" class="row g-3 align-items-end" id="filterForm">
+          <div class="col-md-2">
+            <label class="form-label">Academic Year</label>
+            <select name="academic_year" class="form-select" id="filterAcademicYear">
+              <option value="">All</option>
+              {% for year in academic_years %}
+              <option value="{{ year }}" {% if filter_academic_year == year %}selected{% endif %}>{{ year }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Regulation</label>
+            <select name="regulation" class="form-select" id="filterRegulation">
+              <option value="">All</option>
+              {% for reg in regulations %}
+              <option value="{{ reg.id }}" {% if filter_regulation|stringformat:"s" == reg.id|stringformat:"s" %}selected{% endif %}>R-{{ reg.year }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Semester</label>
+            <select name="semester" class="form-select" id="filterSemester">
+              <option value="">All</option>
+              {% for sem in semesters %}
+              <option value="{{ sem }}" {% if filter_semester == sem %}selected{% endif %}>Semester {{ sem }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Batch</label>
+            <select name="batch" class="form-select" id="filterBatch">
+              <option value="">All</option>
+              {% for batch in batches %}
+              <option value="{{ batch }}" {% if filter_batch == batch %}selected{% endif %}>{{ batch }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Section</label>
+            <select name="section" class="form-select" id="filterSection">
+              <option value="">All</option>
+              {% for section in sections %}
+              <option value="{{ section }}" {% if filter_section == section %}selected{% endif %}>{{ section }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-funnel"></i> Apply Filters
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Requested By</th>
+              <th>Course Details</th>
+              <th>Batch</th>
+              <th>Section</th>
+              <th>Semester</th>
+              <th>Academic Year</th>
+              <th>Reason</th>
+              <th>Assigned To</th>
+              <th>Status / Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in requests %}
+            <tr>
+              <td>
+                <strong>{{ r.faculty.name }}</strong><br>
+                <small>{{ r.faculty.faculty_id }}</small><br>
+                <small class="text-muted">{{ r.faculty.department.Department }}</small>
+              </td>
+              <td>
+                <strong>{{ r.course.title }}</strong><br>
+                <small>{{ r.course.course_code }}</small><br>
+                <small class="text-muted">R-{{ r.regulation.year }}</small>
+              </td>
+              <td><span class="badge bg-secondary">{{ r.batch }}</span></td>
+              <td><span class="badge bg-info">{{ r.section }}</span></td>
+              <td><span class="badge bg-warning">Sem {{ r.semester }}</span></td>
+              <td><strong>{{ r.academic_year }}</strong></td>
+              <td>{{ r.reason|truncatechars:80 }}</td>
+              <td>
+                {% if r.assigned_faculty %}
+                  <span class="badge bg-success">{{ r.assigned_faculty }}</span>
+                {% else %}
+                  <span class="badge bg-secondary">Not Assigned</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if r.status == "PENDING" and schedule_state.can_act %}
+                <form method="POST" class="action-form">{% csrf_token %}
+                  <input type="hidden" name="req_id" value="{{ r.id }}">
+                  <select name="selected_faculty" class="form-select form-select-sm" required>
+                    <option value="" disabled selected>Select Faculty</option>
+                    {% for f in faculty_list %}
+                    <option value="{{ f.faculty_id }}">{{ f.name }} ({{ f.faculty_id }})</option>
+                    {% endfor %}
+                  </select>
+                  <div>
+                    <button type="submit" name="action" value="approve" class="btn-success">Approve</button>
+                    <button type="submit" name="action" value="reject" class="btn-danger">Reject</button>
+                  </div>
+                </form>
+                {% elif r.status == "PENDING" %}
+                <span class="badge bg-warning">Pending</span>
+                <div class="text-muted small mt-2">{{ schedule_state.status_message }}</div>
+                {% elif r.status == "APPROVED" and schedule_state.can_act %}
+                <form method="POST" class="action-form">{% csrf_token %}
+                  <input type="hidden" name="req_id" value="{{ r.id }}">
+                  <select name="selected_faculty" class="form-select form-select-sm" required>
+                    {% for f in faculty_list %}
+                    <option value="{{ f.faculty_id }}" {% if f.faculty_id == r.assigned_faculty_id %}selected{% endif %}>
+                      {{ f.name }} ({{ f.faculty_id }})
+                    </option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit" name="action" value="update_faculty" class="btn-success">Update</button>
+                </form>
+                <span class="badge bg-success mt-2">Approved</span>
+                {% elif r.status == "APPROVED" %}
+                <span class="badge bg-success">Approved</span>
+                <div class="text-muted small mt-2">{{ schedule_state.status_message }}</div>
+                {% else %}
+                <span class="badge bg-danger">Rejected</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="9" class="text-center text-muted py-5">No Requests Found</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('filterForm').addEventListener('change', function() {
+  const academicYear = document.getElementById('filterAcademicYear').value;
+  const regulation = document.getElementById('filterRegulation').value;
+  const semester = document.getElementById('filterSemester').value;
+  const batch = document.getElementById('filterBatch').value;
+  const section = document.getElementById('filterSection').value;
+  const downloadBtn = document.querySelector('.report-btn');
+  const params = new URLSearchParams();
+  if (academicYear) params.set('academic_year', academicYear);
+  if (regulation) params.set('regulation', regulation);
+  if (semester) params.set('semester', semester);
+  if (batch) params.set('batch', batch);
+  if (section) params.set('section', section);
+  const baseUrl = "{% url 'download_hod_subject_request_pdf' %}";
+  const newUrl = params.toString() ? baseUrl + '?' + params.toString() : baseUrl;
+  downloadBtn.setAttribute('href', newUrl);
+});
+</script>
+
+{% endblock %}

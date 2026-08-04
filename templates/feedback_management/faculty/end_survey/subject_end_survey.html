@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+{% load static %}
+{% load feedback_tags %}
+{% block content %}
+
+<style>
+  .fb-subject-page{
+    --card:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --soft:#f8fafc;
+    --pri:#2563eb;
+    --ok:#16a34a;
+    --bad:#dc2626;
+    --r:16px;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--ink);
+  }
+
+  .fb-subject-page .justify{ text-align: justify; }
+  .fb-subject-page .wrap{ max-width:1600px; margin:18px auto; padding:0 10px; }
+
+  .fb-subject-page .hero{
+    background: linear-gradient(135deg, rgba(37,99,235,.14), rgba(99,102,241,.08));
+    border:1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px 18px;
+  }
+
+  .fb-subject-page .hero h3{
+    margin:0;
+    font-weight:400;
+    color:var(--ink);
+    text-align:left;
+  }
+
+  .fb-subject-page .sub{
+    color:var(--muted);
+    margin-top:4px;
+    text-align:left;
+  }
+
+  .fb-subject-page .cardx{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius: var(--r);
+    box-shadow: 0 8px 24px rgba(0,0,0,.06);
+  }
+
+  .fb-subject-page .pad{ padding:16px; }
+
+  .fb-subject-page .filters{
+    display:grid;
+    grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr 1.8fr;
+    gap:12px;
+    align-items:end;
+    text-align:left;
+  }
+
+  @media (max-width: 1200px){
+    .fb-subject-page .filters{ grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 640px){
+    .fb-subject-page .filters{ grid-template-columns: 1fr; }
+  }
+
+  .fb-subject-page .filters label{
+    font-weight:400;
+    color:var(--ink);
+    font-size:13px;
+    margin-bottom:6px;
+    display:block;
+  }
+
+  .fb-subject-page .filters select{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:#fff;
+    font-weight:400;
+  }
+
+  .fb-subject-page .filters select:disabled{
+    background:#f1f5f9;
+    cursor:not-allowed;
+    color:#94a3b8;
+  }
+
+  .fb-subject-page .btnx{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:none;
+    font-weight:400;
+    cursor:pointer;
+    text-decoration:none;
+  }
+
+  .fb-subject-page .btn-pri{ background:var(--pri); color:#fff; }
+  .fb-subject-page .btn-soft{ background:#e5e7eb; color:#111827; }
+
+  .fb-subject-page .stats{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:10px;
+    text-align:left;
+  }
+
+  .fb-subject-page .pill{
+    background:var(--soft);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:6px 10px;
+    font-size:13px;
+    color:var(--ink);
+    font-weight:400;
+  }
+
+  .fb-subject-page .table-wrap{
+    overflow: visible;
+    border-radius: 12px;
+    border:1px solid var(--border);
+    margin-top:12px;
+    background:#fff;
+  }
+
+  .fb-subject-page table.matrix{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1300px;
+  }
+
+  .fb-subject-page .matrix th,
+  .fb-subject-page .matrix td{
+    border:1px solid var(--border);
+    padding:8px 10px;
+    vertical-align:middle;
+    text-align:center;
+    font-weight:400;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+
+  .fb-subject-page .matrix thead th{
+    background:var(--soft);
+    font-weight:400;
+    font-size:12px;
+  }
+
+  .fb-subject-page .qhead{
+    white-space:normal !important;
+    min-width:220px;
+    max-width:260px;
+    font-weight:400;
+    text-align:left !important;
+    vertical-align:top !important;
+  }
+
+  .fb-subject-page .totalcol{
+    background:#f8fafc;
+    font-weight:600 !important;
+  }
+
+  .fb-subject-page .note{
+    color:var(--muted);
+    font-weight:400;
+    margin-top:8px;
+    text-align:left;
+  }
+
+  .fb-subject-page .dataTables_wrapper .dataTables_length,
+  .fb-subject-page .dataTables_wrapper .dataTables_filter{
+    padding:10px 0;
+    text-align:left;
+  }
+
+  .fb-subject-page .dataTables_wrapper .dataTables_filter{
+    text-align:right;
+  }
+
+  .fb-subject-page .dataTables_wrapper .dataTables_filter input,
+  .fb-subject-page .dataTables_wrapper .dataTables_length select{
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:8px 10px;
+    outline:none;
+  }
+
+  .fb-subject-page .dataTables_wrapper .dataTables_paginate{
+    padding:10px 0;
+    text-align:right;
+  }
+
+  .fb-subject-page .dataTables_wrapper .dataTables_paginate .paginate_button{
+    border:1px solid var(--border) !important;
+    border-radius:10px !important;
+    padding:6px 10px !important;
+    margin:0 2px !important;
+    background:#fff !important;
+    color:var(--ink) !important;
+    font-weight:400 !important;
+  }
+
+  .fb-subject-page .dataTables_wrapper .dataTables_paginate .paginate_button.current{
+    background:var(--pri) !important;
+    color:#fff !important;
+    border-color:var(--pri) !important;
+  }
+
+  .fb-subject-page .dt-buttons .dt-button{
+    border:1px solid var(--border) !important;
+    border-radius:10px !important;
+    background:#fff !important;
+    color:var(--ink) !important;
+    padding:8px 10px !important;
+    margin-right:6px !important;
+    font-weight:400 !important;
+  }
+
+  .fb-subject-page div.dataTables_scrollBody{
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+  }
+</style>
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="fb-subject-page">
+  <div class="wrap">
+
+    <div class="hero cardx">
+      <h3>Subject End Survey – Faculty Report</h3>
+
+      <div class="sub">
+        Department: {{ department.department_name|default:department }}
+        &nbsp; | &nbsp;
+        Faculty: {{ faculty.name|default:faculty }}
+      </div>
+
+      <div class="stats">
+        <span class="pill">Total Students: {{ total_students }}</span>
+        <span class="pill">Submitted: {{ submitted_students }}</span>
+        <span class="pill">Not Submitted: {{ not_submitted_students }}</span>
+      </div>
+    </div>
+
+    <div class="cardx pad mt-3">
+      <form method="GET">
+        <div class="filters">
+
+          <div>
+            <label>Department</label>
+            <select disabled>
+              <option>{{ department.department_name|default:department }}</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Batch</label>
+            <select name="batch">
+              <option value="">All</option>
+              {% for b in batches %}
+                <option value="{{ b }}" {% if sel_batch == b|stringformat:"s" %}selected{% endif %}>
+                  {{ b }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label>Year</label>
+            <select name="year" id="yearSelect">
+              <option value="">All</option>
+              {% for y in years %}
+                <option value="{{ y }}" {% if sel_year == y|stringformat:"s" %}selected{% endif %}>
+                  {{ y }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label>Semester</label>
+            <select name="semester" id="semesterSelect">
+              <option value="">All</option>
+              {% for s in semesters %}
+                <option value="{{ s }}" {% if sel_sem == s|stringformat:"s" %}selected{% endif %}>
+                  {{ s }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label>Section</label>
+            <select name="section">
+              <option value="">All</option>
+              {% for s in sections %}
+                <option value="{{ s }}" {% if sel_section == s|stringformat:"s" %}selected{% endif %}>
+                  {{ s }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label>Assigned Subject</label>
+            <select name="assign_id" id="courseSelect" {% if not filters_applied %}disabled{% endif %}>
+              <option value="">
+                {% if not filters_applied %}
+                  Select Year & Semester to load your assigned subjects
+                {% else %}
+                  Select Your Assigned Subject
+                {% endif %}
+              </option>
+
+              {% if filters_applied %}
+                {% for a in course_assignments %}
+                  <option value="{{ a.id }}" {% if sel_assign_id == a.id|stringformat:"s" %}selected{% endif %}>
+                    {{ a.course.course_code }} - {{ a.course.title }}
+                    {% if a.section %} | Sec: {{ a.section }}{% endif %}
+                    {% if a.batch %} | Batch: {{ a.batch }}{% endif %}
+                  </option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </div>
+
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end mt-3">
+          <button type="submit" class="btnx btn-pri">Apply Filter</button>
+
+          {% if sel_assign_id and sel_year and sel_sem %}
+            <a class="btnx btn-soft" target="_blank"
+               href="{% url 'end_survey_pdf' %}?batch={{ sel_batch }}&year={{ sel_year }}&semester={{ sel_sem }}&section={{ sel_section }}&assign_id={{ sel_assign_id }}">
+              PDF
+            </a>
+          {% endif %}
+
+          <a href="{% url 'end_survey' %}" class="btnx btn-soft">Reset</a>
+        </div>
+      </form>
+
+      {% if sel_assign_id %}
+        <div class="table-wrap">
+          <table class="matrix" id="feedbackTable">
+            <thead>
+              <tr>
+                <th rowspan="2">S.No</th>
+
+                {% for c in category_spans %}
+                  <th colspan="{{ c.span }}">{{ c.category }}</th>
+                {% endfor %}
+
+                <th rowspan="2" class="totalcol">Total</th>
+              </tr>
+
+              <tr>
+                {% for q in ordered_questions %}
+                  <th class="qhead">{{ q.question_text }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+
+            <tbody>
+              {% if rows %}
+                {% for r in rows %}
+                  <tr>
+                    <td>{{ r.sno }}</td>
+
+                    {% for q in ordered_questions %}
+                      <td>{{ r.marks|get_item:q.id|default:"-" }}</td>
+                    {% endfor %}
+
+                    <td class="totalcol">{{ r.total }}</td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="{{ ordered_questions|length|add:'2' }}">No students found.</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note justify">
+          * Scores are calculated only for the selected assigned subject.
+        </div>
+      {% else %}
+        <div class="note justify mt-3">
+          Select Year + Semester to load your assigned subjects, then click Apply Filter to view marks.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.colVis.min.js"></script>
+
+<script>
+$(document).ready(function() {
+  {% if sel_assign_id and rows %}
+    $('#feedbackTable').DataTable({
+      pageLength: 25,
+      lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+      dom: '<"row"<"col-md-6"B><"col-md-6"f>>' +
+           '<"row"<"col-md-12"tr>>' +
+           '<"row"<"col-md-6"l><"col-md-6"p>>',
+      buttons: [
+        { extend: 'excelHtml5', text: 'Excel' },
+        { extend: 'print', text: 'Print' },
+        { extend: 'colvis', text: 'Columns' }
+      ],
+      language: {
+        search: "Search:",
+        lengthMenu: "Show _MENU_",
+        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+        paginate: {
+          first: "First",
+          last: "Last",
+          next: "Next",
+          previous: "Previous"
+        }
+      },
+      scrollX: true,
+      scrollCollapse: true,
+      autoWidth: false,
+      responsive: false,
+      order: [[0, 'asc']]
+    });
+  {% endif %}
+
+  $('#yearSelect, #semesterSelect').change(function() {
+    var year = $('#yearSelect').val();
+    var semester = $('#semesterSelect').val();
+
+    if (year && semester) {
+      $('#courseSelect').prop('disabled', false);
+    } else {
+      $('#courseSelect').prop('disabled', true);
+      $('#courseSelect').val('');
+    }
+  });
+});
+</script>
+
+{% endblock %}

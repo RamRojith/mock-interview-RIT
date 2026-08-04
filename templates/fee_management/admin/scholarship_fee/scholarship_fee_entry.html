@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+<div class="card shadow">
+<div class="card-header bg-primary text-white">
+<h5>Scholarship Fee Entry</h5>
+</div>
+
+<div class="card-body">
+
+{% comment %} {% for message in messages %}
+<div class="alert alert-{{ message.tags }}">{{ message }}</div>
+{% endfor %} {% endcomment %}
+
+<!-- ================= TOP FORM ================= -->
+<form method="post" class="border p-4 bg-light rounded">
+{% csrf_token %}
+
+<input type="hidden" name="entry_id" value="{{ edit_obj.id|default:'' }}">
+
+<div class="row g-3">
+
+<!-- Scholarship -->
+<div class="col-md-3">
+<label>Scholarship</label>
+<select name="scholarship_id" class="form-control" required>
+<option value="">Select</option>
+{% for s in scholarship_types %}
+<option value="{{ s.id }}"
+{% if edit_obj and edit_obj.scholarship.id == s.id %}selected{% endif %}>
+{{ s.name }}
+</option>
+{% endfor %}
+</select>
+</div>
+
+<!-- Degree -->
+<div class="col-md-3">
+<label>Degree</label>
+<select name="degree_id" id="degreeSelect" class="form-control" required>
+<option value="">Select</option>
+{% for d in degrees %}
+<option value="{{ d.id }}"
+{% if edit_obj and edit_obj.degree.id == d.id %}selected{% endif %}>
+{{ d.degree }}
+</option>
+{% endfor %}
+</select>
+</div>
+
+<!-- Department -->
+<div class="col-md-3">
+<label>Department</label>
+<select name="department_id"
+id="departmentSelect"
+data-selected="{{ edit_obj.department.id|default:'' }}"
+class="form-control"
+required>
+<option value="">Select Degree First</option>
+</select>
+</div>
+
+<!-- Batch -->
+<div class="col-md-3">
+<label>Batch</label>
+<select name="batch" class="form-control">
+{% for b in batches %}
+<option value="{{ b }}"
+{% if edit_obj and edit_obj.batch == b %}selected{% endif %}>
+{{ b }}
+</option>
+{% endfor %}
+</select>
+</div>
+
+<!-- Quota -->
+<div class="col-md-3 mt-3">
+<label>Quota</label>
+<select name="quota" class="form-control">
+{% for q in quotas %}
+<option value="{{ q }}"
+{% if edit_obj and edit_obj.quota == q %}selected{% endif %}>
+{{ q }}
+</option>
+{% endfor %}
+</select>
+</div>
+
+<!-- Amount -->
+<div class="col-md-3 mt-3">
+<label>Amount</label>
+<input type="number"
+step="0.01"
+name="scholarship_amount"
+value="{{ edit_obj.scholarship_amount|default:'' }}"
+class="form-control"
+required>
+</div>
+
+</div>
+
+<button class="btn btn-success mt-3">
+{% if edit_obj %}Update{% else %}Save{% endif %}
+</button>
+
+{% if edit_obj %}
+<a href="{% url 'scholarship_fee_entry' %}" class="btn btn-secondary mt-3">
+Cancel
+</a>
+{% endif %}
+
+</form>
+
+<hr>
+
+<!-- ================= LIST TABLE ================= -->
+<table class="table table-bordered mt-3">
+<thead>
+<tr>
+<th>Scholarship</th>
+<th>Degree</th>
+<th>Department</th>
+<th>Batch</th>
+<th>Quota</th>
+<th>Amount</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+
+{% for fee in scholarship_fees %}
+<tr>
+<td>{{ fee.scholarship }}</td>
+<td>{{ fee.degree }}</td>
+<td>{{ fee.department }}</td>
+<td>{{ fee.batch }}</td>
+<td>{{ fee.quota }}</td>
+<td>{{ fee.scholarship_amount }}</td>
+<td>
+
+<a href="?edit={{ fee.id }}" class="btn btn-sm btn-primary">
+Edit
+</a>
+
+<form method="post" style="display:inline;">
+{% csrf_token %}
+<input type="hidden" name="entry_id" value="{{ fee.id }}">
+<button class="btn btn-sm btn-danger"
+onclick="return confirm('Delete?')">
+Delete
+</button>
+</form>
+
+</td>
+</tr>
+{% endfor %}
+
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+
+<!-- ================= AJAX SCRIPT ================= -->
+<script>
+function loadDepartments(degreeId, selectedValue) {
+
+fetch("{% url 'get_departments_by_degree' %}?degree_id=" + degreeId)
+.then(response => response.json())
+.then(data => {
+
+let deptSelect = document.getElementById("departmentSelect");
+deptSelect.innerHTML = '<option value="">Select</option>';
+
+data.departments.forEach(function (dept) {
+
+let selected = (dept.id == selectedValue) ? "selected" : "";
+
+deptSelect.innerHTML +=
+`<option value="${dept.id}" ${selected}>
+${dept.Department}
+</option>`;
+});
+});
+}
+
+let degreeSelect = document.getElementById("degreeSelect");
+let departmentSelect = document.getElementById("departmentSelect");
+let selectedDept = departmentSelect.dataset.selected;
+
+if (degreeSelect.value) {
+loadDepartments(degreeSelect.value, selectedDept);
+}
+
+degreeSelect.addEventListener("change", function () {
+loadDepartments(this.value, null);
+});
+</script>
+
+{% endblock %}

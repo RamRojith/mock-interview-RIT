@@ -1,0 +1,181 @@
+{% block content %}
+
+{% if messages %}
+  <div class="message-container">
+    {% for message in messages %}
+      <div class="alert {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="payment-container">
+    <div class="payment-header">
+        <h1>Complete Your Payment</h1>
+        <p>Secure payment powered by Techpay</p>
+    </div>
+
+    <form method="POST" action="{% url 'initiate_techpay_payment' %}">
+        {% csrf_token %}
+        <input type="hidden" name="transaction_id" value="{{ transaction.transaction_uuid }}">
+
+        <div class="modern-amount-box">
+            <label for="amount" class="amount-label">Enter Amount</label>
+            <div class="currency-input-wrapper">
+                <span class="currency-symbol">ZMW</span>
+                <input
+                    id="amount"
+                    name="amount"
+                    type="text"
+                    inputmode="decimal"
+                    pattern="^\d+(\.\d{1,2})?$"
+                    placeholder="e.g., 120.00"
+                    required
+                    class="amount-input"
+                />
+            </div>
+        </div>
+
+        <button type="submit" class="payment-button">Proceed to Pay</button>
+    </form>
+
+    <form method="POST" action="{% url 'pay_by_cash' %}">
+        {% csrf_token %}
+        <input type="hidden" name="transaction_id" value="{{ transaction.transaction_uuid }}">
+        <button type="submit" class="payment-button cash-button">
+            Pay Later
+        </button>
+	<p class="payment-footer">If you wish to pay the Fee later, click on the Pay Later Button</p>
+    </form>
+
+    <p class="payment-footer">100% Secure Payment Processing via Techpay</p>
+</div>
+
+<style>
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: "Inter", sans-serif;
+    background: #f9fafb;
+}
+
+.payment-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    padding: 32px;
+    max-width: 420px;
+    width: 100%;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: fadeInScale 0.4s ease-out forwards;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.payment-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+.payment-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 6px;
+}
+.payment-header p {
+    color: #666;
+    font-size: 14px;
+}
+
+/* New modern input styles */
+.modern-amount-box {
+    margin-bottom: 24px;
+}
+.amount-label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+    color: #374151;
+}
+.currency-input-wrapper {
+    position: relative;
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+}
+.currency-symbol {
+    font-size: 16px;
+    font-weight: 500;
+    color: #4b5563;
+    margin-right: 8px;
+}
+.amount-input {
+    border: none;
+    background: transparent;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e3a8a;
+    width: 100%;
+    outline: none;
+}
+.amount-input::placeholder {
+    color: #9ca3af;
+}
+
+/* Buttons */
+.payment-button {
+    width: 100%;
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 8px;
+}
+.payment-button:hover {
+    background: #1d4ed8;
+}
+
+.cash-button {
+    background: #64748b !important;
+    margin-top: 12px;
+}
+
+.payment-footer {
+    font-size: 12px;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 24px;
+}
+
+/* Remove number spinners on some browsers */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+</style>
+
+{% endblock %}

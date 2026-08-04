@@ -1,0 +1,454 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3 border-bottom pb-2">
+    <div>
+      <h3 class="mb-1">Library Incharge Requests</h3>
+      <div class="text-muted small">
+        Department:
+        {% if incharge and incharge.department %}
+          {{ incharge.department }}
+        {% elif incharge and incharge.department_id %}
+          {{ incharge.department_id }}
+        {% else %}
+          -
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for m in messages %}
+      <div class="alert alert-{{ m.tags }} alert-dismissible fade show" role="alert">
+        {{ m }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row g-3 mb-3">
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-white">
+          <h6 class="mb-0">Latest Notifications</h6>
+        </div>
+        <div class="card-body" style="max-height:280px; overflow:auto;">
+          {% if notifications %}
+            <ul class="mb-0">
+              {% for n in notifications %}
+                <li class="mb-2">
+                  <div class="fw-bold">{{ n.title }}</div>
+                  <div class="small text-muted">{{ n.message }}</div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="text-muted">No notifications.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <form class="row g-2 align-items-end" method="get" id="filterForm">
+            <div class="col-md-3">
+              <label class="form-label small mb-1">Status</label>
+              <select class="form-select auto-filter" name="status" id="statusFilter">
+                <option value="">All Status</option>
+                <option value="PENDING" {% if selected_status == "PENDING" %}selected{% endif %}>PENDING</option>
+                <option value="APPROVED" {% if selected_status == "APPROVED" %}selected{% endif %}>APPROVED</option>
+                <option value="REJECTED" {% if selected_status == "REJECTED" %}selected{% endif %}>REJECTED</option>
+                <option value="RETURN_REQUESTED" {% if selected_status == "RETURN_REQUESTED" %}selected{% endif %}>RETURN_REQUESTED</option>
+                <option value="RETURNED" {% if selected_status == "RETURNED" %}selected{% endif %}>RETURNED</option>
+              </select>
+            </div>
+
+            <div class="col-md-2">
+              <label class="form-label small mb-1">Year</label>
+              <select class="form-select auto-filter" name="year" id="yearFilter">
+                <option value="">All</option>
+                {% for y in year_choices %}
+                  <option value="{{ y }}" {% if year_val == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-2">
+              <label class="form-label small mb-1">Section</label>
+              <select class="form-select auto-filter" name="section" id="sectionFilter">
+                <option value="">All</option>
+                {% for s in sections %}
+                  <option value="{{ s.section }}" {% if section_val == s.section %}selected{% endif %}>{{ s.section }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label small mb-1">Search</label>
+              <input type="text"
+                     class="form-control"
+                     name="q"
+                     id="searchFilter"
+                     value="{{ search_q }}"
+                     placeholder="student / roll / book / acc / publisher"
+                     autocomplete="off">
+            </div>
+
+            <div class="col-md-2 d-flex">
+              <a class="btn btn-outline-secondary w-100" href="{% url 'library_incharge_requests' %}">Clear</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <h6 class="mb-0">Requests</h6>
+      <div class="small text-muted">
+        {% if requests %}
+          Showing {{ requests.start_index }} - {{ requests.end_index }} of {{ requests.paginator.count }}
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive" style="max-height:520px; overflow:auto;">
+        <table class="table table-bordered table-hover align-middle mb-0">
+          <thead class="table-light sticky-top" style="top:0; z-index:1;">
+            <tr>
+              <th style="min-width:180px;">Student</th>
+              <th style="min-width:140px;">Roll</th>
+              <th style="min-width:220px;">Dept</th>
+              <th style="min-width:260px;">Book</th>
+              <th style="width:80px;">Acc</th>
+              <th style="min-width:130px;">Status</th>
+              <th style="min-width:120px;">Req</th>
+              <th style="min-width:120px;">Issued</th>
+              <th style="min-width:120px;">Return</th>
+              <th style="min-width:180px;">Remarks</th>
+              <th style="min-width:340px;">Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% if requests and requests.object_list %}
+              {% for r in requests %}
+                <tr>
+                  <td class="fw-bold">{{ r.student_name }}</td>
+                  <td>{{ r.student_rollno|default:"-" }}</td>
+                  <td>{{ r.department.Department|default:r.department }}</td>
+
+                  <td>
+                    <div class="fw-bold">{{ r.book.title }}</div>
+                    <div class="small text-muted">Publisher: {{ r.book.publisher|default:"-" }}</div>
+                  </td>
+
+                  <td>{{ r.book.accession_book|default:"-" }}</td>
+
+                  <td>
+                    <span class="badge
+                      {% if r.status == 'PENDING' %} bg-secondary
+                      {% elif r.status == 'APPROVED' %} bg-success
+                      {% elif r.status == 'REJECTED' %} bg-danger
+                      {% elif r.status == 'RETURN_REQUESTED' %} bg-primary
+                      {% elif r.status == 'RETURNED' %} bg-dark
+                      {% else %} bg-info {% endif %}
+                    ">{{ r.status }}</span>
+                  </td>
+
+                  <td>{{ r.requested_on|date:"M d, Y"|default:"-" }}</td>
+                  <td>{{ r.issued_on|date:"M d, Y"|default:"-" }}</td>
+                  <td>{{ r.returned_on|date:"M d, Y"|default:"-" }}</td>
+                  <td>{{ r.remarks|default:"-" }}</td>
+
+                  <td>
+                    {% if incharge and r.incharge_faculty_id == incharge.faculty_id %}
+
+                      {% if r.status == "PENDING" %}
+
+                        <button class="btn btn-success btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#approveModal{{ r.id }}">
+                          Approve
+                        </button>
+
+                        <button class="btn btn-danger btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#rejectModal{{ r.id }}">
+                          Reject
+                        </button>
+
+                      {% elif r.status == "REJECTED" %}
+
+                        <button class="btn btn-warning btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#approveModal{{ r.id }}">
+                          Approve Again
+                        </button>
+
+                        <button class="btn btn-outline-danger btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#rejectModal{{ r.id }}">
+                          Update Reject Remarks
+                        </button>
+
+                      {% elif r.status == "APPROVED" %}
+
+                        <button class="btn btn-outline-danger btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#rejectModal{{ r.id }}">
+                          Reject Again
+                        </button>
+
+                      {% elif r.status == "RETURN_REQUESTED" %}
+
+                        <button class="btn btn-dark btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#confirmReturnModal{{ r.id }}">
+                          Confirm Return
+                        </button>
+
+                      {% else %}
+                        <span class="text-muted small">No action</span>
+                      {% endif %}
+
+                      {% if r.status == "PENDING" or r.status == "REJECTED" %}
+                      <div class="modal fade" id="approveModal{{ r.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                          <div class="modal-content border-0 shadow">
+                            <form method="post" action="{% url 'incharge_approve_book_request' r.id %}">
+                              {% csrf_token %}
+                              <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title">
+                                  {% if r.status == "REJECTED" %}
+                                    Change Rejected to Approved
+                                  {% else %}
+                                    Approve Request
+                                  {% endif %}
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                              </div>
+
+                              <div class="modal-body">
+                                <div class="mb-3">
+                                  <div><strong>Request ID:</strong> {{ r.id }}</div>
+                                  <div><strong>Student:</strong> {{ r.student_name }}</div>
+                                  <div><strong>Roll No:</strong> {{ r.student_rollno|default:"-" }}</div>
+                                  <div><strong>Book:</strong> {{ r.book.title }}</div>
+                                  <div><strong>Accession:</strong> {{ r.book.accession_book|default:"-" }}</div>
+                                  <div><strong>Department:</strong> {{ r.department.Department|default:"-" }}</div>
+                                </div>
+
+                                <div class="alert alert-success mb-0">
+                                  {% if r.status == "REJECTED" %}
+                                    Are you sure you want to change this rejected request to approved and allot the book?
+                                  {% else %}
+                                    Are you sure you want to approve and allot this book to the student?
+                                  {% endif %}
+                                </div>
+                              </div>
+
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">
+                                  {% if r.status == "REJECTED" %}
+                                    Approve Again
+                                  {% else %}
+                                    Approve
+                                  {% endif %}
+                                </button>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                      {% endif %}
+
+                      {% if r.status == "PENDING" or r.status == "REJECTED" or r.status == "APPROVED" %}
+                      <div class="modal fade" id="rejectModal{{ r.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                          <div class="modal-content border-0 shadow">
+                            <form method="post" action="{% url 'incharge_reject_book_request' r.id %}">
+                              {% csrf_token %}
+                              <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">
+                                  {% if r.status == "APPROVED" %}
+                                    Change Approved to Rejected
+                                  {% elif r.status == "REJECTED" %}
+                                    Update Rejection Remarks
+                                  {% else %}
+                                    Reject Request
+                                  {% endif %}
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                              </div>
+
+                              <div class="modal-body">
+                                <div class="mb-3">
+                                  <div><strong>Request ID:</strong> {{ r.id }}</div>
+                                  <div><strong>Student:</strong> {{ r.student_name }}</div>
+                                  <div><strong>Book:</strong> {{ r.book.title }}</div>
+                                  <div><strong>Accession:</strong> {{ r.book.accession_book|default:"-" }}</div>
+                                </div>
+
+                                <label class="form-label">Remarks</label>
+                                <textarea name="remarks" class="form-control" rows="3" required>{% if r.status == "REJECTED" %}{{ r.remarks }}{% endif %}</textarea>
+                              </div>
+
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger">Submit</button>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                      {% endif %}
+
+                      {% if r.status == "RETURN_REQUESTED" %}
+                      <div class="modal fade" id="confirmReturnModal{{ r.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                          <div class="modal-content border-0 shadow">
+                            <form method="post" action="{% url 'incharge_confirm_return' r.id %}">
+                              {% csrf_token %}
+                              <div class="modal-header bg-dark text-white">
+                                <h5 class="modal-title">Confirm Return</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                              </div>
+
+                              <div class="modal-body">
+                                <div class="mb-3">
+                                  <div><strong>Request ID:</strong> {{ r.id }}</div>
+                                  <div><strong>Student:</strong> {{ r.student_name }}</div>
+                                  <div><strong>Roll No:</strong> {{ r.student_rollno|default:"-" }}</div>
+                                  <div><strong>Book:</strong> {{ r.book.title }}</div>
+                                  <div><strong>Accession:</strong> {{ r.book.accession_book|default:"-" }}</div>
+                                  <div><strong>Department:</strong> {{ r.department.Department|default:"-" }}</div>
+                                </div>
+
+                                <div class="alert alert-dark mb-0">
+                                  Are you sure you want to confirm return for this book request?
+                                </div>
+                              </div>
+
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-dark">Confirm Return</button>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                      {% endif %}
+
+                    {% else %}
+                      <span class="text-muted small">No action</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="11" class="text-center text-muted py-4">
+                  No requests found.
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% if requests and requests.paginator.num_pages > 1 %}
+      <div class="card-footer bg-white">
+        <nav>
+          <ul class="pagination mb-0">
+            {% if requests.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ requests.previous_page_number }}&status={{ selected_status }}&q={{ search_q }}&year={{ year_val }}&section={{ section_val }}">Prev</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">Prev</span></li>
+            {% endif %}
+
+            <li class="page-item disabled">
+              <span class="page-link">Page {{ requests.number }} / {{ requests.paginator.num_pages }}</span>
+            </li>
+
+            {% if requests.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ requests.next_page_number }}&status={{ selected_status }}&q={{ search_q }}&year={{ year_val }}&section={{ section_val }}">Next</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+    {% endif %}
+
+  </div>
+
+</div>
+
+<style>
+  .table td, .table th {
+    vertical-align: middle;
+  }
+  .card {
+    border-radius: 14px;
+  }
+  .btn, .form-control, .form-select {
+    border-radius: 10px;
+  }
+  .filter-loading {
+    opacity: .65;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  (function () {
+    const form = document.getElementById("filterForm");
+    const autoFilters = document.querySelectorAll(".auto-filter");
+    const searchInput = document.getElementById("searchFilter");
+    let searchTimer = null;
+
+    function submitFilters() {
+      if (!form) return;
+      form.classList.add("filter-loading");
+      form.submit();
+    }
+
+    autoFilters.forEach(el => {
+      el.addEventListener("change", function () {
+        submitFilters();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener("input", function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () {
+          submitFilters();
+        }, 500);
+      });
+
+      searchInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          clearTimeout(searchTimer);
+          submitFilters();
+        }
+      });
+    }
+  })();
+</script>
+{% endblock %}

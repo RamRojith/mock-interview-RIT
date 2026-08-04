@@ -1,0 +1,61 @@
+{% load static %}
+{% load user_tags %}
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h5 class="mb-0">{{ request.user.Department.Department }}</h5>
+    </div>
+    <ul class="sidebar-menu">
+        <li class="menu-item">
+            <a href="{% url 'home' %}" class="menu-link">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+            </a>
+        </li>
+        {% if request.session.faculty_dashboard and not request.user.is_student and not request.user.is_superuser and not request.user.is_parent %}
+        <li class="menu-item">
+            <a href="{% url 'faculty_dashboard' %}" class="menu-link">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Go to Dashboard</span>
+            </a>
+        </li>
+        {% endif %}
+        {% if request.user.is_student and not request.user.is_superuser %}
+        <li class="menu-item">
+            <a href="{% url 'student_dashboard' %}" class="menu-link">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Go to Dashboard</span>
+            </a>
+        </li>
+        {% endif %}
+        {% if request.user.is_parent and not request.user.is_superuser %}
+        <li class="menu-item">
+            <a href="{% url 'parent_dashboard' %}" class="menu-link">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Go to Dashboard</span>
+            </a>
+        </li>
+        {% endif %}
+        {% if request.user.is_student %}
+        <li class="menu-item">
+            <a href="{% url 'mock_interview:dashboard' %}" class="menu-link {% if request.resolver_match and request.resolver_match.namespace == 'mock_interview' %}active{% endif %}">
+            <i class="fas fa-robot"></i>
+            <span>Mock Interview</span>
+            </a>
+        </li>
+        {% elif request.user.is_authenticated and not request.user.is_student and not request.user.is_parent and request.user|is_faculty_or_hod %}
+        <li class="menu-item">
+            <a href="{% url 'mock_interview:faculty_dashboard' %}" class="menu-link {% if request.resolver_match and request.resolver_match.namespace == 'mock_interview' %}active{% endif %}">
+            <i class="fas fa-robot"></i>
+            <span>Mock Interview</span>
+            </a>
+        </li>
+        {% endif %}
+        <li class="menu-item">
+            <a href="{% url 'logout' %}" class="menu-link">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+            </a>
+        </li>
+    </ul>
+</aside>

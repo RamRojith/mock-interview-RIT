@@ -1,0 +1,939 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4 assessment-page">
+  <div class="mb-4 p-4 page-hero">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h2 class="mb-1">Assessment Management</h2>
+        <p class="text-muted mb-0">Create and manage course assessments with CO-PO mapping</p>
+      </div>
+      <div class="text-center px-3 py-2 border rounded bg-light hero-stat">
+        <h4 class="mb-0">{{ items|length }}</h4>
+        <small class="text-muted">Total Assessments</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-4 form-card">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center card-head">
+      <div>
+        <h5 class="mb-0">{% if is_edit %}Edit Assessment{% else %}Create New Assessment{% endif %}</h5>
+        <small class="text-muted">
+          Fill in the details below to {% if is_edit %}update the{% else %}create a new{% endif %} assessment
+        </small>
+      </div>
+      <span class="badge {% if is_edit %}bg-warning text-dark{% else %}bg-success{% endif %}">
+        {% if is_edit %}Editing Mode{% else %}New Entry{% endif %}
+      </span>
+    </div>
+
+    <div class="card-body card-body-pad">
+      <form method="post" novalidate id="assessmentForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="{% if is_edit %}edit{% else %}create{% endif %}">
+        {% if is_edit %}<input type="hidden" name="id" value="{{ edit.id }}">{% endif %}
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Degree</label>
+            <select class="form-select" id="degreeSelect" name="degree" required>
+              <option value="">Select Degree</option>
+              {% for d in degrees %}
+                <option value="{{ d.id }}" {% if edit and edit.degree_id == d.id %}selected{% endif %}>{{ d }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Department</label>
+            <select class="form-select" id="departmentSelect" name="department" required>
+              <option value="">Select Department</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Regulation</label>
+            <select class="form-select" id="regulationSelect" name="regulation" required>
+              <option value="">Select Regulation</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Semester</label>
+            <select class="form-select" id="semesterSelect" name="semester" required>
+              <option value="">Select Semester</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Course</label>
+            <select class="form-select" id="courseSelect" name="course" required>
+              <option value="">Select Course</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Batch - Section</label>
+            <select class="form-select" id="batchSectionSelect" name="assignment_id" required>
+              <option value="">Select Batch - Section</option>
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Unit / Module</label>
+            <div id="moduleCheckboxWrap" class="simple-box">
+              <div class="checkbox-grid">
+                {% for n in module_range %}
+                  <div class="checkbox-item">
+                    <input
+                      type="checkbox"
+                      name="module"
+                      value="{{ n }}"
+                      id="module_{{ n }}"
+                      {% if n in selected_modules %}checked{% endif %}
+                    >
+                    <label for="module_{{ n }}">Unit {{ n }} / Module {{ n }}</label>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="form-text">You can select multiple Units / Modules.</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Faculty ID</label>
+            <input class="form-control bg-light" name="faculty_id"
+                   value="{{ edit.faculty_id|default:faculty_id|default:'' }}" readonly>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Internal Assessment</label>
+            <select class="form-select" id="iatSelect" name="internal_assessment">
+              <option value="">Select Internal Assessment</option>
+            </select>
+            <div class="form-text">
+              If you choose “Use IAT name...” below, the selected IAT label will be saved into “Assessment name”.
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Assessment Name</label>
+            <select class="form-select" id="assessmentSelect" name="assessment_id">
+              <option value="">Select Assessment</option>
+              {% if is_edit and edit.assessment_id %}
+                <option value="{{ edit.assessment_id }}" selected>{{ edit.assessment }}</option>
+              {% endif %}
+              <option value="__custom__" {% if is_edit and not edit.assessment_id and edit.customAssessmentname %}selected{% endif %}>Custom...</option>
+            </select>
+          </div>
+
+          <div class="col-12" id="customNameWrap" style="display:none;">
+            <label class="form-label">Custom Name</label>
+            <input class="form-control" id="customAssessmentName" name="assessment_name"
+                   value="{{ edit.customAssessmentname|default:'' }}"
+                   placeholder="e.g., Surprise Quiz / Unit Test B" maxlength="255">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Max Marks</label>
+            <input id="maxMarks" class="form-control" name="Maxmarks"
+                   value="{{ edit.Maxmarks|default:'' }}" required inputmode="numeric"
+                   placeholder="Enter max marks">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Weightage</label>
+            <input class="form-control" name="weightage"
+                   value="{{ edit.weightage|default:'' }}" placeholder="Enter weightage">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">CO Code</label>
+            <div id="coCheckboxWrap" class="simple-box">
+              <div class="text-muted">Select regulation to load COs</div>
+            </div>
+            <div class="form-text">You can select multiple COs. COs are loaded by regulation year.</div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Bloom Level</label>
+            <div id="bloomsCheckboxWrap" class="simple-box">
+              <div class="text-muted">Loading Bloom levels...</div>
+            </div>
+            <div class="form-text">You can select multiple Bloom levels.</div>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <a href="{% url 'add_assessments' %}" class="btn btn-outline-secondary">Reset</a>
+          <button class="btn btn-primary" type="submit">
+            {% if is_edit %}Update Assessment{% else %}Create Assessment{% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow-sm list-card">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center card-head">
+      <div>
+        <h5 class="mb-0">Manage Assessments</h5>
+        <small class="text-muted">View and manage all created assessments</small>
+      </div>
+      <span class="badge bg-primary">{{ items|length }} Total</span>
+    </div>
+
+    <div class="card-body p-0">
+      {% if items %}
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover align-middle mb-0 assessment-table">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Degree</th>
+                <th>Dept</th>
+                <th>Reg</th>
+                <th>Sem</th>
+                <th>Course</th>
+                <th>Batch</th>
+                <th>Section</th>
+                <th>Module</th>
+                <th>IAT</th>
+                <th>Assessment</th>
+                <th>COs</th>
+                <th>Blooms</th>
+                <th>Wt</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in items %}
+              <tr>
+                <td>{{ a.id }}</td>
+                <td>{{ a.degree|truncatechars:15 }}</td>
+                <td>{{ a.department|truncatechars:15 }}</td>
+                <td>{{ a.regulation }}</td>
+                <td>{{ a.semester }}</td>
+                <td>{{ a.course|truncatechars:20 }}</td>
+                <td>{{ a.batch|default:"-" }}</td>
+                <td>{{ a.section|default:"-" }}</td>
+                <td>{{ a.module_display|default:"-" }}</td>
+                <td>
+                  {% if a.internal_assessment %}
+                    <span class="badge bg-success">{{ a.internal_assessment.iat }}</span>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>{{ a.Assessmentname|default:a.customAssessmentname|default:"-" }}</td>
+                <td>
+                  {% for co in a.co_codes.all %}
+                    <span class="badge bg-secondary">{{ co.co_code }}</span>
+                  {% empty %}
+                    <span class="text-muted">-</span>
+                  {% endfor %}
+                </td>
+                <td>
+                  {% for bl in a.bloom_levels.all %}
+                    <span class="badge bg-info text-dark">{{ bl.level_code }}</span>
+                  {% empty %}
+                    <span class="text-muted">-</span>
+                  {% endfor %}
+                </td>
+                <td>{{ a.weightage }}</td>
+                <td>
+                  <div class="d-flex gap-1 flex-wrap">
+                    <a href="?action=edit&id={{ a.id }}" class="btn btn-sm btn-primary">Edit</a>
+
+                    {% if a.assessment and a.needs_master_update %}
+                    <form method="post" action="" class="d-inline">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="sync_assessment_name">
+                      <input type="hidden" name="id" value="{{ a.id }}">
+                      <button class="btn btn-sm btn-warning"
+                              onclick="return confirm('Update assessment name and IAT from master?')"
+                              type="submit">
+                        Update
+                      </button>
+                    </form>
+                    {% endif %}
+
+                    <form method="post" action="" class="d-inline">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="delete">
+                      <input type="hidden" name="id" value="{{ a.id }}">
+                      <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this item?')" type="submit">
+                        Delete
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="p-4 text-center">
+          <h5>No Assessments Found</h5>
+          <p class="text-muted mb-0">Create your first assessment using the form above</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+.assessment-page{
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+
+.assessment-page .page-hero{
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: #fff;
+  border: none !important;
+  box-shadow: 0 8px 28px rgba(26,75,140,.22);
+}
+
+.assessment-page .page-hero h2{
+  font-weight: 800;
+  letter-spacing: -.3px;
+}
+
+.assessment-page .page-hero .text-muted{
+  color: rgba(255,255,255,.88) !important;
+}
+
+.assessment-page .hero-stat{
+  border: 1px solid rgba(255,255,255,.35) !important;
+  background: rgba(255,255,255,.12) !important;
+  color: #fff;
+  min-width: 140px;
+}
+
+.assessment-page .hero-stat .text-muted{
+  color: rgba(255,255,255,.86) !important;
+}
+
+.assessment-page .card{
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.assessment-page .card-head{
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.assessment-page .card-head h5{
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.assessment-page .card-body-pad{
+  padding: 1.35rem;
+}
+
+.assessment-page .form-label{
+  font-weight: 650;
+  color: #334155;
+  margin-bottom: .35rem;
+}
+
+.assessment-page .form-select,
+.assessment-page .form-control{
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: .6rem .75rem;
+  font-size: .92rem;
+}
+
+.assessment-page .form-select:focus,
+.assessment-page .form-control:focus{
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 .2rem rgba(59,130,246,.15);
+}
+
+.assessment-page .btn{
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.assessment-page .btn-primary{
+  background: linear-gradient(135deg, #1a4b8c 0%, #2563eb 100%);
+  border: none;
+}
+
+.assessment-page .btn-outline-secondary{
+  border-color: #94a3b8;
+  color: #475569;
+}
+
+.assessment-page .btn-outline-secondary:hover{
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.assessment-page .simple-box {
+  border: 1px solid #d7e0eb;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fbfdff;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px 14px;
+}
+.checkbox-item {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+}
+.checkbox-item label {
+  margin: 0;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.assessment-page .assessment-table thead th{
+  background: #f8fafc;
+  color: #1f2937;
+  font-weight: 700;
+  font-size: .84rem;
+  white-space: nowrap;
+}
+
+.assessment-page .assessment-table td{
+  font-size: .88rem;
+  color: #334155;
+}
+
+.assessment-page .assessment-table tbody tr:hover{
+  background: #f8fbff;
+}
+
+@media (max-width: 768px){
+  .assessment-page .card-body-pad{
+    padding: 1rem;
+  }
+}
+</style>
+
+<script>
+(function () {
+  const degreeSelect       = document.getElementById('degreeSelect');
+  const departmentSelect   = document.getElementById('departmentSelect');
+  const regulationSelect   = document.getElementById('regulationSelect');
+  const courseSelect       = document.getElementById('courseSelect');
+  const semesterSelect     = document.getElementById('semesterSelect');
+  const iatSelect          = document.getElementById('iatSelect');
+  const assessmentSelect   = document.getElementById('assessmentSelect');
+  const batchSectionSelect = document.getElementById('batchSectionSelect');
+  const customWrap         = document.getElementById('customNameWrap');
+  const form               = document.getElementById('assessmentForm');
+  const csrfToken          = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+  const maxMarksField      = document.getElementById('maxMarks');
+  const weightageField     = form.querySelector('input[name="weightage"]');
+  const coCheckboxWrap     = document.getElementById('coCheckboxWrap');
+  const bloomsCheckboxWrap = document.getElementById('bloomsCheckboxWrap');
+
+  const preselectDept       = '{{ edit.department_id|default_if_none:"" }}';
+  const preselectReg        = '{{ edit.regulation_id|default_if_none:"" }}';
+  const preselectCourse     = '{{ edit.course_id|default_if_none:"" }}';
+  const preselectSem        = '{{ edit.semester|default_if_none:"" }}';
+  const preselectIat        = '{{ edit.internal_assessment_id|default_if_none:"" }}';
+  const preselectAssessment = '{{ edit.assessment_id|default_if_none:"" }}';
+  const preselectIsCustom   = '{{ edit.customAssessmentname|default_if_none:"" }}';
+  const preselectBatch      = '{{ edit.batch|default_if_none:"" }}';
+  const preselectSection    = '{{ edit.section|default_if_none:"" }}';
+
+  const preselectedCOIds = [
+    {% if is_edit %}
+      {% for co in edit.co_codes.all %}
+        "{{ co.id }}"{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    {% endif %}
+  ];
+
+  const preselectedBloomIds = [
+    {% if is_edit %}
+      {% for bl in edit.bloom_levels.all %}
+        "{{ bl.id }}"{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    {% endif %}
+  ];
+
+  function option(value, text, selected) {
+    const o = document.createElement('option');
+    o.value = value;
+    o.textContent = text;
+    if (selected) o.selected = true;
+    return o;
+  }
+
+  function setLoading(sel) {
+    sel.innerHTML = '';
+    sel.appendChild(option('', 'Loading...', false));
+  }
+
+  function setEmpty(sel, msg='Select') {
+    sel.innerHTML = '';
+    sel.appendChild(option('', msg, false));
+  }
+
+  async function postJSON(url, payload) {
+    const fd = new FormData();
+    Object.entries(payload || {}).forEach(([k, v]) => fd.append(k, v));
+    fd.append('csrfmiddlewaretoken', csrfToken);
+
+    const resp = await fetch(url, {
+      method: 'POST',
+      body: fd,
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+
+    let data = null;
+    try { data = await resp.json(); } catch {}
+
+    if (!resp.ok || !data || data.ok !== true) {
+      const msg = (data && data.error) ? data.error : `HTTP ${resp.status}`;
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  function renderCheckboxGroup(container, items, inputName, selectedIds=[]) {
+    container.innerHTML = '';
+
+    if (!items || !items.length) {
+      container.innerHTML = `<div class="text-muted">No items found</div>`;
+      return;
+    }
+
+    const selectedSet = new Set((selectedIds || []).map(String));
+    const grid = document.createElement('div');
+    grid.className = 'checkbox-grid';
+
+    items.forEach(item => {
+      const wrap = document.createElement('div');
+      wrap.className = 'checkbox-item';
+
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.name = inputName;
+      input.value = item.id;
+      input.id = `${inputName}_${item.id}`;
+      if (selectedSet.has(String(item.id))) input.checked = true;
+
+      const label = document.createElement('label');
+      label.setAttribute('for', `${inputName}_${item.id}`);
+      label.textContent = item.label || item.code || item.name || `Item ${item.id}`;
+
+      wrap.appendChild(input);
+      wrap.appendChild(label);
+      grid.appendChild(wrap);
+    });
+
+    container.appendChild(grid);
+  }
+
+  async function fetchCOsForRegulation(regulationId, selectedIds=[]) {
+    if (!regulationId) {
+      coCheckboxWrap.innerHTML = '<div class="text-muted">Select regulation to load COs</div>';
+      return;
+    }
+
+    coCheckboxWrap.innerHTML = '<div class="text-muted">Loading COs...</div>';
+
+    try {
+      const data = await postJSON("{% url 'ajax_cos_for_regulation' %}", {
+        regulation_id: regulationId
+      });
+      renderCheckboxGroup(coCheckboxWrap, data.items || [], 'co_codes', selectedIds);
+    } catch (e) {
+      console.error('fetchCOsForRegulation:', e);
+      coCheckboxWrap.innerHTML = '<div class="text-muted">Failed to load COs</div>';
+    }
+  }
+
+  async function fetchBloomsLevels(selectedIds=[]) {
+    bloomsCheckboxWrap.innerHTML = '<div class="text-muted">Loading Bloom levels...</div>';
+
+    try {
+      const data = await postJSON("{% url 'ajax_blooms_levels' %}", {});
+      renderCheckboxGroup(bloomsCheckboxWrap, data.items || [], 'level_codes', selectedIds);
+    } catch (e) {
+      console.error('fetchBloomsLevels:', e);
+      bloomsCheckboxWrap.innerHTML = '<div class="text-muted">Failed to load Bloom levels</div>';
+    }
+  }
+
+  async function fetchBatchSections(departmentId, regulationId, courseId, keepSelection=true) {
+    setLoading(batchSectionSelect);
+    try {
+      const data = await postJSON("{% url 'ajax_batch_sections_for_course' %}", {
+        department_id: departmentId,
+        regulation_id: regulationId,
+        course_id: courseId
+      });
+
+      batchSectionSelect.innerHTML = '';
+      batchSectionSelect.appendChild(option('', 'Select Batch - Section', false));
+
+      (data.items || []).forEach(row => {
+        const isSelected =
+          keepSelection &&
+          preselectBatch &&
+          preselectSection &&
+          String(preselectBatch) === String(row.batch || '') &&
+          String(preselectSection) === String(row.section || '');
+
+        batchSectionSelect.appendChild(option(String(row.id), row.label, isSelected));
+      });
+    } catch (e) {
+      console.error('fetchBatchSections:', e);
+      setEmpty(batchSectionSelect, 'Failed to load');
+    }
+  }
+
+  function ensureIATChoiceOption() {
+    const iatLabel = iatSelect.options[iatSelect.selectedIndex]?.textContent || '';
+    const hasIAT = (iatSelect.value || '') !== '';
+    const existingIATOpt = Array.from(assessmentSelect.options).find(o => o.value === '__iat__');
+
+    if (hasIAT) {
+      const label = iatLabel ? `Use IAT name (${iatLabel})` : 'Use IAT name';
+      if (!existingIATOpt) {
+        const customIdx = Array.from(assessmentSelect.options).findIndex(o => o.value === '__custom__');
+        const newOpt = option('__iat__', label, false);
+        if (customIdx >= 0) {
+          assessmentSelect.insertBefore(newOpt, assessmentSelect.options[customIdx]);
+        } else {
+          assessmentSelect.appendChild(newOpt);
+        }
+      } else {
+        existingIATOpt.textContent = label;
+      }
+    } else if (existingIATOpt) {
+      existingIATOpt.remove();
+    }
+  }
+
+  function toggleCustomUI() {
+    const isCustom = assessmentSelect && assessmentSelect.value === '__custom__';
+    customWrap.style.display = isCustom ? 'block' : 'none';
+  }
+
+  async function fetchIATsForDegree(degreeId, keepSelection=true) {
+    setLoading(iatSelect);
+    try {
+      const data = await postJSON("{% url 'ajax_iats_for_degree' %}", { degree_id: degreeId });
+      iatSelect.innerHTML = '';
+      iatSelect.appendChild(option('', 'Select IAT', false));
+      (data.iats || []).forEach(row => {
+        const sel = keepSelection && preselectIat && String(preselectIat) === String(row.id);
+        iatSelect.appendChild(option(String(row.id), row.label, sel));
+      });
+    } catch (e) {
+      setEmpty(iatSelect, 'Failed to load');
+    }
+  }
+
+  async function fetchAssessmentsForDegreeIAT(degreeId, iatId, keepSelection=true) {
+    setLoading(assessmentSelect);
+    try {
+      const data = await postJSON("{% url 'ajax_assessments_for_degree_iat' %}", {
+        degree_id: degreeId,
+        iat_id: iatId
+      });
+
+      const iatLabel = (iatSelect.options[iatSelect.selectedIndex]?.textContent || '').trim();
+
+      assessmentSelect.innerHTML = '';
+      assessmentSelect.appendChild(option('', 'Select Assessment', false));
+
+      (data.assessments || []).forEach(a => {
+        const label = (a.label || '').trim();
+        if (label === iatLabel) return;
+        const sel = keepSelection && preselectAssessment && String(preselectAssessment) === String(a.id);
+        assessmentSelect.appendChild(option(String(a.id), a.label, sel));
+      });
+
+      ensureIATChoiceOption();
+      assessmentSelect.appendChild(option('__custom__', 'Custom...', !!preselectIsCustom));
+
+      if (preselectIsCustom) assessmentSelect.value = '__custom__';
+      toggleCustomUI();
+    } catch (e) {
+      setEmpty(assessmentSelect, 'Failed to load');
+      ensureIATChoiceOption();
+      assessmentSelect.appendChild(option('__custom__', 'Custom...', !!preselectIsCustom));
+      toggleCustomUI();
+    }
+  }
+
+  async function fetchDepartmentsForDegree(degreeId, keepSelection=true) {
+    setLoading(departmentSelect);
+    try {
+      const data = await postJSON("{% url 'ajax_departments_for_degree' %}", { degree_id: degreeId });
+      departmentSelect.innerHTML = '';
+      departmentSelect.appendChild(option('', 'Select Department', false));
+      (data.departments || []).forEach(d => {
+        const sel = keepSelection && preselectDept && String(preselectDept) === String(d.id);
+        departmentSelect.appendChild(option(String(d.id), d.label, sel));
+      });
+    } catch (e) {
+      setEmpty(departmentSelect, 'Failed to load');
+    }
+  }
+
+  async function fetchSemestersForDegree(degreeId, keepSelection=true) {
+    setLoading(semesterSelect);
+    try {
+      const data = await postJSON("{% url 'ajax_semesters_for_degree' %}", { degree_id: degreeId });
+      semesterSelect.innerHTML = '';
+      semesterSelect.appendChild(option('', 'Select Semester', false));
+      (data.semesters || []).forEach(s => {
+        const val = String(s.value);
+        const sel = keepSelection && preselectSem && String(preselectSem) === val;
+        semesterSelect.appendChild(option(val, val, sel));
+      });
+    } catch (e) {
+      setEmpty(semesterSelect, 'Failed to load');
+    }
+  }
+
+  async function fetchRegulationsForDepartment(departmentId, keepSelection=true) {
+    setLoading(regulationSelect);
+    try {
+      const data = await postJSON("{% url 'ajax_regulations_for_department' %}", { department_id: departmentId });
+      regulationSelect.innerHTML = '';
+      regulationSelect.appendChild(option('', 'Select Regulation', false));
+      (data.regulations || []).forEach(r => {
+        const sel = keepSelection && preselectReg && String(preselectReg) === String(r.id);
+        regulationSelect.appendChild(option(String(r.id), r.label, sel));
+      });
+    } catch (e) {
+      setEmpty(regulationSelect, 'Failed to load');
+    }
+  }
+
+  async function fetchCoursesForSelection(departmentId, regulationId, degreeId, semesterVal, keepSelection=true) {
+    setLoading(courseSelect);
+    try {
+      const data = await postJSON("{% url 'ajax_courses_for_selection' %}", {
+        department_id: departmentId,
+        regulation_id: regulationId,
+        degree_id: degreeId || "",
+        semester: semesterVal || ""
+      });
+      courseSelect.innerHTML = '';
+      courseSelect.appendChild(option('', 'Select Course', false));
+      (data.courses || []).forEach(c => {
+        const sel = keepSelection && preselectCourse && String(preselectCourse) === String(c.id);
+        courseSelect.appendChild(option(String(c.id), c.label, sel));
+      });
+    } catch (e) {
+      setEmpty(courseSelect, 'Failed to load');
+    }
+  }
+
+  async function fetchAndApplyIATWeight() {
+    const degId = degreeSelect.value;
+    const regId = regulationSelect.value;
+    if (!degId || !regId) {
+      setIATFields(null);
+      return;
+    }
+    try {
+      const data = await postJSON("{% url 'ajax_assessment_weight' %}", {
+        degree_id: degId,
+        regulation_id: regId
+      });
+      if (data && data.ok) {
+        setIATFields(data.percentage === null ? null : data.percentage);
+      } else {
+        setIATFields(null);
+      }
+    } catch {
+      setIATFields(null);
+    }
+  }
+
+  function setIATFields(percent) {
+    if (maxMarksField) {
+      maxMarksField.value = 100;
+      maxMarksField.readOnly = true;
+    }
+    if (weightageField) {
+      weightageField.value = (percent === null || percent === undefined) ? '' : String(percent);
+      weightageField.readOnly = true;
+    }
+  }
+
+  function unsetIATFields() {
+    if (maxMarksField) maxMarksField.readOnly = false;
+    if (weightageField) weightageField.readOnly = false;
+  }
+
+  if (degreeSelect) {
+    degreeSelect.addEventListener('change', () => {
+      const degId = degreeSelect.value;
+      setEmpty(iatSelect);
+      setEmpty(departmentSelect);
+      setEmpty(regulationSelect);
+      setEmpty(courseSelect);
+      setEmpty(semesterSelect);
+      setEmpty(batchSectionSelect);
+      coCheckboxWrap.innerHTML = '<div class="text-muted">Select regulation to load COs</div>';
+
+      assessmentSelect.innerHTML = '';
+      assessmentSelect.appendChild(option('', 'Select Assessment', false));
+      assessmentSelect.appendChild(option('__custom__', 'Custom...', false));
+      ensureIATChoiceOption();
+      toggleCustomUI();
+
+      if (degId) {
+        fetchIATsForDegree(degId, false);
+        fetchDepartmentsForDegree(degId, false);
+        fetchSemestersForDegree(degId, false);
+      }
+    });
+  }
+
+  if (departmentSelect) {
+    departmentSelect.addEventListener('change', () => {
+      const deptId = departmentSelect.value;
+      setEmpty(regulationSelect);
+      setEmpty(courseSelect);
+      setEmpty(batchSectionSelect);
+      coCheckboxWrap.innerHTML = '<div class="text-muted">Select regulation to load COs</div>';
+      if (deptId) fetchRegulationsForDepartment(deptId, false);
+    });
+  }
+
+  if (regulationSelect) {
+    regulationSelect.addEventListener('change', () => {
+      const deptId = departmentSelect.value;
+      const regId  = regulationSelect.value;
+      const degId  = degreeSelect.value;
+      const semVal = semesterSelect.value;
+
+      setEmpty(courseSelect);
+      setEmpty(batchSectionSelect);
+
+      if (deptId && regId) {
+        fetchCoursesForSelection(deptId, regId, degId, semVal, false);
+        fetchCOsForRegulation(regId, []);
+      }
+
+      if (assessmentSelect && assessmentSelect.value === '__iat__') {
+        fetchAndApplyIATWeight();
+      }
+    });
+  }
+
+  if (semesterSelect) {
+    semesterSelect.addEventListener('change', () => {
+      const deptId = departmentSelect.value;
+      const regId  = regulationSelect.value;
+      const degId  = degreeSelect.value;
+      const semVal = semesterSelect.value;
+      setEmpty(batchSectionSelect);
+      if (deptId && regId) fetchCoursesForSelection(deptId, regId, degId, semVal, false);
+    });
+  }
+
+  if (courseSelect) {
+    courseSelect.addEventListener('change', () => {
+      const deptId = departmentSelect.value;
+      const regId  = regulationSelect.value;
+      const courseId = courseSelect.value;
+
+      if (deptId && regId && courseId) {
+        fetchBatchSections(deptId, regId, courseId, false);
+      } else {
+        setEmpty(batchSectionSelect);
+      }
+    });
+  }
+
+  if (iatSelect) {
+    iatSelect.addEventListener('change', () => {
+      const degId = degreeSelect.value;
+      const iatId = iatSelect.value;
+      if (degId && iatId) {
+        fetchAssessmentsForDegreeIAT(degId, iatId, false);
+      } else {
+        assessmentSelect.innerHTML = '';
+        assessmentSelect.appendChild(option('', 'Select Assessment', false));
+        ensureIATChoiceOption();
+        assessmentSelect.appendChild(option('__custom__', 'Custom...', false));
+        toggleCustomUI();
+      }
+    });
+  }
+
+  if (assessmentSelect) {
+    assessmentSelect.addEventListener('change', () => {
+      ensureIATChoiceOption();
+      toggleCustomUI();
+
+      if (assessmentSelect.value === '__iat__') {
+        fetchAndApplyIATWeight();
+      } else {
+        unsetIATFields();
+      }
+    });
+  }
+
+  function bootCustomVisibility() {
+    const hasCustom = "{{ edit.customAssessmentname|default_if_none:'' }}".trim().length > 0;
+    if (hasCustom) assessmentSelect.value = '__custom__';
+    toggleCustomUI();
+  }
+
+  bootCustomVisibility();
+  fetchBloomsLevels(preselectedBloomIds);
+
+  const initialDegreeId = degreeSelect ? degreeSelect.value : '';
+  if (initialDegreeId) {
+    Promise.all([
+      fetchIATsForDegree(initialDegreeId, true),
+      fetchDepartmentsForDegree(initialDegreeId, true),
+      fetchSemestersForDegree(initialDegreeId, true),
+    ]).then(() => {
+      const iatId = iatSelect.value || preselectIat;
+      if (iatId) {
+        return fetchAssessmentsForDegreeIAT(initialDegreeId, iatId, true);
+      }
+    }).then(() => {
+      const deptId = departmentSelect.value || preselectDept;
+      if (deptId) {
+        return fetchRegulationsForDepartment(deptId, true).then(() => {
+          const regId = regulationSelect.value || preselectReg;
+          const degId = degreeSelect.value || '';
+          const semVal = semesterSelect.value || preselectSem || '';
+          if (regId) {
+            fetchCOsForRegulation(regId, preselectedCOIds);
+            return fetchCoursesForSelection(deptId, regId, degId, semVal, true).then(() => {
+              const courseId = courseSelect.value || preselectCourse;
+              if (courseId) {
+                return fetchBatchSections(deptId, regId, courseId, true);
+              }
+            });
+          }
+        });
+      }
+    }).catch(() => {});
+  }
+})();
+</script>
+{% endblock %}

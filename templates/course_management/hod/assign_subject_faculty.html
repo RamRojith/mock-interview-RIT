@@ -1,0 +1,1753 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+.faculty-subject-management {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.faculty-subject-management .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.faculty-subject-management .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.faculty-subject-management .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.faculty-subject-management .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.faculty-subject-management .stats-bar {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.faculty-subject-management .stats-bar .department-info h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  margin: 0 0 0.25rem 0;
+}
+
+.faculty-subject-management .stats-bar .department-info p {
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+.faculty-subject-management .stats-numbers {
+  display: flex;
+  gap: 2rem;
+  text-align: center;
+}
+
+.faculty-subject-management .stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.faculty-subject-management .stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a4b8c;
+  line-height: 1;
+}
+
+.faculty-subject-management .stat-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.faculty-subject-management .filters-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.faculty-subject-management .filters-card .card-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #374151;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.faculty-subject-management .filters-card .card-header h5 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.faculty-subject-management .filters-card .card-header i {
+  margin-right: 0.75rem;
+  color: #1a4b8c;
+}
+
+.faculty-subject-management .filters-card .card-body {
+  padding: 1.5rem;
+}
+
+.faculty-subject-management .form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.faculty-subject-management .form-control,
+.faculty-subject-management .form-select {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.faculty-subject-management .form-control:focus,
+.faculty-subject-management .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+}
+
+.faculty-subject-management .assignment-form-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.faculty-subject-management .assignment-form-card .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem;
+}
+
+.faculty-subject-management .assignment-form-card .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.faculty-subject-management .assignment-form-card .card-header i {
+  margin-right: 0.75rem;
+}
+
+.faculty-subject-management .assignment-form-card .card-body {
+  padding: 2rem;
+}
+
+.faculty-subject-management .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.faculty-subject-management .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.faculty-subject-management .form-group-full {
+  grid-column: 1 / -1;
+}
+
+.faculty-subject-management .form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.faculty-subject-management .form-check-input {
+  width: 1.2em;
+  height: 1.2em;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.faculty-subject-management .form-check-input:checked {
+  background-color: #1a4b8c;
+  border-color: #1a4b8c;
+}
+
+.faculty-subject-management .form-check-label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.faculty-subject-management .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.faculty-subject-management .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.faculty-subject-management .btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.faculty-subject-management .btn-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.faculty-subject-management .btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.faculty-subject-management .btn-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.faculty-subject-management .btn-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.faculty-subject-management .btn-warning:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.faculty-subject-management .table-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.faculty-subject-management .table-card .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.faculty-subject-management .table-card .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.faculty-subject-management .table-card .card-header i {
+  margin-right: 0.75rem;
+}
+
+.faculty-subject-management .table-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.faculty-subject-management .search-box {
+  min-width: 260px;
+}
+
+.faculty-subject-management .badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.faculty-subject-management .badge.bg-light {
+  background: #f8fafc !important;
+  color: #374151;
+  border: 1px solid #e2e8f0;
+}
+
+.faculty-subject-management .badge.bg-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: white;
+}
+
+.faculty-subject-management .badge.bg-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: white;
+}
+
+.faculty-subject-management .badge.bg-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  color: white;
+}
+
+.faculty-subject-management .badge.bg-secondary {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+  color: white;
+}
+
+.faculty-subject-management .badge.bg-info {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  color: white;
+}
+
+.faculty-subject-management .table-container {
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+}
+
+.faculty-subject-management .table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.faculty-subject-management .table thead {
+  background: #2c5aa0;
+  display: table-header-group;
+}
+
+.faculty-subject-management .table th {
+  background: #2c5aa0 !important;
+  color: white;
+  opacity: 1;
+  visibility: visible;
+  display: table-cell;
+  font-weight: 700;
+  padding: 1rem;
+  text-align: left;
+  border: none;
+  white-space: nowrap;
+  vertical-align: middle;
+  position: relative;
+  z-index: 1;
+  box-shadow: none;
+}
+
+.faculty-subject-management .table thead th:first-child {
+  border-top-left-radius: 0;
+}
+
+.faculty-subject-management .table thead th:last-child {
+  border-top-right-radius: 0;
+}
+
+.faculty-subject-management .table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #4b5563;
+  vertical-align: middle;
+}
+
+.faculty-subject-management .table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.faculty-subject-management .table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.faculty-subject-management .action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.faculty-subject-management .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.faculty-subject-management .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.faculty-subject-management .pagination {
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+.faculty-subject-management .page-link {
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  margin: 0 0.25rem;
+  font-weight: 500;
+}
+
+.faculty-subject-management .page-item.active .page-link {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-color: #1a4b8c;
+  color: white;
+}
+
+.faculty-subject-management .page-item.disabled .page-link {
+  color: #9ca3af;
+  background: #f8fafc;
+}
+
+.faculty-subject-management .custom-reason-box {
+  margin-top: 0.5rem;
+  display: none;
+}
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 2000;
+  backdrop-filter: blur(3px);
+}
+
+.confirm-overlay.show {
+  display: flex;
+}
+
+.confirm-dialog {
+  width: min(720px, 100%);
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+  overflow: hidden;
+  animation: confirmModalIn 0.18s ease-out;
+}
+
+.confirm-dialog-header {
+  background: #2c5aa0;
+  color: white;
+  padding: 1rem 1.35rem;
+}
+
+.confirm-dialog-header h5 {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 700;
+}
+
+.confirm-dialog-body {
+  padding: 1.25rem;
+}
+
+.confirm-dialog-body p {
+  color: #475569;
+  margin-bottom: 1rem;
+  line-height: 1.55;
+}
+
+.confirm-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.confirm-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.875rem 1rem;
+}
+
+.confirm-card strong {
+  display: block;
+  color: #1e3a8a;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.3rem;
+}
+
+.confirm-card span {
+  color: #334155;
+  font-weight: 600;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem 1.25rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.confirm-actions .btn,
+.confirm-actions .btn-outline-secondary {
+  min-width: 110px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-outline-secondary {
+  background: white;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 0.75rem 1.1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-secondary:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.confirm-actions .btn-primary {
+  box-shadow: 0 10px 20px rgba(44, 90, 160, 0.18);
+}
+
+@keyframes confirmModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .faculty-subject-management .page-header {
+    padding: 1rem;
+  }
+  
+  .faculty-subject-management .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .faculty-subject-management .stats-bar {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .faculty-subject-management .stats-numbers {
+    gap: 1.5rem;
+  }
+  
+  .faculty-subject-management .table-card .card-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .faculty-subject-management .table-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 768px) {
+  .faculty-subject-management {
+    padding: 1rem;
+  }
+  
+  .faculty-subject-management .page-header {
+    padding: 0.75rem;
+  }
+  
+  .faculty-subject-management .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .faculty-subject-management .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .faculty-subject-management .assignment-form-card .card-body {
+    padding: 1.5rem;
+  }
+  
+  .faculty-subject-management .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .faculty-subject-management .table {
+    font-size: 0.8rem;
+  }
+  
+  .faculty-subject-management .table th,
+  .faculty-subject-management .table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .faculty-subject-management .action-buttons {
+    flex-direction: column;
+  }
+
+  .confirm-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .faculty-subject-management .table-card .card-header h5 {
+    font-size: 1.1rem;
+  }
+  
+  .faculty-subject-management .stats-bar .department-info h2 {
+    font-size: 1.25rem;
+  }
+  
+  .faculty-subject-management .stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .faculty-subject-management .badge {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.6rem;
+  }
+}
+</style>
+
+<div class="faculty-subject-management">
+  <div class="page-header">
+    <h1><i class="fas fa-chalkboard-teacher me-2"></i>Assign Subject to Faculty</h1>
+    <p class="header-subtitle">Department: {{ department.Department }}</p>
+  </div>
+
+  <div class="page-container">
+    {% if schedule_state %}
+      <div class="alert {% if schedule_state.can_act %}alert-success{% else %}alert-warning{% endif %}">
+        {{ schedule_state.status_message }}
+      </div>
+    {% endif %}
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="department-info">
+        <h2>Faculty Subject Assignment</h2>
+        <p>Manage subject assignments and faculty preferences</p>
+      </div>
+      <div class="stats-numbers">
+        <div class="stat-item">
+          <span class="stat-value">{{ assignments.paginator.count }}</span>
+          <span class="stat-label">Current Assignments</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ willingness.paginator.count }}</span>
+          <span class="stat-label">Willingness Requests</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="filters-card">
+      <div class="card-header">
+        <h5><i class="fas fa-filter me-2"></i>Filter Assignments</h5>
+      </div>
+      <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+          <input type="hidden" name="w_page" value="{{ willingness.number }}">
+          <input type="hidden" name="a_page" value="{{ assignments.number }}">
+          <input type="hidden" name="w_year" value="{{ w_year }}">
+          <input type="hidden" name="w_regulation" value="{{ w_regulation }}">
+          <input type="hidden" name="w_semester" value="{{ w_semester }}">
+          <input type="hidden" name="w_batch" value="{{ w_batch }}">
+          <input type="hidden" name="w_section" value="{{ w_section }}">
+          <input type="hidden" name="a_year" value="{{ a_year }}">
+          <input type="hidden" name="a_regulation" value="{{ a_regulation }}">
+          <input type="hidden" name="a_semester" value="{{ a_semester }}">
+          <input type="hidden" name="a_batch" value="{{ a_batch }}">
+          <input type="hidden" name="a_section" value="{{ a_section }}">
+          <div class="col-md-6">
+            <label class="form-label">Regulation</label>
+            <select name="regulation" class="form-select" onchange="this.form.submit()">
+              <option value="">-- Select Regulation --</option>
+              {% for r in regulations %}
+              <option value="{{ r.id }}" {% if r.id|stringformat:"s" == selected_regulation %}selected{% endif %}>
+                R-{{ r.year }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Semester</label>
+            <select name="semester" class="form-select" {% if not selected_regulation %}disabled{% endif %} onchange="this.form.submit()">
+              <option value="">-- Select Semester --</option>
+              {% for sem in semesters %}
+              <option value="{{ sem }}" {% if sem|stringformat:"s" == selected_semester %}selected{% endif %}>
+                Semester {{ sem }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- New Assignment Form -->
+    <div class="assignment-form-card">
+      <div class="card-header">
+        <h5><i class="fas fa-plus-circle me-2"></i>New Assignment</h5>
+      </div>
+      <div class="card-body">
+        <form method="post" id="assignmentForm">
+          {% csrf_token %}
+          <fieldset {% if not schedule_state.can_act %}disabled{% endif %}>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Faculty</label>
+              <select name="faculty" id="assignmentFaculty" class="form-select" required>
+                <option value="">-- Select Faculty --</option>
+                {% for f in faculties %}
+                <option value="{{ f.faculty_id }}">{{ f.name }} ({{ f.department }})</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group" id="skilledFacultyGroup" style="display:none;">
+              <label class="form-label">Skilled Faculty</label>
+              <select name="skilled_faculty" id="assignmentSkilledFaculty" class="form-select">
+                <option value="">-- Select Skilled Faculty --</option>
+                {% for f in faculties %}
+                <option value="{{ f.faculty_id }}">{{ f.name }} ({{ f.department }})</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Course</label>
+              <select name="course" id="assignmentCourse" class="form-select" {% if not courses %}disabled{% endif %} required>
+                <option value="">-- Select Course --</option>
+                {% for c in courses %}
+                <option value="{{ c.id }}"
+                  data-course-code="{{ c.course_code }}"
+                  data-course-title="{{ c.title }}"
+                  data-needs-skilled="{% if c.needs_skilled_faculty %}1{% else %}0{% endif %}"
+                  data-course-type="{{ c.course_type_label }}"
+                  data-lecture-hours="{{ c.lecture_hours_value }}"
+                  data-laboratory-hours="{{ c.laboratory_hours_value }}">
+                  {{ c.course_code }} - {{ c.title }}{% if c.needs_skilled_faculty %} ({{ c.course_type_label }}){% endif %}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Batch</label>
+              <select name="batch" id="assignmentBatch" class="form-select" required>
+                <option value="">-- Select Batch --</option>
+                {% for b in batches %}
+                <option value="{{ b }}">{{ b }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Section</label>
+              <select name="section" id="assignmentSection" class="form-select" required>
+                <option value="">-- Select Section --</option>
+                {% for s in sections %}
+                <option value="{{ s }}">{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group form-group-full">
+              <label class="form-label">Reason</label>
+              <select id="reason" name="reason" class="form-select" required>
+                <option value="">-- Select Reason --</option>
+                {% for ro in reason_options %}
+                <option value="{{ ro.value }}">{{ ro.label }}</option>
+                {% endfor %}
+              </select>
+              <div id="customReasonBox" class="custom-reason-box">
+                <input type="text" name="custom_reason" id="custom_reason" class="form-control" placeholder="Enter custom reason">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="is_active" checked>
+                <label class="form-check-label">Active Assignment</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save me-2"></i>Assign Subject
+            </button>
+          </div>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+
+    <!-- Willingness Review -->
+    <div class="table-card">
+      <!-- Willingness Filters -->
+<div class="filters-card mb-4">
+  <div class="card-header">
+    <h5><i class="fas fa-filter me-2"></i>Willingness Filters</h5>
+  </div>
+  <div class="card-body">
+    <form method="get" class="row g-3">
+
+      <!-- preserve assignment pagination -->
+      <input type="hidden" name="a_page" value="{{ assignments.number }}">
+      <input type="hidden" name="regulation" value="{{ selected_regulation }}">
+      <input type="hidden" name="semester" value="{{ selected_semester }}">
+      <input type="hidden" name="a_year" value="{{ a_year }}">
+      <input type="hidden" name="a_regulation" value="{{ a_regulation }}">
+      <input type="hidden" name="a_semester" value="{{ a_semester }}">
+      <input type="hidden" name="a_batch" value="{{ a_batch }}">
+      <input type="hidden" name="a_section" value="{{ a_section }}">
+
+      <div class="col-md-2">
+        <label class="form-label">Academic Year</label>
+        <select name="w_year" class="form-select" onchange="this.form.submit()">
+          {% for y in academic_years %}
+            <option value="{{ y }}" {% if y|stringformat:"s" == w_year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Regulation</label>
+        <select name="w_regulation" class="form-select" onchange="this.form.submit()">
+          <option value="">All</option>
+          {% for r in regulations %}
+            <option value="{{ r.id }}" {% if r.id|stringformat:"s" == w_regulation %}selected{% endif %}>
+              R-{{ r.year }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Semester</label>
+        <select name="w_semester" class="form-select" onchange="this.form.submit()">
+          <option value="">All</option>
+          {% for s in filter_semesters %}
+            <option value="{{ s }}" {% if s|stringformat:"s" == w_semester %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Batch</label>
+        <select name="w_batch" class="form-select" onchange="this.form.submit()">
+          <option value="">All</option>
+          {% for b in batches %}
+            <option value="{{ b }}" {% if b == w_batch %}selected{% endif %}>{{ b }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Section</label>
+        <select name="w_section" class="form-select" onchange="this.form.submit()">
+          <option value="">All</option>
+          {% for s in sections %}
+            <option value="{{ s }}" {% if s == w_section %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+      <div class="card-header">
+        <h5><i class="fas fa-clipboard-check me-2"></i>Subject Willingness Review</h5>
+        <div class="table-controls">
+          
+          <div class="input-group search-box">
+            <input id="willingnessSearch" type="search" class="form-control" placeholder="Search willingness..." aria-label="Search willingness">
+          </div>
+          <span class="badge bg-light">Total: {{ willingness.paginator.count }}</span>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>S No.</th>
+                <th>Submitted</th>
+                <th>Faculty</th>
+                <th>Regulation</th>
+                <th>Sem</th>
+                <th>Requested Section</th>
+                <th>Allotted Section</th>
+                <th>Handled</th>
+                <th>Course</th>
+                <th>Skilled Faculty</th>
+                <th>Status</th>
+                <th>Reason</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="willingnessTbody">
+              {% for w in willingness %}
+              <tr>
+                <td><strong>{{ willingness.start_index|add:forloop.counter0 }}</strong></td>
+                <td>{{ w.created_at|date:"d M Y, H:i" }}</td>
+                <td>
+                  <div class="fw-semibold">{{ w.faculty.name }}</div>
+                  <small class="text-muted">{{ w.faculty.faculty_id }}</small>
+                </td>
+                <td>{% if w.regulation %}R-{{ w.regulation.year }}{% endif %}</td>
+                <td>{{ w.semester }}</td>
+
+                <td><span class="badge bg-secondary">{{ w.section }}</span></td>
+
+                <td>
+                  {% if w.status == 'Approved' and w.allotted_section %}
+                    <span class="badge bg-success">{{ w.allotted_section }}</span>
+                  {% else %}
+                    <select id="allotted_section_{{ w.id }}" class="form-select form-select-sm" {% if w.status != 'Pending' or not schedule_state.can_act %}disabled{% endif %} required>
+                      <option value="">-- Select Section --</option>
+                      {% for s in sections %}
+                        <option value="{{ s }}"{% if s == w.allotted_section %} selected{% endif %}>{{ s }}</option>
+                      {% endfor %}
+                    </select>
+                  {% endif %}
+                </td>
+
+                <td>{{ w.No_of_time_handled }}</td>
+
+                <td>
+                  {% if w.course %}
+                  <div class="fw-semibold">{{ w.course.course_code }}</div>
+                  <small class="text-muted">{{ w.course.title|truncatechars:30 }}</small>
+                  {% if w.needs_skilled_faculty %}
+                    <div><small class="badge bg-primary">{{ w.course_type_label }}</small></div>
+                  {% endif %}
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if w.needs_skilled_faculty %}
+                    <select id="approve_skilled_faculty_{{ w.id }}" class="form-select form-select-sm" {% if w.status != 'Pending' or not schedule_state.can_act %}disabled{% endif %} required>
+                      <option value="">-- Select --</option>
+                      {% for f in faculties %}
+                        <option value="{{ f.faculty_id }}">{{ f.name }}</option>
+                      {% endfor %}
+                    </select>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if w.status == 'Approved' %}
+                    <span class="badge bg-success">Approved</span>
+                  {% elif w.status == 'Rejected' %}
+                    <span class="badge bg-danger">Rejected</span>
+                  {% else %}
+                    <span class="badge bg-warning">Pending</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if w.status == 'Approved' and w.reason %}
+                    <span class="badge bg-info">{{ w.reason }}</span>
+                  {% else %}
+                    <select id="approve_reason_{{ w.id }}" class="form-select form-select-sm" {% if w.status != 'Pending' or not schedule_state.can_act %}disabled{% endif %}>
+                      <option value="">-- Select Reason --</option>
+                      {% for ro in reason_options %}
+                        <option value="{{ ro.value }}">{{ ro.label }}</option>
+                      {% endfor %}
+                    </select>
+
+                    <input type="text" id="approve_custom_reason_{{ w.id }}" class="form-control form-control-sm mt-1" style="display:none;" placeholder="Custom Reason">
+                  {% endif %}
+                </td>
+
+                <td>
+                  <div class="action-buttons">
+                  {% if w.status == 'Pending' and schedule_state.can_act %}
+                    <form method="post" action="{% url 'review_subject_willingness' %}" class="d-inline willingness-approve-form"
+                      data-course-id="{{ w.course_id|default:'' }}"
+                      data-course-code="{{ w.course.course_code|default:'' }}"
+                      data-course-title="{{ w.course.title|default:'' }}"
+                      data-course-type="{{ w.course_type_label|default:'' }}"
+                      data-needs-skilled="{% if w.needs_skilled_faculty %}1{% else %}0{% endif %}"
+                      data-regulation-id="{{ w.regulation_id|default:'' }}"
+                      data-regulation-year="{{ w.regulation.year|default:'' }}"
+                      data-semester="{{ w.semester|default:'' }}"
+                      data-batch="{{ w.batch|default:'' }}"
+                      data-requested-section="{{ w.section|default:'' }}"
+                      data-academic-year="{{ w.academic_year|default:current_academic_year }}"
+                      data-requested-faculty="{{ w.faculty.name|default:'' }}"
+                      data-requested-faculty-id="{{ w.faculty.faculty_id|default:'' }}">
+                      {% csrf_token %}
+                      <input type="hidden" name="id" value="{{ w.id }}">
+                      <input type="hidden" name="action" value="approve">
+                      <input type="hidden" name="w_page" value="{{ willingness.number }}">
+                      <input type="hidden" name="a_page" value="{{ assignments.number }}">
+                      <input type="hidden" name="return_query" value="{{ current_query_string }}">
+                      <input type="hidden" id="approve_reason_hidden_{{ w.id }}" name="reason">
+                      <input type="hidden" id="approve_custom_reason_hidden_{{ w.id }}" name="custom_reason">
+                      <input type="hidden" id="allotted_section_hidden_{{ w.id }}" name="allotted_section">
+                      <input type="hidden" id="approve_skilled_faculty_hidden_{{ w.id }}" name="skilled_faculty">
+                      <button type="submit" class="btn btn-success btn-sm">
+                        <i class="fas fa-check me-1"></i>Approve
+                      </button>
+                    </form>
+
+                    <form method="post" action="{% url 'review_subject_willingness' %}" class="d-inline">
+                      {% csrf_token %}
+                      <input type="hidden" name="id" value="{{ w.id }}">
+                      <input type="hidden" name="action" value="reject">
+                      <input type="hidden" name="w_page" value="{{ willingness.number }}">
+                      <input type="hidden" name="a_page" value="{{ assignments.number }}">
+                      <input type="hidden" name="return_query" value="{{ current_query_string }}">
+                      <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="fas fa-times me-1"></i>Reject
+                      </button>
+                    </form>
+                  {% elif w.status == 'Pending' and not schedule_state.can_act %}
+                    <button type="button" class="btn btn-secondary btn-sm" disabled>
+                      <i class="fas fa-lock me-1"></i>Read Only
+                    </button>
+                  {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="13" class="text-center py-5">
+                  <div class="empty-state">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h5>No Willingness Entries</h5>
+                    <p class="text-muted">No faculty subject preference requests found</p>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if willingness.paginator.num_pages > 1 %}
+        <nav aria-label="Willingness pagination">
+          <ul class="pagination">
+            {% if willingness.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?{{ willingness_page_query }}&w_page={{ willingness.previous_page_number }}">Previous</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+
+            {% for num in willingness.paginator.page_range %}
+              <li class="page-item {% if willingness.number == num %}active{% endif %}">
+                <a class="page-link" href="?{{ willingness_page_query }}&w_page={{ num }}">{{ num }}</a>
+              </li>
+            {% endfor %}
+
+            {% if willingness.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?{{ willingness_page_query }}&w_page={{ willingness.next_page_number }}">Next</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Current Assignments -->
+    <div class="table-card">
+      <!-- Assignment Filters -->
+<div class="filters-card mb-4">
+  <div class="card-header">
+    <h5><i class="fas fa-filter me-2"></i>Assignment Filters</h5>
+  </div>
+  <div class="card-body">
+    <form method="get" class="row g-3">
+
+      <!-- preserve willingness pagination -->
+      <input type="hidden" name="w_page" value="{{ willingness.number }}">
+      <input type="hidden" name="regulation" value="{{ selected_regulation }}">
+      <input type="hidden" name="semester" value="{{ selected_semester }}">
+      <input type="hidden" name="w_year" value="{{ w_year }}">
+      <input type="hidden" name="w_regulation" value="{{ w_regulation }}">
+      <input type="hidden" name="w_semester" value="{{ w_semester }}">
+      <input type="hidden" name="w_batch" value="{{ w_batch }}">
+      <input type="hidden" name="w_section" value="{{ w_section }}">
+
+      <div class="col-md-2">
+        <label class="form-label">Academic Year</label>
+        <select name="a_year" class="form-select" onchange="this.form.submit()">
+          {% for y in academic_years %}
+            <option value="{{ y }}" {% if y|stringformat:"s" == a_year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Regulation</label>
+        <select name="a_regulation" class="form-select" onchange="this.form.submit()">
+          <option value="">All</option>
+          {% for r in regulations %}
+            <option value="{{ r.id }}" {% if r.id|stringformat:"s" == a_regulation %}selected{% endif %}>
+              R-{{ r.year }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Semester</label>
+        <select name="a_semester" class="form-select" onchange="this.form.submit()">
+          <option value="">All</option>
+          {% for s in filter_semesters %}
+            <option value="{{ s }}" {% if s|stringformat:"s" == a_semester %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Batch</label>
+        <select name="a_batch" class="form-select" onchange="this.form.submit()">
+          <option value="">All</option>
+          {% for b in batches %}
+            <option value="{{ b }}" {% if b == a_batch %}selected{% endif %}>{{ b }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Section</label>
+        <select name="a_section" class="form-select" onchange="this.form.submit()">
+          <option value="">All</option>
+          {% for s in sections %}
+            <option value="{{ s }}" {% if s == a_section %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+      <div class="card-header">
+        <h5><i class="fas fa-list-alt me-2"></i>Current Assignments</h5>
+        <div class="table-controls">
+          <div class="input-group search-box">
+            <input id="assignmentsSearch" type="search" class="form-control" placeholder="Search assignments..." aria-label="Search assignments">
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'assign_subject_faculty_pdf' %}?a_year={{ a_year }}&a_regulation={{ a_regulation }}&a_semester={{ a_semester }}&a_batch={{ a_batch }}&a_section={{ a_section }}"
+   class="btn btn-danger btn-sm" target="blank">
+  <i class="fas fa-file-pdf me-1"></i>PDF
+</a>
+            <span class="badge bg-light">Total: {{ assignments.paginator.count }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>S No.</th>
+                <th>Main Faculty</th>
+                <th>Skilled Faculty</th>
+                <th>Course</th>
+                <th>Batch</th>
+                <th>Section</th>
+                <th>Regulation</th>
+                <th>Semester</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th class="text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="assignmentsTbody">
+              {% for a in assignments %}
+              <tr>
+                <td><strong>{{ forloop.counter }}</strong></td>
+                <td>
+                  <div class="fw-semibold">{{ a.faculty.name }}</div>
+                  <small class="text-muted">{{ a.faculty.faculty_id }}</small>
+                </td>
+                <td>
+                  {% if a.skilled_faculty %}
+                    <div class="fw-semibold">{{ a.skilled_faculty.name }}</div>
+                    <small class="text-muted">{{ a.skilled_faculty.faculty_id }}</small>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="fw-semibold">{{ a.course.course_code }}</div>
+                  <small class="text-muted">{{ a.course.title|truncatechars:40 }}</small>
+                </td>
+                <td><span class="badge bg-secondary">{{ a.batch }}</span></td>
+                <td><span class="badge bg-info">{{ a.section }}</span></td>
+                <td>R-{{ a.regulation.year }}</td>
+                <td>{{ a.course.semester }}</td>
+                <td>{{ a.reason }}</td>
+                <td>
+                  {% if a.is_active %}
+                    <span class="badge bg-success">Active</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="toggle_assignment" value="{{ a.id }}">
+                    <button type="submit" class="btn btn-sm {% if a.is_active %}btn-warning{% else %}btn-success{% endif %}">
+                      {% if a.is_active %}<i class="fas fa-pause me-1"></i>Deactivate{% else %}<i class="fas fa-play me-1"></i>Activate{% endif %}
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="11" class="text-center py-5">
+                  <div class="empty-state">
+                    <i class="fas fa-book"></i>
+                    <h5>No Assignments Found</h5>
+                    <p class="text-muted">No subject assignments have been created yet</p>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if assignments.paginator.num_pages > 1 %}
+        <nav aria-label="Assignments pagination">
+          <ul class="pagination">
+            {% if assignments.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?{{ assignments_page_query }}&a_page={{ assignments.previous_page_number }}">Previous</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+
+            {% for num in assignments.paginator.page_range %}
+              {% if assignments.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+              {% else %}
+                <li class="page-item">
+                  <a class="page-link" href="?{{ assignments_page_query }}&a_page={{ num }}">{{ num }}</a>
+                </li>
+              {% endif %}
+            {% endfor %}
+
+            {% if assignments.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?{{ assignments_page_query }}&a_page={{ assignments.next_page_number }}">Next</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="assignmentConfirmOverlay" class="confirm-overlay" aria-hidden="true">
+  <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="assignmentConfirmTitle">
+    <div class="confirm-dialog-header">
+      <h5 id="assignmentConfirmTitle">Confirm Faculty Update</h5>
+    </div>
+    <div class="confirm-dialog-body">
+      <p id="assignmentConfirmIntro">Please review the previous assignment details before you continue.</p>
+      <div id="assignmentConfirmGrid" class="confirm-grid"></div>
+    </div>
+    <div class="confirm-actions">
+      <button type="button" id="assignmentConfirmCancel" class="btn-outline-secondary">Cancel</button>
+      <button type="button" id="assignmentConfirmProceed" class="btn btn-primary">Confirm</button>
+    </div>
+  </div>
+</div>
+
+{{ assignment_lookup|json_script:"assignmentLookupData" }}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const assignmentLookupElement = document.getElementById('assignmentLookupData');
+  const assignmentLookup = assignmentLookupElement ? JSON.parse(assignmentLookupElement.textContent) : {};
+  const confirmOverlay = document.getElementById('assignmentConfirmOverlay');
+  const confirmGrid = document.getElementById('assignmentConfirmGrid');
+  const confirmIntro = document.getElementById('assignmentConfirmIntro');
+  const confirmProceed = document.getElementById('assignmentConfirmProceed');
+  const confirmCancel = document.getElementById('assignmentConfirmCancel');
+  let pendingForm = null;
+
+  function buildLookupKey(courseId, regulationId, batch, section, academicYear) {
+    return [courseId || '', regulationId || '', batch || '', section || '', academicYear || ''].join('||');
+  }
+
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, function (char) {
+      return ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[char];
+    });
+  }
+
+  function renderConfirmCards(items) {
+    confirmGrid.innerHTML = items.map(item => `
+      <div class="confirm-card">
+        <strong>${escapeHtml(item.label)}</strong>
+        <span>${escapeHtml(item.value || '-')}</span>
+      </div>
+    `).join('');
+  }
+
+  function showConfirmDialog(intro, items, form) {
+    confirmIntro.textContent = intro;
+    renderConfirmCards(items);
+    pendingForm = form;
+    confirmOverlay.classList.add('show');
+    confirmOverlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeConfirmDialog() {
+    confirmOverlay.classList.remove('show');
+    confirmOverlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    pendingForm = null;
+  }
+
+  if (confirmCancel) {
+    confirmCancel.addEventListener('click', closeConfirmDialog);
+  }
+
+  if (confirmOverlay) {
+    confirmOverlay.addEventListener('click', function (event) {
+      if (event.target === confirmOverlay) {
+        closeConfirmDialog();
+      }
+    });
+  }
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && confirmOverlay && confirmOverlay.classList.contains('show')) {
+      closeConfirmDialog();
+    }
+  });
+
+  if (confirmProceed) {
+    confirmProceed.addEventListener('click', function () {
+      if (!pendingForm) return;
+      const formToSubmit = pendingForm;
+      formToSubmit.dataset.confirmed = 'true';
+      closeConfirmDialog();
+      if (formToSubmit.requestSubmit) {
+        formToSubmit.requestSubmit();
+      } else {
+        formToSubmit.submit();
+      }
+    });
+  }
+
+  // 1) Show/Hide Custom Reason (New Assignment Form)
+  const reasonSel = document.getElementById('reason');
+  const customBox = document.getElementById('customReasonBox');
+  const customInp = document.getElementById('custom_reason');
+  const assignmentCourse = document.getElementById('assignmentCourse');
+  const skilledFacultyGroup = document.getElementById('skilledFacultyGroup');
+  const skilledFacultySelect = document.getElementById('assignmentSkilledFaculty');
+
+  function selectedOption(selectElement) {
+    return selectElement && selectElement.selectedIndex >= 0
+      ? selectElement.options[selectElement.selectedIndex]
+      : null;
+  }
+
+  function selectedCourseNeedsSkilledFaculty() {
+    const option = selectedOption(assignmentCourse);
+    return option ? option.dataset.needsSkilled === '1' : false;
+  }
+
+  function updateSkilledFacultyVisibility() {
+    if (!skilledFacultyGroup || !skilledFacultySelect) return;
+    const needsSkilled = selectedCourseNeedsSkilledFaculty();
+    skilledFacultyGroup.style.display = needsSkilled ? '' : 'none';
+    skilledFacultySelect.required = needsSkilled;
+    if (!needsSkilled) {
+      skilledFacultySelect.value = '';
+    }
+  }
+
+  if (assignmentCourse) {
+    assignmentCourse.addEventListener('change', updateSkilledFacultyVisibility);
+    updateSkilledFacultyVisibility();
+  }
+
+  if (reasonSel) {
+    reasonSel.addEventListener('change', function () {
+      if (this.value === 'OTHER') {
+        customBox.style.display = 'block';
+        customInp.required = true;
+      } else {
+        customBox.style.display = 'none';
+        customInp.required = false;
+        customInp.value = '';
+      }
+    });
+  }
+
+  // 2) Show/Hide Custom Reason in Willingness Table
+  document.querySelectorAll('select[id^="approve_reason_"]').forEach(sel => {
+    sel.addEventListener('change', function () {
+      const id = this.id.replace('approve_reason_', '');
+      const cust = document.getElementById('approve_custom_reason_' + id);
+      if (this.value === 'OTHER') {
+        cust.style.display = 'block';
+        cust.required = true;
+      } else {
+        cust.style.display = 'none';
+        cust.required = false;
+        cust.value = '';
+      }
+    });
+  });
+
+  // 3) Copy Selected Values to Hidden Inputs Before Submit
+  document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function () {
+      const hiddenReason  = this.querySelector('[id^="approve_reason_hidden_"]');
+      const hiddenCustom  = this.querySelector('[id^="approve_custom_reason_hidden_"]');
+      const hiddenSection = this.querySelector('[id^="allotted_section_hidden_"]');
+      const hiddenSkilledFaculty = this.querySelector('[id^="approve_skilled_faculty_hidden_"]');
+
+      if (hiddenReason) {
+        const id = hiddenReason.id.replace('approve_reason_hidden_', '');
+        const selReason   = document.getElementById('approve_reason_' + id);
+        const custReason  = document.getElementById('approve_custom_reason_' + id);
+        const selSection  = document.getElementById('allotted_section_' + id);
+        const selSkilledFaculty = document.getElementById('approve_skilled_faculty_' + id);
+
+        hiddenReason.value  = selReason ? selReason.value : '';
+        hiddenCustom.value  = custReason ? custReason.value : '';
+        hiddenSection.value = selSection ? selSection.value : '';
+        if (hiddenSkilledFaculty) {
+          hiddenSkilledFaculty.value = selSkilledFaculty ? selSkilledFaculty.value : '';
+        }
+      }
+    });
+  });
+
+  const assignmentForm = document.getElementById('assignmentForm');
+  if (assignmentForm) {
+    assignmentForm.addEventListener('submit', function (event) {
+      if (this.dataset.confirmed === 'true') {
+        delete this.dataset.confirmed;
+        return;
+      }
+
+      const facultySelect = document.getElementById('assignmentFaculty');
+      const courseSelect = document.getElementById('assignmentCourse');
+      const skilledFacultySelect = document.getElementById('assignmentSkilledFaculty');
+      const batchSelect = document.getElementById('assignmentBatch');
+      const sectionSelect = document.getElementById('assignmentSection');
+      const needsSkilledFaculty = selectedCourseNeedsSkilledFaculty();
+
+      if (needsSkilledFaculty && skilledFacultySelect && !skilledFacultySelect.value) {
+        event.preventDefault();
+        alert('Please select a skilled faculty for this course.');
+        skilledFacultySelect.focus();
+        return;
+      }
+
+      if (
+        needsSkilledFaculty &&
+        facultySelect &&
+        skilledFacultySelect &&
+        facultySelect.value &&
+        facultySelect.value === skilledFacultySelect.value
+      ) {
+        event.preventDefault();
+        alert('Main faculty and skilled faculty must be different.');
+        skilledFacultySelect.focus();
+        return;
+      }
+
+      const regulationId = '{{ selected_regulation|escapejs }}';
+      const academicYear = '{{ current_academic_year|escapejs }}';
+      const lookupKey = buildLookupKey(
+        courseSelect ? courseSelect.value : '',
+        regulationId,
+        batchSelect ? batchSelect.value : '',
+        sectionSelect ? sectionSelect.value : '',
+        academicYear
+      );
+      const previous = assignmentLookup[lookupKey];
+
+      if (!previous) {
+        return;
+      }
+
+      event.preventDefault();
+      const selectedFacultyText = facultySelect && facultySelect.selectedIndex >= 0
+        ? facultySelect.options[facultySelect.selectedIndex].text
+        : '-';
+      const selectedSkilledFacultyText = skilledFacultySelect && skilledFacultySelect.selectedIndex >= 0 && skilledFacultySelect.value
+        ? skilledFacultySelect.options[skilledFacultySelect.selectedIndex].text
+        : '-';
+      const selectedCourseText = courseSelect && courseSelect.selectedIndex >= 0
+        ? courseSelect.options[courseSelect.selectedIndex].text
+        : '-';
+      const selectedCourseOption = selectedOption(courseSelect);
+      const courseType = selectedCourseOption ? (selectedCourseOption.dataset.courseType || '-') : '-';
+
+      showConfirmDialog(
+        'This subject is already assigned for the selected batch and section. Please confirm the update.',
+        [
+          { label: 'Previous Main Faculty', value: `${previous.faculty_name} (${previous.faculty_id})` },
+          { label: 'New Main Faculty', value: selectedFacultyText },
+          { label: 'Previous Skilled Faculty', value: previous.skilled_faculty_id !== '-' ? `${previous.skilled_faculty_name} (${previous.skilled_faculty_id})` : '-' },
+          { label: 'New Skilled Faculty', value: selectedSkilledFacultyText },
+          { label: 'Course', value: `${previous.course_code} - ${previous.course_title}` },
+          { label: 'Selected Course', value: selectedCourseText },
+          { label: 'Course Type', value: courseType },
+          { label: 'Regulation', value: `R-${previous.regulation}` },
+          { label: 'Semester', value: previous.semester },
+          { label: 'Batch / Section', value: `${previous.batch} / ${previous.section}` },
+          { label: 'Academic Year', value: previous.academic_year },
+          { label: 'Previous Reason', value: previous.reason },
+          { label: 'Previous Status', value: previous.is_active ? 'Active' : 'Inactive' }
+        ],
+        this
+      );
+    });
+  }
+
+  document.querySelectorAll('.willingness-approve-form').forEach(form => {
+    form.addEventListener('submit', function (event) {
+      if (this.dataset.confirmed === 'true') {
+        delete this.dataset.confirmed;
+        return;
+      }
+
+      const hiddenReason = this.querySelector('[id^="approve_reason_hidden_"]');
+      const rowId = hiddenReason ? hiddenReason.id.replace('approve_reason_hidden_', '') : '';
+      const reasonSelect = document.getElementById('approve_reason_' + rowId);
+      const customReason = document.getElementById('approve_custom_reason_' + rowId);
+      const sectionSelect = document.getElementById('allotted_section_' + rowId);
+      const skilledFacultySelect = document.getElementById('approve_skilled_faculty_' + rowId);
+      const allottedSection = sectionSelect && sectionSelect.value ? sectionSelect.value : this.dataset.requestedSection;
+      const selectedReason = reasonSelect
+        ? (reasonSelect.value === 'OTHER' ? (customReason ? customReason.value.trim() : '') : reasonSelect.value)
+        : '';
+      const needsSkilledFaculty = this.dataset.needsSkilled === '1';
+      const selectedSkilledFacultyText = skilledFacultySelect && skilledFacultySelect.selectedIndex >= 0 && skilledFacultySelect.value
+        ? skilledFacultySelect.options[skilledFacultySelect.selectedIndex].text
+        : '-';
+
+      if (!reasonSelect || !reasonSelect.value) {
+        event.preventDefault();
+        alert('Please select a reason before approving.');
+        if (reasonSelect) reasonSelect.focus();
+        return;
+      }
+
+      if (reasonSelect.value === 'OTHER' && !selectedReason) {
+        event.preventDefault();
+        alert('Please enter the custom reason before approving.');
+        if (customReason) customReason.focus();
+        return;
+      }
+
+      if (needsSkilledFaculty && (!skilledFacultySelect || !skilledFacultySelect.value)) {
+        event.preventDefault();
+        alert('Please select a skilled faculty before approving this course.');
+        if (skilledFacultySelect) skilledFacultySelect.focus();
+        return;
+      }
+
+      if (
+        needsSkilledFaculty &&
+        skilledFacultySelect &&
+        skilledFacultySelect.value &&
+        skilledFacultySelect.value === this.dataset.requestedFacultyId
+      ) {
+        event.preventDefault();
+        alert('Main faculty and skilled faculty must be different.');
+        skilledFacultySelect.focus();
+        return;
+      }
+
+      const lookupKey = buildLookupKey(
+        this.dataset.courseId,
+        this.dataset.regulationId,
+        this.dataset.batch,
+        allottedSection,
+        this.dataset.academicYear
+      );
+      const previous = assignmentLookup[lookupKey];
+
+      if (!previous) {
+        return;
+      }
+
+      event.preventDefault();
+
+      showConfirmDialog(
+        'This willingness will replace an existing faculty mapping for the selected section. Please confirm.',
+        [
+          { label: 'Previous Main Faculty', value: `${previous.faculty_name} (${previous.faculty_id})` },
+          { label: 'Requested Main Faculty', value: `${this.dataset.requestedFaculty} (${this.dataset.requestedFacultyId})` },
+          { label: 'Previous Skilled Faculty', value: previous.skilled_faculty_id !== '-' ? `${previous.skilled_faculty_name} (${previous.skilled_faculty_id})` : '-' },
+          { label: 'New Skilled Faculty', value: selectedSkilledFacultyText },
+          { label: 'Course', value: `${this.dataset.courseCode} - ${this.dataset.courseTitle}` },
+          { label: 'Course Type', value: this.dataset.courseType || '-' },
+          { label: 'Regulation', value: `R-${this.dataset.regulationYear || '-'}` },
+          { label: 'Semester', value: this.dataset.semester || '-' },
+          { label: 'Batch / Section', value: `${this.dataset.batch || '-'} / ${allottedSection || '-'}` },
+          { label: 'Academic Year', value: this.dataset.academicYear || '-' },
+          { label: 'Previously Assigned Reason', value: previous.reason },
+          { label: 'Approval Reason', value: selectedReason || '-' },
+          { label: 'Previous Status', value: previous.is_active ? 'Active' : 'Inactive' }
+        ],
+        this
+      );
+    });
+  });
+
+  // 4) Client-side search for Willingness Table
+  const willingnessSearch = document.getElementById('willingnessSearch');
+  if (willingnessSearch) {
+    willingnessSearch.addEventListener('input', function () {
+      const q = this.value.trim().toLowerCase();
+      const rows = document.querySelectorAll('#willingnessTbody tr');
+      
+      rows.forEach(row => {
+        if (row.querySelectorAll('td').length === 0) return;
+        const cellsText = Array.from(row.querySelectorAll('td')).map(td => td.innerText.trim().toLowerCase()).join(' ');
+        row.style.display = cellsText.indexOf(q) !== -1 ? '' : 'none';
+      });
+    });
+  }
+
+  // 5) Client-side search for Assignments Table
+  const assignmentsSearch = document.getElementById('assignmentsSearch');
+  if (assignmentsSearch) {
+    assignmentsSearch.addEventListener('input', function () {
+      const q = this.value.trim().toLowerCase();
+      const rows = document.querySelectorAll('#assignmentsTbody tr');
+      
+      rows.forEach(row => {
+        if (row.querySelectorAll('td').length === 0) return;
+        const cellsText = Array.from(row.querySelectorAll('td')).map(td => td.innerText.trim().toLowerCase()).join(' ');
+        row.style.display = cellsText.indexOf(q) !== -1 ? '' : 'none';
+      });
+    });
+  }
+});
+</script>
+
+{% endblock %}

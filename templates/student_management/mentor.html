@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% load authorizer_tags %}
+{% load sm_tags %}
+<!DOCTYPE html>
+{% load static %}
+<html>
+    {% block content %}
+<head>
+
+
+
+
+
+<style>
+
+    
+    .container header {
+        font-size: 20px;
+        font-weight: 600;
+        color: #333;
+        position: relative;
+    }
+    
+    .container header::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -2px;
+        height: 3px;
+        width: 27px;
+        border-radius: 8px;
+        background-color: #4070f4;
+    }
+    
+    form .fields {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .input-field, .availability-input-field {
+        display: flex;
+        flex-direction: column;
+        margin: 4px 0;
+    }
+    
+    .input-field {
+        width: calc(100% / 3 - 15px);
+    }
+    
+    .availability-input-field {
+        width: calc(100% / 4 - 15px);
+    }
+    
+    .input-field label, .availability-input-field label {
+        color: #2e2e2e;
+        margin-left: 8.5px;
+    }
+    
+    .input-field input, .input-field select,
+    .availability-input-field select, .availability-input-field input {
+        outline: none;
+        font-size: 14px;
+        color: #333;
+        border-radius: 5px;
+        border: 1px solid #aaa;
+        padding: 0 15px;
+        height: 42px;
+        margin: 8px;
+        width: 95%;
+    }
+    
+    .container form button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 45px;
+        max-width: 200px;
+        width: 100%;
+        border: none;
+        color: #fff;
+        border-radius: 5px;
+        margin: 25px 0;
+        cursor: pointer;
+    }
+    
+    form button:hover {
+        background-color: #265df2;
+    }
+    
+    /* Table Styling */
+    .table__header {
+        width: 100%;
+        height: 70px;
+        background-color: #fff4;
+        padding: .8rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .table__body {
+        width: 95%;
+        max-height: 90vh;
+        background-color: #fffb;
+        margin: .8rem auto;
+        border-radius: .6rem;
+        overflow: auto;
+    }
+    
+    .table__body::-webkit-scrollbar-thumb {
+        border-radius: .5rem;
+        background-color: #0004;
+        visibility: hidden;
+    }
+    
+    .table__body:hover::-webkit-scrollbar-thumb {
+        visibility: visible;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    thead th {
+        position: sticky;
+        top: 0;
+        background-color: #d5d1defe;
+        cursor: pointer;
+    }
+    
+    tbody tr:nth-child(even) {
+        background-color: #0000000b;
+    }
+    
+    tbody tr:hover {
+        background-color: #fff6 !important;
+    }
+    
+    .status {
+        padding: .4rem 0;
+        border-radius: 2rem;
+        text-align: center;
+    }
+    
+    .status.delivered { background-color: #86e49d; color: #006b21; }
+    .status.cancelled { background-color: #d893a3; color: #b30021; }
+    .status.pending { background-color: #ebc474; }
+    .status.shipped { background-color: #6fcaea; }
+    
+    @media (max-width: 750px) {
+        .container form {
+            overflow-y: scroll;
+        }
+        form .fields .input-field, .availability-input-field {
+            width: calc(100% / 2 - 15px);
+        }
+    }
+    
+    @media (max-width: 550px) {
+        form .fields .input-field, .availability-input-field {
+            width: 100%;
+        }
+    }
+</style>    
+    </head>
+      <body>
+
+        <div class="container mt-5" id="main-content">
+            <div class="row">
+                <header>Assign Faculty for Students</header>
+                <form id="filterForm" method="POST">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="program">Program</label>
+                            <div class="d-flex">
+                                <select name="program" id="program" class="form-control" required>
+                                    <option value="" disabled hidden selected>Select Program</option>
+                                    {% Program_data as program %}
+                                  {% for dept in program %}
+                                  <option value="{{ dept.program_name }}">{{ dept.program_name }}</option>
+                                  {% endfor %}  
+                                </select>
+                                <button type="submit" class="btn btn-success ms-2">
+                                    <i class="uil uil-filter"></i> Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+        
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <label for="range">Range</label>
+                        <input type="number" name="range" id="range" class="form-control" placeholder="Enter Range">
+                    </div>
+        
+                    <div class="col-md-6">
+                        <label for="employee_id">Employee ID</label>
+                        <select name="employee_id" id="employee_id" class="form-control">
+                            <option value="" disabled hidden selected>Select Employee ID</option>
+                            {% mentor_select as employees %}
+                            {% for employee in employees %}
+                                <option value="{{ employee.Employee_id }}">{{ employee.username }}-{{ employee.unique_id }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+        
+                    <div class="col-md-12 text-center mt-2">
+                        <button id="assignMentor" class="btn btn-primary">
+                            <i class="uil uil-user-plus"></i> Assign Mentor
+                        </button>
+                    </div>
+                </div>
+        
+                <!-- Student Table -->
+                <div class="table-responsive scrollable-table mt-4">
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Reg Number</th>
+                                <th>Student Name</th>
+                                <th>Program</th>
+                                <th>Mentor ID</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTable">
+                            {% for student in data %}
+                            <tr>
+                                <td>{{ student.reg_number }}</td>
+                                <td>{{ student.first_name }}</td>
+                                <td>{{ student.program_name }}</td>
+                                <td class="mentor_id">
+                                    {% if student.mentor_id %}
+                                        <span class="badge bg-success">{{ student.mentor_id }}</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Not Assigned</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+        $(document).ready(function(){
+            // 🔵 Handle Filter Form Submission
+            $("#filterForm").submit(function(event){
+                event.preventDefault();
+                let program = $("#program").val();
+        
+                if (!program) {
+                    alert("Please select a program.");
+                    return;
+                }
+        
+                $.ajax({
+                    type: "POST",
+                    url: "{% url 'assign_mentor' %}",
+                    data: { 'program': program },
+                    success: function(response) {
+                        $("#studentTable").html($(response).find("#studentTable").html());
+                    },
+                    error: function() {
+                        alert("Error fetching student data.");
+                    }
+                });
+            });
+        
+            // 🔵 Handle Assign Mentor Click
+            $("#assignMentor").click(function(event){
+                event.preventDefault();
+                let program = $("#program").val();
+                let range = $("#range").val();
+                let employee_id = $("#employee_id").val();
+        
+                if (!program || !range || !employee_id) {
+                    alert("All fields are required!");
+                    return;
+                }
+        
+                $.ajax({
+                    type: "POST",
+                    url: "{% url 'assign_mentor_ajax' %}",
+                    data: {
+                        'program': program,
+                        'range': range,
+                        'employee_id': employee_id,
+                        'csrfmiddlewaretoken': "{{ csrf_token }}"
+                    },
+                    success: function(response) {
+                        alert(response.message);
+                        $("#filterForm").submit();  // ✅ Refresh table data after assignment
+                    },
+                    error: function() {
+                        alert("Error assigning mentor.");
+                    }
+                });
+            });
+        });
+        </script>
+        
+                                    
+
+
+{% endblock content %}
+</body>
+</html>

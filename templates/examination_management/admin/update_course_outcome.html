@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    
+
+    
+
+    <div class="row">
+        <!-- Form Section -->
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas {% if outcome %}fa-edit{% else %}fa-plus-circle{% endif %} me-2"></i>
+                        {% if outcome %}Update Outcome{% else %}Add New Outcome{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% if outcome %}
+                            <input type="hidden" name="id" value="{{ outcome.id }}">
+                        {% endif %}
+
+                        <!-- Regulation Dropdown -->
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-bold">Regulation</label>
+                            <select class="form-select" name="regulation" required>
+                                <option value="" selected disabled hidden>-- Select Regulation --</option>
+                                {% for reg in regulations %}
+                                    <option value="{{ reg }}" {% if outcome and outcome.regulation == reg %}selected{% endif %}>
+                                        {{ reg }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Course Code -->
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-bold">Course Outcome Code</label>
+                            <input type="text" class="form-control" name="co_code"
+                                   value="{{ outcome.co_code|default:'' }}" 
+                                   placeholder="e.g., CO1, CO2" required>
+                            <div class="form-text">Unique identifier for this outcome</div>
+                        </div>
+
+                        <!-- CO Name -->
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold">Course Outcome Description</label>
+                            <textarea class="form-control" name="co_name" rows="3" 
+                                      placeholder="Course Outcome 1, Course Outcome 2 ... "
+                                      required>{{ outcome.co_name|default:'' }}</textarea>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-fill">
+                                <i class="fas {% if outcome %}fa-save{% else %}fa-plus{% endif %} me-1"></i>
+                                {% if outcome %} Update Outcome {% else %} Add Outcome {% endif %}
+                            </button>
+                            {% if outcome %}
+                                <a href="{% url 'update_course_outcome' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i> Cancel
+                                </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- List Section -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Existing Course Outcomes</h5>
+                    <span class="badge bg-primary rounded-pill">{{ outcomes|length }}</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if outcomes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Code</th>
+                                    <th>Description</th>
+                                    <th>Regulation</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for co in outcomes %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td class="fw-bold">{{ co.co_code }}</td>
+                                    <td>{{ co.co_name }}</td>
+                                    <td><span class="badge bg-secondary">{{ co.regulation }}</span></td>
+                                    <td>
+    <div class="btn-group btn-group-sm">
+        <a href="?edit={{ co.id }}" class="btn btn-outline-primary me-2" data-bs-toggle="tooltip" title="Edit">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <form method="post" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="delete" value="{{ co.id }}">
+            <button type="submit" class="btn btn-outline-danger"
+                    onclick="return confirm('Are you sure you want to delete {{ co.co_code }}?');"
+                    data-bs-toggle="tooltip" title="Delete">
+                <i class="fas fa-trash-alt"></i> Delete
+            </button>
+        </form>
+    </div>
+</td>
+
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No course outcomes added yet.</p>
+                        <p class="text-muted small">Use the form to add your first course outcome</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+    
+    // Show help section if there are no outcomes
+    {% if not outcomes %}
+    new bootstrap.Collapse(document.getElementById('helpSection')).show();
+    {% endif %}
+});
+</script>
+{% endblock %}

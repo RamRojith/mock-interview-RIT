@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+/* ─── Layout ─── */
+.pd-page { background:#f0f4f8; min-height:100vh; padding:24px; }
+
+/* ─── Page Header ─── */
+.pd-header {
+    background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 60%,#3b6fd4 100%);
+    border-radius:16px; padding:22px 28px;
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:20px;
+    box-shadow:0 6px 24px rgba(26,75,140,.28);
+}
+.pd-header-left h2 {
+    margin:0; color:#fff; font-size:20px; font-weight:800; letter-spacing:.2px;
+}
+.pd-header-left p {
+    margin:4px 0 0; color:rgba(255,255,255,.75); font-size:12px;
+}
+.pd-back-btn {
+    background:rgba(255,255,255,.18); color:#fff;
+    border:1.5px solid rgba(255,255,255,.35);
+    border-radius:9px; padding:8px 18px;
+    font-size:12.5px; font-weight:700;
+    text-decoration:none;
+    display:flex; align-items:center; gap:7px;
+    transition:all .2s;
+}
+.pd-back-btn:hover {
+    background:rgba(255,255,255,.28); color:#fff; text-decoration:none;
+}
+
+/* ─── Filter Card ─── */
+.pd-filter {
+    background:#fff; border-radius:14px;
+    padding:20px 24px; margin-bottom:18px;
+    box-shadow:0 2px 12px rgba(0,0,0,.07);
+}
+.pd-filter-title {
+    font-size:13px; font-weight:700; color:#1a4b8c;
+    margin-bottom:14px; display:flex; align-items:center; gap:7px;
+}
+.pd-filter .form-label {
+    font-size:11.5px; font-weight:700; color:#374151;
+    text-transform:uppercase; letter-spacing:.4px; margin-bottom:5px;
+}
+.pd-filter .form-select,
+.pd-filter input[type="month"] {
+    border:1.5px solid #dbe3ef; border-radius:9px;
+    font-size:13px; padding:9px 13px;
+    background:#fafbff; transition:border .2s, box-shadow .2s;
+}
+.pd-filter .form-select:focus,
+.pd-filter input[type="month"]:focus {
+    border-color:#1a4b8c;
+    box-shadow:0 0 0 3px rgba(26,75,140,.1);
+    outline:none;
+}
+.btn-view {
+    width:100%; background:linear-gradient(135deg,#1a4b8c,#2c5aa0);
+    color:#fff; border:none; border-radius:10px;
+    padding:10px; font-weight:700; font-size:13.5px;
+    cursor:pointer; transition:all .2s;
+    display:flex; align-items:center; justify-content:center; gap:7px;
+}
+.btn-view:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(26,75,140,.32); }
+
+/* ─── Employee Info ─── */
+.emp-card {
+    background:linear-gradient(135deg,#eef5ff,#e2edff);
+    border:1.5px solid #bdd4f8; border-radius:14px;
+    padding:16px 20px; margin-bottom:18px;
+    display:flex; align-items:center; gap:16px;
+}
+.emp-avatar {
+    width:50px; height:50px; border-radius:50%;
+    background:linear-gradient(135deg,#1a4b8c,#2c5aa0);
+    color:#fff; font-size:20px; font-weight:900;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; box-shadow:0 3px 12px rgba(26,75,140,.35);
+}
+.emp-name { font-size:15px; font-weight:800; color:#1a4b8c; }
+.emp-meta { font-size:12px; color:#5a7296; margin-top:3px; }
+.emp-period {
+    margin-left:auto;
+    background:#fff; border:1.5px solid #c3d8f8;
+    border-radius:10px; padding:8px 16px; text-align:center;
+}
+.emp-period .ep-month { font-size:15px; font-weight:800; color:#1a4b8c; }
+.emp-period .ep-year  { font-size:11px; color:#8aa5c8; }
+
+/* ─── Stat Cards ─── */
+.stat-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+.stat-card {
+    flex:1; min-width:110px;
+    background:#fff; border-radius:13px; padding:14px 12px;
+    text-align:center; box-shadow:0 2px 10px rgba(0,0,0,.06);
+    border-top:3px solid var(--sc); transition:transform .2s;
+}
+.stat-card:hover { transform:translateY(-2px); }
+.stat-val { font-size:28px; font-weight:900; color:var(--sc); line-height:1; }
+.stat-lbl { font-size:10.5px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.5px; margin-top:5px; }
+
+/* ─── Table Card ─── */
+.tbl-card { background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.06); overflow:hidden; }
+.tbl-card-header {
+    padding:15px 22px; border-bottom:1px solid #eef2f8;
+    display:flex; align-items:center; gap:9px;
+}
+.tch-title { font-size:14px; font-weight:700; color:#1a4b8c; }
+.tch-count { margin-left:auto; font-size:11.5px; color:#94a3b8; }
+
+table.ptbl { width:100%; border-collapse:collapse; font-size:12.5px; }
+table.ptbl thead tr { background:#0b1220; }
+table.ptbl thead th {
+    padding:10px 13px; color:#8da2b8;
+    font-size:10.5px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.6px; text-align:center; white-space:nowrap;
+}
+table.ptbl thead th:first-child { text-align:left; padding-left:20px; }
+table.ptbl thead th:nth-child(2) { text-align:left; }
+table.ptbl tbody tr { transition:background .1s; }
+table.ptbl tbody tr:hover { background:#f5f8ff !important; }
+table.ptbl tbody tr:last-child td { border-bottom:none; }
+table.ptbl tbody td {
+    padding:8px 13px; border-bottom:1px solid #f1f5fb;
+    text-align:center; vertical-align:middle; white-space:nowrap;
+}
+table.ptbl tbody td:first-child { text-align:left; padding-left:20px; font-weight:700; color:#1e293b; }
+table.ptbl tbody td:nth-child(2) { text-align:left; color:#64748b; font-size:12px; }
+
+/* Row colours */
+.r-weekend td { background:#f8fafc; color:#aab8c4; }
+.r-holiday td { background:#fffbeb; }
+.r-leave   td { background:#eff6ff; }
+.r-absent  td { background:#fff5f5; }
+
+/* Time highlight cells */
+.t-ok   { background:#d1fae5 !important; color:#065f46; font-weight:700; font-family:'Courier New',monospace; font-size:13px; }
+.t-late { background:#fee2e2 !important; color:#b91c1c; font-weight:700; font-family:'Courier New',monospace; font-size:13px; }
+.t-out  { background:#d1fae5 !important; color:#065f46; font-weight:700; font-family:'Courier New',monospace; font-size:13px; }
+.t-nil  { color:#d1d5db; font-size:12px; }
+.t-dur  { color:#1d4ed8; font-weight:700; font-family:'Courier New',monospace; font-size:13px; }
+
+/* Status badges */
+.sb {
+    display:inline-flex; align-items:center; gap:4px;
+    padding:3px 10px; border-radius:20px;
+    font-size:11px; font-weight:700;
+}
+.sb-prs  { background:#d1fae5; color:#065f46; }
+.sb-late { background:#fee2e2; color:#b91c1c; }
+.sb-abs  { background:#fee2e2; color:#b91c1c; }
+.sb-hol  { background:#fef3c7; color:#92400e; }
+.sb-wknd { background:#f1f5f9; color:#64748b; }
+.sb-lv   { background:#dbeafe; color:#1d4ed8; }
+.sb-sing { background:#fef3c7; color:#b45309; }
+.sb-nil  { background:#f1f5f9; color:#94a3b8; font-weight:500; }
+
+/* Leave type badges */
+.lv-badge {
+    display:inline-flex; align-items:center; gap:4px;
+    padding:3px 10px; border-radius:20px;
+    font-size:11.5px; font-weight:800; letter-spacing:.3px;
+}
+.lv-CL   { background:#dbeafe; color:#1e40af; }
+.lv-CCL  { background:#d1fae5; color:#065f46; }
+.lv-ML   { background:#fce7f3; color:#9d174d; }
+.lv-OD   { background:#e0e7ff; color:#3730a3; }
+.lv-LOP  { background:#fee2e2; color:#b91c1c; }
+.lv-VL   { background:#fef3c7; color:#92400e; }
+.lv-WL   { background:#ede9fe; color:#6d28d9; }
+.lv-AB   { background:#fee2e2; color:#991b1b; }
+.lv-DEF  { background:#f1f5f9; color:#374151; }
+
+/* Legend */
+.tbl-legend {
+    display:flex; flex-wrap:wrap; gap:14px;
+    padding:12px 20px; border-top:1px solid #f0f4f8;
+    font-size:11.5px; color:#64748b;
+}
+.lg-item { display:flex; align-items:center; gap:5px; }
+.lg-dot  { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+
+/* Empty / Select state */
+.pd-prompt {
+    background:#fff; border-radius:14px;
+    padding:70px 20px; text-align:center;
+    box-shadow:0 2px 12px rgba(0,0,0,.06);
+}
+.pd-prompt .pi { font-size:52px; color:#e2e8f0; display:block; margin-bottom:14px; }
+.pd-prompt h5  { font-size:16px; font-weight:700; color:#64748b; margin:0 0 6px; }
+.pd-prompt p   { font-size:13px; color:#94a3b8; margin:0; }
+
+.pd-error {
+    background:#fff5f5; border:1.5px solid #fca5a5;
+    border-radius:12px; padding:12px 18px;
+    display:flex; align-items:center; gap:9px;
+    font-size:13px; color:#991b1b; margin-bottom:16px;
+}
+
+@media(max-width:768px){
+    .pd-header { flex-direction:column; gap:12px; align-items:flex-start; }
+    .stat-row   { gap:8px; }
+    .stat-card  { min-width:90px; }
+    .emp-period { display:none; }
+}
+</style>
+
+<div class="pd-page">
+
+    <!-- Header -->
+    <div class="pd-header">
+        <div class="pd-header-left">
+            <h2><i class="fas fa-fingerprint me-2"></i>Punch Details</h2>
+            <p>Daily employee IN &amp; OUT times with attendance status overview</p>
+        </div>
+        <a href="/faculty_leave_management/faculty/leave/emp_attandance_report/"
+           class="pd-back-btn">
+            <i class="fas fa-arrow-left"></i> Attendance Report
+        </a>
+    </div>
+
+    <!-- Filter -->
+    <div class="pd-filter">
+        <div class="pd-filter-title">
+            <i class="fas fa-filter"></i> Select Employee &amp; Month
+        </div>
+        <form method="get" id="pdForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-6 col-md-5">
+                    <label class="form-label">Employee</label>
+                    <select name="faculty_id" class="form-select"
+                            onchange="document.getElementById('pdForm').submit()">
+                        <option value="">— Choose employee —</option>
+                        {% for emp in employees %}
+                        <option value="{{ emp.faculty_id }}"
+                            {% if emp.faculty_id|stringformat:"s" == selected_faculty_id %}selected{% endif %}>
+                            {{ emp.faculty_id }} – {{ emp.name }}
+                            {% if emp.designation %} / {{ emp.designation.designation_name }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-4">
+                    <label class="form-label">Month &amp; Year</label>
+                    <input type="month" name="ym" class="form-control" value="{{ ym }}">
+                </div>
+                <div class="col-lg-3 col-md-3">
+                    <button type="submit" class="btn-view">
+                        <i class="fas fa-search"></i> View Punches
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if error_message %}
+    <div class="pd-error">
+        <i class="fas fa-exclamation-circle"></i>{{ error_message }}
+    </div>
+    {% endif %}
+
+    {% if selected_employee %}
+
+    <!-- Employee Info -->
+    <div class="emp-card">
+        <div class="emp-avatar">{{ selected_employee.name|first|upper }}</div>
+        <div>
+            <div class="emp-name">{{ selected_employee.name }}</div>
+            <div class="emp-meta">
+                <strong>ID:</strong> {{ selected_employee.faculty_id }}
+                {% if selected_employee.designation %}
+                &nbsp;&bull;&nbsp;{{ selected_employee.designation.designation_name }}
+                {% endif %}
+                {% if selected_employee.department %}
+                &nbsp;&bull;&nbsp;{{ selected_employee.department.Department }}
+                {% endif %}
+            </div>
+        </div>
+        <div class="emp-period">
+            <div class="ep-month">{{ selected_month_name }}</div>
+            <div class="ep-year">{{ selected_year }}</div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-row">
+        <div class="stat-card" style="--sc:#1a4b8c;">
+            <div class="stat-val">{{ summary.total }}</div>
+            <div class="stat-lbl">Total Days</div>
+        </div>
+        <div class="stat-card" style="--sc:#16a34a;">
+            <div class="stat-val">{{ summary.present }}</div>
+            <div class="stat-lbl">Present</div>
+        </div>
+        <div class="stat-card" style="--sc:#dc2626;">
+            <div class="stat-val">{{ summary.absent }}</div>
+            <div class="stat-lbl">Absent</div>
+        </div>
+        <div class="stat-card" style="--sc:#d97706;">
+            <div class="stat-val">{{ summary.late }}</div>
+            <div class="stat-lbl">Late IN</div>
+        </div>
+        <div class="stat-card" style="--sc:#b45309;">
+            <div class="stat-val">{{ summary.holiday }}</div>
+            <div class="stat-lbl">Holiday</div>
+        </div>
+        <div class="stat-card" style="--sc:#1d4ed8;">
+            <div class="stat-val">{{ summary.leave }}</div>
+            <div class="stat-lbl">On Leave</div>
+        </div>
+        <div class="stat-card" style="--sc:#7c3aed;">
+            <div class="stat-val">{{ summary.single }}</div>
+            <div class="stat-lbl">Single Punch</div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    {% if punch_data %}
+    <div class="tbl-card">
+        <div class="tbl-card-header">
+            <i class="fas fa-table" style="color:#1a4b8c;"></i>
+            <span class="tch-title">Punch History &mdash; {{ selected_month_name }} {{ selected_year }}</span>
+            <span class="tch-count">{{ punch_data|length }} days</span>
+        </div>
+        <div style="overflow-x:auto;">
+        <table class="ptbl">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>IN Time</th>
+                    <th>IN Remark</th>
+                    <th>OUT Time</th>
+                    <th>OUT Remark</th>
+                    <th>Duration</th>
+                    <th>Leave</th>
+                    <th>Status</th>
+                    <th>Applied (Leave / CCL)</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in punch_data %}
+            <tr class="{% if row.is_holiday and not row.leave_code %}r-holiday
+                       {% elif row.leave_code %}r-leave
+                       {% elif not row.in_time and not row.is_holiday %}r-absent
+                       {% endif %}">
+
+                <td>{{ row.date_str }}</td>
+                <td>{{ row.day_name }}</td>
+
+                <td class="{% if row.in_time %}{% if row.is_late %}t-late{% else %}t-ok{% endif %}{% else %}t-nil{% endif %}">
+                    {{ row.in_time|default:"—" }}
+                </td>
+
+                <td>
+                    {% if row.in_remark == "Ok" %}
+                        <span class="sb sb-prs"><i class="fas fa-check"></i>Ok</span>
+                    {% elif row.in_remark == "Late" %}
+                        <span class="sb sb-late"><i class="fas fa-clock"></i>Late</span>
+                    {% else %}
+                        <span class="sb sb-nil">—</span>
+                    {% endif %}
+                </td>
+
+                <td class="{% if row.out_time %}t-out{% else %}t-nil{% endif %}">
+                    {{ row.out_time|default:"—" }}
+                </td>
+
+                <td>
+                    {% if row.out_remark == "Ok" %}
+                        <span class="sb sb-prs"><i class="fas fa-check"></i>Ok</span>
+                    {% else %}
+                        <span class="sb sb-nil">—</span>
+                    {% endif %}
+                </td>
+
+                <td class="{% if row.duration %}t-dur{% else %}t-nil{% endif %}">
+                    {{ row.duration|default:"—" }}
+                </td>
+
+                <!-- Leave type -->
+                <td>
+                    {% if row.leave_code %}
+                        <span class="lv-badge
+                            {% if row.leave_code == 'CL' %}lv-CL
+                            {% elif row.leave_code == 'CCL' %}lv-CCL
+                            {% elif row.leave_code == 'ML' %}lv-ML
+                            {% elif row.leave_code == 'OD' %}lv-OD
+                            {% elif row.leave_code == 'LOP' %}lv-LOP
+                            {% elif row.leave_code == 'VL' %}lv-VL
+                            {% elif row.leave_code == 'WL' %}lv-WL
+                            {% elif row.leave_code == 'AB' %}lv-AB
+                            {% else %}lv-DEF
+                            {% endif %}">
+                            {{ row.leave_code }}
+                        </span>
+                    {% else %}
+                        <span class="sb-nil" style="color:#d1d5db;font-size:12px;">—</span>
+                    {% endif %}
+                </td>
+
+                <!-- Status -->
+                <td>
+                    {% if row.is_holiday and not row.leave_code %}
+                        <span class="sb sb-hol"><i class="fas fa-sun"></i>&nbsp;Holiday</span>
+                    {% elif row.leave_code %}
+                        {% if row.in_time and row.out_time %}
+                            <span class="sb sb-prs"><i class="fas fa-check-circle"></i>&nbsp;Present</span>
+                        {% elif row.in_time %}
+                            <span class="sb sb-sing"><i class="fas fa-exclamation"></i>&nbsp;Single Punch</span>
+                        {% else %}
+                            <span class="sb sb-lv"><i class="fas fa-calendar-minus"></i>&nbsp;On Leave</span>
+                        {% endif %}
+                    {% elif row.in_time and row.out_time %}
+                        {% if row.is_late %}
+                            <span class="sb sb-late"><i class="fas fa-clock"></i>&nbsp;Late Present</span>
+                        {% else %}
+                            <span class="sb sb-prs"><i class="fas fa-check-circle"></i>&nbsp;Present</span>
+                        {% endif %}
+                    {% elif row.total_punches == 1 %}
+                        <span class="sb sb-sing"><i class="fas fa-exclamation"></i>&nbsp;Single Punch</span>
+                    {% else %}
+                        <span class="sb sb-abs"><i class="fas fa-times-circle"></i>&nbsp;Absent</span>
+                    {% endif %}
+                </td>
+
+                <!-- Applied leave / CCL (any status) -->
+                <td>
+                    {% for app in row.applications %}
+                        <span class="sb"
+                              style="{% if app.status == 'Approved' %}background:#d1fae5;color:#065f46;{% elif app.status == 'Rejected' %}background:#fee2e2;color:#b91c1c;{% else %}background:#fef3c7;color:#92400e;{% endif %}"
+                              title="{{ app.type }} — {{ app.status }}">
+                            {{ app.code }} · {{ app.status }}
+                        </span>
+                    {% empty %}
+                        <span class="sb-nil" style="color:#d1d5db;font-size:12px;">—</span>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        <div class="tbl-legend">
+            <span class="lg-item"><span class="lg-dot" style="background:#d1fae5;"></span>Present</span>
+            <span class="lg-item"><span class="lg-dot" style="background:#fee2e2;"></span>Absent / Late IN</span>
+            <span class="lg-item"><span class="lg-dot" style="background:#fffbeb;"></span>Holiday</span>
+            <span class="lg-item"><span class="lg-dot" style="background:#eff6ff;"></span>On Leave (any type)</span>
+            <span class="lg-item"><span class="lg-dot" style="background:#fef3c7;"></span>Single Punch</span>
+            <span class="lg-item"><span class="lv-badge lv-CL" style="font-size:10px;padding:1px 6px;">CL</span></span>
+            <span class="lg-item"><span class="lv-badge lv-CCL" style="font-size:10px;padding:1px 6px;">CCL</span></span>
+            <span class="lg-item"><span class="lv-badge lv-ML" style="font-size:10px;padding:1px 6px;">ML</span></span>
+            <span class="lg-item"><span class="lv-badge lv-OD" style="font-size:10px;padding:1px 6px;">OD</span></span>
+            <span class="lg-item"><span class="lv-badge lv-LOP" style="font-size:10px;padding:1px 6px;">LOP</span></span>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="pd-prompt">
+        <i class="fas fa-calendar-times pi"></i>
+        <h5>No Punch Records Found</h5>
+        <p>No attendance data available for {{ selected_month_name }} {{ selected_year }}.</p>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="pd-prompt">
+        <i class="fas fa-users pi"></i>
+        <h5>Select an Employee</h5>
+        <p>Choose an employee from the dropdown above to view their daily punch records.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

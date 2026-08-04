@@ -1,0 +1,671 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-lg rounded-4 border-0">
+    <div class="card-header bg-gradient-primary text-white py-3">
+      <h4 class="mb-0"><i class="fas fa-calendar-alt me-2"></i> Upload Academic Calendar</h4>
+    </div>
+    <div class="card-body p-4">
+
+
+
+      <!-- Upload Form -->
+      <form method="post" enctype="multipart/form-data" id="uploadForm">
+        {% csrf_token %}
+        <div class="row mb-4 g-3">
+          <div class="col-md-3">
+           
+                                    <label for="year" class="form-label fw-semibold">Select Batch:</label>
+                                    <select name="year" id="batch" class="form-select" >
+                                        <option value="">-- Select a batch --</option>
+                                        {% for b in batches %}
+                                            <option value="{{ b }}">{{ b }}</option>
+                                        {% endfor %}
+                                    </select>
+                                
+            
+          </div>
+          <div class="col-md-3">
+            <label for="semester" class="form-label fw-medium">Select Semester</label>
+            <select name="semester" id="semester" class="form-select rounded-3" required>
+              <option value="">--Choose Semester--</option>
+              {% for i in semesters %}
+                <option value="{{ i }}">Semester {{ i }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="file" class="form-label fw-medium">Choose File (PDF)</label>
+            <input type="file" name="file" id="file" class="form-control rounded-3" accept="application/pdf" required>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-success w-100 rounded-3">
+              <i class="fas fa-upload me-2"></i> Upload
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <hr class="my-4">
+
+      <!-- Uploaded Calendars Table -->
+      <h5 class="mt-3 mb-4 fw-bold">Uploaded Calendars</h5>
+      <div class="table-responsive">
+        <table id="calendarsTable" class="table table-hover table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">Year</th>
+              <th scope="col">Semester</th>
+              <th scope="col">File</th>
+              <th scope="col">Uploaded At</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for calendar in calendars %}
+              <tr id="calendar-row-{{ calendar.id }}">
+                <td>{{ calendar.batch }}</td>
+                <td>Semester {{ calendar.semester }}</td>
+                <td>
+                  {% if calendar.file %}
+                    <button type="button"
+                            class="btn btn-outline-primary btn-sm rounded-3 open-file-link"
+                            onclick="openPdfModal('{{ calendar.file.url|safe }}', '{{ calendar.file.url|safe }}')">
+                      <i class="fas fa-eye me-2"></i> View File
+                    </button>
+                  {% else %}
+                    No file
+                  {% endif %}
+                </td>
+                <td>{{ calendar.uploaded_at|date:"d-m-Y H:i" }}</td>
+                <td>
+                  <button type="button"
+                          class="btn btn-outline-danger btn-sm rounded-3 delete-calendar-btn"
+                          data-calendar-id="{{ calendar.id }}"
+                          data-calendar-year="{{ calendar.year }}"
+                          data-calendar-semester="{{ calendar.semester }}">
+                    <i class="fas fa-trash me-2"></i> Delete
+                  </button>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="text-center text-muted">No academic calendars uploaded yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PDF Viewer Modal -->
+<div class="modal fade" id="pdfModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content pdf-viewer-container">
+      <div class="modal-header bg-light border-bottom py-3">
+        <h5 class="modal-title fw-bold text-dark mb-0">
+          <i class="fas fa-file-pdf text-danger me-2"></i>
+          Academic Calendar
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <div class="modal-body p-0 pdf-content-container">
+        <!-- Simple Toolbar -->
+        <div class="pdf-toolbar bg-white border-bottom p-3">
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="d-flex align-items-center gap-2">
+              <button id="prevPage" class="btn btn-sm btn-outline-secondary rounded-3" title="Previous Page">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <div class="page-navigation d-flex align-items-center">
+                <span class="text-muted">Page</span>
+                <input type="number" id="pageInput" class="form-control form-control-sm rounded-3 mx-2" style="width: 70px;" min="1" value="1">
+                <span class="text-muted">of <span id="totalPages">1</span></span>
+              </div>
+              <button id="nextPage" class="btn btn-sm btn-outline-secondary rounded-3" title="Next Page">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+            
+            <div class="zoom-controls d-flex align-items-center bg-light rounded-3 p-1 border">
+              <button id="zoomOut" class="btn btn-sm btn-link text-dark" title="Zoom Out">
+                <i class="fas fa-search-minus"></i>
+              </button>
+              <span id="zoomLevel" class="mx-2 text-muted">100%</span>
+              <button id="zoomIn" class="btn btn-sm btn-link text-dark" title="Zoom In">
+                <i class="fas fa-search-plus"></i>
+              </button>
+            </div>
+            
+            <a id="pdfDownload" href="#" class="btn btn-danger btn-sm rounded-3 ms-2" download title="Download PDF">
+              <i class="fas fa-download"></i> Download
+            </a>
+          </div>
+        </div>
+        
+        <!-- PDF Canvas Container -->
+        <div class="pdf-canvas-container" id="pdfScrollContainer">
+          <div id="initialLoading" class="d-flex justify-content-center align-items-center h-100">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <span class="ms-3 text-muted">Loading PDF document...</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer bg-light border-top py-3">
+        <div class="d-flex justify-content-between w-100 align-items-center">
+          <div id="documentInfo" class="text-muted small">
+            Loading...
+          </div>
+          <button class="btn btn-outline-secondary btn-sm rounded-3" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i> Close Viewer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<style>
+  .pdf-viewer-container {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+    width: 100%;
+    overflow: hidden;
+  }
+  .pdf-toolbar {
+    background-color: #ffffff;
+    padding: 12px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border-bottom: 1px solid #e9ecef;
+  }
+  .pdf-content-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    background: #e9ecef;
+    flex-direction: column;
+  }
+  .pdf-canvas-container {
+    background: #e9ecef;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+  }
+  .pdf-page {
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    position: relative;
+    border-radius: 4px;
+    background: white;
+    width: auto;
+    max-width: 100%;
+    z-index: 1;
+  }
+  .pdf-page canvas {
+    display: block;
+    width: 100% !important;
+    height: auto !important;
+    border-radius: 4px;
+  }
+  .text-layer {
+    display: none;
+  }
+  .modal-xl {
+    max-width: 95vw;
+  }
+  .bg-gradient-primary {
+    background: linear-gradient(45deg, #007bff, #00aaff);
+  }
+  .btn-outline-primary, .btn-outline-secondary, .btn-outline-danger {
+    transition: all 0.2s ease;
+  }
+  .btn-outline-primary:hover, .btn-outline-secondary:hover, .btn-outline-danger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .pdf-canvas-container::-webkit-scrollbar {
+    width: 8px;
+  }
+  .pdf-canvas-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  .pdf-canvas-container::-webkit-scrollbar-thumb {
+    background: #6c757d;
+    border-radius: 4px;
+  }
+  .pdf-canvas-container::-webkit-scrollbar-thumb:hover {
+    background: #5a6268;
+  }
+  @media (max-width: 768px) {
+    .pdf-toolbar {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .modal-xl {
+      max-width: 98vw;
+    }
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize DataTable
+  $('#calendarsTable').DataTable({
+    "order": [[ 3, "desc" ]], // Sort by uploaded date descending
+    "pageLength":25,
+    "language": {
+      "emptyTable": "No academic calendars uploaded yet.",
+      "info": "Showing _START_ to _END_ of _TOTAL_ calendars",
+      "infoEmpty": "Showing 0 to 0 of 0 calendars",
+      "infoFiltered": "(filtered from _MAX_ total calendars)",
+      "lengthMenu": "Show _MENU_ calendars",
+      "search": "Search:",
+      "zeroRecords": "No matching calendars found"
+    }
+  });
+
+  // Check dependencies
+  if (typeof bootstrap === 'undefined') {
+    console.warn('Bootstrap JavaScript not loaded. Modal functionality may be limited.');
+  }
+  if (typeof pdfjsLib === 'undefined') {
+    console.error('PDF.js library not loaded');
+    return;
+  }
+
+  // PDF.js configuration
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+  let currentPdf = null;
+  let currentPage = 1;
+  let currentScale = 1.0;
+  const SCALE_INCREMENT = 0.1;
+  let allRenderedPages = [];
+  let isRendering = false;
+  let renderQueue = [];
+
+  // Initialize PDF modal
+  function initPdfModal(pdfUrl, downloadUrl) {
+    if (!pdfUrl) {
+      console.error('No PDF URL provided');
+      alert('Error: No PDF file specified.');
+      return;
+    }
+    const pdfModalElement = document.getElementById('pdfModal');
+    let pdfModal;
+    try {
+      pdfModal = new bootstrap.Modal(pdfModalElement, { backdrop: 'static', keyboard: true });
+    } catch (e) {
+      console.warn('Bootstrap Modal not available:', e);
+      pdfModalElement.classList.add('show');
+      pdfModalElement.style.display = 'block';
+      document.body.classList.add('modal-open');
+      const backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop fade show';
+      document.body.appendChild(backdrop);
+    }
+    document.getElementById('pdfDownload').href = downloadUrl;
+    document.getElementById('pdfDownload').setAttribute('download', downloadUrl.split('/').pop() || 'academic_calendar.pdf');
+    resetPdfState();
+    loadPdfDocument(pdfUrl, pdfModal);
+  }
+
+  // Reset PDF viewer state
+  function resetPdfState() {
+    currentPage = 1;
+    currentScale = 1.0;
+    allRenderedPages = [];
+    renderQueue = [];
+    document.getElementById('pdfScrollContainer').innerHTML = `
+      <div id="initialLoading" class="d-flex justify-content-center align-items-center h-100">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <span class="ms-3 text-muted">Loading PDF document...</span>
+      </div>
+    `;
+    document.getElementById('pageInput').value = '1';
+    document.getElementById('documentInfo').textContent = 'Loading...';
+  }
+
+  // Load PDF document
+  function loadPdfDocument(pdfUrl, pdfModal) {
+    const loadingTask = pdfjsLib.getDocument({
+      url: pdfUrl,
+      cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/cmaps/',
+      cMapPacked: true,
+      disableFontFace: false,
+      enableXfa: true
+    });
+    loadingTask.promise.then(pdf => {
+      currentPdf = pdf;
+      document.getElementById('totalPages').textContent = pdf.numPages;
+      document.getElementById('pageInput').max = pdf.numPages;
+      document.getElementById('documentInfo').textContent = `${pdf.numPages} page${pdf.numPages > 1 ? 's' : ''}`;
+      document.getElementById('initialLoading').style.display = 'none';
+      renderAllPages(pdf, currentScale);
+      if (pdfModal) {
+        pdfModal.show();
+      } else {
+        document.getElementById('pdfModal').classList.add('show');
+        document.getElementById('pdfModal').style.display = 'block';
+      }
+      setTimeout(() => scrollToPage(1), 100);
+    }).catch(error => {
+      console.error('PDF loading error:', error);
+      document.getElementById('initialLoading').innerHTML = `
+        <div class="text-danger text-center p-4">
+          <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+          <p>Error loading PDF: ${error.message}. Please try downloading the file.</p>
+          <a href="${document.getElementById('pdfDownload').href}" class="btn btn-danger btn-sm rounded-3" download>
+            <i class="fas fa-download me-2"></i>Download PDF
+          </a>
+        </div>
+      `;
+    });
+  }
+
+  // Render all PDF pages
+  function renderAllPages(pdf, scale) {
+    const container = document.getElementById('pdfScrollContainer');
+    container.innerHTML = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const pageDiv = document.createElement('div');
+      pageDiv.id = `pdf-page-${i}`;
+      pageDiv.className = 'pdf-page';
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'page-loading';
+      loadingDiv.id = `loading-${i}`;
+      loadingDiv.innerHTML = `
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      `;
+      pageDiv.appendChild(loadingDiv);
+      const canvas = document.createElement('canvas');
+      canvas.id = `pdfCanvas-${i}`;
+      pageDiv.appendChild(canvas);
+      container.appendChild(pageDiv);
+      renderQueue.push(i);
+    }
+    processRenderQueue(pdf, scale);
+  }
+
+  // Process rendering queue
+  function processRenderQueue(pdf, scale) {
+    if (isRendering || renderQueue.length === 0) return;
+    isRendering = true;
+    const pageNum = renderQueue.shift();
+    pdf.getPage(pageNum).then(page => {
+      const viewport = page.getViewport({ scale: scale });
+      const outputScale = window.devicePixelRatio || 1;
+      const canvas = document.getElementById(`pdfCanvas-${pageNum}`);
+      const context = canvas.getContext('2d');
+      canvas.width = Math.floor(viewport.width * outputScale);
+      canvas.height = Math.floor(viewport.height * outputScale);
+      canvas.style.width = `${viewport.width}px`;
+      canvas.style.height = `${viewport.height}px`;
+      context.scale(outputScale, outputScale);
+      const renderContext = {
+        canvasContext: context,
+        viewport: viewport,
+        intent: 'display',
+        enableWebGL: true
+      };
+      document.getElementById(`loading-${pageNum}`).style.display = 'none';
+      page.render(renderContext).promise.then(() => {
+        allRenderedPages[pageNum-1] = { page, viewport, canvas };
+        isRendering = false;
+        if (renderQueue.length > 0) {
+          setTimeout(() => processRenderQueue(pdf, scale), 0);
+        }
+      });
+    }).catch(error => {
+      console.error(`Error rendering page ${pageNum}:`, error);
+      isRendering = false;
+      if (renderQueue.length > 0) {
+        setTimeout(() => processRenderQueue(pdf, scale), 0);
+      }
+    });
+  }
+
+  // Scroll to a specific page
+  function scrollToPage(pageNum) {
+    const pageElement = document.getElementById(`pdf-page-${pageNum}`);
+    if (pageElement) {
+      currentPage = pageNum;
+      document.getElementById('pageInput').value = pageNum;
+      pageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      prioritizeRenderQueue(pageNum);
+    }
+  }
+
+  // Prioritize rendering queue
+  function prioritizeRenderQueue(currentPageNum) {
+    if (!currentPdf) return;
+    const numPages = currentPdf.numPages;
+    const newQueue = [];
+    if (!allRenderedPages[currentPageNum-1]) {
+      newQueue.push(currentPageNum);
+    }
+    for (let i = Math.max(1, currentPageNum-2); i <= Math.min(numPages, currentPageNum+2); i++) {
+      if (i !== currentPageNum && !allRenderedPages[i-1] && !renderQueue.includes(i)) {
+        newQueue.push(i);
+      }
+    }
+    for (let i = 1; i <= numPages; i++) {
+      if (!allRenderedPages[i-1] && !newQueue.includes(i) && !renderQueue.includes(i)) {
+        newQueue.push(i);
+      }
+    }
+    renderQueue = newQueue;
+    if (!isRendering) {
+      processRenderQueue(currentPdf, currentScale);
+    }
+  }
+
+  // Update zoom level
+  function updateZoom() {
+    document.getElementById('zoomLevel').textContent = `${Math.round(currentScale * 100)}%`;
+    if (currentPdf) {
+      renderAllPages(currentPdf, currentScale);
+    }
+  }
+
+  // Delete calendar function
+  function deleteCalendar(calendarId, year, semester) {
+    if (!confirm(`Are you sure you want to delete the calendar for Year ${year}, Semester ${semester}?`)) {
+      return;
+    }
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    if (!csrfToken) {
+      alert('Error: CSRF token missing. Please refresh the page and try again.');
+      return;
+    }
+    
+    // Construct delete URL
+    const deleteUrl = "{% url 'delete_calendar' 0 %}".replace("0", calendarId);
+
+    
+    console.log('Delete URL:', deleteUrl);
+    
+    fetch(deleteUrl, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        // Remove the row from the DataTable
+        const table = $('#calendarsTable').DataTable();
+        const row = table.row($('#calendar-row-' + calendarId));
+        row.remove().draw();
+        
+        // Show success message
+        showAlert('Calendar deleted successfully.', 'success');
+      } else {
+        throw new Error(data.error || 'Unknown error occurred');
+      }
+    })
+    .catch(error => {
+      console.error('Error deleting calendar:', error);
+      showAlert('An error occurred while deleting the calendar: ' + error.message, 'danger');
+    });
+  }
+
+  // Show alert message
+  function showAlert(message, type) {
+    // Remove any existing alerts
+    document.querySelectorAll('.alert').forEach(alert => alert.remove());
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Insert after the card header
+    const cardBody = document.querySelector('.card-body');
+    cardBody.insertBefore(alertDiv, cardBody.firstChild);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      if (alertDiv.parentNode) {
+        alertDiv.remove();
+      }
+    }, 5000);
+  }
+
+  // Setup event listeners
+  function setupEventListeners() {
+    // Delete calendar button listeners
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('.delete-calendar-btn')) {
+        const btn = e.target.closest('.delete-calendar-btn');
+        const calendarId = btn.getAttribute('data-calendar-id');
+        const year = btn.getAttribute('data-calendar-year');
+        const semester = btn.getAttribute('data-calendar-semester');
+        deleteCalendar(calendarId, year, semester);
+      }
+    });
+
+    // PDF viewer controls
+    document.getElementById('prevPage').addEventListener('click', () => {
+      if (currentPdf && currentPage > 1) {
+        scrollToPage(currentPage - 1);
+      }
+    });
+    document.getElementById('nextPage').addEventListener('click', () => {
+      if (currentPdf && currentPage < currentPdf.numPages) {
+        scrollToPage(currentPage + 1);
+      }
+    });
+    document.getElementById('pageInput').addEventListener('change', (e) => {
+      const pageNum = parseInt(e.target.value);
+      if (currentPdf && pageNum >= 1 && pageNum <= currentPdf.numPages) {
+        scrollToPage(pageNum);
+      } else {
+        e.target.value = currentPage;
+      }
+    });
+    document.getElementById('zoomIn').addEventListener('click', () => {
+      currentScale += SCALE_INCREMENT;
+      updateZoom();
+    });
+    document.getElementById('zoomOut').addEventListener('click', () => {
+      if (currentScale > SCALE_INCREMENT) {
+        currentScale -= SCALE_INCREMENT;
+        updateZoom();
+      }
+    });
+    
+    document.getElementById('pdfScrollContainer').addEventListener('scroll', () => {
+      if (!currentPdf) return;
+      const container = document.getElementById('pdfScrollContainer');
+      const pages = Array.from(document.getElementsByClassName('pdf-page'));
+      const containerRect = container.getBoundingClientRect();
+      const containerCenter = containerRect.top + containerRect.height / 2;
+      let closestPage = null;
+      let minDistance = Infinity;
+      pages.forEach(page => {
+        const pageRect = page.getBoundingClientRect();
+        const pageCenter = pageRect.top + pageRect.height / 2;
+        const distance = Math.abs(pageCenter - containerCenter);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestPage = page;
+        }
+      });
+      if (closestPage) {
+        const pageNum = parseInt(closestPage.id.split('-')[2]);
+        if (pageNum !== currentPage) {
+          currentPage = pageNum;
+          document.getElementById('pageInput').value = pageNum;
+          prioritizeRenderQueue(pageNum);
+        }
+      }
+    });
+    
+    document.getElementById('pdfModal').addEventListener('hidden.bs.modal', () => {
+      if (!bootstrap) {
+        document.getElementById('pdfModal').classList.remove('show');
+        document.getElementById('pdfModal').style.display = 'none';
+        document.body.classList.remove('modal-open');
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.remove();
+      }
+      currentPdf = null;
+      allRenderedPages = [];
+      renderQueue = [];
+      document.getElementById('pdfScrollContainer').innerHTML = '';
+    });
+  }
+
+  // Initialize
+  setupEventListeners();
+  window.openPdfModal = initPdfModal;
+});
+</script>
+{% endblock %} 

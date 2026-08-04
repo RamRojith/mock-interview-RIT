@@ -1,0 +1,632 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+{% load flm_tags %}
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<style>
+  :root{
+    --card-bg:#ffffff;
+    --muted:#6c757d;
+    --border:#e6e8eb;
+    --soft:#f6f7f9;
+  }
+
+  .page-wrap{ max-width: 1200px; }
+
+  /* NOTE (clean, readable) */
+  .note-box{
+    border: 1px solid #ffe3e3;
+    background: #fff5f5;
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: 0 6px 14px rgba(0,0,0,.06);
+  }
+  .note-title{
+    display:flex; align-items:center; gap:10px;
+    font-weight:800; color:#b42318; margin-bottom: 8px;
+  }
+  .note-bullets{
+    margin:0; padding-left: 18px;
+    color:#7a1c1c; font-size: 0.95rem;
+  }
+  .note-bullets li{ margin-bottom: 6px; }
+
+  /* Header */
+  .section-title{
+    display:flex; align-items:center; justify-content:space-between;
+    gap: 12px; margin: 18px 0 12px;
+  }
+  .section-title h3{ margin:0; font-weight:800; }
+  .subtext{ color: var(--muted); font-size: .9rem; }
+
+  /* Cards */
+  .ui-card{
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 8px 18px rgba(0,0,0,.06);
+    overflow: hidden;
+  }
+  .ui-card .ui-card-header{
+    padding: 14px 16px;
+    background: linear-gradient(180deg, #f8fafc, #ffffff);
+    border-bottom: 1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .ui-card .ui-card-header h5{
+    margin:0; font-weight:800;
+  }
+  .ui-card .ui-card-body{ padding: 14px 16px; }
+
+  /* Creator role select */
+  .creator-row{
+    display:flex; gap: 12px; align-items:end; flex-wrap: wrap;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 8px 18px rgba(0,0,0,.05);
+  }
+  .creator-row .form-label{ font-weight: 800; }
+  .creator-row .hint{ margin-top: 4px; color: var(--muted); font-size: .85rem; }
+
+  /* Search inputs */
+  .search-box{
+    position: relative;
+    width: 100%;
+  }
+  .search-box input{
+    padding-left: 38px;
+    border-radius: 12px;
+    background: var(--soft);
+    border: 1px solid var(--border);
+  }
+  .search-box .icon{
+    position:absolute; left:12px; top:50%;
+    transform: translateY(-50%);
+    color: #9aa4af; font-size: 14px;
+  }
+
+  /* Role lists */
+  .role-list{
+    min-height: 320px;
+    border: 2px dashed #cfd6dd;
+    border-radius: 14px;
+    padding: 12px;
+    background: #fff;
+  }
+
+  .role-item{
+    cursor: grab;
+    padding: 10px 12px;
+    margin: 8px 0;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    transition: transform .08s ease, background-color .2s ease, box-shadow .2s ease;
+  }
+  .role-item:hover{
+    background: #f1f5f9;
+    box-shadow: 0 6px 12px rgba(0,0,0,.06);
+  }
+  .role-left{
+    display:flex; align-items:center; gap:10px;
+    min-width: 180px; flex: 1;
+  }
+  .role-pill{
+    font-size: .75rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #e7f0ff;
+    color: #1d4ed8;
+    font-weight: 700;
+    border: 1px solid #d6e6ff;
+    white-space: nowrap;
+  }
+  .role-name{
+    font-weight: 800;
+    color:#0f172a;
+    line-height: 1.2;
+  }
+
+  .role-right{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content:flex-end;
+  }
+
+  .cross-dept-wrap{
+    display:flex; align-items:center; gap: 8px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid var(--border);
+  }
+  .cross-dept-wrap label{
+    margin:0;
+    font-size: .85rem;
+    color:#334155;
+    font-weight:700;
+    white-space: nowrap;
+  }
+
+  .department-select{
+    min-width: 240px;
+    border-radius: 12px;
+  }
+
+  .role-item.frozen{
+    cursor: not-allowed;
+    opacity: 0.55;
+    filter: grayscale(0.2);
+  }
+
+  /* Sticky action bar */
+  .sticky-actions{
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(6px);
+    border-top: 1px solid var(--border);
+    padding: 12px 0;
+    margin-top: 18px;
+  }
+  .sticky-actions .inner{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 12px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .mini-help{ color: var(--muted); font-size: .9rem; }
+  .btn-lg-round{ border-radius: 14px; padding: 10px 16px; font-weight: 800; }
+
+  .sortable-ghost{ opacity: .35; }
+  .hidden-by-search{ display: none !important; }
+
+  /* Modal icon circle */
+  .status-icon{
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size: 20px; font-weight: 900;
+  }
+</style>
+
+<div class="container py-3 page-wrap">
+
+  <!-- NOTE -->
+  <div class="note-box mb-3">
+    <div class="note-title">
+      <span>⚠ Important</span>
+      <span class="subtext">Cross-department approvals (New approvals only)</span>
+    </div>
+    <ul class="note-bullets">
+      <li>If the approver is not from the creator’s department, enable <b>Cross Dept</b> and select the approver’s department.</li>
+      <li>This update is applicable only for <b>new approvals</b>.</li>
+    </ul>
+  </div>
+
+  <!-- Title -->
+  <div class="section-title">
+    <h3>Leave Approvers</h3>
+    <div class="subtext">Drag roles from left → right to set hierarchy</div>
+  </div>
+
+  <!-- Creator role selector -->
+  <div class="creator-row mb-3">
+    <div style="min-width: 320px; flex:1;">
+      <label class="form-label">Creator Role</label>
+      <input type="hidden" id="creatorRole3" value="{{ student_role.id|default:'' }}">
+      <input type="text" class="form-control" value="{{ student_role.role|default:'Student role not found' }}" readonly>
+      <div class="hint">All student leave applications use the Student role.</div>
+    </div>
+
+    <div style="min-width: 280px; flex:1;">
+      <label for="studentLeaveCondition3" class="form-label">Student Leave Flow</label>
+      <select id="studentLeaveCondition3" class="form-select">
+        {% for option in condition_options %}
+          <option value="{{ option.mode }}|{{ option.gender }}">{{ option.label }}</option>
+        {% endfor %}
+      </select>
+      <div class="hint">Transport uses the academic flow; hostel flow splits by student gender.</div>
+    </div>
+
+    <div class="ms-auto d-flex align-items-end gap-2">
+      <button type="button" class="btn btn-outline-secondary btn-lg-round" id="clearHierarchy3">
+        Clear Hierarchy
+      </button>
+    </div>
+  </div>
+
+  <!-- Lists -->
+  <div class="row g-3">
+    <!-- Available -->
+    <div class="col-md-6">
+      <div class="ui-card">
+        <div class="ui-card-header">
+          <h5 class="mb-0">Available Roles</h5>
+          <span class="subtext">Search + drag</span>
+        </div>
+        <div class="ui-card-body">
+          <div class="search-box mb-2">
+            <span class="icon">🔎</span>
+            <input id="searchAvailable3" type="text" class="form-control" placeholder="Search available roles...">
+          </div>
+          <div id="availableRoles3" class="role-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hierarchy -->
+    <div class="col-md-6">
+      <div class="ui-card">
+        <div class="ui-card-header">
+          <h5 class="mb-0">Approval Hierarchy</h5>
+          <span class="subtext">Order matters</span>
+        </div>
+        <div class="ui-card-body">
+          <div class="search-box mb-2">
+            <span class="icon">🔎</span>
+            <input id="searchHierarchy3" type="text" class="form-control" placeholder="Search hierarchy roles...">
+          </div>
+          <div id="roleHierarchy3" class="role-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Sticky Submit -->
+<div class="sticky-actions">
+  <div class="inner">
+    <div class="mini-help">
+      ✅ After arranging, click <b>Submit</b> to save the hierarchy.
+    </div>
+    <button id="submitRoles3" class="btn btn-primary btn-lg-round">
+      <span class="btn-text">Submit Hierarchy</span>
+      <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+    </button>
+  </div>
+</div>
+
+<!-- ✅ Status Modal (replaces alert) -->
+<div class="modal fade" id="statusModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow:hidden;">
+      <div class="modal-header border-0" style="background: linear-gradient(180deg,#f8fafc,#fff);">
+        <div class="d-flex align-items-center gap-3">
+          <div id="statusIcon" class="status-icon" style="background:#eef2ff;color:#1d4ed8;">i</div>
+          <div>
+            <h5 id="statusTitle" class="modal-title mb-0 fw-bold">Message</h5>
+            <div id="statusSub" class="text-muted" style="font-size:.9rem;">Status</div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="statusMessage" class="fw-semibold" style="color:#0f172a;">
+          Done.
+        </div>
+      </div>
+
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-primary btn-lg-round" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ✅ Bootstrap Modal fallback loader (only if not already loaded in base.html)
+  (function ensureBootstrapModal(){
+    if (window.bootstrap && window.bootstrap.Modal) return;
+
+    // If your base already includes bootstrap.bundle.min.js, this won't run.
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js";
+    s.defer = true;
+    document.head.appendChild(s);
+  })();
+
+  function showStatusModal(type, title, message, subText="") {
+    // type: "success" | "error" | "info" | "warning"
+    const iconEl = document.getElementById("statusIcon");
+    const titleEl = document.getElementById("statusTitle");
+    const msgEl   = document.getElementById("statusMessage");
+    const subEl   = document.getElementById("statusSub");
+
+    const styles = {
+      success: { bg:"#ecfdf3", fg:"#027a48", icon:"✓", sub:"Saved successfully" },
+      error:   { bg:"#fff5f5", fg:"#b42318", icon:"!", sub:"Something went wrong" },
+      warning: { bg:"#fffbeb", fg:"#b45309", icon:"!", sub:"Please check" },
+      info:    { bg:"#eef2ff", fg:"#1d4ed8", icon:"i", sub:"Information" }
+    };
+
+    const s = styles[type] || styles.info;
+    iconEl.style.background = s.bg;
+    iconEl.style.color = s.fg;
+    iconEl.textContent = s.icon;
+
+    titleEl.textContent = title || "Message";
+    msgEl.textContent = message || "Done.";
+    subEl.textContent = subText || s.sub;
+
+    // Wait until bootstrap loads (if injected)
+    const open = () => {
+      if (!window.bootstrap || !window.bootstrap.Modal) return setTimeout(open, 80);
+      const modal = new bootstrap.Modal(document.getElementById("statusModal"));
+      modal.show();
+    };
+    open();
+  }
+
+  function setSubmitLoading(isLoading){
+    const btn = document.getElementById("submitRoles3");
+    const sp  = btn.querySelector(".spinner-border");
+    const tx  = btn.querySelector(".btn-text");
+    if (isLoading){
+      btn.disabled = true;
+      sp.classList.remove("d-none");
+      tx.textContent = "Saving...";
+    } else {
+      btn.disabled = false;
+      sp.classList.add("d-none");
+      tx.textContent = "Submit Hierarchy";
+    }
+  }
+
+  function getCsrfToken() {
+    return document.cookie.split('; ')
+      .find(row => row.startsWith('csrftoken='))?.split('=')[1];
+  }
+
+  function roleItemTemplate(roleId, roleName, departmentsHtml, isCross=false, selectedDeptId=null, frozen=false) {
+    const crossChecked = isCross ? "checked" : "";
+    const selectDisplay = isCross ? "block" : "none";
+    const frozenClass = frozen ? "frozen" : "";
+
+    return `
+      <div class="role-item ${frozenClass}" data-role-id="${roleId}" data-role-name="${(roleName||'').toLowerCase()}">
+        <div class="role-left">
+          <span class="role-pill">ROLE</span>
+          <div class="role-name">${roleName}</div>
+        </div>
+
+        <div class="role-right">
+          <div class="cross-dept-wrap">
+            <input type="checkbox" class="form-check-input cross-department-check" ${crossChecked} ${frozen ? "disabled" : ""}/>
+            <label>Cross Dept</label>
+          </div>
+
+          <select class="form-select department-select" style="display:${selectDisplay};" ${frozen ? "disabled" : ""}>
+            <option value="">-- Select Department --</option>
+            ${departmentsHtml}
+          </select>
+        </div>
+      </div>
+    `;
+  }
+
+  function applyDeptSelection(container, deptId) {
+    if (!deptId) return;
+    const select = container.querySelector(".department-select");
+    if (!select) return;
+    select.value = String(deptId);
+  }
+
+  function filterList(listEl, query) {
+    const q = (query || "").trim().toLowerCase();
+    listEl.querySelectorAll(".role-item").forEach(item => {
+      const name = item.dataset.roleName || "";
+      item.classList.toggle("hidden-by-search", q && !name.includes(q));
+    });
+  }
+
+  function initializeRoleSelection(roleSelectId, availableRolesId, roleHierarchyId, submitButtonId, fetchUrlBase, submitUrl) {
+    const availableRoles = document.getElementById(availableRolesId);
+    const roleHierarchy = document.getElementById(roleHierarchyId);
+    const creatorRoleSelect = document.getElementById(roleSelectId);
+    const conditionSelect = document.getElementById("studentLeaveCondition3");
+
+    const searchAvailable = document.getElementById("searchAvailable3");
+    const searchHierarchy = document.getElementById("searchHierarchy3");
+    const clearBtn = document.getElementById("clearHierarchy3");
+
+    const departmentsHtml = `
+      {% for department in departments %}
+        <option value="{{ department.id }}">
+          {{ department.Department }}  ({{ department.Department_code }}) - {{ department.degree.degree_code|default:"N/A" }}
+        </option>
+      {% endfor %}
+    `;
+
+    function getSelectedCondition() {
+      const [mode, gender] = (conditionSelect.value || "DEFAULT|ANY").split("|");
+      return {
+        mode: mode || "DEFAULT",
+        gender: gender || "ANY"
+      };
+    }
+
+    function getFetchUrl(creatorRoleId) {
+      if (!creatorRoleId) return null;
+      const condition = getSelectedCondition();
+      const params = new URLSearchParams({
+        conditionMode: condition.mode,
+        conditionGender: condition.gender
+      });
+      return `${fetchUrlBase.replace("__ID__", creatorRoleId)}?${params.toString()}`;
+    }
+
+    function populateRoles(creatorRoleId) {
+      availableRoles.innerHTML = '';
+      roleHierarchy.innerHTML = '';
+      searchAvailable.value = "";
+      searchHierarchy.value = "";
+
+      if (!creatorRoleId) {
+        availableRoles.innerHTML = `<div class="text-muted text-center p-3">Student role not found</div>`;
+      } else {
+        fetchRoles(getFetchUrl(creatorRoleId));
+      }
+    }
+
+    function fetchRoles(apiUrl) {
+      if (!apiUrl) return;
+
+      fetch(apiUrl)
+        .then(r => r.json())
+        .then(data => {
+          roleHierarchy.innerHTML = (data.matched_roles || []).map(r => {
+            return roleItemTemplate(
+              r.id,
+              r.role,
+              departmentsHtml,
+              !!r.is_cross_department,
+              r.approver_department_id || null,
+              false
+            );
+          }).join("");
+
+          roleHierarchy.querySelectorAll(".role-item").forEach(item => {
+            const roleId = item.dataset.roleId;
+            const role = (data.matched_roles || []).find(x => String(x.id) === String(roleId));
+            if (role && role.approver_department_id) applyDeptSelection(item, role.approver_department_id);
+          });
+
+          availableRoles.innerHTML = (data.unmatched_roles || []).map(r => {
+            return roleItemTemplate(r.id, r.role, departmentsHtml, false, null, false);
+          }).join("");
+        })
+        .catch(err => {
+          console.error("Fetch error:", err);
+          showStatusModal("error", "Failed to load roles", "Unable to fetch roles. Please try again.");
+        });
+    }
+
+    function submitRoles(apiUrl) {
+      const creatorRole = creatorRoleSelect.value;
+      if (!creatorRole) {
+        showStatusModal("warning", "Creator role required", "Please select a creator role to continue.");
+        return;
+      }
+      const condition = getSelectedCondition();
+
+      const roleHierarchyData = Array.from(roleHierarchy.querySelectorAll(".role-item")).map(item => ({
+        id: item.dataset.roleId,
+        isCrossDepartment: item.querySelector(".cross-department-check")?.checked || false,
+        departmentId: item.querySelector(".department-select")?.value || null
+      }));
+
+      const invalid = roleHierarchyData.find(x => x.isCrossDepartment && !x.departmentId);
+      if (invalid) {
+        showStatusModal("warning", "Department missing", "Cross Dept is checked for a role, but department is not selected.");
+        return;
+      }
+
+      setSubmitLoading(true);
+
+      fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCsrfToken()
+        },
+        body: JSON.stringify({
+          creatorRole,
+          conditionMode: condition.mode,
+          conditionGender: condition.gender,
+          roleHierarchy: roleHierarchyData
+        })
+      })
+      .then(async r => {
+        let data = {};
+        try { data = await r.json(); } catch(e) {}
+        if (!r.ok) {
+          const msg = data.message || data.error || "Server error while saving.";
+          throw new Error(msg);
+        }
+        return data;
+      })
+      .then(data => {
+        showStatusModal("success", "Hierarchy Saved", data.message || "Saved successfully.");
+      })
+      .catch(error => {
+        showStatusModal("error", "Save Failed", error.message || "Something went wrong.");
+      })
+      .finally(() => setSubmitLoading(false));
+    }
+
+    // Drag & drop
+    new Sortable(availableRoles, { group: 'roles', animation: 150, ghostClass: 'sortable-ghost' });
+    new Sortable(roleHierarchy, { group: 'roles', animation: 150, ghostClass: 'sortable-ghost' });
+
+    // Cross dept toggle show/hide
+    document.addEventListener("change", (event) => {
+      if (event.target.classList.contains("cross-department-check")) {
+        const wrap = event.target.closest(".role-item");
+        const sel = wrap?.querySelector(".department-select");
+        if (!sel) return;
+        sel.style.display = event.target.checked ? "block" : "none";
+        if (!event.target.checked) sel.value = "";
+      }
+    });
+
+    // Search
+    searchAvailable.addEventListener("input", () => filterList(availableRoles, searchAvailable.value));
+    searchHierarchy.addEventListener("input", () => filterList(roleHierarchy, searchHierarchy.value));
+
+    // Clear hierarchy
+    clearBtn.addEventListener("click", () => {
+      const items = Array.from(roleHierarchy.querySelectorAll(".role-item"));
+      items.forEach(i => availableRoles.appendChild(i));
+
+      availableRoles.querySelectorAll(".role-item").forEach(item => {
+        const chk = item.querySelector(".cross-department-check");
+        const sel = item.querySelector(".department-select");
+        if (chk) chk.checked = false;
+        if (sel) { sel.value = ""; sel.style.display = "none"; }
+      });
+
+      searchAvailable.value = "";
+      searchHierarchy.value = "";
+      filterList(availableRoles, "");
+      filterList(roleHierarchy, "");
+
+      showStatusModal("info", "Hierarchy cleared", "All roles moved back to Available Roles.");
+    });
+
+    // Init
+    creatorRoleSelect.addEventListener("change", () => populateRoles(creatorRoleSelect.value));
+    conditionSelect.addEventListener("change", () => populateRoles(creatorRoleSelect.value));
+    populateRoles(creatorRoleSelect.value);
+
+    // Submit
+    document.getElementById(submitButtonId).addEventListener("click", () => submitRoles(submitUrl));
+  }
+
+  const fetchUrlLeave = "{% url 'student_api_leave_roles' 1 %}".replace("/1/", "/__ID__/");
+  const submitUrlLeave = "{% url 'student_leave_approval_management' %}";
+
+  initializeRoleSelection(
+    "creatorRole3",
+    "availableRoles3",
+    "roleHierarchy3",
+    "submitRoles3",
+    fetchUrlLeave,
+    submitUrlLeave
+  );
+</script>
+
+{% endblock content %}

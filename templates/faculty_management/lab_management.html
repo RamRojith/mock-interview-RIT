@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% load fm_tags %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+.lab-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.lab-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.75rem 1.5rem;
+  background: linear-gradient(135deg, #0f766e 0%, #0ea5a4 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.lab-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.lab-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.92;
+  margin-top: 0.5rem;
+}
+
+.lab-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.lab-portal .notice {
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  color: #155e63;
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.92rem;
+}
+
+.lab-portal .feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.lab-portal .feature-card {
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+  border: 1px solid #f1f5f9;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.lab-portal .feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(15,118,110,0.14);
+}
+
+.lab-portal .feature-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ccfbf1, #f0fdfa);
+  color: #0f766e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.lab-portal .feature-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #134e4a;
+  margin: 0;
+}
+
+.lab-portal .feature-desc {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.lab-portal .feature-action {
+  margin-top: 0.5rem;
+}
+
+.lab-portal .btn-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, #0f766e 0%, #0ea5a4 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.55rem 1.1rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.lab-portal .badge-soon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.lab-portal .forbidden-box {
+  max-width: 600px;
+  margin: 4rem auto;
+  background: white;
+  border-radius: 18px;
+  padding: 2.5rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.lab-portal .forbidden-box i {
+  font-size: 3rem;
+  color: #f59e0b;
+  margin-bottom: 1rem;
+}
+</style>
+
+<div class="lab-portal">
+
+  {% if can_access_lab_management %}
+
+  <div class="page-header">
+    <h1><i class="fas fa-flask me-2"></i> Lab Management System</h1>
+    <p class="header-subtitle">Manage laboratories, equipment, bookings and in-charges</p>
+  </div>
+
+  <div class="page-container">
+
+    <div class="notice">
+      <i class="fas fa-circle-info"></i>
+      <span>
+        This module is being set up. The sections below are placeholders &mdash;
+        the workflow and rules will be configured next.
+      </span>
+    </div>
+
+    <div class="feature-grid">
+      {% for feature in lab_features %}
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-{{ feature.icon }}"></i>
+        </div>
+        <h3 class="feature-title">{{ feature.title }}</h3>
+        <p class="feature-desc">{{ feature.description }}</p>
+        <div class="feature-action">
+          {% if feature.url_name %}
+            {% url feature.url_name as feature_url %}
+            {% if feature_url %}
+            <a href="{{ feature_url }}" class="btn-open">
+              Open <i class="fas fa-arrow-right"></i>
+            </a>
+            {% else %}
+            <span class="badge-soon"><i class="fas fa-clock"></i> Coming soon</span>
+            {% endif %}
+          {% else %}
+            <span class="badge-soon"><i class="fas fa-clock"></i> Coming soon</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+  {% else %}
+
+  <div class="forbidden-box">
+    <i class="fas fa-lock"></i>
+    <h2>Access Restricted</h2>
+    <p>You do not have permission to access the Lab Management System.
+       Please contact your administrator if you believe this is an error.</p>
+  </div>
+
+  {% endif %}
+
+</div>
+
+{% endblock %}

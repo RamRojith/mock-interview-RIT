@@ -1,0 +1,138 @@
+{% load static %}
+<section
+  class="faculty-chatbot"
+  id="facultyChatbot"
+  data-chat-url="{% url 'chatbot:chat' %}"
+  data-history-url="{% url 'chatbot:history' %}"
+  data-questions-url="{% url 'chatbot:questions' %}"
+  aria-label="ERP Assistant"
+>
+  <div class="faculty-chatbot__panel" id="facultyChatPanel" hidden>
+    <header class="faculty-chatbot__header">
+      <div class="faculty-chatbot__identity">
+        <span class="faculty-chatbot__avatar" aria-hidden="true">
+          <i class="fas fa-wand-magic-sparkles"></i>
+        </span>
+        <div>
+          <h2>RIT ERP Assistant</h2>
+          <p>{% if request.user.is_superuser or request.user.Employee_id == "0000" or request.session.app_name == "Admin Portal" %}Admin · Full ERP access{% elif request.user.is_student %}Student · Personal ERP access{% else %}ERP access · {{ request.user.role.role|default:"Employee" }}{% endif %}</p>
+        </div>
+      </div>
+      <div class="faculty-chatbot__actions">
+        <button
+          type="button"
+          class="faculty-chatbot__help-button"
+          id="erpChatQuestionsToggle"
+          title="Browse questions you can ask"
+          aria-label="Browse questions you can ask"
+          aria-controls="erpChatQuestions"
+          aria-expanded="false"
+        >
+          <i class="fas fa-circle-question" aria-hidden="true"></i>
+          <span>Questions</span>
+        </button>
+        <button type="button" id="facultyChatClear" title="Clear conversation" aria-label="Clear conversation">
+          <i class="fas fa-trash-can"></i>
+        </button>
+        <button type="button" id="facultyChatClose" title="Close assistant" aria-label="Close assistant">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+    </header>
+
+    <aside
+      class="faculty-chatbot__question-panel"
+      id="erpChatQuestions"
+      aria-labelledby="erpChatQuestionsTitle"
+      hidden
+    >
+      <div class="faculty-chatbot__question-header">
+        <div>
+          <h3 id="erpChatQuestionsTitle">What can I ask?</h3>
+          <p>Select a question to place it in the message box, or copy it.</p>
+        </div>
+        <button
+          type="button"
+          id="erpChatQuestionsClose"
+          aria-label="Close example questions"
+          title="Close questions"
+        >
+          <i class="fas fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <label class="visually-hidden" for="erpChatQuestionsSearch">Search example questions</label>
+      <div class="faculty-chatbot__question-search">
+        <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+        <input
+          type="search"
+          id="erpChatQuestionsSearch"
+          placeholder="Search questions..."
+          autocomplete="off"
+        >
+      </div>
+      <div class="faculty-chatbot__question-list" id="erpChatQuestionsList"></div>
+      <p class="faculty-chatbot__question-empty" id="erpChatQuestionsEmpty" hidden>
+        No matching questions found.
+      </p>
+    </aside>
+
+    <div class="faculty-chatbot__messages" id="facultyChatMessages" role="log" aria-live="polite">
+      <div class="faculty-chatbot__empty" id="facultyChatEmpty">
+        <span><i class="fas fa-comments"></i></span>
+        <h3>How can I help?</h3>
+        <p>{% if request.user.is_student %}Ask about your profile, subjects, attendance, marks, or semester results.{% else %}Ask about your students, handled subjects, permitted marks, or class performance.{% endif %}</p>
+        <div class="faculty-chatbot__suggestions">
+          {% if request.user.is_student %}
+          <button type="button" data-chat-suggestion="Show today's timetable">Today's timetable</button>
+          <button type="button" data-chat-suggestion="Show my academic overview">Academic overview</button>
+          <button type="button" data-chat-suggestion="Show my attendance">My attendance</button>
+          <button type="button" data-chat-suggestion="Show my internal marks">My marks</button>
+          <button type="button" data-chat-suggestion="Show my subjects">My subjects</button>
+          {% else %}
+          <button
+            type="button"
+            data-chat-template="Class report for &lt;SUBJECT CODE&gt; in IAT 1 &lt;BATCH&gt; Section &lt;SECTION&gt;"
+            data-chat-select-placeholder="&lt;SUBJECT CODE&gt;"
+          >Class Report</button>
+          <button
+            type="button"
+            class="faculty-chatbot__suggestion--wide"
+            data-chat-template-prefix="Analyze the performance of "
+            aria-label="Prepare a student performance analysis query"
+          >Analyze Student Performance</button>
+          <button type="button" data-chat-suggestion="What can you help me with?">Available help</button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="faculty-chatbot__status" id="facultyChatStatus" aria-live="polite"></div>
+    <form class="faculty-chatbot__composer" id="facultyChatForm">
+      {% csrf_token %}
+      <label class="visually-hidden" for="facultyChatInput">Ask the ERP assistant</label>
+      <textarea
+        id="facultyChatInput"
+        rows="1"
+        maxlength="1200"
+        placeholder="Ask about ERP academic data…"
+        autocomplete="off"
+      ></textarea>
+      <button type="submit" id="facultyChatSend" aria-label="Send message">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </form>
+    <p class="faculty-chatbot__notice">{% if request.user.is_superuser or request.user.Employee_id == "0000" or request.session.app_name == "Admin Portal" %}Admin access includes institution-wide ERP data.{% elif request.user.is_student %}Responses are restricted to your own student record.{% else %}Responses are restricted to your current ERP role and permitted assignments.{% endif %}</p>
+  </div>
+
+  <button
+    class="faculty-chatbot__toggle"
+    id="facultyChatToggle"
+    type="button"
+    aria-controls="facultyChatPanel"
+    aria-expanded="false"
+  >
+    <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+    <span>AI Assistant</span>
+  </button>
+</section>
+<script src="{% static 'chatbot/chatbot.js' %}?v=20260722-1" defer></script>

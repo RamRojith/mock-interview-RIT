@@ -1,0 +1,2020 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Course Attendance{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+/* ================= GLOBAL STYLES ================= */
+.attendance-page {
+    --primary: #1a4b8c;
+    --primary-light: #2a5ba8;
+    --primary-soft: #eaf2ff;
+    --secondary: #f8b739;
+    --success: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --info: #17a2b8;
+    --light: #f8f9fa;
+    --dark: #343a40;
+    --border: #e3e6f0;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding-bottom: 2rem;
+    background:
+        radial-gradient(circle at top left, rgba(42, 91, 168, 0.08), transparent 28%),
+        linear-gradient(180deg, #f7faff 0%, #f4f7fb 100%);
+}
+
+.attendance-page.container-fluid {
+    padding-top: 1.25rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+}
+
+.attendance-page .course-info-card,
+.attendance-page .date-selector-card,
+.attendance-page .group-summary-card,
+.attendance-page .attendance-table-card {
+    backdrop-filter: blur(6px);
+}
+
+/* ================= HEADER STYLES ================= */
+.attendance-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    margin-bottom: 2rem;
+    color: white;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.attendance-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.page-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+    font-weight: 400;
+}
+
+.header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-end;
+}
+
+.header-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.6rem 1rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.18);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.date-display {
+    background: rgba(255,255,255,0.12);
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    white-space: nowrap;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+}
+
+.date-display:hover {
+    background: rgba(255,255,255,0.18);
+    transform: translateY(-2px);
+}
+
+.date-display i {
+    font-size: 1.1rem;
+}
+
+/* ================= COURSE INFO CARD ================= */
+.course-info-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border);
+}
+
+.course-info-card .card-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.course-info-card .card-header h3 {
+    margin: 0;
+    color: var(--primary);
+    font-size: 1.4rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.course-info-card .card-body {
+    padding: 2rem;
+}
+
+.course-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.detail-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border-color: var(--primary-light);
+    background: white;
+}
+
+.detail-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(26, 75, 140, 0.25);
+}
+
+.detail-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.detail-label {
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.detail-value {
+    color: var(--dark);
+    font-weight: 800;
+    font-size: 1.25rem;
+    line-height: 1.2;
+}
+
+/* ================= DATE SELECTION CARD ================= */
+.date-selector-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border);
+}
+
+.date-selector-card .card-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.date-selector-card .card-header h3 {
+    margin: 0;
+    color: var(--primary);
+    font-size: 1.4rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.date-selector-card .card-body {
+    padding: 2rem;
+}
+
+.date-input-group {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(160px, 1fr)) auto;
+    gap: 1rem;
+    align-items: end;
+}
+
+.input-field {
+    min-width: 0;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+    display: block;
+    font-size: 0.95rem;
+}
+
+.date-input {
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 1rem;
+    background: #fbfdff;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.date-input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+    background: white;
+}
+
+/* ================= Course Plan Custom Dropdown ================= */
+/* Let the popup escape the card (card normally clips with overflow:hidden) */
+.course-plan-card {
+    overflow: visible;
+    position: relative;
+    z-index: 70;
+}
+
+/* Keep the card's top corners rounded now that overflow is visible */
+.course-plan-card .card-header {
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+}
+
+.course-plan-card .card-body {
+    padding: 1.5rem 2rem;
+    overflow: visible;
+}
+
+.course-plan-field {
+    width: 100%;
+}
+
+.required-star {
+    color: var(--danger);
+    font-weight: 700;
+}
+
+.course-plan-warning {
+    display: block;
+    margin-top: 0.6rem;
+    color: var(--danger);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Academic year tag on the label */
+.cp-ay-tag {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.15rem 0.7rem;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+/* Active unit-filter notice (shown above the course plan dropdown) */
+.cp-unit-active {
+    display: block;
+    margin-bottom: 0.75rem;
+    padding: 0.55rem 0.9rem;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.cp-unit-active i {
+    margin-right: 0.35rem;
+}
+
+.cp-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+/* Trigger box - rounded curve ends */
+.cp-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.95rem 1.25rem;
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    background: #fbfdff;
+    font-size: 1rem;
+    color: var(--dark);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.25s ease;
+}
+
+.cp-trigger:hover {
+    border-color: var(--primary-light);
+}
+
+.cp-dropdown.open .cp-trigger {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.12);
+    background: #fff;
+}
+
+.cp-trigger-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cp-trigger-text.cp-placeholder {
+    color: #94a3b8;
+}
+
+.cp-caret {
+    color: var(--primary);
+    font-size: 0.9rem;
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+}
+
+.cp-dropdown.open .cp-caret {
+    transform: rotate(180deg);
+}
+
+/* Menu always opens BELOW the trigger, fully rounded */
+.cp-menu {
+    list-style: none;
+    margin: 0.5rem 0 0 0;
+    padding: 0.4rem;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: #fff;
+    border: 2px solid var(--primary);
+    border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(26, 75, 140, 0.18);
+    max-height: 280px;
+    overflow-y: auto;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.cp-dropdown.open .cp-menu {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Rounded option rows */
+.cp-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--dark);
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.cp-option + .cp-option {
+    margin-top: 0.15rem;
+}
+
+.cp-option:hover {
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.cp-option-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cp-option .cp-option-check {
+    opacity: 0;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.cp-option[data-selected="true"] {
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.cp-option[data-selected="true"] .cp-option-check {
+    opacity: 1;
+}
+
+/* Rounded scrollbar inside menu */
+.cp-menu::-webkit-scrollbar {
+    width: 8px;
+}
+.cp-menu::-webkit-scrollbar-thumb {
+    background: rgba(26, 75, 140, 0.3);
+    border-radius: 8px;
+}
+
+.cp-dropdown.cp-disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.load-btn {
+    padding: 0.875rem 2rem;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1rem;
+    height: fit-content;
+    white-space: nowrap;
+    align-self: end;
+}
+
+.load-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+/* ================= GROUP SUMMARY CARD ================= */
+.group-summary-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border);
+}
+
+.group-summary-card .card-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.group-summary-card .card-header h3 {
+    margin: 0;
+    color: var(--primary);
+    font-size: 1.4rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.group-summary-card .card-body {
+    padding: 2rem;
+}
+
+.attendance-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    width: 100%;
+}
+
+.summary-item {
+    text-align: center;
+    min-width: 100px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+}
+
+.summary-label {
+    display: block;
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.summary-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--dark);
+    line-height: 1;
+    display: block;
+}
+
+.group-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+
+.group-box {
+    background: linear-gradient(180deg, #fbfcff 0%, #f6f9fd 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    position: relative;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.group-box.selected {
+    border-color: var(--primary);
+    background: linear-gradient(180deg, #f0f7ff 0%, #e8f2ff 100%);
+}
+
+.group-box.completed {
+    border-color: #bfdbfe;
+}
+
+.group-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+}
+
+.group-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.35rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-selected {
+    background: var(--primary);
+    color: white;
+}
+
+.badge-completed {
+    background: var(--success);
+    color: white;
+}
+
+.group-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 1rem;
+    padding-right: 80px;
+}
+
+.group-meta {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+.group-meta strong {
+    color: var(--dark);
+    font-weight: 600;
+}
+
+/* ================= STICKY LIVE SUMMARY ================= */
+.live-summary-sticky {
+    position: sticky;
+    top: 12px;
+    z-index: 50;
+    margin-bottom: 1rem;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 1rem 1.25rem;
+}
+
+.live-summary-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.85rem;
+}
+
+.live-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.85rem;
+}
+
+.live-summary-box {
+    border-radius: 12px;
+    padding: 0.95rem 1rem;
+    text-align: center;
+    border: 1px solid transparent;
+    transition: all 0.25s ease;
+}
+
+.live-summary-box .live-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 0.45rem;
+}
+
+.live-summary-box .live-count {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.live-summary-box.present {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #166534;
+}
+
+.live-summary-box.absent {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.live-summary-box.onduty {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1e40af;
+}
+
+.live-summary-box.locked {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #475569;
+}
+
+.live-summary-box.total {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #9a3412;
+}
+
+/* ================= ATTENDANCE TABLE CARD ================= */
+.attendance-table-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border);
+}
+
+.attendance-table-card .card-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1.75rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.table-subheader {
+    border-top: 1px solid #edf2f7;
+    padding-top: 1.1rem;
+    padding-bottom: 1.1rem;
+}
+
+.header-left h3 {
+    margin: 0;
+    color: var(--dark);
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.subtitle {
+    color: #6c757d;
+    font-size: 0.95rem;
+    margin: 0.25rem 0 0 0;
+}
+
+.top-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.mini-btn {
+    padding: 0.6rem 1.25rem;
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-weight: 600;
+    color: var(--dark);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.mini-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 75, 140, 0.2);
+}
+
+/* ================= TABLE STYLES ================= */
+.table-container {
+    overflow-x: auto;
+    max-height: 600px;
+    overflow-y: auto;
+    position: relative;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.attendance-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 800px;
+}
+
+.attendance-table th {
+    background: var(--light);
+    padding: 1.25rem 1.5rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--dark);
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.attendance-table td {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    transition: background-color 0.2s ease;
+}
+
+.attendance-table tbody tr:nth-child(even) td {
+    background: #fcfdff;
+}
+
+.attendance-table tr:hover td {
+    background-color: #f4f8fd;
+}
+
+.student-col {
+    min-width: 280px;
+    position: sticky;
+    left: 0;
+    background: inherit;
+    z-index: 5;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+
+.period-col {
+    min-width: 180px;
+}
+
+.status-info-col {
+    min-width: 210px;
+}
+
+/* ================= STUDENT INFORMATION ================= */
+.student-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.student-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    box-shadow: 0 4px 8px rgba(26, 75, 140, 0.2);
+}
+
+.student-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.student-reg {
+    font-weight: 700;
+    color: var(--dark);
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.student-name {
+    color: #495057;
+    font-weight: 500;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ================= PERIOD ATTENDANCE ================= */
+.period-attendance {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.locked-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.status-info-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 88px;
+    text-align: center;
+}
+
+/* ================= STATUS OPTIONS ================= */
+.status-options {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.status-option {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.5rem;
+    border: 1px solid #d8e0ea;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(180deg, #ffffff 0%, #fdfefe 100%);
+    position: relative;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+.status-option input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    margin: 0;
+}
+
+.status-option .status-icon {
+    pointer-events: none;
+}
+
+.status-option .status-label {
+    pointer-events: none;
+}
+
+.status-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.status-label {
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #495057;
+}
+
+/* Status Colors */
+.present-option .status-icon {
+    background: #e8f5e8;
+    color: #166534;
+}
+
+.absent-option .status-icon {
+    background: #fde8e8;
+    color: #991b1b;
+}
+
+.onduty-option .status-icon {
+    background: #e3f2f8;
+    color: #1e40af;
+}
+
+.present-option:has(input:checked) {
+    border-color: #166534;
+    background: #f0fdf4;
+}
+
+.absent-option:has(input:checked) {
+    border-color: #991b1b;
+    background: #fef2f2;
+}
+
+.onduty-option:has(input:checked) {
+    border-color: #1e40af;
+    background: #eff6ff;
+}
+
+.status-option:has(input:checked) .status-icon {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px currentColor;
+}
+
+.status-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 18px rgba(15, 23, 42, 0.06);
+}
+
+/* ================= SOURCE BADGES ================= */
+.source-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.source-hour {
+    background: #e8f0ff;
+    color: #1d4ed8;
+}
+
+.source-daily {
+    background: #e9f8ef;
+    color: #166534;
+}
+
+.source-default {
+    background: #fff3e6;
+    color: #b45309;
+}
+
+/* ================= EMPTY STATE ================= */
+.empty-row td {
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: #9ca3af;
+}
+
+.empty-state i {
+    font-size: 3.5rem;
+    opacity: 0.5;
+}
+
+.empty-state h4 {
+    color: #6b7280;
+    font-weight: 600;
+    margin: 0;
+}
+
+.empty-state p {
+    color: #9ca3af;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* ================= FOOTER ================= */
+.card-footer {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1.75rem 2rem;
+    border-top: 1px solid var(--border);
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.875rem 2rem;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    font-size: 1rem;
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+}
+
+/* ================= ANIMATIONS ================= */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.status-option:has(input:checked) .status-icon {
+    animation: pulse 0.3s ease;
+}
+
+/* ================= SCROLLBAR STYLING ================= */
+.table-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* ================= RESPONSIVE DESIGN ================= */
+@media (max-width: 1200px) {
+    .header-content {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .header-info {
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .course-details-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .date-input-group {
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+    }
+}
+
+@media (max-width: 992px) {
+    .attendance-header {
+        padding: 1.75rem;
+    }
+
+    .page-title {
+        font-size: 1.9rem;
+    }
+
+    .course-details-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .footer-content {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .attendance-summary {
+        grid-template-columns: repeat(2, minmax(130px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .attendance-page.container-fluid {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    .attendance-header {
+        padding: 1.5rem;
+        border-radius: 12px;
+    }
+
+    .page-title {
+        font-size: 1.7rem;
+    }
+
+    .page-subtitle {
+        font-size: 1rem;
+    }
+
+    .course-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .date-input-group {
+        grid-template-columns: 1fr;
+    }
+
+    .load-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .attendance-table-card .card-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.25rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .status-options {
+        flex-direction: column;
+    }
+
+    .status-option {
+        flex-direction: row;
+        justify-content: flex-start;
+        padding: 0.5rem 1rem;
+    }
+
+    .group-summary-card .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .live-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .attendance-table th,
+    .attendance-table td {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .date-display {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .detail-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .detail-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.2rem;
+    }
+
+    .student-info {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+
+    .group-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .top-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .mini-btn {
+        width: 100%;
+    }
+
+    .live-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .attendance-summary {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ================= PRINT STYLES ================= */
+@media print {
+    .btn,
+    .date-input-group,
+    .mini-btn,
+    .load-btn,
+    .group-summary-card,
+    .live-summary-sticky {
+        display: none !important;
+    }
+
+    .attendance-table {
+        min-width: 100%;
+    }
+
+    .attendance-table th,
+    .attendance-table td {
+        padding: 0.5rem;
+        font-size: 11px;
+    }
+
+    .student-avatar {
+        display: none;
+    }
+
+    .status-option {
+        border: none;
+        padding: 0.25rem;
+    }
+
+    .status-option input:checked + .status-icon {
+        border: 2px solid black;
+    }
+}
+</style>
+
+<div class="attendance-page container-fluid">
+
+    <!-- Header -->
+    <div class="attendance-header">
+        <div class="header-content">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-clipboard-check"></i>
+                    Course Attendance
+                </h1>
+                <p class="page-subtitle">{{ title }} ({{ course_code }}) - {{ department_name }}</p>
+            </div>
+            <div class="header-info">
+                <div class="date-display">
+                    <i class="fas fa-calendar-day"></i>
+                    {{ selected_date|date:"d M Y" }} ({{ weekday_name }})
+                </div>
+                <div class="header-chip">
+                    <i class="fas fa-clock"></i>
+                    {% if selected_period %}Period {{ selected_period }}{% else %}Choose Period{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Info Card -->
+    <div class="course-info-card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-circle-info"></i>
+                Course Information
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="course-details-grid">
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Year / Semester</span>
+                        <span class="detail-value">{{ year }} / {{ semester }}</span>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Batch / Section</span>
+                        <span class="detail-value">{{ batch }} / {{ section }}</span>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Academic Year</span>
+                        <span class="detail-value">{{ academic_year }}</span>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Total Students</span>
+                        <span class="detail-value">{{ total_students }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date + Period + Type + Group -->
+    <div class="date-selector-card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-calendar-alt"></i>
+                Select Date, Period and Attendance Type
+            </h3>
+        </div>
+        <div class="card-body">
+            <form method="get" id="attendanceFilterForm">
+                {% for key,value in request.GET.items %}
+                    {% if key != "date" and key != "period" and key != "split_type" and key != "group_no" and key != "unit_module_no" %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endif %}
+                {% endfor %}
+
+                <div class="date-input-group">
+                    <div class="input-field">
+                        <label class="form-label" for="dateInput">Date</label>
+                        <input type="date"
+                               id="dateInput"
+                               name="date"
+                               class="date-input"
+                               value="{{ selected_date|date:'Y-m-d' }}"
+                               max="{{ today|date:'Y-m-d' }}">
+                    </div>
+
+                    <div class="input-field">
+                        <label class="form-label" for="periodSelect">Period</label>
+                        <select name="period" id="periodSelect" class="date-input" required>
+                            <option value="">-- Select Period --</option>
+                            {% for p in all_periods %}
+                                <option value="{{ p }}" {% if selected_period == p %}selected{% endif %}>
+                                    Period {{ p }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="input-field">
+                        <label class="form-label" for="unitFilterSelect">Unit (Course Plan)</label>
+                        <select name="unit_module_no" id="unitFilterSelect" class="date-input">
+                            <option value="">-- All Units --</option>
+                            {% for u in unit_options %}
+                                <option value="{{ u.unit_module_no }}" {% if selected_unit == u.unit_module_no %}selected{% endif %}>
+                                    Unit {{ u.unit_module_no }} ({{ u.plan_count }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="input-field">
+                        <label class="form-label" for="splitTypeSelect">Attendance Type</label>
+                        <select name="split_type" id="splitTypeSelect" class="date-input">
+                            <option value="1" {% if split_type == 1 %}selected{% endif %}>Type 1 - Full Class</option>
+                            <option value="2" {% if split_type == 2 %}selected{% endif %}>Type 2 - Strength / 2</option>
+                            <option value="3" {% if split_type == 3 %}selected{% endif %}>Type 3 - Strength / 3</option>
+                            <option value="4" {% if split_type == 4 %}selected{% endif %}>Type 4 - Strength / 4</option>
+                        </select>
+                    </div>
+
+                    <div class="input-field">
+                        <label class="form-label" for="groupSelect">Group / Sub Batch</label>
+                        <select name="group_no" id="groupSelect" class="date-input">
+                            {% for g in group_summary %}
+                                <option value="{{ g.group_no }}" {% if g.is_selected %}selected{% endif %}>
+                                    Group {{ g.group_no }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="load-btn">
+                        <i class="fas fa-sync-alt"></i>
+                        Load Attendance
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Group Summary -->
+    {% if group_summary %}
+    <div class="group-summary-card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-layer-group"></i>
+                Group Summary
+            </h3>
+            <div class="attendance-summary">
+                <div class="summary-item">
+                    <span class="summary-label">Total Students</span>
+                    <span class="summary-value">{{ total_students }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Marked</span>
+                    <span class="summary-value">{{ marked_total }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Remaining</span>
+                    <span class="summary-value">{{ remaining_total }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="group-grid">
+                {% for g in group_summary %}
+                <div class="group-box {% if g.is_selected %}selected{% endif %} {% if g.is_completed %}completed{% endif %}">
+                    {% if g.is_selected %}
+                        <span class="group-badge badge-selected">Selected</span>
+                    {% elif g.is_completed %}
+                        <span class="group-badge badge-completed">Completed</span>
+                    {% endif %}
+
+                    <div class="group-title">Group {{ g.group_no }}</div>
+                    <div class="group-meta"><strong>Students:</strong> {{ g.count }}</div>
+                    <div class="group-meta"><strong>Register No:</strong> {{ g.start_reg }} to {{ g.end_reg }}</div>
+                    <div class="group-meta"><strong>Already Marked:</strong> {{ g.already_marked_count }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if selected_period %}
+    <!-- Attendance Form -->
+    <form method="post" id="attendanceForm">
+        {% csrf_token %}
+        <input type="hidden" name="selected_period" value="{{ selected_period }}">
+        <input type="hidden" name="selected_date" value="{{ selected_date|date:'Y-m-d' }}">
+        <input type="hidden" name="split_type" value="{{ split_type }}">
+        <input type="hidden" name="group_no" value="{{ selected_group_no }}">
+
+        <!-- Course Plan (compulsory) -->
+        <div class="date-selector-card course-plan-card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-book"></i>
+                    Select Course Plan <span class="required-star">*</span>
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="input-field course-plan-field">
+                    <label class="form-label" for="cpTrigger">
+                        Course Plan / Topic (required)
+                        {% if plan_academic_year %}<span class="cp-ay-tag">AY {{ plan_academic_year }}</span>{% endif %}
+                    </label>
+
+                    {% if selected_unit %}
+                    <small class="cp-unit-active">
+                        <i class="fas fa-filter"></i> Showing plans for <strong>Unit {{ selected_unit }}</strong> only —
+                        change the <strong>Unit</strong> filter above to "All Units" to see every plan.
+                    </small>
+                    {% endif %}
+
+                    <div class="cp-dropdown {% if not course_plans %}cp-disabled{% endif %}" id="cpDropdown">
+                        <input type="hidden" name="course_plan" id="coursePlanValue"
+                               value="{% if selected_course_plan_id %}{{ selected_course_plan_id }}{% endif %}">
+
+                        <button type="button" class="cp-trigger" id="cpTrigger"
+                                aria-haspopup="listbox" aria-expanded="false">
+                            <span class="cp-trigger-text" id="cpTriggerText">-- Select Course Plan --</span>
+                            <i class="fas fa-chevron-down cp-caret"></i>
+                        </button>
+
+                        <ul class="cp-menu" id="cpMenu" role="listbox">
+                            {% for plan in course_plans %}
+                            <li class="cp-option" role="option"
+                                data-value="{{ plan.id }}"
+                                data-unit="{{ plan.unit_module_no|default:'' }}"
+                                {% if selected_course_plan_id == plan.id %}data-selected="true"{% endif %}>
+                                <span class="cp-option-text">{% if plan.unit_module_no %}Unit {{ plan.unit_module_no }} | {% endif %}{% if plan.co_no %}{{ plan.co_no }} | {% endif %}{% if plan.period_no %}Period {{ plan.period_no }} | {% endif %}{{ plan.topic|default:"(No topic)"|truncatechars:90 }}</span>
+                                <i class="fas fa-check cp-option-check"></i>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    {% if not course_plans %}
+                        <small class="course-plan-warning">No course plan found for this course. Please create a course plan first under Course Plan.</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sticky Live Summary -->
+        <div class="live-summary-sticky">
+            <div class="live-summary-title">
+                <i class="fas fa-chart-pie"></i>
+                Live Attendance Count
+            </div>
+            <div class="live-summary-grid">
+                <div class="live-summary-box present">
+                    <span class="live-label">Present</span>
+                    <span class="live-count" id="presentCount">0</span>
+                </div>
+                <div class="live-summary-box absent">
+                    <span class="live-label">Absent</span>
+                    <span class="live-count" id="absentCount">0</span>
+                </div>
+                <div class="live-summary-box onduty">
+                    <span class="live-label">On Duty</span>
+                    <span class="live-count" id="ondutyCount">0</span>
+                </div>
+                <div class="live-summary-box locked">
+                    <span class="live-label">Locked</span>
+                    <span class="live-count" id="lockedCount">0</span>
+                </div>
+                <div class="live-summary-box total">
+                    <span class="live-label">Total</span>
+                    <span class="live-count" id="totalCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="attendance-table-card">
+            <div class="card-header">
+                <div class="header-left">
+                    <h3>
+                        <i class="fas fa-user-check"></i>
+                        Mark Attendance - Period {{ selected_period }} | Group {{ selected_group_no }}
+                    </h3>
+                    <p class="subtitle">Register-number-wise selected group attendance entry</p>
+                </div>
+
+                <div class="top-actions">
+                    <button type="button" class="mini-btn" onclick="setAllStatus('Present')">
+                        <i class="fas fa-check-circle"></i> Set All Present
+                    </button>
+                    <button type="button" class="mini-btn" onclick="setAllStatus('Absent')">
+                        <i class="fas fa-times-circle"></i> Set All Absent
+                    </button>
+                    <button type="button" class="mini-btn" onclick="setAllStatus('On Duty')">
+                        <i class="fas fa-user-tie"></i> Set All On Duty
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-header table-subheader">
+                <div class="attendance-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Students in Group</span>
+                        <span class="summary-value">{{ students_with_attendance|length }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Period</span>
+                        <span class="summary-value">{{ selected_period }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Type</span>
+                        <span class="summary-value">{{ split_type }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Group</span>
+                        <span class="summary-value">{{ selected_group_no }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="attendance-table">
+                    <thead>
+                        <tr>
+                            <th class="student-col">Student Details</th>
+                            <th class="period-col">Attendance Status</th>
+                            <th class="period-col status-info-col">Status Info</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in students_with_attendance %}
+                        <tr class="attendance-row" data-locked="{% if s.locked %}true{% else %}false{% endif %}">
+                            <td class="student-col">
+                                <div class="student-info">
+                                    <div class="student-avatar">
+                                        {{ s.student.name|first|default:'N' }}
+                                    </div>
+                                    <div class="student-details">
+                                        <div class="student-reg">{{ s.student.reg_no }}</div>
+                                        <div class="student-name">{{ s.student.name|default:'N/A' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="period-col">
+                                <div class="status-options">
+                                    <label class="status-option present-option">
+                                        <input type="radio"
+                                               class="attendance-radio"
+                                               name="attendance_{{ s.student.id }}"
+                                               value="Present"
+                                               {% if s.status == "Present" %}checked{% endif %}>
+                                        <span class="status-icon"><i class="fas fa-check"></i></span>
+                                        <span class="status-label">Present</span>
+                                    </label>
+
+                                    <label class="status-option absent-option">
+                                        <input type="radio"
+                                               class="attendance-radio"
+                                               name="attendance_{{ s.student.id }}"
+                                               value="Absent"
+                                               {% if s.status == "Absent" %}checked{% endif %}>
+                                        <span class="status-icon"><i class="fas fa-times"></i></span>
+                                        <span class="status-label">Absent</span>
+                                    </label>
+
+                                    <label class="status-option onduty-option">
+                                        <input type="radio"
+                                               class="attendance-radio"
+                                               name="attendance_{{ s.student.id }}"
+                                               value="On Duty"
+                                               {% if s.status == "On Duty" %}checked{% endif %}>
+                                        <span class="status-icon"><i class="fas fa-user-tie"></i></span>
+                                        <span class="status-label">On Duty</span>
+                                    </label>
+                                </div>
+                            </td>
+
+                            <td class="period-col status-info-col">
+                                {% if s.source == "HOUR" %}
+                                    <div class="status-info-stack">
+                                        <div class="locked-status current-locked-status" data-status="{{ s.status }}">
+                                            <span>{{ s.status }}</span>
+                                        </div>
+                                        <span class="source-badge source-hour">Already Saved</span>
+                                    </div>
+                                {% elif s.source == "DAILY" %}
+                                    <div class="status-info-stack">
+                                        <span class="source-badge source-daily">Prefilled from Daily</span>
+                                    </div>
+                                {% else %}
+                                    <div class="status-info-stack">
+                                        <span class="source-badge source-default">Default Present</span>
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr class="empty-row">
+                            <td colspan="3">
+                                <div class="empty-state">
+                                    <i class="fas fa-user-slash"></i>
+                                    <h4>No Students Found</h4>
+                                    <p>No students available for the selected group.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer">
+                <div class="footer-content">
+                    <a href="{% url 'hour_attendence' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Back
+                    </a>
+
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            Save Attendance
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    {% else %}
+    <div class="attendance-table-card">
+        <div class="card-body">
+            <div class="empty-state">
+                <i class="fas fa-calendar-check"></i>
+                <h4>Select Date, Period and Attendance Type</h4>
+                <p>Choose the date, period, attendance type and group, then click Load Attendance.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+    function updateLiveCounts() {
+        const rows = document.querySelectorAll('.attendance-row');
+        let present = 0;
+        let absent = 0;
+        let onduty = 0;
+        let locked = 0;
+        let total = 0;
+
+        rows.forEach(row => {
+            total++;
+
+            const isLocked = row.dataset.locked === 'true';
+            const checkedRadio = row.querySelector('.attendance-radio:checked');
+            const value = checkedRadio ? checkedRadio.value.trim() : '';
+
+            if (isLocked) {
+                locked++;
+            }
+
+            if (value === 'Present') {
+                present++;
+            } else if (value === 'Absent') {
+                absent++;
+            } else if (value === 'On Duty') {
+                onduty++;
+            }
+        });
+
+        const presentEl = document.getElementById('presentCount');
+        const absentEl = document.getElementById('absentCount');
+        const ondutyEl = document.getElementById('ondutyCount');
+        const lockedEl = document.getElementById('lockedCount');
+        const totalEl = document.getElementById('totalCount');
+
+        if (presentEl) presentEl.textContent = present;
+        if (absentEl) absentEl.textContent = absent;
+        if (ondutyEl) ondutyEl.textContent = onduty;
+        if (lockedEl) lockedEl.textContent = locked;
+        if (totalEl) totalEl.textContent = total;
+    }
+
+    function setAllStatus(statusValue) {
+        const rows = document.querySelectorAll('.attendance-row');
+
+        rows.forEach(row => {
+            const radios = row.querySelectorAll('.attendance-radio');
+            radios.forEach(radio => {
+                radio.checked = (radio.value === statusValue);
+            });
+        });
+
+        updateLiveCounts();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const radios = document.querySelectorAll('.attendance-radio');
+        radios.forEach(radio => {
+            radio.addEventListener('change', updateLiveCounts);
+        });
+
+        updateLiveCounts();
+    });
+
+    // Form validation
+    document.getElementById('attendanceFilterForm')?.addEventListener('submit', function(e) {
+        const periodSelect = document.getElementById('periodSelect');
+        if (!periodSelect.value) {
+            e.preventDefault();
+            alert('Please select a period');
+            return;
+        }
+    });
+
+    // ===== Custom Course Plan Dropdown =====
+    (function () {
+        const dropdown = document.getElementById('cpDropdown');
+        if (!dropdown) return;
+
+        const trigger = document.getElementById('cpTrigger');
+        const triggerText = document.getElementById('cpTriggerText');
+        const menu = document.getElementById('cpMenu');
+        const hiddenInput = document.getElementById('coursePlanValue');
+        const options = menu.querySelectorAll('.cp-option');
+
+        // Restore the previously saved plan (if any)
+        const preselected = menu.querySelector('.cp-option[data-selected="true"]');
+        if (preselected) {
+            triggerText.textContent = preselected.querySelector('.cp-option-text').textContent.trim();
+            triggerText.classList.remove('cp-placeholder');
+            hiddenInput.value = preselected.dataset.value;
+        } else {
+            triggerText.classList.add('cp-placeholder');
+        }
+
+        function closeMenu() {
+            dropdown.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        trigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const isOpen = dropdown.classList.toggle('open');
+            trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        options.forEach(function (opt) {
+            opt.addEventListener('click', function () {
+                options.forEach(o => o.removeAttribute('data-selected'));
+                opt.setAttribute('data-selected', 'true');
+                hiddenInput.value = opt.dataset.value;
+                triggerText.textContent = opt.querySelector('.cp-option-text').textContent.trim();
+                triggerText.classList.remove('cp-placeholder');
+                closeMenu();
+            });
+        });
+
+        // Close when clicking outside, or on Escape
+        document.addEventListener('click', function (e) {
+            if (!dropdown.contains(e.target)) closeMenu();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeMenu();
+        });
+    })();
+
+    // Confirm before submitting attendance form (course plan is compulsory)
+    document.getElementById('attendanceForm')?.addEventListener('submit', function(e) {
+        const cpValue = document.getElementById('coursePlanValue');
+        if (cpValue && !cpValue.value) {
+            e.preventDefault();
+            alert('Please select a course plan before saving attendance.');
+            const dd = document.getElementById('cpDropdown');
+            if (dd) {
+                dd.classList.add('open');
+                dd.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return;
+        }
+        if (!confirm('Are you sure you want to save this attendance?')) {
+            e.preventDefault();
+        }
+    });
+
+    // Auto-submit when group changes
+    document.getElementById('groupSelect')?.addEventListener('change', function() {
+        document.getElementById('attendanceFilterForm').submit();
+    });
+
+    // Auto-submit when the Unit (course plan) filter changes
+    document.getElementById('unitFilterSelect')?.addEventListener('change', function() {
+        document.getElementById('attendanceFilterForm').submit();
+    });
+</script>
+
+{% endblock %}

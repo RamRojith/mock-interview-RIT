@@ -1,0 +1,978 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+.course-request-system {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+}
+
+.course-request-system .page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Header Section */
+.course-request-system .page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    border-radius: 20px;
+    color: white;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.course-request-system .page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.5px;
+}
+
+.course-request-system .page-header .subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+/* Stats Overview */
+.course-request-system .stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.course-request-system .stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #1a4b8c;
+}
+
+.course-request-system .stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1a4b8c;
+    line-height: 1;
+}
+
+.course-request-system .stat-label {
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+/* Card Layout */
+.course-request-system .card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    margin-bottom: 2rem;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.course-request-system .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.course-request-system .card-header {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    font-weight: 700;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.course-request-system .card-header i {
+    font-size: 1.5rem;
+}
+
+.course-request-system .card-body {
+    padding: 2.5rem;
+}
+
+/* Form Grid Layout */
+.course-request-system .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.course-request-system .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.course-request-system .form-group-full {
+    grid-column: 1 / -1;
+}
+
+/* Form Styling */
+.course-request-system .form-label {
+    font-weight: 700;
+    color: #1a4b8c;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.course-request-system .form-label i {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.course-request-system .form-control,
+.course-request-system .form-select {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+    background: white;
+    color: #1e293b !important;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.course-request-system .form-control:focus,
+.course-request-system .form-select:focus {
+    border-color: #1a4b8c;
+    box-shadow: 0 0 0 4px rgba(26, 75, 140, 0.15);
+    transform: translateY(-2px);
+}
+
+.course-request-system .form-control::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.course-request-system .form-select option {
+    color: #1e293b !important;
+    font-weight: 500;
+    padding: 0.75rem;
+}
+
+/* Department Info Panel */
+.course-request-system .department-info {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 2px solid #bae6fd;
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.course-request-system .department-info i {
+    font-size: 1.5rem;
+    color: #0369a1;
+}
+
+.course-request-system .department-info p {
+    margin: 0;
+    color: #0369a1;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.course-request-system .department-info strong {
+    color: #1a4b8c;
+    font-size: 1.2rem;
+}
+
+/* Buttons */
+.course-request-system .btn {
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    font-weight: 700;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    text-decoration: none;
+}
+
+.course-request-system .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.course-request-system .btn-primary {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+}
+
+.course-request-system .btn-primary:hover {
+    background: linear-gradient(135deg, #153e75 0%, #1e4a8e 100%);
+    box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.course-request-system .btn-secondary {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
+}
+
+.course-request-system .btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+}
+
+.course-request-system .btn-info {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    color: white;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.85rem;
+}
+
+.course-request-system .btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.85rem;
+}
+
+.course-request-system .btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.85rem;
+}
+
+/* Action Buttons Container */
+.course-request-system .action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid #f1f5f9;
+}
+
+/* Status Badges */
+.course-request-system .badge {
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: white !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 100px;
+    justify-content: center;
+}
+
+.course-request-system .badge.bg-warning { 
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important; 
+}
+.course-request-system .badge.bg-success { 
+    background: linear-gradient(135deg, #10b981, #059669) !important; 
+}
+.course-request-system .badge.bg-danger { 
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important; 
+}
+.course-request-system .badge.bg-info { 
+    background: linear-gradient(135deg, #0ea5e9, #0284c7) !important; 
+}
+
+/* Table Styling */
+.course-request-system .table-responsive {
+    border-radius: 0 0 20px 20px;
+    overflow: hidden;
+    margin: 0;
+}
+
+.course-request-system .table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    font-size: 0.95rem;
+    margin: 0;
+    color: #1e293b !important;
+}
+
+.course-request-system .table thead {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.course-request-system .table th {
+    color: black !important;
+    font-weight: 700;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    border: none;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.course-request-system .table td {
+    color: #1e293b !important;
+    padding: 1.25rem 1rem;
+    border-bottom: 2px solid #f8fafc;
+    text-align: center;
+    font-weight: 500;
+    vertical-align: middle;
+}
+
+.course-request-system .table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.course-request-system .table tbody tr:hover {
+    background: linear-gradient(90deg, #f0f9ff 0%, #e0f2fe 100%);
+    transform: scale(1.01);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #1a4b8c;
+}
+
+/* Empty State */
+.course-request-system .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #64748b;
+}
+
+.course-request-system .empty-state i {
+    font-size: 4rem;
+    opacity: 0.3;
+    margin-bottom: 1.5rem;
+}
+
+.course-request-system .empty-state div {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #475569;
+}
+
+.course-request-system .empty-state .text-muted {
+    font-size: 1rem;
+}
+
+/* Loading States */
+.course-request-system .loading {
+    opacity: 0.7;
+    pointer-events: none;
+    position: relative;
+}
+
+.course-request-system .loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #1a4b8c;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .course-request-system .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .course-request-system .card-body {
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .course-request-system {
+        padding: 1rem 0.5rem;
+    }
+    
+    .course-request-system .page-header {
+        padding: 1.5rem 1rem;
+    }
+    
+    .course-request-system .page-header h1 {
+        font-size: 2rem;
+    }
+    
+    .course-request-system .card-body {
+        padding: 1.5rem;
+    }
+    
+    .course-request-system .action-buttons {
+        flex-direction: column;
+    }
+    
+    .course-request-system .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .course-request-system .table th,
+    .course-request-system .table td {
+        padding: 1rem 0.5rem;
+        font-size: 0.85rem;
+    }
+    
+    .course-request-system .stats-overview {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .course-request-system .department-info {
+        flex-direction: column;
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    .course-request-system .table-responsive {
+        font-size: 0.8rem;
+    }
+    
+    .course-request-system .badge {
+        min-width: 80px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+    }
+}
+</style>
+
+<div class="course-request-system">
+    <div class="page-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1><i class="bi bi-journal-plus"></i>Course Request Management</h1>
+            <p class="subtitle">Request to handle courses from other departments</p>
+        </div>
+
+        {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if schedule_state %}
+        <div class="alert {% if schedule_state.can_act %}alert-success{% else %}alert-warning{% endif %}">
+            {{ schedule_state.status_message }}
+        </div>
+        {% endif %}
+
+        <!-- Request Form Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-{% if edit_obj %}pencil-square{% else %}plus-circle{% endif %}"></i>
+                {% if edit_obj %}Edit Course Request{% else %}Request to Handle Course{% endif %}
+            </div>
+
+            <div class="card-body">
+                <form method="post" id="requestForm">
+                    {% csrf_token %}
+                    {% if edit_obj %}
+                    <input type="hidden" name="form_type" value="edit">
+                    <input type="hidden" name="id" value="{{ edit_obj.id }}">
+                    {% endif %}
+
+                    <fieldset {% if not schedule_state.can_act %}disabled{% endif %}>
+                    <!-- Department Information -->
+                    <div class="department-info">
+                        <i class="bi bi-building"></i>
+                        <p>
+                            Your Department: <strong>{{ own_department.Department }}</strong> (Auto-Assigned)
+                        </p>
+                    </div>
+
+                    <!-- Requested To Department -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="bi bi-building-fill"></i>
+                            Requesting To Department
+                        </label>
+                        <select name="requested_to_department" class="form-select" required>
+                            <option value="">Select Department</option>
+                            {% for d in departments %}
+                                {% if own_department and d.id != own_department.id %}
+                                <option value="{{ d.id }}" {% if edit_obj and edit_obj.requested_to_department_id == d.id %}selected{% endif %}>
+                                    {{ d.Department }}
+                                </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Regulation / Year / Semester -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-journal-text"></i>
+                                Regulation
+                            </label>
+                            <select id="regulationSelect" name="regulation" class="form-select" required>
+                                <option value="">Select Regulation</option>
+                                {% for r in regulations %}
+                                    <option value="{{ r.id }}" {% if edit_obj and edit_obj.regulation_id == r.id %}selected{% endif %}>
+                                        R-{{ r.year }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-calendar-event"></i>
+                                Year
+                            </label>
+                            <select id="yearSelect" name="year" class="form-select" required>
+                                <option value="">Select Year</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-list-ol"></i>
+                                Semester
+                            </label>
+                            <select id="semesterSelect" class="form-select" required>
+                                <option value="">Select Semester</option>
+                                {% for n in "12345678" %}
+                                    <option value="{{ n }}" {% if edit_obj and edit_obj.semester == n %}selected{% endif %}>{{ n }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Course Selection -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="bi bi-book"></i>
+                            Course
+                        </label>
+                        <select id="courseSelect" name="course" class="form-select" required disabled>
+                            <option value="">Select Course</option>
+                        </select>
+                        <small class="text-muted mt-1">Please select regulation, year, and semester first</small>
+                    </div>
+
+                    <!-- Auto Semester Display -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="bi bi-cpu"></i>
+                            Auto Semester
+                        </label>
+                        <input type="text" id="semesterInput" name="semester" class="form-control" 
+                               value="{{ edit_obj.semester }}" readonly style="background-color: #f8fafc;">
+                    </div>
+
+                    <!-- Batch & Section & Academic Year -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-people"></i>
+                                Batch
+                            </label>
+                            <select name="batch" class="form-select" required>
+                                {% for b in batches %}
+                                    <option value="{{ b }}" {% if edit_obj and edit_obj.batch == b %}selected{% endif %}>{{ b }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-grid-3x3"></i>
+                                Section
+                            </label>
+                            <select name="section" class="form-select" required>
+                                {% for s in sections %}
+                                    <option value="{{ s.section }}" {% if edit_obj and edit_obj.section == s.section %}selected{% endif %}>
+                                        {{ s.section }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-calendar-range"></i>
+                                Academic Year
+                            </label>
+                            <input type="text" name="academic_year" class="form-control"
+                                   value="{{ edit_obj.academic_year }}" placeholder="2024-2025" required>
+                        </div>
+                    </div>
+
+                    <!-- Reason -->
+                    <div class="form-group form-group-full">
+                        <label class="form-label">
+                            <i class="bi bi-chat-left-text"></i>
+                            Reason
+                        </label>
+                        <textarea name="reason" class="form-control" rows="4" 
+                                  placeholder="Please provide a detailed reason for this course request...">{{ edit_obj.reason }}</textarea>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="bi bi-{% if edit_obj %}check-lg{% else %}send{% endif %}"></i>
+                            {% if edit_obj %}Update Request{% else %}Submit Request{% endif %}
+                        </button>
+
+                        {% if edit_obj %}
+                            <a href="{% url 'create_subject_request' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>Cancel
+                            </a>
+                        {% endif %}
+                    </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+
+        <!-- Requests Table Card -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-list-check"></i>Your Course Requests
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#subjectRequestReportModal">
+                        <i class="bi bi-download"></i>Download PDF
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Course</th>
+                            <th>Requested To Dept</th>
+                            <th>Semester</th>
+                            <th>Batch</th>
+                            <th>Section</th>
+                            <th>Academic Year</th>
+                            <th>Assigned Faculty</th>
+                            <th>Status</th>
+                            <th style="width: 200px;">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for r in requests %}
+                        <tr>
+                            <td>
+                                <strong>{{ r.course }}</strong>
+                                {% if r.course.course_code %}
+                                <br><small class="text-muted">{{ r.course.course_code }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ r.requested_to_department }}</td>
+                            <td>
+                                <span class="badge bg-info">
+                                    <i class="bi bi-{{ r.semester }}-circle"></i>Sem {{ r.semester }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ r.batch }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ r.section }}</span>
+                            </td>
+                            <td>{{ r.academic_year }}</td>
+
+                            <td>
+                                {% if r.status == "APPROVED" and r.assigned_faculty %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-person-check"></i>{{ r.assigned_faculty.name }}
+                                    </span>
+                                    <br><small class="text-muted">{{ r.assigned_faculty.faculty_id }}</small>
+                                {% elif r.status == "APPROVED" %}
+                                    <span class="badge bg-secondary">Not Assigned</span>
+                                {% else %}
+                                    <span class="text-muted small">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if r.status == "PENDING" %}
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-hourglass-split"></i>Pending
+                                    </span>
+                                {% elif r.status == "APPROVED" %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i>Approved
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i>Rejected
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if r.status == "PENDING" and schedule_state.can_act %}
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <a href="?edit_id={{ r.id }}" class="btn btn-info">
+                                            <i class="bi bi-pencil"></i>Edit
+                                        </a>
+                                        <a href="?delete_id={{ r.id }}" class="btn btn-danger"
+                                           onclick="return confirm('Are you sure you want to delete this request?');">
+                                            <i class="bi bi-trash"></i>Delete
+                                        </a>
+                                    </div>
+                                {% elif r.status == "PENDING" %}
+                                    <span class="text-muted small">
+                                        <i class="bi bi-lock"></i> {{ schedule_state.status_message }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted small">
+                                        <i class="bi bi-lock"></i> Read Only
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <div>No Course Requests Yet</div>
+                                    <small class="text-muted">Submit your first course request above to get started</small>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="modal fade" id="subjectRequestReportModal" tabindex="-1" aria-labelledby="subjectRequestReportModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
+                    <form method="GET" action="{% url 'download_subject_request_pdf' %}">
+                        <div class="modal-header text-white" style="background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);">
+                            <h5 class="modal-title fw-bold" id="subjectRequestReportModalLabel">
+                                <i class="bi bi-file-earmark-arrow-down me-2"></i>Download Subject Request Report
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="mb-3">
+                                <label for="requestReportAcademicYear" class="form-label fw-bold">Academic Year</label>
+                                <select id="requestReportAcademicYear" name="academic_year" class="form-select" required>
+                                    <option value="" disabled selected>Select Academic Year</option>
+                                    {% for year in academic_years %}
+                                    <option value="{{ year }}">{{ year }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-0">
+                                <label for="requestReportSemester" class="form-label fw-bold">Semester</label>
+                                <select id="requestReportSemester" name="semester" class="form-select" required disabled>
+                                    <option value="" disabled selected>Select Academic Year First</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-download me-1"></i>Download PDF
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ report_semesters_by_year|json_script:"requestReportSemesters" }}
+<script>
+const yearURL = "{% url 'sr_get_years' %}";
+const courseURL = "{% url 'sr_get_courses' %}";
+const regulationSelect = document.getElementById('regulationSelect');
+const yearSelect = document.getElementById('yearSelect');
+const semesterSelect = document.getElementById('semesterSelect');
+const courseSelect = document.getElementById('courseSelect');
+const semesterInput = document.getElementById('semesterInput');
+const submitBtn = document.getElementById('submitBtn');
+const requestForm = document.getElementById('requestForm');
+const reportYearSelect = document.getElementById('requestReportAcademicYear');
+const reportSemesterSelect = document.getElementById('requestReportSemester');
+const reportSemestersByYear = JSON.parse(document.getElementById('requestReportSemesters').textContent);
+
+// Initialize form on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadYears();
+    setupFormValidation();
+    prefillFormData();
+    setupReportFilters();
+});
+
+function setupReportFilters() {
+    if (!reportYearSelect || !reportSemesterSelect) return;
+
+    reportYearSelect.addEventListener('change', function() {
+        const semesters = reportSemestersByYear[this.value] || [];
+        reportSemesterSelect.innerHTML = '<option value="" disabled selected>Select Semester</option>';
+
+        semesters.forEach(semester => {
+            reportSemesterSelect.innerHTML += `<option value="${semester}">Semester ${semester}</option>`;
+        });
+
+        if (semesters.length) {
+            reportSemesterSelect.disabled = false;
+        } else {
+            reportSemesterSelect.innerHTML = '<option value="" disabled selected>No Semesters Found</option>';
+            reportSemesterSelect.disabled = true;
+        }
+    });
+}
+
+// Load years from server
+async function loadYears() {
+    try {
+        const response = await fetch(yearURL);
+        const data = await response.json();
+        
+        yearSelect.innerHTML = '<option value="">Select Year</option>';
+        data.years.forEach(year => {
+            yearSelect.innerHTML += `<option value="${year}">${year}</option>`;
+        });
+        
+        prefillFormData();
+    } catch (error) {
+        console.error('Error loading years:', error);
+    }
+}
+
+// Load courses based on selection
+async function loadCourses() {
+    const regulationId = regulationSelect.value;
+    const year = yearSelect.value;
+    const semester = semesterSelect.value;
+
+    if (!regulationId || !year || !semester) {
+        courseSelect.innerHTML = '<option value="">Select Course</option>';
+        courseSelect.disabled = true;
+        semesterInput.value = '';
+        return;
+    }
+
+    try {
+        courseSelect.disabled = true;
+        courseSelect.innerHTML = '<option value="">Loading courses...</option>';
+        
+        const response = await fetch(`${courseURL}?regulation_id=${regulationId}&year=${year}&semester=${semester}`);
+        const data = await response.json();
+        
+        courseSelect.innerHTML = '<option value="">Select Course</option>';
+        data.courses.forEach(course => {
+            courseSelect.innerHTML += `<option value="${course.id}" data-sem="${course.semester}">${course.label}</option>`;
+        });
+        
+        courseSelect.disabled = false;
+        prefillFormData();
+    } catch (error) {
+        console.error('Error loading courses:', error);
+        courseSelect.innerHTML = '<option value="">Error loading courses</option>';
+    }
+}
+
+// Prefill form data for editing
+function prefillFormData() {
+    {% if edit_obj %}
+        // Set year if available
+        if (yearSelect.options.length > 1) {
+            setTimeout(() => {
+                yearSelect.value = "{{ edit_obj.course.year }}";
+                loadCourses();
+            }, 100);
+        }
+    {% endif %}
+}
+
+// Auto-fill semester when course is selected
+function updateSemester() {
+    const selectedCourse = courseSelect.selectedOptions[0];
+    if (selectedCourse && selectedCourse.dataset.sem) {
+        semesterInput.value = selectedCourse.dataset.sem;
+    } else {
+        semesterInput.value = '';
+    }
+}
+
+// Form validation
+function setupFormValidation() {
+    requestForm.addEventListener('submit', function(e) {
+        const courseValue = courseSelect.value;
+        if (!courseValue) {
+            e.preventDefault();
+            alert('Please select a course before submitting.');
+            courseSelect.focus();
+            return false;
+        }
+        
+        // Add loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+    });
+}
+
+// Event listeners
+regulationSelect.addEventListener('change', loadCourses);
+yearSelect.addEventListener('change', loadCourses);
+semesterSelect.addEventListener('change', loadCourses);
+courseSelect.addEventListener('change', updateSemester);
+
+// Add input validation for academic year
+document.querySelector('input[name="academic_year"]').addEventListener('input', function(e) {
+    this.value = this.value.replace(/[^0-9\-]/g, '');
+});
+
+// Add character counter for reason textarea
+const reasonTextarea = document.querySelector('textarea[name="reason"]');
+reasonTextarea.addEventListener('input', function() {
+    const maxLength = 500;
+    const currentLength = this.value.length;
+    
+    if (currentLength > maxLength) {
+        this.value = this.value.substring(0, maxLength);
+    }
+});
+</script>
+
+{% endblock %}

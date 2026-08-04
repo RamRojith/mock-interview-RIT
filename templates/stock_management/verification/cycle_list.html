@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+    .verif-wrap { padding: 1rem 2rem; }
+    .panel { background:#fff; border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,.06); overflow:hidden; }
+    .panel-head { background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%); color:#fff; padding:.85rem 1.25rem; font-weight:600; display:flex; justify-content:space-between; align-items:center; }
+    .panel thead th { background:#f1f5f9; color:#334155; font-size:.85rem; text-align:center; }
+    .panel tbody td { vertical-align:middle; text-align:center; font-size:.9rem; }
+</style>
+
+<div class="verif-wrap">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="panel">
+        <div class="panel-head">
+            <span><i class="fas fa-clipboard-check me-2"></i>Verification Cycles</span>
+            <a href="{% url 'verification_cycle_create' %}" class="btn btn-light btn-sm fw-semibold">
+                <i class="fas fa-plus me-1"></i>New Cycle
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered mb-0">
+                <thead>
+                    <tr>
+                        <th>S.No</th><th>Cycle Name</th><th>Financial Year</th>
+                        <th>Start</th><th>End</th><th>Status</th><th>Created By</th><th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cycle in cycles %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td class="text-start">{{ cycle.cycle_name }}</td>
+                        <td>{{ cycle.financial_year }}</td>
+                        <td>{{ cycle.start_date|date:"d M Y" }}</td>
+                        <td>{{ cycle.end_date|date:"d M Y" }}</td>
+                        <td>
+                            {% if cycle.status == "ACTIVE" %}<span class="badge bg-success">ACTIVE</span>
+                            {% elif cycle.status == "CLOSED" %}<span class="badge bg-secondary">CLOSED</span>
+                            {% else %}<span class="badge bg-warning text-dark">DRAFT</span>{% endif %}
+                        </td>
+                        <td>{{ cycle.created_by.name|default:"-" }}</td>
+                        <td>
+                            <a href="{% url 'verification_cycle_detail' cycle.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-muted">No verification cycles yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content %}

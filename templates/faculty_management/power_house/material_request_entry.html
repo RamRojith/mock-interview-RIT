@@ -1,0 +1,702 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.material-request-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.material-request-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.material-request-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.material-request-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.material-request-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.material-request-portal .custom-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.material-request-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a4b8c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.material-request-portal .card-body-custom {
+  padding: 1.5rem;
+}
+
+.material-request-portal .alert-success-custom {
+  max-width: 1400px;
+  margin: 0 auto 1rem auto;
+  background: #dcfce7;
+  color: #166534;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  font-weight: 700;
+  border: 1px solid #bbf7d0;
+}
+
+.material-request-portal .alert-error-custom {
+  max-width: 1400px;
+  margin: 0 auto 1rem auto;
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  font-weight: 700;
+  border: 1px solid #fecaca;
+}
+
+.material-request-portal .form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.material-request-portal .request-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+  gap: 1rem;
+  align-items: end;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+}
+
+.material-request-portal label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.material-request-portal input,
+.material-request-portal select {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.material-request-portal input:focus,
+.material-request-portal select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26,75,140,0.1);
+  outline: none;
+}
+
+.material-request-portal .stock-input,
+.material-request-portal .unit-input,
+.material-request-portal .readonly-input {
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 700;
+}
+
+.material-request-portal .btn-primary-custom {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.material-request-portal .btn-secondary-custom {
+  background: #64748b;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.material-request-portal .remove-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 1.3rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.material-request-portal .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.material-request-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.material-request-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.material-request-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.85rem;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.material-request-portal .search-box {
+  width: 260px;
+}
+
+.material-request-portal .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.material-request-portal .badge-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.material-request-portal .badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.material-request-portal .badge-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.material-request-portal .badge-info {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.material-request-portal .item-line {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 0.35rem 0.6rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.material-request-portal .locked-text {
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.material-request-portal .empty-row {
+  text-align: center;
+  padding: 2rem !important;
+  color: #64748b;
+  font-weight: 700;
+}
+
+@media(max-width: 992px) {
+  .material-request-portal .form-grid-3,
+  .material-request-portal .request-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media(max-width: 768px) {
+  .material-request-portal {
+    padding: 1rem;
+  }
+
+  .material-request-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .material-request-portal .card-header-custom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .material-request-portal .search-box,
+  .material-request-portal .btn-primary-custom,
+  .material-request-portal .btn-secondary-custom,
+  .material-request-portal .remove-btn {
+    width: 100%;
+  }
+}
+</style>
+
+<div class="material-request-portal">
+
+  <div class="page-header">
+    <h1>
+      <i class="fas fa-file-circle-plus me-2"></i>
+      Material Request Entry
+    </h1>
+    <p class="header-subtitle">
+      Select a ticket and raise material request for approval
+    </p>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      {% if message.tags == "error" %}
+        <div class="alert-error-custom">
+          <i class="fas fa-circle-xmark me-2"></i> {{ message }}
+        </div>
+      {% else %}
+        <div class="alert-success-custom">
+          <i class="fas fa-circle-check me-2"></i> {{ message }}
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  <div class="page-container">
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span>
+          <i class="fas fa-plus-circle me-2"></i>
+          New Material Request
+        </span>
+
+        <button type="button"
+                class="btn-secondary-custom"
+                onclick="addRequestRow()">
+          + Add Row
+        </button>
+      </div>
+
+      <div class="card-body-custom">
+
+        <form method="post" id="materialRequestForm">
+          {% csrf_token %}
+
+          <div class="form-grid-3">
+
+            <div>
+              <label>Ticket</label>
+              <select name="ticket"
+                      id="ticketSelect"
+                      required
+                      onchange="updateTicketDetails(this)">
+                <option value="">Select Ticket</option>
+
+                {% for ticket in tickets %}
+                  <option value="{{ ticket.id }}"
+                          data-location="{{ ticket.location }}"
+                          data-issue="{{ ticket.issue }}"
+                          data-department="{% if ticket.student %}{{ ticket.student.department.Department|default:'-' }}{% elif ticket.faculty %}{{ ticket.faculty.department.Department|default:'-' }}{% else %}-{% endif %}"
+                          data-user="{% if ticket.student %}{{ ticket.student.name }} - {{ ticket.student.reg_no }}{% elif ticket.faculty %}{{ ticket.faculty.name }} - {{ ticket.faculty.faculty_id }}{% else %}-{% endif %}"
+                          data-usertype="{% if ticket.student %}Student{% elif ticket.faculty %}Faculty{% else %}-{% endif %}">
+                    #{{ ticket.id }} -
+                    {{ ticket.issue }}
+                    -
+                    {% if ticket.student %}
+                      {{ ticket.student.name }}
+                    {% elif ticket.faculty %}
+                      {{ ticket.faculty.name }}
+                    {% endif %}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div>
+              <label>User Type</label>
+              <input type="text"
+                     id="ticketUserType"
+                     class="readonly-input"
+                     value="-"
+                     readonly>
+            </div>
+
+            <div>
+              <label>User</label>
+              <input type="text"
+                     id="ticketUser"
+                     class="readonly-input"
+                     value="-"
+                     readonly>
+            </div>
+
+          </div>
+
+          <div class="form-grid-3">
+
+            <div>
+              <label>Department</label>
+              <input type="text"
+                     id="ticketDepartment"
+                     class="readonly-input"
+                     value="-"
+                     readonly>
+            </div>
+
+            <div>
+              <label>Ticket Issue</label>
+              <input type="text"
+                     id="ticketIssue"
+                     class="readonly-input"
+                     value="-"
+                     readonly>
+            </div>
+
+            <div>
+              <label>Location</label>
+              <input type="text"
+                     name="location"
+                     id="ticketLocation"
+                     placeholder="Lab / Block / Room">
+            </div>
+
+          </div>
+
+          <div class="form-grid-3">
+
+            <div>
+              <label>Purpose</label>
+              <input type="text"
+                     name="purpose"
+                     placeholder="Purpose of material request"
+                     required>
+            </div>
+
+          </div>
+
+          <div class="card-header-custom"
+               style="margin: 0 -1.5rem 1.5rem -1.5rem;">
+            <span>
+              <i class="fas fa-box-open me-2"></i>
+              Requested Items
+            </span>
+          </div>
+
+          <div id="requestRows">
+
+            <div class="request-row">
+
+              <div>
+                <label>Item</label>
+
+                <select name="item_id[]"
+                        required
+                        onchange="updateStockInfo(this)">
+                  <option value="">Select Item</option>
+
+                  {% for item in inventory_items %}
+                    <option value="{{ item.id }}"
+                            data-stock="{{ item.stock_qty }}"
+                            data-unit="{{ item.unit }}">
+                      {{ item.item_name }} - {{ item.item_type.type_name|default:"-" }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div>
+                <label>Available Stock</label>
+                <input type="text"
+                       class="stock-input"
+                       value="-"
+                       readonly>
+              </div>
+
+              <div>
+                <label>Unit</label>
+                <input type="text"
+                       class="unit-input"
+                       value="-"
+                       readonly>
+              </div>
+
+              <div>
+                <label>Required Qty</label>
+                <input type="number"
+                       step="0.01"
+                       min="0.01"
+                       name="quantity[]"
+                       required>
+              </div>
+
+              <div>
+                <button type="button"
+                        class="remove-btn"
+                        onclick="removeRequestRow(this)">
+                  ×
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+          <button class="btn-primary-custom" type="submit">
+            <i class="fas fa-paper-plane me-2"></i>
+            Submit Request
+          </button>
+
+        </form>
+
+      </div>
+    </div>
+
+    <div class="custom-card">
+
+      <div class="card-header-custom">
+        <span>
+          <i class="fas fa-list-check me-2"></i>
+          My Material Requests
+        </span>
+
+        <input type="text"
+               id="requestSearch"
+               class="search-box"
+               placeholder="Search request...">
+      </div>
+
+      <div class="card-body-custom">
+
+        <div class="table-responsive">
+
+          <table id="myRequestTable" class="data-table">
+
+            <thead>
+              <tr>
+                <th>Request No</th>
+                <th>Ticket</th>
+                <th>User</th>
+                <th>Department</th>
+                <th>Items</th>
+                <th>Purpose</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              {% for req in my_requests %}
+
+              <tr>
+
+                <td>
+                  <strong>{{ req.request_no }}</strong>
+                </td>
+
+                <td>
+                  {% if req.ticket %}
+                    #{{ req.ticket.id }} - {{ req.ticket.issue }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if req.ticket.student %}
+                    Student: {{ req.ticket.student.name }} - {{ req.ticket.student.reg_no }}
+                  {% elif req.ticket.faculty %}
+                    Faculty: {{ req.ticket.faculty.name }} - {{ req.ticket.faculty.faculty_id }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>
+                  {{ req.department.Department|default:"-" }}
+                </td>
+
+                <td>
+                  {% for item in req.request_items.all %}
+                    <div class="item-line">
+                      {{ item.item.item_name }}
+                      -
+                      {{ item.requested_qty }}
+                      {{ item.item.unit }}
+                    </div>
+                  {% endfor %}
+                </td>
+
+                <td>{{ req.purpose }}</td>
+
+                <td>{{ req.location|default:"-" }}</td>
+
+                <td>
+                  {% if req.status == "PENDING" %}
+                    <span class="badge-status badge-pending">
+                      <i class="fas fa-clock"></i>
+                      {{ req.status }}
+                    </span>
+
+                  {% elif req.status == "APPROVED" %}
+                    <span class="badge-status badge-success">
+                      <i class="fas fa-circle-check"></i>
+                      {{ req.status }}
+                    </span>
+
+                  {% elif req.status == "REJECTED" %}
+                    <span class="badge-status badge-danger">
+                      <i class="fas fa-circle-xmark"></i>
+                      {{ req.status }}
+                    </span>
+
+                  {% else %}
+                    <span class="badge-status badge-info">
+                      <i class="fas fa-circle-info"></i>
+                      {{ req.status }}
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td>{{ req.created_at }}</td>
+
+              </tr>
+
+              {% empty %}
+
+              <tr>
+                <td colspan="9" class="empty-row">
+                  <i class="fas fa-inbox me-2"></i>
+                  No requests found.
+                </td>
+              </tr>
+
+              {% endfor %}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function updateTicketDetails(select) {
+  const option = select.options[select.selectedIndex];
+
+  document.getElementById("ticketUserType").value = option.dataset.usertype || "-";
+  document.getElementById("ticketUser").value = option.dataset.user || "-";
+  document.getElementById("ticketDepartment").value = option.dataset.department || "-";
+  document.getElementById("ticketIssue").value = option.dataset.issue || "-";
+  document.getElementById("ticketLocation").value = option.dataset.location || "";
+}
+
+function updateStockInfo(select) {
+  const option = select.options[select.selectedIndex];
+  const row = select.closest(".request-row");
+
+  row.querySelector(".stock-input").value = option.dataset.stock || "-";
+  row.querySelector(".unit-input").value = option.dataset.unit || "-";
+}
+
+function addRequestRow() {
+  const container = document.getElementById("requestRows");
+  const firstRow = container.querySelector(".request-row");
+  const newRow = firstRow.cloneNode(true);
+
+  newRow.querySelectorAll("input").forEach(input => {
+    if (!input.classList.contains("stock-input") && !input.classList.contains("unit-input")) {
+      input.value = "";
+    } else {
+      input.value = "-";
+    }
+  });
+
+  newRow.querySelectorAll("select").forEach(select => {
+    select.selectedIndex = 0;
+  });
+
+  container.appendChild(newRow);
+}
+
+function removeRequestRow(btn) {
+  const rows = document.querySelectorAll(".request-row");
+
+  if (rows.length === 1) {
+    alert("At least one item is required.");
+    return;
+  }
+
+  btn.closest(".request-row").remove();
+}
+
+document.getElementById("requestSearch").addEventListener("input", function() {
+  const value = this.value.toLowerCase();
+  const rows = document.querySelectorAll("#myRequestTable tbody tr");
+
+  rows.forEach(row => {
+    row.style.display = row.innerText.toLowerCase().includes(value) ? "" : "none";
+  });
+});
+</script>
+
+{% endblock %}

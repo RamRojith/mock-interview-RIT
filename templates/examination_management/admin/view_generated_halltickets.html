@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+  <h4 class="fw-bold text-success mb-4">View Generated Halltickets</h4>
+
+  <!-- ✅ FILTER FORM (GET) -->
+  <form method="GET" id="filterForm">
+    <div class="row g-3">
+
+      <!-- Degree -->
+      <div class="col-md-3">
+        <label class="form-label fw-semibold">Degree</label>
+        <select id="degree" name="degree" class="form-control">
+          <option value="">Select Degree</option>
+          {% for d in degrees %}
+            <option value="{{ d.id }}" {% if selected_degree == d.id|stringformat:"s" %}selected{% endif %}>
+              {{ d.degree }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Department -->
+      <div class="col-md-3">
+        <label class="form-label fw-semibold">Department</label>
+        <select id="department" name="department" class="form-control">
+          <option value="">Select Department</option>
+        </select>
+      </div>
+
+      <!-- Batch -->
+      <div class="col-md-3">
+        <label class="form-label fw-semibold">Batch</label>
+        <select id="batch" name="batch" class="form-control">
+          <option value="">Select Batch</option>
+        </select>
+      </div>
+
+      <!-- Semester -->
+      <div class="col-md-3">
+        <label class="form-label fw-semibold">Semester</label>
+        <select id="semester" name="semester" class="form-control">
+          <option value="">Select Semester</option>
+        </select>
+      </div>
+
+      <!-- ✅ FILTER BUTTON -->
+      <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-success w-100">
+          Filter
+        </button>
+      </div>
+
+    </div>
+  </form>
+
+  <hr>
+
+  {% if students %}
+    <!-- ✅ SEARCH + SELECT ALL + DOWNLOAD -->
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <input type="text"
+               id="studentSearch"
+               class="form-control"
+               placeholder="Search by Name or Reg No"
+               autocomplete="off">
+      </div>
+
+      <div class="col-md-8 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="selectAllStudents">
+            <label class="form-check-label fw-semibold" for="selectAllStudents">
+              Select All (Visible)
+            </label>
+          </div>
+
+          <small class="text-muted">
+            Selected: <span id="selectedCount">0</span>
+          </small>
+
+          <small class="text-muted">
+            Showing <span id="visibleCount"></span> / <span id="totalCount"></span>
+          </small>
+        </div>
+
+        <!-- ✅ Download Selected PDF -->
+        <form method="POST"
+      action="{% url 'hallticket_bulk_pdf' %}"
+      id="bulkPdfForm"
+      target="_blank"   
+      class="mb-0">
+
+          {% csrf_token %}
+          <input type="hidden" name="ids" id="selectedIdsInput" value="">
+          <button type="submit" class="btn btn-danger" id="downloadSelectedBtn" disabled>
+            Download PDF
+          </button>
+        </form>
+
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- ✅ STUDENT CARDS -->
+  {% if students %}
+    <div class="row mt-4" id="studentCardsWrap">
+
+      {% for ht in students %}
+        <div class="col-md-4 mb-4 student-card"
+             data-name="{{ ht.student.name|default_if_none:''|lower }}"
+             data-reg="{{ ht.student.reg_no|default_if_none:''|lower }}">
+
+          <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body d-flex flex-column position-relative">
+
+              <!-- ✅ Per-student checkbox -->
+              <div class="position-absolute top-0 end-0 p-3">
+                <div class="form-check">
+                  <input class="form-check-input student-select"
+                         type="checkbox"
+                         value="{{ ht.id }}"
+                         id="sel_{{ ht.id }}">
+                </div>
+              </div>
+
+              <h5 class="fw-bold text-primary mb-3 pe-5">
+                {{ ht.student.name }}
+              </h5>
+
+              <p class="mb-1"><strong>Reg No:</strong> {{ ht.student.reg_no }}</p>
+              <p class="mb-1"><strong>Semester:</strong> {{ ht.semester }}</p>
+              <p class="mb-1"><strong>Batch:</strong> {{ ht.batch }}</p>
+              <p class="mb-1"><strong>Date of Birth:</strong> {{ ht.student.date_of_birth|date:"d-m-Y" }}</p>
+              <p class="mb-1"><strong>Degree:</strong> {{ ht.degree.degree }}</p>
+              <p class="mb-3"><strong>Department:</strong> {{ ht.department.Department }}</p>
+
+              <!-- ✅ VIEW BUTTON -->
+              <div class="mt-auto">
+                <button type="button"
+                        class="btn btn-outline-primary w-100 view-btn"
+                        data-bs-toggle="modal"
+                        data-bs-target="#viewModal"
+                        data-hallticket-student-id="{{ ht.id }}"
+                        data-student-name="{{ ht.student.name }}"
+                        data-reg-no="{{ ht.student.reg_no }}"
+                        data-semester="{{ ht.semester }}"
+                        data-batch="{{ ht.batch }}">
+                  View
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      {% endfor %}
+
+    </div>
+  {% elif selected_degree or selected_department or selected_batch or selected_semester %}
+    <div class="alert alert-warning mt-3">
+      No generated hallticket students found for the selected filters.
+    </div>
+  {% endif %}
+
+</div>
+
+<!-- ================= VIEW MODAL ================= -->
+<div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content border-0 shadow rounded-4">
+
+      <div class="modal-header bg-primary text-white rounded-top-4">
+        <div>
+          <h5 class="modal-title mb-0">Hall Ticket Course</h5>
+          <small class="opacity-75" id="modalStudentMeta"></small>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div id="modalMsg" class="text-muted mb-3"></div>
+
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:90px;">Semester</th>
+                <th style="width:140px;">Course Code</th>
+                <th>Course Name</th>
+                <th style="width:140px;">Exam Date</th>
+                <th style="width:90px;">Session</th>
+                <th style="width:160px;">Exam Session</th>
+              </tr>
+            </thead>
+            <tbody id="hallCourseTbody">
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">Click View to load courses…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function(){
+
+  // ================== DROPDOWN LOADERS ==================
+  function loadDepartments(degree_id, selected_department){
+    return $.ajax({
+      url: "{% url 'hall_generated_departments' %}",
+      data: { degree_id: degree_id },
+      success: function(data){
+        let html = '<option value="">Select Department</option>';
+        data.forEach(function(item){
+          html += `<option value="${item.id}">${item.Department}</option>`;
+        });
+        $("#department").html(html);
+
+        if(selected_department){
+          $("#department").val(String(selected_department));
+        }
+
+        $("#batch").html('<option value="">Select Batch</option>');
+        $("#semester").html('<option value="">Select Semester</option>');
+      }
+    });
+  }
+
+  function loadBatches(degree_id, department_id, selected_batch){
+    return $.ajax({
+      url: "{% url 'hall_generated_batches' %}",
+      data: { degree_id: degree_id, department_id: department_id },
+      success: function(data){
+        let html = '<option value="">Select Batch</option>';
+        data.forEach(function(batch){
+          html += `<option value="${batch}">${batch}</option>`;
+        });
+        $("#batch").html(html);
+
+        if(selected_batch){
+          $("#batch").val(String(selected_batch));
+        }
+
+        $("#semester").html('<option value="">Select Semester</option>');
+      }
+    });
+  }
+
+  function loadSemesters(degree_id, department_id, batch, selected_semester){
+    return $.ajax({
+      url: "{% url 'hall_generated_semesters' %}",
+      data: { degree_id: degree_id, department_id: department_id, batch: batch },
+      success: function(data){
+        let html = '<option value="">Select Semester</option>';
+        data.forEach(function(sem){
+          html += `<option value="${sem}">${sem}</option>`;
+        });
+        $("#semester").html(html);
+
+        if(selected_semester){
+          $("#semester").val(String(selected_semester));
+        }
+      }
+    });
+  }
+
+  // Degree change
+  $("#degree").change(function(){
+    let degree_id = $(this).val();
+    if(!degree_id){
+      $("#department").html('<option value="">Select Department</option>');
+      $("#batch").html('<option value="">Select Batch</option>');
+      $("#semester").html('<option value="">Select Semester</option>');
+      return;
+    }
+    loadDepartments(degree_id, "");
+  });
+
+  // Department change
+  $("#department").change(function(){
+    let degree_id = $("#degree").val();
+    let department_id = $(this).val();
+    if(!degree_id || !department_id){
+      $("#batch").html('<option value="">Select Batch</option>');
+      $("#semester").html('<option value="">Select Semester</option>');
+      return;
+    }
+    loadBatches(degree_id, department_id, "");
+  });
+
+  // Batch change
+  $("#batch").change(function(){
+    let degree_id = $("#degree").val();
+    let department_id = $("#department").val();
+    let batch = $(this).val();
+    if(!degree_id || !department_id || !batch){
+      $("#semester").html('<option value="">Select Semester</option>');
+      return;
+    }
+    loadSemesters(degree_id, department_id, batch, "");
+  });
+
+  // ✅ Restore selections after page load (when filter applied)
+  const selected_degree = "{{ selected_degree }}";
+  const selected_department = "{{ selected_department }}";
+  const selected_batch = "{{ selected_batch }}";
+  const selected_semester = "{{ selected_semester }}";
+
+  if(selected_degree){
+    loadDepartments(selected_degree, selected_department).then(function(){
+      if(selected_department){
+        return loadBatches(selected_degree, selected_department, selected_batch);
+      }
+    }).then(function(){
+      if(selected_degree && selected_department && selected_batch){
+        return loadSemesters(selected_degree, selected_department, selected_batch, selected_semester);
+      }
+    });
+  }
+
+  // ================== SEARCH + COUNTS ==================
+  function updateCounts() {
+    $("#totalCount").text($(".student-card").length);
+    $("#visibleCount").text($(".student-card:visible").length);
+  }
+  updateCounts();
+
+  $(document).on("keyup", "#studentSearch", function(){
+    let value = ($(this).val() || "").toLowerCase().trim();
+    $(".student-card").each(function(){
+      let name = String($(this).data("name") || "");
+      let reg  = String($(this).data("reg") || "");
+      $(this).toggle(name.includes(value) || reg.includes(value));
+    });
+    updateCounts();
+    refreshBulkUI();
+  });
+
+  // ================== SELECT ALL + BULK PDF ==================
+  function getSelectedIds(){
+    const ids = [];
+    $(".student-card:visible .student-select:checked").each(function(){
+      ids.push(String($(this).val()));
+    });
+    return ids;
+  }
+
+  function refreshBulkUI(){
+    const allVisible = $(".student-card:visible .student-select").length;
+    const selectedVisible = $(".student-card:visible .student-select:checked").length;
+
+    $("#selectedCount").text(selectedVisible);
+
+    if(allVisible > 0 && selectedVisible === allVisible){
+      $("#selectAllStudents").prop("checked", true).prop("indeterminate", false);
+    } else if(selectedVisible > 0){
+      $("#selectAllStudents").prop("checked", false).prop("indeterminate", true);
+    } else {
+      $("#selectAllStudents").prop("checked", false).prop("indeterminate", false);
+    }
+
+    $("#downloadSelectedBtn").prop("disabled", selectedVisible === 0);
+    $("#selectedIdsInput").val(getSelectedIds().join(","));
+  }
+
+  $("#selectAllStudents").on("change", function(){
+    const checked = $(this).is(":checked");
+    $(".student-card:visible .student-select").prop("checked", checked);
+    refreshBulkUI();
+  });
+
+  $(document).on("change", ".student-select", function(){
+    refreshBulkUI();
+  });
+
+  refreshBulkUI();
+
+  $("#bulkPdfForm").on("submit", function(e){
+    const ids = ($("#selectedIdsInput").val() || "").trim();
+    if(!ids){
+      e.preventDefault();
+      alert("Please select at least one student.");
+    }
+  });
+
+  // ================== VIEW SAVED COURSES MODAL ==================
+  $(document).on("click", ".view-btn", function(){
+
+    const btn = $(this);
+
+    const hallticket_student_id = btn.data("hallticket-student-id");
+    const student_name = btn.data("student-name") || "";
+    const reg_no = btn.data("reg-no") || "";
+    const semester = btn.data("semester") || "";
+    const batch = btn.data("batch") || "";
+
+    $("#modalStudentMeta").text(`${student_name} (${reg_no}) | Sem ${semester} | Batch ${batch}`);
+    $("#modalMsg").text("Loading courses...");
+    $("#hallCourseTbody").html(`<tr><td colspan="6" class="text-center text-muted py-4">Loading…</td></tr>`);
+
+    $.ajax({
+      url: "{% url 'hallticket_saved_courses' %}",
+      data: { hallticket_student_id: hallticket_student_id },
+      success: function(resp){
+        if(!resp.ok){
+          $("#modalMsg").text(resp.error || "Failed to load.");
+          $("#hallCourseTbody").html(`<tr><td colspan="6" class="text-center text-danger py-4">Error loading courses</td></tr>`);
+          return;
+        }
+
+        const items = resp.items || [];
+        if(items.length === 0){
+          $("#modalMsg").text("No saved courses found for this hallticket.");
+          $("#hallCourseTbody").html(`<tr><td colspan="6" class="text-center text-muted py-4">No data to display</td></tr>`);
+          return;
+        }
+
+        $("#modalMsg").text("");
+        let rows = "";
+        items.forEach(function(it){
+          rows += `
+            <tr>
+              <td>${it.semester || ""}</td>
+              <td>${it.course_code || ""}</td>
+              <td>${it.course_name || ""}</td>
+              <td>${it.exam_date || ""}</td>
+              <td>${it.session || ""}</td>
+              <td>${it.examsession || ""}</td>
+            </tr>
+          `;
+        });
+        $("#hallCourseTbody").html(rows);
+      },
+      error: function(){
+        $("#modalMsg").text("");
+        $("#hallCourseTbody").html(`<tr><td colspan="6" class="text-center text-danger py-4">Server error</td></tr>`);
+      }
+    });
+
+  });
+
+});
+</script>
+
+{% endblock %}
+``

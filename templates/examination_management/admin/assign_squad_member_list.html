@@ -1,0 +1,640 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+.attendance-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.attendance-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.attendance-portal .page-header h3 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.attendance-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.attendance-portal .page-container {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.attendance-portal .card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.attendance-portal .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.attendance-portal .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.2rem 1.5rem;
+  border-bottom: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.attendance-portal .card-header i {
+  font-size: 1.2rem;
+}
+
+.attendance-portal .card-body {
+  padding: 1.5rem;
+}
+
+/* Header Actions */
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.header-title h3 {
+  color: #1a4b8c;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.header-title p {
+  color: #64748b;
+  margin: 0;
+}
+
+/* Buttons */
+.attendance-portal .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.attendance-portal .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(26, 75, 140, 0.3);
+}
+
+.attendance-portal .btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 10px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.attendance-portal .btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.attendance-portal .btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 10px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.attendance-portal .btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.attendance-portal .btn-outline-primary {
+  border: 2px solid #1a4b8c;
+  color: #1a4b8c;
+  background: transparent;
+  padding: 0.4rem 0.8rem;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.attendance-portal .btn-outline-primary:hover {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.attendance-portal .btn-outline-danger {
+  border: 2px solid #ef4444;
+  color: #ef4444;
+  background: transparent;
+  padding: 0.4rem 0.8rem;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.attendance-portal .btn-outline-danger:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-sm {
+  font-size: 0.85rem;
+}
+
+/* Table Styles */
+.attendance-portal .table-responsive {
+  border-radius: 12px;
+  overflow-x: auto;
+  margin-bottom: 0;
+}
+
+.attendance-portal .table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+  min-width: 1400px;
+}
+
+.attendance-portal .table th {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+}
+
+.attendance-portal .table th:last-child {
+  border-right: none;
+}
+
+.attendance-portal .table td {
+  padding: 1rem 0.75rem;
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+  color: #374151;
+  font-weight: 500;
+}
+
+.attendance-portal .table tbody tr {
+  transition: all 0.3s ease;
+}
+
+.attendance-portal .table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.03);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Form Controls */
+.attendance-portal .form-control,
+.attendance-portal .form-select {
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.attendance-portal .form-control:focus,
+.attendance-portal .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+.attendance-portal .form-control-sm,
+.attendance-portal .form-select-sm {
+  height: auto;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.attendance-portal .form-control[readonly] {
+  background-color: #f8fafc;
+  cursor: default;
+  border-color: #e2e8f0;
+}
+
+/* Badges */
+.attendance-portal .badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.attendance-portal .badge-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.attendance-portal .badge-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+/* Ref Number Style */
+.ref-number {
+  background: rgba(26, 75, 140, 0.1);
+  color: #1a4b8c;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  display: inline-block;
+}
+
+/* Empty State */
+.attendance-portal .empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.attendance-portal .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+  color: #1a4b8c;
+}
+
+.attendance-portal .empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Action Buttons Container */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.attendance-portal .card {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .attendance-portal {
+    padding: 1rem;
+  }
+  
+  .attendance-portal .page-header h3 {
+    font-size: 1.75rem;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+}
+</style>
+
+<div class="attendance-portal">
+  <div class="page-container">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h3><i class="bi bi-people-fill"></i> Squad Member Assignment</h3>
+      <div class="header-subtitle">Assign and manage squad members for examination duties</div>
+      {% comment %} <button type="button" id="add-row" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;left: 80%; top:50%">
+    <i class="bi bi-plus-circle"></i> Add New Row
+  </button> {% endcomment %}
+    </div>
+
+    <!-- FORM CARD -->
+    <div class="card">
+      <div class="card-header">
+        <i class="bi bi-pencil-square"></i> Add / Edit Squad Member
+      </div>
+      <div class="card-body p-0">
+        <form method="POST" id="squad-form">
+          {% csrf_token %}
+
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Ref No</th>
+                  <th>Faculty ID</th>
+                  <th>Name</th>
+                  <th>Designation</th>
+                  <th>Department</th>
+                  <th>Date</th>
+                  <th>Semester</th>
+                  <th>IAT</th>
+                  <th>No. Hall</th>
+                  <th>Hall Numbers</th>
+                  <th>Duration</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody id="squad-table-body">
+                <tr class="new-row">
+                  <td>
+                    <input type="text" name="appointment_ref[]" class="form-control form-control-sm" placeholder="Enter ref no" required>
+                  </td>
+                  <td>
+                    <input type="number" name="facultyId[]" class="form-control form-control-sm faculty-input" placeholder="Enter faculty ID" required>
+                  </td>
+                  <td>
+                    <input type="text" class="form-control form-control-sm name-input" placeholder="Auto-filled" readonly>
+                  </td>
+                  <td>
+                    <input type="text" class="form-control form-control-sm designation-input" placeholder="Auto-filled" readonly>
+                  </td>
+                  <td>
+                    <input type="text" class="form-control form-control-sm dept-input" placeholder="Auto-filled" readonly>
+                  </td>
+                  <td>
+                    <input type="date" name="date[]" class="form-control form-control-sm" required>
+                  </td>
+                  <td>
+                    <select name="semester[]" class="form-select form-select-sm" required>
+                      <option value="">Select</option>
+                      {% for i in "12345678" %}
+                        <option value="{{ i }}">Sem {{ i }}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td>
+                    <select name="iat[]" class="form-select form-select-sm">
+                      <option value="I">I</option>
+                      <option value="II">II</option>
+                      <option value="III">III</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input type="number" name="no_of_hall[]" class="form-control form-control-sm" placeholder="Count">
+                  </td>
+                  <td>
+                    <input type="text" name="hall_numbers[]" class="form-control form-control-sm" placeholder="e.g., 101,102">
+                  </td>
+                  <td>
+                    <select name="duration[]" class="form-select form-select-sm">
+                      <option value="FN">FN</option>
+                      <option value="AN">AN</option>
+                    </select>
+                  </td>
+                  <td>
+                    <div class="action-buttons">
+                      <button type="submit" class="btn btn-success btn-sm" title="Save">
+                        <i class="bi bi-check-lg"></i>
+                      </button>
+                      <button type="button" class="btn btn-danger btn-sm remove-row" title="Remove">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- LIST CARD -->
+    <div class="card">
+      <div class="card-header">
+        <i class="bi bi-list-ul"></i> Assigned Squad Members
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Ref</th>
+                <th>Faculty ID</th>
+                <th>Name</th>
+                <th>Date</th>
+                <th>Sem</th>
+                <th>IAT</th>
+                <th>Halls</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for member in squad_members %}
+              <tr>
+                <td><span class="ref-number">{{ member.appointment_ref }}</span></td>
+                <td><strong>{{ member.faculty_id.faculty_id }}</strong></td>
+                <td class="fw-500">{{ member.faculty_id.name }}</td>
+                <td>{{ member.date|date:"d-m-Y" }}</td>
+                <td><span class="badge bg-light text-dark">Sem {{ member.semester }}</span></td>
+                <td>{{ member.iat }}</td>
+                <td>{{ member.hall_numbers|default:"-" }}</td>
+                <td>{{ member.duration }}</td>
+                <td>
+                  {% if member.reported == "Reported" %}
+                    <span class="badge badge-success">
+                      <i class="bi bi-check-circle-fill"></i> Reported
+                    </span>
+                  {% else %}
+                    <span class="badge badge-warning">
+                      <i class="bi bi-exclamation-triangle-fill"></i> Pending
+                    </span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button type="button"
+                            class="btn btn-outline-primary btn-sm btn-edit"
+                            data-ref="{{ member.appointment_ref }}"
+                            title="Edit">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-outline-danger btn-sm btn-delete-existing"
+                            data-ref="{{ member.appointment_ref }}"
+                            title="Delete">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="10">
+                  <div class="empty-state">
+                    <i class="bi bi-inbox-fill"></i>
+                    <p>No squad members assigned yet</p>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPT - Preserved exactly as original with no changes -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  // DELETE
+  document.addEventListener("click", async function(e){
+    if(e.target.closest(".btn-delete-existing")){
+      const ref = e.target.closest(".btn-delete-existing").dataset.ref;
+
+      if(!confirm("Delete " + ref + " ?")) return;
+
+      const formData = new FormData();
+      formData.append("csrfmiddlewaretoken", csrfToken);
+      formData.append("action", "delete");
+      formData.append("appointment_ref", ref);
+
+      const res = await fetch("", { method:"POST", body:formData });
+      const data = await res.json();
+
+      if(data.ok){
+        location.reload();
+      } else {
+        alert(data.error || "Delete failed");
+      }
+    }
+  });
+
+  // EDIT
+  document.addEventListener("click", async function(e){
+    if(e.target.closest(".btn-edit")){
+      const ref = e.target.closest(".btn-edit").dataset.ref;
+
+      const res = await fetch("?edit=" + ref);
+      const data = await res.json();
+
+      if(data.error){
+        alert(data.error);
+        return;
+      }
+
+      const row = document.querySelector(".new-row");
+
+      row.querySelector('[name="appointment_ref[]"]').value = data.appointment_ref;
+      row.querySelector('[name="facultyId[]"]').value = data.facultyId;
+      row.querySelector('[name="date[]"]').value = data.date;
+      row.querySelector('[name="semester[]"]').value = data.semester;
+      row.querySelector('[name="iat[]"]').value = data.iat;
+      row.querySelector('[name="no_of_hall[]"]').value = data.no_of_hall;
+      row.querySelector('[name="hall_numbers[]"]').value = data.hall_numbers;
+      row.querySelector('[name="duration[]"]').value = data.duration;
+
+      row.querySelector(".faculty-input")
+          .dispatchEvent(new Event("input",{bubbles:true}));
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+
+  // FACULTY AUTO FILL
+  document.addEventListener("input", function(e){
+    if(e.target.classList.contains("faculty-input")){
+      const facultyId = e.target.value;
+      const row = e.target.closest("tr");
+
+      if(!facultyId) return;
+
+      fetch("?facultyId=" + facultyId)
+      .then(res=>res.json())
+      .then(data=>{
+        if(data.error){
+          alert(data.error);
+        }else{
+          row.querySelector(".name-input").value = data.name;
+          row.querySelector(".dept-input").value = data.department;
+          row.querySelector(".designation-input").value = data.designation;
+        }
+      });
+    }
+  });
+
+});
+</script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container py-4" style="max-width:900px;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="fw-bold text-primary mb-0"><i class="fa-solid fa-barcode me-2"></i>{{ item.asset_tag }}</h2>
+    <a href="{% url 'stock_item' %}" class="btn btn-sm btn-outline-secondary">Back</a>
+  </div>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body row g-3">
+      <div class="col-md-6"><small class="text-muted">Condition</small><div>{{ item.get_condition_display }}</div></div>
+      <div class="col-md-6"><small class="text-muted">Current Lab</small><div>{% if item.current_lab %}{{ item.current_lab.lab_code }} — {{ item.current_lab.name }}{% else %}-{% endif %}</div></div>
+      <div class="col-md-6"><small class="text-muted">Manufacturer Serial</small><div>{{ item.serial_no_manufacturer|default:"-" }}</div></div>
+      <div class="col-md-6"><small class="text-muted">Bill Number</small><div>{{ item.entry.bill_number }}</div></div>
+      <div class="col-12"><small class="text-muted">Item Description</small><div>{{ item.entry.item_description }}</div></div>
+      {% if item.condition == "CONDEMNED" %}
+        <div class="col-md-6"><small class="text-muted">Condemned Date</small><div>{{ item.condemned_date|default:"-" }}</div></div>
+        <div class="col-12"><small class="text-muted">Condemned Reason</small><div>{{ item.condemned_reason|default:"-" }}</div></div>
+      {% endif %}
+      <div class="col-12"><small class="text-muted">Notes</small><div>{{ item.notes|default:"-" }}</div></div>
+    </div>
+  </div>
+
+  {% if transfer_items %}
+  <h5 class="fw-semibold">Transfer History</h5>
+  <div class="card shadow-sm border-0">
+    <div class="table-responsive">
+      <table class="table table-bordered mb-0">
+        <thead class="table-light text-center"><tr><th>Transfer</th><th>Received Condition</th></tr></thead>
+        <tbody>
+          {% for ti in transfer_items %}
+          <tr><td>{{ ti.transfer_request.transfer_number }}</td><td class="text-center">{{ ti.received_condition|default:"-" }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock content %}

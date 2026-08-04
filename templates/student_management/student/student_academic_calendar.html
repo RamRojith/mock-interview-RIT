@@ -1,0 +1,904 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+.academic-calendar-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.academic-calendar-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.academic-calendar-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.academic-calendar-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.academic-calendar-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.academic-calendar-portal .card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.academic-calendar-portal .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.academic-calendar-portal .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+}
+
+.academic-calendar-portal .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.academic-calendar-portal .card-body {
+  padding: 2rem;
+}
+
+/* Student Info Section */
+.academic-calendar-portal .student-info-section {
+  margin-bottom: 2rem;
+}
+
+.academic-calendar-portal .info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.academic-calendar-portal .info-card {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+}
+
+.academic-calendar-portal .info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 75, 140, 0.15);
+}
+
+.academic-calendar-portal .info-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.academic-calendar-portal .info-content {
+  flex: 1;
+}
+
+.academic-calendar-portal .info-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.academic-calendar-portal .info-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  line-height: 1.2;
+}
+
+.academic-calendar-portal .student-badge {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* Calendar Cards */
+.academic-calendar-portal .calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.academic-calendar-portal .calendar-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.academic-calendar-portal .calendar-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.academic-calendar-portal .calendar-card.current {
+  border: 2px solid #1a4b8c;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+}
+
+.academic-calendar-portal .calendar-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.academic-calendar-portal .calendar-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+}
+
+.academic-calendar-portal .calendar-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.academic-calendar-portal .calendar-subtitle {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  position: relative;
+  z-index: 1;
+}
+
+.academic-calendar-portal .calendar-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 1;
+}
+
+.academic-calendar-portal .calendar-body {
+  padding: 1.5rem;
+}
+
+.academic-calendar-portal .calendar-description {
+  color: #64748b;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.academic-calendar-portal .calendar-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.academic-calendar-portal .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  flex: 1;
+  justify-content: center;
+  min-width: 140px;
+}
+
+.academic-calendar-portal .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+}
+
+.academic-calendar-portal .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+}
+
+.academic-calendar-portal .btn-outline-primary {
+  background: transparent;
+  color: #1a4b8c;
+  border: 2px solid #1a4b8c;
+}
+
+.academic-calendar-portal .btn-outline-primary:hover {
+  background: #1a4b8c;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Empty State */
+.academic-calendar-portal .empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+}
+
+.academic-calendar-portal .empty-state i {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.7;
+  color: #1a4b8c;
+}
+
+.academic-calendar-portal .empty-state h5 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #374151;
+}
+
+.academic-calendar-portal .empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* PDF Modal Styling */
+.academic-calendar-portal .modal-content {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.academic-calendar-portal .modal-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border-bottom: none;
+  padding: 1.5rem 2rem;
+}
+
+.academic-calendar-portal .modal-header .btn-close {
+  filter: invert(1);
+}
+
+.academic-calendar-portal .modal-body {
+  padding: 0;
+  background: #f8f9fa;
+}
+
+.academic-calendar-portal .pdf-toolbar {
+  background: white;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.academic-calendar-portal .pdf-canvas-container {
+  background: #e9ecef;
+  overflow-y: auto;
+  padding: 1.5rem;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.academic-calendar-portal .pdf-page {
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background: white;
+  overflow: hidden;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .academic-calendar-portal .page-header {
+    padding: 1rem;
+  }
+  
+  .academic-calendar-portal .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .academic-calendar-portal .card-body {
+    padding: 1.5rem;
+  }
+  
+  .academic-calendar-portal .calendar-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .academic-calendar-portal .info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .academic-calendar-portal {
+    padding: 1rem;
+  }
+  
+  .academic-calendar-portal .page-header {
+    padding: 0.75rem;
+  }
+  
+  .academic-calendar-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .academic-calendar-portal .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .academic-calendar-portal .card-body {
+    padding: 1.25rem;
+  }
+  
+  .academic-calendar-portal .info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .academic-calendar-portal .calendar-actions {
+    flex-direction: column;
+  }
+  
+  .academic-calendar-portal .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .academic-calendar-portal .calendar-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .academic-calendar-portal .pdf-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+}
+
+/* Animation for cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.academic-calendar-portal .card,
+.academic-calendar-portal .calendar-card {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+.academic-calendar-portal .info-card {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+</style>
+
+<div class="academic-calendar-portal">
+  <div class="page-header">
+    <h1><i class="fas fa-calendar-alt me-2"></i>Academic Calendar</h1>
+    <p class="header-subtitle">Access your semester schedules and important academic dates</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Student Information Section -->
+    <div class="card student-info-section">
+      <div class="card-header">
+        <h5><i class="fas fa-user-graduate me-2"></i>Student Information</h5>
+      </div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="info-icon">
+              <i class="fas fa-id-card"></i>
+            </div>
+            <div class="info-content">
+              <div class="info-label">Student Name</div>
+              <div class="info-value">{{ student.get_full_name|default:student.username }}</div>
+            </div>
+          </div>
+          
+          <div class="info-card">
+            <div class="info-icon">
+              <i class="fas fa-hashtag"></i>
+            </div>
+            <div class="info-content">
+              <div class="info-label">Student ID</div>
+              <div class="info-value">{{ student.Employee_id }}</div>
+            </div>
+          </div>
+          
+          {% if student_info %}
+          <div class="info-card">
+            <div class="info-icon">
+              <i class="fas fa-book"></i>
+            </div>
+            <div class="info-content">
+              <div class="info-label">Current Semester</div>
+              <div class="info-value">Semester {{ student_info.semester }}</div>
+            </div>
+          </div>
+          
+          <div class="info-card">
+            <div class="info-icon">
+              <i class="fas fa-calendar"></i>
+            </div>
+            <div class="info-content">
+              <div class="info-label">Academic Year</div>
+              <div class="info-value">{{ student_info.year }}</div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+        
+        {% if student_info %}
+        <div class="text-center">
+          <span class="student-badge">
+            <i class="fas fa-users me-1"></i> Batch: {{ student_info.batch }}
+          </span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Academic Calendars Section -->
+    {% with calendars|dictsort:"semester" as sorted_calendars %}
+      {% if sorted_calendars %}
+        <div class="calendar-grid">
+          {% for cal in sorted_calendars %}
+          <div class="calendar-card {% if student_info and cal.semester == student_info.semester %}current{% endif %}">
+            <div class="calendar-header">
+              <div class="calendar-title">
+                <i class="fas fa-calendar-check"></i>
+                Semester {{ cal.semester }} Calendar
+              </div>
+              <div class="calendar-subtitle">
+                Academic Year {{ cal.batch }}
+              </div>
+              {% if student_info and cal.semester == student_info.semester %}
+              <span class="calendar-badge">
+                <i class="fas fa-star me-1"></i> Current
+              </span>
+              {% endif %}
+            </div>
+            <div class="calendar-body">
+              <p class="calendar-description">
+                This calendar contains all important academic dates, holidays, and deadlines for Semester {{ cal.semester }} of the {{ cal.batch }} academic year.
+              </p>
+              <div class="calendar-actions">
+                <button type="button" 
+                        class="btn btn-primary"
+                        onclick="openPdfModal('{{ cal.file.url|safe }}', '{{ cal.file.url|safe }}')">
+                  <i class="fas fa-eye me-2"></i> View Calendar
+                </button>
+                <a href="{{ cal.file.url }}" 
+                   class="btn btn-outline-primary" 
+                   download>
+                  <i class="fas fa-download me-2"></i> Download
+                </a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <!-- Empty State -->
+        <div class="card">
+          <div class="card-body">
+            <div class="empty-state">
+              <i class="fas fa-calendar-times"></i>
+              <h5>No Academic Calendar Available</h5>
+              <p>Your batch calendars are not yet published. Please check back later.</p>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    {% endwith %}
+  </div>
+</div>
+
+<!-- PDF Viewer Modal -->
+<div class="modal fade" id="pdfModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-file-pdf me-2"></i>
+          Academic Calendar
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Simple Toolbar -->
+        <div class="pdf-toolbar">
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="d-flex align-items-center gap-2">
+              <button id="prevPage" class="btn btn-sm btn-outline-secondary rounded-3" title="Previous Page">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <div class="page-navigation d-flex align-items-center">
+                <span class="text-muted">Page</span>
+                <input type="number" id="pageInput" class="form-control form-control-sm rounded-3 mx-2" style="width: 70px;" min="1" value="1">
+                <span class="text-muted">of <span id="totalPages">1</span></span>
+              </div>
+              <button id="nextPage" class="btn btn-sm btn-outline-secondary rounded-3" title="Next Page">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+            
+            <div class="zoom-controls d-flex align-items-center bg-light rounded-3 p-1 border">
+              <button id="zoomOut" class="btn btn-sm btn-link text-dark" title="Zoom Out">
+                <i class="fas fa-search-minus"></i>
+              </button>
+              <span id="zoomLevel" class="mx-2 text-muted">100%</span>
+              <button id="zoomIn" class="btn btn-sm btn-link text-dark" title="Zoom In">
+                <i class="fas fa-search-plus"></i>
+              </button>
+            </div>
+            
+            <a id="pdfDownload" href="#" class="btn btn-danger btn-sm rounded-3 ms-2" download title="Download PDF">
+              <i class="fas fa-download"></i> Download
+            </a>
+          </div>
+        </div>
+        
+        <!-- PDF Canvas Container -->
+        <div class="pdf-canvas-container" id="pdfScrollContainer">
+          <div id="initialLoading" class="d-flex justify-content-center align-items-center h-100">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <span class="ms-3 text-muted">Loading PDF document...</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <div class="d-flex justify-content-between w-100 align-items-center">
+          <div id="documentInfo" class="text-muted small">
+            Loading...
+          </div>
+          <button class="btn btn-outline-secondary btn-sm rounded-3" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i> Close Viewer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js"></script>
+
+<script>
+// PDF Viewer JavaScript (same as previous implementation)
+document.addEventListener('DOMContentLoaded', function() {
+  // Check dependencies
+  if (typeof bootstrap === 'undefined') {
+    console.warn('Bootstrap JavaScript not loaded. Modal functionality may be limited.');
+  }
+  if (typeof pdfjsLib === 'undefined') {
+    console.error('PDF.js library not loaded');
+    return;
+  }
+
+  // PDF.js configuration
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+  let currentPdf = null;
+  let currentPage = 1;
+  let currentScale = 1.0;
+  const SCALE_INCREMENT = 0.1;
+  let allRenderedPages = [];
+  let isRendering = false;
+  let renderQueue = [];
+
+  // Initialize PDF modal
+  window.openPdfModal = function(pdfUrl, downloadUrl) {
+    if (!pdfUrl) {
+      console.error('No PDF URL provided');
+      alert('Error: No PDF file specified.');
+      return;
+    }
+    const pdfModalElement = document.getElementById('pdfModal');
+    let pdfModal;
+    try {
+      pdfModal = new bootstrap.Modal(pdfModalElement, { backdrop: 'static', keyboard: true });
+    } catch (e) {
+      console.warn('Bootstrap Modal not available:', e);
+      pdfModalElement.classList.add('show');
+      pdfModalElement.style.display = 'block';
+      document.body.classList.add('modal-open');
+      const backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop fade show';
+      document.body.appendChild(backdrop);
+    }
+    document.getElementById('pdfDownload').href = downloadUrl;
+    document.getElementById('pdfDownload').setAttribute('download', downloadUrl.split('/').pop() || 'academic_calendar.pdf');
+    resetPdfState();
+    loadPdfDocument(pdfUrl, pdfModal);
+  }
+
+  // Reset PDF viewer state
+  function resetPdfState() {
+    currentPage = 1;
+    currentScale = 1.0;
+    allRenderedPages = [];
+    renderQueue = [];
+    document.getElementById('pdfScrollContainer').innerHTML = `
+      <div id="initialLoading" class="d-flex justify-content-center align-items-center h-100">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <span class="ms-3 text-muted">Loading PDF document...</span>
+      </div>
+    `;
+    document.getElementById('pageInput').value = '1';
+    document.getElementById('documentInfo').textContent = 'Loading...';
+  }
+
+  // Load PDF document
+  function loadPdfDocument(pdfUrl, pdfModal) {
+    const loadingTask = pdfjsLib.getDocument({
+      url: pdfUrl,
+      cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/cmaps/',
+      cMapPacked: true,
+      disableFontFace: false,
+      enableXfa: true
+    });
+    loadingTask.promise.then(pdf => {
+      currentPdf = pdf;
+      document.getElementById('totalPages').textContent = pdf.numPages;
+      document.getElementById('pageInput').max = pdf.numPages;
+      document.getElementById('documentInfo').textContent = `${pdf.numPages} page${pdf.numPages > 1 ? 's' : ''}`;
+      document.getElementById('initialLoading').style.display = 'none';
+      renderAllPages(pdf, currentScale);
+      if (pdfModal) {
+        pdfModal.show();
+      } else {
+        document.getElementById('pdfModal').classList.add('show');
+        document.getElementById('pdfModal').style.display = 'block';
+      }
+      setTimeout(() => scrollToPage(1), 100);
+    }).catch(error => {
+      console.error('PDF loading error:', error);
+      document.getElementById('initialLoading').innerHTML = `
+        <div class="text-danger text-center p-4">
+          <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+          <p>Error loading PDF: ${error.message}. Please try downloading the file.</p>
+          <a href="${document.getElementById('pdfDownload').href}" class="btn btn-danger btn-sm rounded-3" download>
+            <i class="fas fa-download me-2"></i>Download PDF
+          </a>
+        </div>
+      `;
+    });
+  }
+
+  // Render all PDF pages
+  function renderAllPages(pdf, scale) {
+    const container = document.getElementById('pdfScrollContainer');
+    container.innerHTML = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const pageDiv = document.createElement('div');
+      pageDiv.id = `pdf-page-${i}`;
+      pageDiv.className = 'pdf-page';
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'page-loading';
+      loadingDiv.id = `loading-${i}`;
+      loadingDiv.innerHTML = `
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      `;
+      pageDiv.appendChild(loadingDiv);
+      const canvas = document.createElement('canvas');
+      canvas.id = `pdfCanvas-${i}`;
+      pageDiv.appendChild(canvas);
+      container.appendChild(pageDiv);
+      renderQueue.push(i);
+    }
+    processRenderQueue(pdf, scale);
+  }
+
+  // Process rendering queue
+  function processRenderQueue(pdf, scale) {
+    if (isRendering || renderQueue.length === 0) return;
+    isRendering = true;
+    const pageNum = renderQueue.shift();
+    pdf.getPage(pageNum).then(page => {
+      const viewport = page.getViewport({ scale: scale });
+      const outputScale = window.devicePixelRatio || 1;
+      const canvas = document.getElementById(`pdfCanvas-${pageNum}`);
+      const context = canvas.getContext('2d');
+      canvas.width = Math.floor(viewport.width * outputScale);
+      canvas.height = Math.floor(viewport.height * outputScale);
+      canvas.style.width = `${viewport.width}px`;
+      canvas.style.height = `${viewport.height}px`;
+      context.scale(outputScale, outputScale);
+      const renderContext = {
+        canvasContext: context,
+        viewport: viewport,
+        intent: 'display',
+        enableWebGL: true
+      };
+      document.getElementById(`loading-${pageNum}`).style.display = 'none';
+      page.render(renderContext).promise.then(() => {
+        allRenderedPages[pageNum-1] = { page, viewport, canvas };
+        isRendering = false;
+        if (renderQueue.length > 0) {
+          setTimeout(() => processRenderQueue(pdf, scale), 0);
+        }
+      });
+    }).catch(error => {
+      console.error(`Error rendering page ${pageNum}:`, error);
+      isRendering = false;
+      if (renderQueue.length > 0) {
+        setTimeout(() => processRenderQueue(pdf, scale), 0);
+      }
+    });
+  }
+
+  // Scroll to a specific page
+  function scrollToPage(pageNum) {
+    const pageElement = document.getElementById(`pdf-page-${pageNum}`);
+    if (pageElement) {
+      currentPage = pageNum;
+      document.getElementById('pageInput').value = pageNum;
+      pageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      prioritizeRenderQueue(pageNum);
+    }
+  }
+
+  // Prioritize rendering queue
+  function prioritizeRenderQueue(currentPageNum) {
+    if (!currentPdf) return;
+    const numPages = currentPdf.numPages;
+    const newQueue = [];
+    if (!allRenderedPages[currentPageNum-1]) {
+      newQueue.push(currentPageNum);
+    }
+    for (let i = Math.max(1, currentPageNum-2); i <= Math.min(numPages, currentPageNum+2); i++) {
+      if (i !== currentPageNum && !allRenderedPages[i-1] && !renderQueue.includes(i)) {
+        newQueue.push(i);
+      }
+    }
+    for (let i = 1; i <= numPages; i++) {
+      if (!allRenderedPages[i-1] && !newQueue.includes(i) && !renderQueue.includes(i)) {
+        newQueue.push(i);
+      }
+    }
+    renderQueue = newQueue;
+    if (!isRendering) {
+      processRenderQueue(currentPdf, currentScale);
+    }
+  }
+
+  // Update zoom level
+  function updateZoom() {
+    document.getElementById('zoomLevel').textContent = `${Math.round(currentScale * 100)}%`;
+    if (currentPdf) {
+      renderAllPages(currentPdf, currentScale);
+    }
+  }
+
+  // Setup PDF viewer event listeners
+  document.getElementById('prevPage')?.addEventListener('click', () => {
+    if (currentPdf && currentPage > 1) {
+      scrollToPage(currentPage - 1);
+    }
+  });
+  document.getElementById('nextPage')?.addEventListener('click', () => {
+    if (currentPdf && currentPage < currentPdf.numPages) {
+      scrollToPage(currentPage + 1);
+    }
+  });
+  document.getElementById('pageInput')?.addEventListener('change', (e) => {
+    const pageNum = parseInt(e.target.value);
+    if (currentPdf && pageNum >= 1 && pageNum <= currentPdf.numPages) {
+      scrollToPage(pageNum);
+    } else {
+      e.target.value = currentPage;
+    }
+  });
+  document.getElementById('zoomIn')?.addEventListener('click', () => {
+    currentScale += SCALE_INCREMENT;
+    updateZoom();
+  });
+  document.getElementById('zoomOut')?.addEventListener('click', () => {
+    if (currentScale > SCALE_INCREMENT) {
+      currentScale -= SCALE_INCREMENT;
+      updateZoom();
+    }
+  });
+
+  // Add animation delays to cards
+  const cards = document.querySelectorAll('.card, .calendar-card');
+  cards.forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.2}s`;
+  });
+
+  const infoCards = document.querySelectorAll('.info-card');
+  infoCards.forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.1}s`;
+  });
+});
+</script>
+{% endblock %}

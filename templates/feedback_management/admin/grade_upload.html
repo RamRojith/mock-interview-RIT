@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Grade Upload{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+  .grade-upload-page{
+    background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+    min-height: 100vh;
+    padding: 24px 0;
+  }
+
+  .grade-upload-page .page-header{
+    background: linear-gradient(135deg, #0d47a1, #1565c0);
+    color: #fff;
+    border-radius: 18px;
+    padding: 24px 28px;
+    box-shadow: 0 10px 30px rgba(13, 71, 161, 0.18);
+    margin-bottom: 24px;
+  }
+
+  .grade-upload-page .page-header h2{
+    margin: 0;
+    font-weight: 700;
+    font-size: 28px;
+  }
+
+  .grade-upload-page .page-header p{
+    margin: 8px 0 0;
+    opacity: 0.95;
+    font-size: 14px;
+  }
+
+  .grade-upload-page .main-card{
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+  }
+
+  .grade-upload-page .card-header-custom{
+    background: #ffffff;
+    border-bottom: 1px solid #e9eef5;
+    padding: 18px 22px;
+  }
+
+  .grade-upload-page .card-header-custom h4{
+    margin: 0;
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 20px;
+  }
+
+  .grade-upload-page .card-header-custom p{
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 14px;
+  }
+
+  .grade-upload-page .card-body-custom{
+    background: #ffffff;
+    padding: 24px;
+  }
+
+  .grade-upload-page .form-label{
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 8px;
+  }
+
+  .grade-upload-page .form-control{
+    border-radius: 12px;
+    min-height: 46px;
+    border: 1px solid #dbe3ef;
+    box-shadow: none;
+  }
+
+  .grade-upload-page .form-control:focus{
+    border-color: #1565c0;
+    box-shadow: 0 0 0 0.18rem rgba(21, 101, 192, 0.12);
+  }
+
+  .grade-upload-page .btn-save{
+    background: linear-gradient(135deg, #0d47a1, #1565c0);
+    border: none;
+    color: #fff;
+    border-radius: 12px;
+    min-height: 46px;
+    padding: 10px 20px;
+    font-weight: 600;
+  }
+
+  .grade-upload-page .btn-save:hover{
+    background: linear-gradient(135deg, #0b3d91, #1257ad);
+    color: #fff;
+  }
+
+  .grade-upload-page .btn-cancel{
+    background: #6b7280;
+    border: none;
+    color: #fff;
+    border-radius: 12px;
+    min-height: 46px;
+    padding: 10px 20px;
+    font-weight: 600;
+  }
+
+  .grade-upload-page .btn-cancel:hover{
+    background: #4b5563;
+    color: #fff;
+  }
+
+  .grade-upload-page .table-card{
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    margin-top: 24px;
+    overflow: hidden;
+  }
+
+  .grade-upload-page .table thead th{
+    background: #f8fafc;
+    color: #0f172a;
+    font-weight: 700;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .grade-upload-page .table tbody td{
+    vertical-align: middle;
+    text-align: center;
+  }
+
+  .grade-upload-page .badge-grade{
+    background: #e3f2fd;
+    color: #0d47a1;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 999px;
+    display: inline-block;
+    min-width: 70px;
+  }
+
+  .grade-upload-page .badge-marks{
+    background: #e8f5e9;
+    color: #1b5e20;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 999px;
+    display: inline-block;
+    min-width: 70px;
+  }
+
+  .grade-upload-page .alert{
+    border-radius: 12px;
+  }
+
+  .grade-upload-page .empty-state{
+    text-align: center;
+    padding: 40px 20px;
+    color: #64748b;
+  }
+
+  .grade-upload-page .empty-state i{
+    font-size: 42px;
+    margin-bottom: 12px;
+    color: #94a3b8;
+  }
+
+  .grade-upload-page .action-btn{
+    border: none;
+    border-radius: 10px;
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .grade-upload-page .btn-edit{
+    background: #fff7ed;
+    color: #c2410c;
+  }
+
+  .grade-upload-page .btn-edit:hover{
+    background: #fed7aa;
+    color: #9a3412;
+  }
+
+  .grade-upload-page .btn-delete{
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  .grade-upload-page .btn-delete:hover{
+    background: #fecaca;
+    color: #991b1b;
+  }
+
+  .grade-upload-page .edit-note{
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 18px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  @media (max-width: 768px){
+    .grade-upload-page .page-header h2{
+      font-size: 22px;
+    }
+    .grade-upload-page .card-body-custom{
+      padding: 18px;
+    }
+  }
+</style>
+
+<div class="grade-upload-page">
+  <div class="container-fluid">
+
+    <div class="page-header">
+      <h2><i class="fas fa-upload me-2"></i>Grade Upload</h2>
+      <p>Enter grade and corresponding mark, then save it to the database.</p>
+    </div>
+
+
+    <div class="card main-card">
+      <div class="card-header-custom">
+        <h4><i class="fas fa-pen-to-square me-2 text-primary"></i>
+          {% if edit_obj %}Edit Grade Details{% else %}Add Grade Details{% endif %}
+        </h4>
+        <p>Fill in the grade and mark fields below.</p>
+      </div>
+
+      <div class="card-body-custom">
+
+        {% if edit_obj %}
+          <div class="edit-note">
+            <i class="fas fa-pen me-2"></i> You are editing grade: <strong>{{ edit_obj.grade }}</strong>
+          </div>
+        {% endif %}
+
+        <form method="POST">
+          {% csrf_token %}
+          <div class="row g-4 align-items-end">
+            <div class="col-lg-5 col-md-6">
+              <label for="grade" class="form-label">
+                <i class="fas fa-award me-1 text-primary"></i>Grade
+              </label>
+              <input
+                type="text"
+                name="grade"
+                id="grade"
+                class="form-control"
+                placeholder="Enter grade (Example: O, A+, A)"
+                maxlength="100"
+                value="{% if edit_obj %}{{ edit_obj.grade }}{% endif %}"
+                required
+              >
+            </div>
+
+            <div class="col-lg-5 col-md-6">
+              <label for="marks" class="form-label">
+                <i class="fas fa-percent me-1 text-success"></i>Marks
+              </label>
+              <input
+                type="number"
+                name="marks"
+                id="marks"
+                class="form-control"
+                placeholder="Enter mark"
+                min="0"
+                value="{% if edit_obj %}{{ edit_obj.marks }}{% endif %}"
+                required
+              >
+            </div>
+
+            <div class="col-lg-2 col-md-12">
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-save w-100">
+                  <i class="fas fa-save me-1"></i>
+                  {% if edit_obj %}Update{% else %}Save{% endif %}
+                </button>
+
+                {% if edit_obj %}
+                  <a href="{% url 'grade_upload' %}" class="btn btn-cancel w-100">
+                    <i class="fas fa-times me-1"></i>Cancel
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <h4><i class="fas fa-table me-2 text-primary"></i>Saved Grade Records</h4>
+          <p>All uploaded grades and marks are shown below.</p>
+        </div>
+        <span class="badge bg-primary fs-6">{{ grades|length }} Records</span>
+      </div>
+
+      <div class="card-body-custom p-0">
+        {% if grades %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th style="width: 80px;">S.No</th>
+                  <th>Grade</th>
+                  <th>Marks</th>
+                  <th style="width: 180px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in grades %}
+                  <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                      <span class="badge-grade">{{ item.grade }}</span>
+                    </td>
+                    <td>
+                      <span class="badge-marks">{{ item.marks }}</span>
+                    </td>
+                    <td>
+                      <div class="d-flex justify-content-center gap-2 flex-wrap">
+                        <a href="{% url 'grade_upload_edit' item.id %}" class="action-btn btn-edit">
+                          <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a href="{% url 'grade_upload_delete' item.id %}"
+                           class="action-btn btn-delete"
+                           onclick="return confirm('Are you sure you want to delete this grade?');">
+                          <i class="fas fa-trash"></i> Delete
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <i class="fas fa-folder-open"></i>
+            <h5 class="mb-2">No Grade Records Found</h5>
+            <p class="mb-0">Add your first grade record using the form above.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

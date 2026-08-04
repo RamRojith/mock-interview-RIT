@@ -1,0 +1,896 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 border-bottom pb-2">
+        <div>
+            <h3 class="mb-0 fw-bold text-primary">Library Analytics Dashboard</h3>
+            <small class="text-muted">Overall library report</small>
+        </div>
+
+        <div class="d-flex gap-2 no-print align-items-center flex-wrap">
+            <a href="{% url 'book_type_page' %}" class="btn btn-outline-primary px-4">
+                <i class="fas fa-layer-group me-2"></i>Book Type
+            </a>
+
+            <a class="btn btn-outline-danger px-4"
+               href="{% url 'library_analytics_dashboard_pdf' %}?{{ request.GET.urlencode }}"
+               target="_blank">
+                <i class="fas fa-file-pdf me-2"></i>PDF
+            </a>
+
+            <form method="post"
+                  action="{% url 'delete_all_library_books' %}"
+                  onsubmit="return confirm('Are you sure you want to delete ALL library book records? This cannot be undone.');"
+                  style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger px-4">
+                    <i class="fas fa-trash me-2"></i>Remove All
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-3 no-print">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Filters -->
+    <div class="card shadow-sm border-0 mb-4 no-print">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end" id="analyticsFilterForm">
+
+                <div class="col-lg-3 col-md-4">
+                    <label class="form-label fw-semibold">Degree</label>
+                    <select class="form-select" name="degree" id="degreeSelect">
+                        <option value="">All</option>
+                        {% for d in degrees %}
+                        <option value="{{ d.id }}" {% if selected_degree == d.id|stringformat:"s" %}selected{% endif %}>
+                            {{ d.degree }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-lg-3 col-md-4">
+                    <label class="form-label fw-semibold">Department</label>
+                    <select class="form-select" name="department" id="departmentSelect">
+                        <option value="">All</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>
+                            {{ dept.Department }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-lg-3 col-md-4">
+                    <label class="form-label fw-semibold">Academic Year</label>
+                    <select class="form-select" name="ay">
+                        <option value="">All</option>
+                        {% for ay in academic_years %}
+                        <option value="{{ ay }}" {% if request.GET.ay == ay %}selected{% endif %}>{{ ay }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-lg-3 col-md-4">
+                    <label class="form-label fw-semibold">Book Type</label>
+                    <select class="form-select" name="type">
+                        <option value="">All</option>
+                        {% for bt in book_types %}
+                        <option value="{{ bt.id }}" {% if request.GET.type == bt.id|stringformat:"s" %}selected{% endif %}>
+                            {{ bt.book_type }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-lg-3 col-md-4">
+                    <label class="form-label fw-semibold">Book Name</label>
+                    <input type="text" name="book_name" value="{{ request.GET.book_name }}"
+                           class="form-control" placeholder="Enter Book Name">
+                </div>
+
+                <div class="col-lg-3 col-md-4">
+                    <label class="form-label fw-semibold">Search</label>
+                    <input type="text" name="q" value="{{ request.GET.q }}"
+                           class="form-control" placeholder="Search Title / Author / Accession">
+                </div>
+
+                <div class="col-lg-3 col-md-4">
+                    <label class="form-label fw-semibold">Issue Date</label>
+                    <input type="date" name="issue_date" value="{{ request.GET.issue_date }}" class="form-control">
+                </div>
+
+                <div class="col-lg-3 col-md-4">
+                    <label class="form-label fw-semibold">Return Date</label>
+                    <input type="date" name="return_date" value="{{ request.GET.return_date }}" class="form-control">
+                </div>
+
+                <div class="col-lg-2 col-md-6 d-grid">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-filter me-2"></i>Apply
+                    </button>
+                </div>
+
+                <div class="col-lg-2 col-md-6 d-grid">
+                    <a href="{% url 'library_analytics_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Clear
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card shadow-sm border-0 stat-card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small">Total Books</div>
+                        <div class="fs-3 fw-bold">{{ total_books|default:"0" }}</div>
+                    </div>
+                    <div class="stat-icon bg-primary-subtle text-primary">
+                        <i class="fas fa-book"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card shadow-sm border-0 stat-card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small">BOOK</div>
+                        <div class="fs-3 fw-bold text-primary">{{ total_book_only|default:"0" }}</div>
+                    </div>
+                    <div class="stat-icon bg-info-subtle text-info">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card shadow-sm border-0 stat-card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small">XEROX</div>
+                        <div class="fs-3 fw-bold text-success">{{ total_xerox_only|default:"0" }}</div>
+                    </div>
+                    <div class="stat-icon bg-success-subtle text-success">
+                        <i class="fas fa-copy"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card shadow-sm border-0 stat-card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small">Total Publishers</div>
+                        <div class="fs-3 fw-bold text-warning">{{ total_publishers|default:"0" }}</div>
+                    </div>
+                    <div class="stat-icon bg-warning-subtle text-warning">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card shadow-sm border-0 stat-card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small">Total Authors</div>
+                        <div class="fs-3 fw-bold text-dark" id="totalAuthorsCount">0</div>
+                        <button type="button" class="btn btn-sm btn-outline-dark mt-2"
+                                data-bs-toggle="modal" data-bs-target="#authorsModal">
+                            View Authors
+                        </button>
+                    </div>
+                    <div class="stat-icon bg-dark-subtle text-dark">
+                        <i class="fas fa-user-edit"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Publisher Table -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-0 d-flex align-items-center gap-2">
+            <i class="fas fa-industry text-warning"></i>
+            <h6 class="mb-0 fw-bold">Publisher Wise Book Count</h6>
+            <small class="text-muted ms-2">(Click publisher to view books)</small>
+        </div>
+
+        <div class="card-body">
+            <div class="d-flex justify-content-end mb-3">
+                <div class="input-group publisher-search">
+                    <span class="input-group-text bg-white">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" id="publisherSearch" class="form-control"
+                           placeholder="Search publisher..." autocomplete="off">
+                    <button type="button" class="btn btn-outline-secondary" id="publisherClearBtn">Clear</button>
+                </div>
+            </div>
+
+            {% if publisher_counts %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:80px;">S.No</th>
+                            <th>Publisher Name</th>
+                            <th class="text-center" style="width:180px;">Total Books</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="publisherTableBody">
+                        {% for pub in publisher_counts %}
+                        <tr class="publisher-row">
+                            <td>{{ forloop.counter }}</td>
+                            <td class="fw-semibold publisher-name">
+                                <a class="text-decoration-none"
+                                   href="?publisher={{ pub.publisher|urlencode }}&degree={{ request.GET.degree|urlencode }}&department={{ request.GET.department|urlencode }}&ay={{ request.GET.ay|urlencode }}&type={{ request.GET.type|urlencode }}&q={{ request.GET.q|urlencode }}&book_name={{ request.GET.book_name|urlencode }}&issue_date={{ request.GET.issue_date|urlencode }}&return_date={{ request.GET.return_date|urlencode }}">
+                                    {{ pub.publisher }}
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
+                                    {{ pub.count }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div id="publisherNoResult" class="text-center text-muted py-3" style="display:none;">
+                    No publisher found.
+                </div>
+            </div>
+            {% else %}
+            <div class="text-muted">No publisher data available.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Books Table -->
+    <div class="card shadow-sm border-0 mb-4" id="booksCard">
+        <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fas fa-list text-primary"></i>
+                <h6 class="mb-0 fw-bold">All Books Details</h6>
+            </div>
+
+            <div class="no-print" id="authorFilterBar" style="display:none;">
+                <span class="badge bg-dark-subtle text-dark px-3 py-2">
+                    Author: <span id="selectedAuthorText" class="fw-bold"></span>
+                    <button type="button" class="btn btn-sm btn-outline-dark ms-2 py-0" id="clearAuthorFilterBtn">
+                        Clear
+                    </button>
+                </span>
+            </div>
+        </div>
+
+        <div class="card-body">
+            {% if all_books %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="allBooksTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:80px;">S.No</th>
+                            <th>Degree</th>
+                            <th>Dept</th>
+                            <th>Accession</th>
+                            <th>Title</th>
+                            <th>Authors</th>
+                            <th>Publisher</th>
+                            <th>Type</th>
+                            <th>Year</th>
+                            <th>Academic Year</th>
+                            <th>Issue Date</th>
+                            <th>Return Date</th>
+                            <th class="text-center no-print" style="width:220px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in all_books %}
+                        <tr class="book-row">
+                            <td>{{ forloop.counter }}</td>
+                            <td>{% if b.department and b.department.degree %}{{ b.department.degree.degree }}{% endif %}</td>
+                            <td>{% if b.department %}{{ b.department.Department }}{% endif %}</td>
+                            <td>{{ b.accession_book }}</td>
+                            <td class="fw-semibold book-title">{{ b.title }}</td>
+                            <td class="authors-cell">{{ b.authors }}</td>
+                            <td class="book-publisher">{{ b.publisher }}</td>
+                            <td>{{ b.book_type.book_type }}</td>
+                            <td>{{ b.first_edition_year }}</td>
+                            <td>{{ b.academic_year }}</td>
+                            <td>{{ b.issue_date|date:"d-m-Y" }}</td>
+                            <td>{{ b.return_date|date:"d-m-Y" }}</td>
+                            <td class="text-center no-print">
+                                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary edit-book-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editBookModal"
+                                            data-book-id="{{ b.id }}"
+                                            data-book-title="{{ b.title }}"
+                                            data-book-accession="{{ b.accession_book }}"
+                                            data-book-authors="{{ b.authors }}"
+                                            data-book-publisher="{{ b.publisher }}"
+                                            data-edit-url="{% url 'edit_library_book' b.id %}">
+                                        <i class="fas fa-edit me-1"></i>Edit
+                                    </button>
+
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger delete-book-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteBookModal"
+                                            data-book-id="{{ b.id }}"
+                                            data-book-title="{{ b.title }}"
+                                            data-book-accession="{{ b.accession_book }}"
+                                            data-delete-url="{% url 'delete_library_book' b.id %}">
+                                        <i class="fas fa-trash me-1"></i>Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="text-center text-muted py-3" id="noBooksForAuthor" style="display:none;">
+                    No books found for this author.
+                </div>
+            </div>
+            {% else %}
+            <div class="text-muted">No books available.</div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- Authors Modal -->
+<div class="modal fade" id="authorsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Authors List</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="author-search-wrapper">
+                    <div class="author-search-container">
+                        <span class="author-search-icon"><i class="fas fa-search"></i></span>
+                        <input type="text"
+                               id="authorSearchInput"
+                               class="author-search-input"
+                               placeholder="Search author..."
+                               autocomplete="off">
+                        <button type="button" id="authorClearBtn" class="author-clear-btn">Clear</button>
+                    </div>
+                </div>
+
+                <div class="small text-muted mb-2" id="authorSearchInfo" style="display:none;"></div>
+                <div id="authorsList" class="authors-grid"></div>
+                <div id="authorsEmpty" class="text-muted" style="display:none;">No authors found.</div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Book Modal -->
+<div class="modal fade" id="editBookModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-edit me-2"></i>Edit Book
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="alert alert-info mb-3" id="editBookMessage">
+                    You are about to edit this book record.
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Book ID</label>
+                        <input type="text" class="form-control" id="modalBookId" readonly>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Accession No</label>
+                        <input type="text" class="form-control" id="modalBookAccession" readonly>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Title</label>
+                        <input type="text" class="form-control" id="modalBookTitle" readonly>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Authors</label>
+                        <input type="text" class="form-control" id="modalBookAuthors" readonly>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Publisher</label>
+                        <input type="text" class="form-control" id="modalBookPublisher" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <a href="#" id="goToEditPageBtn" class="btn btn-primary">
+                    <i class="fas fa-arrow-right me-1"></i>Go to Edit Page
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Book Modal -->
+<div class="modal fade" id="deleteBookModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-trash me-2"></i>Delete Book
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="alert alert-danger mb-3" id="deleteBookMessage">
+                    You are about to delete this book record.
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Book ID</label>
+                        <input type="text" class="form-control" id="deleteModalBookId" readonly>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Accession No</label>
+                        <input type="text" class="form-control" id="deleteModalBookAccession" readonly>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Title</label>
+                        <input type="text" class="form-control" id="deleteModalBookTitle" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <form method="post" id="deleteBookForm" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Yes, Delete
+                    </button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat-card {
+        border-radius: 14px;
+    }
+
+    .stat-icon {
+        height: 46px;
+        width: 46px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .no-print {
+        display: block;
+    }
+
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+    }
+
+    .publisher-search {
+        max-width: 380px;
+    }
+
+    .author-search-wrapper {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 14px;
+    }
+
+    .author-search-container {
+        display: flex;
+        align-items: center;
+        width: 420px;
+        height: 42px;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .author-search-icon {
+        padding: 0 12px;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        height: 100%;
+    }
+
+    .author-search-input {
+        flex: 1;
+        height: 100%;
+        border: none;
+        outline: none;
+        padding: 0 12px;
+        font-size: 14px;
+    }
+
+    .author-clear-btn {
+        height: 100%;
+        border: none;
+        padding: 0 18px;
+        background: #f8f9fa;
+        border-left: 1px solid #dee2e6;
+        font-weight: 500;
+        transition: 0.2s ease;
+    }
+
+    .author-clear-btn:hover {
+        background: #e9ecef;
+    }
+
+    .authors-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 12px;
+    }
+
+    .author-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: #f4f6f9;
+        border: 1px solid #dbe2ea;
+        font-size: 13px;
+        font-weight: 700;
+        text-align: center;
+        word-break: break-word;
+        min-height: 46px;
+        cursor: pointer;
+        transition: 0.15s ease;
+    }
+
+    .author-badge:hover {
+        background: #e9eef5;
+    }
+
+    .author-badge.active {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
+    }
+
+    #allBooksTable th,
+    #allBooksTable td {
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    #allBooksTable td:nth-child(5),
+    #allBooksTable td:nth-child(6),
+    #allBooksTable td:nth-child(7) {
+        white-space: normal;
+    }
+</style>
+
+<script>
+    // Degree change submit
+    (function () {
+        const degreeSelect = document.getElementById("degreeSelect");
+        if (!degreeSelect) return;
+
+        degreeSelect.addEventListener("change", function () {
+            const departmentSelect = document.getElementById("departmentSelect");
+            if (departmentSelect) {
+                departmentSelect.value = "";
+            }
+            document.getElementById("analyticsFilterForm").submit();
+        });
+    })();
+
+    // Publisher search
+    (function () {
+        const searchInput = document.getElementById("publisherSearch");
+        const clearBtn = document.getElementById("publisherClearBtn");
+        const tbody = document.getElementById("publisherTableBody");
+        const noRes = document.getElementById("publisherNoResult");
+
+        if (!searchInput || !tbody) return;
+        const rows = Array.from(tbody.querySelectorAll("tr.publisher-row"));
+
+        function filterRows() {
+            const term = (searchInput.value || "").trim().toLowerCase();
+            let visible = 0;
+
+            rows.forEach(row => {
+                const nameCell = row.querySelector(".publisher-name");
+                const name = (nameCell ? nameCell.innerText : "").toLowerCase();
+                const show = name.includes(term);
+                row.style.display = show ? "" : "none";
+                if (show) visible++;
+            });
+
+            if (noRes) noRes.style.display = (visible === 0) ? "" : "none";
+        }
+
+        searchInput.addEventListener("input", filterRows);
+        if (clearBtn) {
+            clearBtn.addEventListener("click", () => {
+                searchInput.value = "";
+                filterRows();
+                searchInput.focus();
+            });
+        }
+    })();
+
+    // Authors modal + filter
+    (function () {
+        const countEl = document.getElementById("totalAuthorsCount");
+        const listEl = document.getElementById("authorsList");
+        const emptyEl = document.getElementById("authorsEmpty");
+
+        const searchInput = document.getElementById("authorSearchInput");
+        const clearBtn = document.getElementById("authorClearBtn");
+        const infoEl = document.getElementById("authorSearchInfo");
+
+        const bookRows = Array.from(document.querySelectorAll("#allBooksTable tbody tr.book-row"));
+        const noBooksForAuthor = document.getElementById("noBooksForAuthor");
+
+        const authorFilterBar = document.getElementById("authorFilterBar");
+        const selectedAuthorText = document.getElementById("selectedAuthorText");
+        const clearAuthorFilterBtn = document.getElementById("clearAuthorFilterBtn");
+
+        if (!listEl) return;
+
+        function normalizeName(name) {
+            return (name || "").trim().replace(/\s+/g, " ").toUpperCase();
+        }
+
+        const authorCells = document.querySelectorAll("#allBooksTable .authors-cell");
+        const set = new Set();
+
+        authorCells.forEach(td => {
+            const raw = (td.innerText || "").trim();
+            if (!raw) return;
+
+            raw.split(/,|;|\/|&|\band\b/gi).forEach(a => {
+                const n = normalizeName(a);
+                if (n) set.add(n);
+            });
+        });
+
+        const authors = Array.from(set).sort((a, b) => a.localeCompare(b));
+        if (countEl) countEl.innerText = authors.length;
+
+        function renderAuthors(filterText = "") {
+            const term = normalizeName(filterText);
+            listEl.innerHTML = "";
+            let visible = 0;
+
+            authors.forEach(name => {
+                if (term && !name.includes(term)) return;
+
+                const span = document.createElement("span");
+                span.className = "author-badge";
+                span.textContent = name;
+
+                span.addEventListener("click", () => {
+                    document.querySelectorAll(".author-badge").forEach(x => x.classList.remove("active"));
+                    span.classList.add("active");
+                    applyAuthorFilter(name);
+
+                    const modalEl = document.getElementById("authorsModal");
+                    if (modalEl && window.bootstrap) {
+                        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                        modal.hide();
+                    }
+                });
+
+                listEl.appendChild(span);
+                visible++;
+            });
+
+            if (emptyEl) emptyEl.style.display = (visible === 0) ? "" : "none";
+
+            if (infoEl) {
+                if (term) {
+                    infoEl.style.display = "";
+                    infoEl.innerText = `Showing ${visible} author(s) for: "${filterText}"`;
+                } else {
+                    infoEl.style.display = "none";
+                    infoEl.innerText = "";
+                }
+            }
+        }
+
+        function applyAuthorFilter(authorName) {
+            const selected = normalizeName(authorName);
+
+            if (authorFilterBar) {
+                authorFilterBar.style.display = "";
+            }
+            if (selectedAuthorText) {
+                selectedAuthorText.innerText = authorName;
+            }
+
+            let shown = 0;
+            bookRows.forEach(row => {
+                const cell = row.querySelector(".authors-cell");
+                const authorsText = normalizeName(cell ? cell.innerText : "");
+                const match = authorsText.includes(selected);
+                row.style.display = match ? "" : "none";
+                if (match) shown++;
+            });
+
+            if (noBooksForAuthor) {
+                noBooksForAuthor.style.display = (shown === 0) ? "" : "none";
+            }
+
+            const card = document.getElementById("booksCard");
+            if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        function clearAuthorFilter() {
+            if (authorFilterBar) authorFilterBar.style.display = "none";
+            if (selectedAuthorText) selectedAuthorText.innerText = "";
+
+            bookRows.forEach(row => {
+                row.style.display = "";
+            });
+
+            if (noBooksForAuthor) noBooksForAuthor.style.display = "none";
+            document.querySelectorAll(".author-badge").forEach(x => x.classList.remove("active"));
+        }
+
+        renderAuthors("");
+
+        if (searchInput) {
+            searchInput.addEventListener("input", () => {
+                renderAuthors(searchInput.value);
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener("click", () => {
+                searchInput.value = "";
+                renderAuthors("");
+                searchInput.focus();
+            });
+        }
+
+        if (clearAuthorFilterBtn) {
+            clearAuthorFilterBtn.addEventListener("click", () => {
+                clearAuthorFilter();
+            });
+        }
+
+        const modalEl = document.getElementById("authorsModal");
+        if (modalEl) {
+            modalEl.addEventListener("shown.bs.modal", () => {
+                if (searchInput) searchInput.focus();
+            });
+        }
+    })();
+
+    // Edit modal
+    (function () {
+        const editModal = document.getElementById("editBookModal");
+        if (!editModal) return;
+
+        editModal.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget;
+            if (!button) return;
+
+            const bookId = button.getAttribute("data-book-id") || "";
+            const title = button.getAttribute("data-book-title") || "";
+            const accession = button.getAttribute("data-book-accession") || "";
+            const authors = button.getAttribute("data-book-authors") || "";
+            const publisher = button.getAttribute("data-book-publisher") || "";
+            const editUrl = button.getAttribute("data-edit-url") || "#";
+
+            document.getElementById("modalBookId").value = bookId;
+            document.getElementById("modalBookTitle").value = title;
+            document.getElementById("modalBookAccession").value = accession;
+            document.getElementById("modalBookAuthors").value = authors;
+            document.getElementById("modalBookPublisher").value = publisher;
+
+            const msg = document.getElementById("editBookMessage");
+            if (msg) {
+                msg.innerHTML = `<strong>Message:</strong> "${title}" book record edit panna ready-ah irukku. Continue panna keela irukkura <b>Go to Edit Page</b> button click pannunga.`;
+            }
+
+            const editBtn = document.getElementById("goToEditPageBtn");
+            if (editBtn) {
+                editBtn.setAttribute("href", editUrl);
+            }
+        });
+    })();
+
+    // Delete modal
+    (function () {
+        const deleteModal = document.getElementById("deleteBookModal");
+        if (!deleteModal) return;
+
+        deleteModal.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget;
+            if (!button) return;
+
+            const bookId = button.getAttribute("data-book-id") || "";
+            const title = button.getAttribute("data-book-title") || "";
+            const accession = button.getAttribute("data-book-accession") || "";
+            const deleteUrl = button.getAttribute("data-delete-url") || "";
+
+            document.getElementById("deleteModalBookId").value = bookId;
+            document.getElementById("deleteModalBookTitle").value = title;
+            document.getElementById("deleteModalBookAccession").value = accession;
+
+            const msg = document.getElementById("deleteBookMessage");
+            if (msg) {
+                msg.innerHTML = `<strong>Warning:</strong> "${title}" book record delete panna poringa. Once delete pannina, thirumba recover panna mudiyadhu.`;
+            }
+
+            const deleteForm = document.getElementById("deleteBookForm");
+            if (deleteForm) {
+                deleteForm.setAttribute("action", deleteUrl);
+            }
+        });
+    })();
+</script>
+{% endblock %}

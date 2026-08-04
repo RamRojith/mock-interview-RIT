@@ -1,0 +1,1086 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load sm_tags %}
+
+{% block title %}Faculty Timetable - Ramco Institute of Technology{% endblock %}
+
+{% block content %}
+
+<style>
+.faculty-timetable {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.faculty-timetable .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.faculty-timetable .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.faculty-timetable .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.faculty-timetable .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.faculty-timetable .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.faculty-timetable .stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: transform 0.3s ease;
+  border-left: 4px solid;
+}
+
+.faculty-timetable .stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.faculty-timetable .stat-card.total-classes {
+  border-left-color: #1a4b8c;
+}
+
+.faculty-timetable .stat-card.daily-periods {
+  border-left-color: #8b5cf6;
+}
+
+.faculty-timetable .stat-card.assigned-sections {
+  border-left-color: #10b981;
+}
+
+.faculty-timetable .stat-card.current-day {
+  border-left-color: #f59e0b;
+}
+
+.faculty-timetable .stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.faculty-timetable .total-classes .stat-icon {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+}
+
+.faculty-timetable .daily-periods .stat-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.faculty-timetable .assigned-sections .stat-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.faculty-timetable .current-day .stat-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.faculty-timetable .stat-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1a4b8c;
+  line-height: 1;
+  display: block;
+}
+
+.faculty-timetable .stat-label {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.faculty-timetable .timetable-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.faculty-timetable .timetable-card .card-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #374151;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.faculty-timetable .timetable-card .card-header h5 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.faculty-timetable .timetable-card .card-header i {
+  margin-right: 0.75rem;
+  color: #1a4b8c;
+}
+
+.faculty-timetable .section-badge {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.faculty-timetable .timetable-card .card-body {
+  padding: 1.5rem;
+}
+
+.faculty-timetable .table-container {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.faculty-timetable .timetable-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0;
+}
+
+.faculty-timetable .timetable-table th {
+  background: #f8fafc;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.faculty-timetable .timetable-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #374151;
+  font-size: 0.9rem;
+  vertical-align: top;
+  height: 120px;
+}
+
+.faculty-timetable .timetable-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.faculty-timetable .timetable-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.faculty-timetable .day-header {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  font-weight: 700;
+  color: #1a4b8c;
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  border-right: 2px solid #e2e8f0;
+  width: 120px;
+}
+
+.faculty-timetable .period-header {
+  text-align: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.faculty-timetable .period-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.faculty-timetable .period-number {
+  font-weight: 700;
+  color: #1a4b8c;
+  font-size: 1rem;
+}
+
+.faculty-timetable .day-cell {
+  background: #f8fafc;
+  font-weight: 600;
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  border-right: 2px solid #e2e8f0;
+}
+
+.faculty-timetable .day-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.faculty-timetable .day-name {
+  font-weight: 700;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.faculty-timetable .today-badge {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.faculty-timetable .class-slot {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border-left: 4px solid #1a4b8c;
+}
+
+.faculty-timetable .class-slot:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #1a4b8c;
+}
+
+.faculty-timetable .current-day-slot {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.faculty-timetable .course-code {
+  font-weight: 700;
+  color: #1a4b8c;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.faculty-timetable .course-title {
+  color: #374151;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.faculty-timetable .free-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #9ca3af;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 2px dashed #d1d5db;
+  transition: all 0.3s ease;
+}
+
+.faculty-timetable .free-slot:hover {
+  background: #f1f5f9;
+  border-color: #9ca3af;
+  color: #6b7280;
+}
+
+.faculty-timetable .free-slot i {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.faculty-timetable .subjects-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.faculty-timetable .subjects-card .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.faculty-timetable .subjects-card .card-header h5 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.faculty-timetable .subjects-card .card-header i {
+  margin-right: 0.75rem;
+}
+
+.faculty-timetable .subjects-card .card-body {
+  padding: 1.5rem;
+}
+
+.faculty-timetable .subjects-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0;
+}
+
+.faculty-timetable .subjects-table th {
+  background: #f8fafc;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.faculty-timetable .subjects-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.faculty-timetable .subjects-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.faculty-timetable .subjects-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.faculty-timetable .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-top: 2rem;
+}
+
+.faculty-timetable .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.faculty-timetable .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.faculty-timetable .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+}
+
+.faculty-timetable .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.faculty-timetable .btn-secondary {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+}
+
+.faculty-timetable .btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(107, 114, 128, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .faculty-timetable .page-header {
+    padding: 1rem;
+  }
+  
+  .faculty-timetable .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .faculty-timetable .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .faculty-timetable .timetable-card .card-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .faculty-timetable {
+    padding: 1rem;
+  }
+  
+  .faculty-timetable .page-header {
+    padding: 0.75rem;
+  }
+  
+  .faculty-timetable .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .faculty-timetable .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .faculty-timetable .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .faculty-timetable .timetable-card .card-body {
+    padding: 1rem;
+  }
+  
+  .faculty-timetable .stat-card {
+    padding: 1.25rem;
+  }
+  
+  .faculty-timetable .stat-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
+  }
+  
+  .faculty-timetable .stat-number {
+    font-size: 1.75rem;
+  }
+  
+  .faculty-timetable .timetable-table {
+    font-size: 0.8rem;
+  }
+  
+  .faculty-timetable .timetable-table th,
+  .faculty-timetable .timetable-table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .faculty-timetable .day-header {
+    width: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .faculty-timetable .timetable-table {
+    font-size: 0.75rem;
+  }
+  
+  .faculty-timetable .class-slot {
+    padding: 0.5rem;
+  }
+  
+  .faculty-timetable .course-code {
+    font-size: 0.85rem;
+  }
+  
+  .faculty-timetable .course-title {
+    font-size: 0.75rem;
+  }
+  
+  .faculty-timetable .free-slot i {
+    font-size: 1.25rem;
+  }
+}
+</style>
+
+<div class="faculty-timetable">
+  <div class="page-header">
+    <h1><i class="fas fa-calendar-alt me-2"></i>Faculty Timetable</h1>
+    <p class="header-subtitle">View your teaching schedule by academic year, section, year, and semester</p>
+  </div>
+
+  <div class="page-container">
+    <div class="timetable-card">
+      <div class="card-header">
+        <h5><i class="fas fa-filter me-2"></i>Academic Year Filter</h5>
+      </div>
+      <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+          <div class="col-lg-4 col-md-6">
+            <label class="form-label fw-semibold">Academic Year</label>
+            <select name="academic_year" class="form-select">
+              {% for ay in academic_year_options %}
+                <option value="{{ ay }}" {% if ay == selected_academic_year %}selected{% endif %}>{{ ay }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="fas fa-search me-1"></i>View
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Statistics Grid -->
+    <div class="stats-grid">
+      <div class="stat-card total-classes">
+        <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+        <div class="stat-content">
+          <span class="stat-number" id="total-classes">{{ total_classes }}</span>
+          <span class="stat-label">Total Classes</span>
+        </div>
+      </div>
+      {% comment %} <div class="stat-card daily-periods">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-content">
+          <span class="stat-number">
+            {% with max_periods=0 %}
+              {% for group in grouped_allocations %}
+                {% if group.visible_periods|length > max_periods %}
+                  {{ group.visible_periods|length }}
+                {% endif %}
+              {% endfor %}
+            {% endwith %}
+          </span>
+          <span class="stat-label">Max Periods per Day</span>
+        </div>
+      </div> {% endcomment %}
+      <div class="stat-card assigned-sections">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-content">
+          <span class="stat-number">{{ grouped_allocations|length }}</span>
+          <span class="stat-label">Assigned Sections</span>
+        </div>
+      </div>
+      <div class="stat-card current-day">
+        <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+        <div class="stat-content">
+          <span class="stat-number">{{ selected_academic_year|default:"-" }}</span>
+          <span class="stat-label">Academic Year</span>
+        </div>
+      </div>
+    </div>
+
+    {% if grouped_allocations %}
+      <!-- Timetable for Each Section, Year, Semester -->
+      {% for group in grouped_allocations %}
+      <div class="timetable-card">
+        <div class="card-header">
+          <h5><i class="fas fa-table me-2"></i>Timetable: Section {{ group.section }} | Year {{ group.year }} | Semester {{ group.semester }}</h5>
+          <div class="section-badge">
+            <i class="fas fa-calendar-check me-1"></i> {{ group.allocations|length }} Days
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-container">
+            <table class="timetable-table">
+              <thead>
+                <tr>
+                  <th class="day-header">Day</th>
+                  {% for period in group.visible_periods %}
+                  <th class="period-header">
+                    <div class="period-info">
+                      <i class="fas fa-clock"></i>
+                      <span class="period-number">Period {{ forloop.counter }}</span>
+                    </div>
+                  </th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for alloc in group.allocations %}
+                <tr class="day-row {% if alloc.day == current_day %}current-day{% endif %}" data-day="{{ alloc.day }}">
+                  <td class="day-cell">
+                    <div class="day-info">
+                      <div class="day-name">{{ alloc.day }}</div>
+                      {% if alloc.day == current_day %}<span class="today-badge">Today</span>{% endif %}
+                    </div>
+                  </td>
+                  {% for p in group.visible_periods %}
+                  <td class="period-cell">
+                    {% with period_data=alloc.period_display|get_item:p %}
+                    {% if period_data %}
+                    <div class="class-slot {% if alloc.day == current_day %}current-day-slot{% endif %}">
+                      <div class="course-code">{{ period_data.course_code }}</div>
+                    </div>
+                    {% else %}
+                    <div class="free-slot">
+                      <i class="fas fa-coffee"></i>
+                      <span>Free</span>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+
+      <!-- Subjects List Table -->
+      <div class="subjects-card">
+        <div class="card-header">
+          <h5><i class="fas fa-book me-2"></i>Subjects with Batch, Section & Semester</h5>
+        </div>
+        <div class="card-body">
+          {% if subjects_list %}
+          <div class="table-responsive">
+            <table class="subjects-table">
+              <thead>
+                <tr>
+                  <th>Course Code</th>
+                  <th>Course Title</th>
+                  <th>Academic Year</th>
+                  <th>Year</th>
+                  <th>Section</th>
+                  <th>Semester</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for sub in subjects_list %}
+                <tr>
+                  <td><strong>{{ sub.course_code }}</strong></td>
+                  <td>{{ sub.title }}</td>
+                  <td>{{ sub.academic_year }}</td>
+                  <td>{{ sub.batch }}</td>
+                  <td>{{ sub.section }}</td>
+                  <td>{{ sub.semester }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="fas fa-book-open"></i>
+            <h4>No Subjects Assigned</h4>
+            <p class="text-muted">No subjects are currently assigned to your timetable.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    {% else %}
+      <!-- Empty State -->
+      <div class="empty-state">
+        <i class="fas fa-calendar-times"></i>
+        <h4>No Timetable Assigned</h4>
+        <p class="text-muted">You don't have any teaching assignments scheduled at the moment.</p>
+        <div class="empty-actions mt-3">
+          <button class="btn btn-primary" onclick="location.reload()">
+            <i class="fas fa-redo me-2"></i>Refresh Page
+          </button>
+          <button class="btn btn-secondary" onclick="history.back()">
+            <i class="fas fa-arrow-left me-2"></i>Go Back
+          </button>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Add interactive effects to table cells
+  const classSlots = document.querySelectorAll('.class-slot');
+  const freeSlots = document.querySelectorAll('.free-slot');
+  
+  classSlots.forEach(slot => {
+    slot.addEventListener('click', function() {
+      this.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        this.style.transform = '';
+      }, 150);
+    });
+  });
+  
+  freeSlots.forEach(slot => {
+    slot.addEventListener('click', function() {
+      this.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        this.style.transform = '';
+      }, 150);
+    });
+  });
+  
+  // Add animation to statistics cards on load
+  const statCards = document.querySelectorAll('.stat-card');
+  statCards.forEach((card, index) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(30px)';
+    
+    setTimeout(() => {
+      card.style.transition = 'all 0.6s ease';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, index * 200);
+  });
+  
+  // Highlight current day rows
+  const currentDayRows = document.querySelectorAll('.current-day');
+  currentDayRows.forEach(row => {
+    row.style.background = 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)';
+  });
+  
+  // Calculate and update total classes count
+  function updateTotalClasses() {
+    const classSlots = document.querySelectorAll('.class-slot');
+    const totalClassesElement = document.getElementById('total-classes');
+    if (totalClassesElement) {
+      totalClassesElement.textContent = classSlots.length;
+    }
+  }
+  
+  // Initialize
+  updateTotalClasses();
+  
+  // Add hover effect to table headers
+  const tableHeaders = document.querySelectorAll('.timetable-table th');
+  tableHeaders.forEach(header => {
+    header.addEventListener('mouseenter', function() {
+      this.style.background = 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)';
+    });
+    
+    header.addEventListener('mouseleave', function() {
+      if (this.classList.contains('day-header')) {
+        this.style.background = 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)';
+      } else {
+        this.style.background = 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)';
+      }
+    });
+  });
+});
+</script>
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% comment %} {% extends 'base.html' %}
+{% load static %}
+{% load fm_tags %}
+
+{% block title %}My Timetable – {{ faculty.name|default:"Faculty" }} – Ramco Institute of Technology{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4 faculty-timetable-page">
+
+  <!-- Header -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+    <div>
+      <h1 class="h3 mb-1">
+        <i class="fas fa-calendar-check me-2 text-primary"></i>
+        My Timetable
+      </h1>
+      <div class="text-muted">
+        Academic Year {{ academic_year|default:"Current Year" }}
+      </div>
+    </div>
+    <div class="mt-3 mt-md-0">
+      <span class="badge bg-primary px-3 py-2 fs-5">
+        {{ faculty.name|default:"Faculty" }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  {% if messages %}
+  <div class="mb-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Today's Assignments I Made -->
+  {% if today_substitutions %}
+  <div class="card border-info shadow-sm mb-5">
+    <div class="card-header bg-info text-white">
+      <h5 class="mb-0">
+        <i class="fas fa-user-check me-2"></i>
+        Periods Assigned by Me Today ({{ today|date:"d MMM Y" }})
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      <ul class="list-group list-group-flush">
+        {% for sub in today_substitutions %}
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between">
+            <div>
+              <strong>{{ sub.get_period_field_display|default:sub.period_field|title }}</strong>
+              <span class="ms-2 text-muted">
+                {{ sub.original_allocation.section }} (Year {{ sub.original_allocation.year }})
+              </span>
+            </div>
+            <div class="text-end">
+              <div class="text-success fw-bold">
+                Assigned to: {{ sub.substitute_faculty.name|default:"—" }}
+              </div>
+              <div class="small text-muted">
+                Reason: {{ sub.reason|default:"—" }}
+                {% if sub.remarks %} • {{ sub.remarks }}{% endif %}
+              </div>
+            </div>
+          </div>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-center py-4 text-muted">
+          No periods assigned by you today.
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if grouped_allocations %}
+
+    {% for group in grouped_allocations %}
+    <div class="card shadow-sm mb-4 timetable-group-card">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="fas fa-graduation-cap me-2 text-primary"></i>
+          Section <strong>{{ group.section|default:"—" }}</strong>
+          • Year <strong>{{ group.year }}</strong>
+          • Semester <strong>{{ group.semester }}</strong>
+        </h5>
+        <span class="badge bg-secondary">
+          {{ group.allocations|length }} days
+        </span>
+      </div>
+
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table timetable-table mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="text-center" style="width: 110px;">Day</th>
+                {% for period in group.visible_periods %}
+                <th class="text-center" style="min-width: 130px;">
+                  P{{ forloop.counter }}
+                </th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for alloc in group.allocations %}
+              <tr class="{% if alloc.day == current_day %}table-warning{% endif %}">
+                <td class="text-center fw-bold align-middle">
+                  {{ alloc.day }}
+                  {% if alloc.day == current_day %}
+                    <span class="badge bg-danger ms-1 small">Today</span>
+                  {% endif %}
+                </td>
+
+                {% for p in group.visible_periods %}
+                <td class="p-2 text-center align-middle period-cell">
+                  {% with slot=alloc.period_display|get_item:p %}
+                    {% if slot %}
+                      <div class="class-slot {% if slot.is_substituted %}substituted-slot {% if slot.is_incoming %}incoming{% else %}outgoing{% endif %}{% endif %}">
+                        <div class="fw-bold fs-5">{{ slot.course_code }}</div>
+                        <div class="small text-muted mt-1">{{ slot.title|truncatechars:38 }}</div>
+
+                        {% if slot.is_substituted %}
+                          {% if slot.is_incoming %}
+                            <div class="mt-2 small text-primary border-top pt-2">
+                              <i class="fas fa-user-shield me-1"></i>
+                              <strong>Substitute for {{ slot.original_faculty.name|default:"—" }}</strong><br>
+                              Reason: {{ slot.reason|default:"—" }}
+                              {% if slot.remarks %} • {{ slot.remarks }}{% endif %}
+                            </div>
+                          {% else %}
+                            <div class="mt-2 small text-success border-top pt-2">
+                              <i class="fas fa-user-check me-1"></i>
+                              Assigned to <strong>{{ slot.substitute.name|default:"—" }}</strong><br>
+                              Reason: {{ slot.reason|default:"—" }}
+                              {% if slot.remarks %} • {{ slot.remarks }}{% endif %}
+                            </div>
+                          {% endif %}
+
+                        {% elif alloc.day == current_day %}
+                          <form method="post" class="mt-3 assign-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="assign_substitute">
+                            <input type="hidden" name="allocation_id" value="{{ alloc.id }}">
+                            <input type="hidden" name="period_field" value="{{ p }}">
+
+                            <select name="substitute_faculty" class="form-select form-select-sm mb-2" required>
+                              <option value="">Assign this period to...</option>
+                              {% for f in possible_substitutes %}
+                              <option value="{{ f.id }}">
+                                {{ f.name }} ({{ f.faculty_id }})
+                                {% if f.department and f.department.short_name %} — {{ f.department.short_name }}{% endif %}
+                              </option>
+                              {% endfor %}
+                            </select>
+
+                            <select name="reason" class="form-select form-select-sm mb-2">
+                              <option value="absent">Absent / Leave</option>
+                              <option value="official_duty">Official Duty / Meeting</option>
+                              <option value="medical">Medical</option>
+                              <option value="other">Other</option>
+                            </select>
+
+                            <textarea name="remarks" class="form-control form-control-sm mb-2" rows="2"
+                              placeholder="Remarks / details (optional)"></textarea>
+
+                            <button type="submit" class="btn btn-sm btn-warning w-100"
+                              onclick="return confirm('Assign this period to the selected faculty for today?');">
+                              <i class="fas fa-user-plus me-1"></i> Assign Period
+                            </button>
+                          </form>
+
+                        {% else %}
+                          <div class="mt-2 small text-success">
+                            <i class="fas fa-check-circle me-1"></i>Regular scheduled class
+                          </div>
+                        {% endif %}
+                      </div>
+                    {% else %}
+                      <div class="free-slot py-3">
+                        <i class="fas fa-coffee text-muted"></i><br>
+                        <small>Free</small>
+                      </div>
+                    {% endif %}
+                  {% endwith %}
+                </td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+  {% else %}
+    <div class="card text-center border-0 shadow-sm py-5 my-5">
+      <i class="far fa-calendar-times fa-5x text-muted mb-4"></i>
+      <h4 class="text-muted">No Timetable Available</h4>
+      <p class="lead text-muted mb-4">
+        You don't have any teaching assignments this semester / year.
+      </p>
+      <div class="d-flex justify-content-center gap-3">
+        <button class="btn btn-primary" onclick="location.reload()">
+          <i class="fas fa-sync me-2"></i> Refresh
+        </button>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+          <i class="fas fa-home me-2"></i> Dashboard
+        </a>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+
+<style>
+.faculty-timetable-page .class-slot {
+  min-height: 110px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f8fbff;
+  border: 1px solid #d1e3ff;
+  transition: all 0.15s;
+}
+
+.faculty-timetable-page .substituted-slot.outgoing {
+  background: #e8f5e9;
+  border: 2px solid #81c784;
+}
+
+.faculty-timetable-page .substituted-slot.incoming {
+  background: #fff3e0;
+  border: 2px dashed #ffb74d;
+}
+
+.faculty-timetable-page .free-slot {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 25px 0;
+}
+
+.faculty-timetable-page .assign-form {
+  display: none;
+}
+
+.faculty-timetable-page tr.table-warning .assign-form {
+  display: block;
+}
+
+.faculty-timetable-page .period-cell:hover {
+  background-color: #f1f5f9;
+}
+</style>
+
+{% endblock %} {% endcomment %}

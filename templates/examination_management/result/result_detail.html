@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Student Info -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <h5 class="mb-1">{{ student.name }}</h5>
+            <p class="mb-0 text-muted">
+                Reg No: <strong>{{ student.reg_no }}</strong> |
+                Degree: <strong>{{ student.department.degree.degree_code }}</strong> |
+                Department: <strong>{{ student.department }}</strong> |
+                Year: <strong>{{ year }}</strong> |
+                Semester: <strong>{{ semester }}</strong> |
+                Batch: <strong>{{ student.batch }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-success text-white">
+            <h6 class="mb-0">Semester {{ semester }} Results</h6>
+        </div>
+
+        <div class="card-body p-0">
+            <table class="table table-bordered table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Course Code</th>
+                        <th>Course Title</th>
+                        <th>Credit</th>
+                        <th>Grade</th>
+                        <th>Grade Point</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in results %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ r.course.course_code }}</td>
+                        <td>{{ r.course.title }}</td>
+                        <td>{{ r.credit }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ r.grade|default:"-" }}</span>
+                        </td>
+                        <td>{{ r.grade_points|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            No results found for this semester
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- GPA / CGPA -->
+    <!-- GPA / CGPA -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card border-info text-center">
+            <div class="card-body">
+                <h6 class="text-info mb-1">SGPA</h6>
+                <h4 class="mb-0">
+                    {{ sgpa|default:"-" }}
+                </h4>
+                <small class="text-muted">
+                    Semester {{ semester }}
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-success text-center">
+            <div class="card-body">
+                <h6 class="text-success mb-1">CGPA</h6>
+                <h4 class="mb-0">
+                    {{ cgpa|default:"-" }}
+                </h4>
+                <small class="text-muted">
+                    Up to Semester {{ semester }}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+{% endblock %}

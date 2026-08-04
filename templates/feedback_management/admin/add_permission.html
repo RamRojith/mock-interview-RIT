@@ -1,0 +1,449 @@
+{% load static %}
+{% load feedback_tags %}
+{% feedback_current_function as permission_data %}
+
+<div class="modal fade" id="addpermissionModal" tabindex="-1" aria-labelledby="addpermissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+
+            <!-- Modal Header -->
+            <div class="modal-header bg-gradient-primary text-white">
+                <div class="d-flex align-items-center w-100">
+                    <div class="modal-icon me-3">
+                        <i class="fas fa-shield-alt fa-2x"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="modal-title fw-bold mb-0" id="addpermissionModalLabel">
+                            Permission Management
+                        </h5>
+                        <small class="opacity-75">Manage role-based access controls</small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body bg-light">
+                <div class="container-fluid py-3">
+
+                    <!-- Search and Controls -->
+                    <div class="row mb-4 px-2 px-md-0">
+                        <div class="col-md-8">
+                            <div class="search-container">
+                                <div class="input-group shadow-sm">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="fas fa-search text-primary"></i>
+                                    </span>
+                                    <input 
+                                        type="text" 
+                                        id="permissionSearch" 
+                                        class="form-control border-start-0 ps-0" 
+                                        placeholder="Search roles..." 
+                                        autocomplete="off"
+                                    >
+                                    <button class="btn btn-outline-secondary border-start-0" type="button" id="clearSearch">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mt-3 mt-md-0">
+                            <div class="d-flex gap-2 justify-content-md-end h-100">
+                                <button type="button" class="btn btn-success btn-sm" id="selectAllBtn">
+                                    <i class="fas fa-check-double me-1"></i>All
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm" id="deselectAllBtn">
+                                    <i class="fas fa-times me-1"></i>None
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Permissions Matrix -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-0">
+                            <form method="POST" action="{% url 'feedback_assign_permission' %}" id="permissionForm">
+                                {% csrf_token %}
+
+                                <div class="table-responsive table-sticky-wrapper">
+                                    <table class="table table-bordered mb-0" id="permissionsTable">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th class="bg-dark text-white align-middle sticky-corner" style="min-width: 220px; width: 220px;">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-user-tag me-2"></i>
+                                                        ROLES
+                                                    </div>
+                                                </th>
+                                                {% for per in permission_data.0 %}
+                                                    <th class="text-center align-middle sticky-top permission-header" style="min-width: 110px;">
+                                                        <div class="d-flex flex-column align-items-center">
+                                                            <span class="small fw-bold">{{ per|replace_underscore|title }}</span>
+                                                        </div>
+                                                    </th>
+                                                {% endfor %}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for per in permission_data.1 %}
+                                                <tr class="role-row" data-role="{{ per.role|lower }}">
+                                                    <td class="fw-bold align-middle bg-light role-name-cell sticky-left">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="role-icon me-2">
+                                                                <i class="fas fa-user-shield text-primary"></i>
+                                                            </div>
+                                                            <div class="role-info">
+                                                                <div class="role-title small">{{ per.role|title }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+
+                                                    {% for field in permission_data.0 %}
+                                                        {% has_permission per field as has_per %}
+                                                        <td class="text-center align-middle permission-cell" data-permission="{{ field }}">
+                                                            <input 
+                                                                type="hidden" 
+                                                                name="permissions[{{ per.role }}][{{ field }}]" 
+                                                                value="false"
+                                                            >
+                                                            <div class="permission-checkbox-container">
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    name="permissions[{{ per.role }}][{{ field }}]" 
+                                                                    class="permission-checkbox visually-hidden" 
+                                                                    data-role="{{ per.role }}" 
+                                                                    data-permission="{{ field }}"
+                                                                    value="true"
+                                                                    id="perm_{{ per.role }}_{{ field }}"
+                                                                    {% if has_per %}checked{% endif %}
+                                                                >
+                                                                <label class="permission-checkbox-label" for="perm_{{ per.role }}_{{ field }}">
+                                                                    <i class="fas fa-check permission-check-icon"></i>
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                    {% endfor %}
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Footer -->
+                                <div class="card-footer bg-white border-top py-3">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge bg-primary rounded-pill px-3 py-2 me-2" id="selectedCount">0</span>
+                                                <small class="text-secondary">permissions selected</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 d-flex justify-content-end gap-2">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                                                <i class="fas fa-times me-1"></i>Cancel
+                                            </button>
+                                            <button type="submit" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-save me-1"></i>Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body py-2 text-center">
+                                    <small class="d-inline-flex align-items-center mx-3">
+                                        <span class="legend-color bg-success me-1"></span> Granted
+                                    </small>
+                                    <small class="d-inline-flex align-items-center mx-3">
+                                        <span class="legend-color bg-secondary me-1"></span> Not Granted
+                                    </small>
+                                    <small class="d-inline-flex align-items-center mx-3">
+                                        <i class="fas fa-search text-info me-1"></i> Search to filter
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<style>
+/* ================================================
+    Feedback Permission Modal - Clean & Modern Styles
+   ================================================ */
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #1d4ed8 0%, #0ea5e9 100%) !important;
+    border-bottom: none;
+}
+
+.modal-icon {
+    opacity: 0.92;
+}
+
+/* Search */
+.search-container .input-group {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.search-container .form-control {
+    border: none;
+    font-size: 0.95rem;
+}
+
+.search-container .input-group-text {
+    background: white;
+    border: none;
+}
+
+/* Table Wrapper – enables sticky */
+.table-sticky-wrapper {
+    max-height: 60vh;
+    overflow: auto;
+    position: relative;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 0;
+}
+
+/* Sticky positioning */
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: inherit;
+}
+
+.sticky-left {
+    position: sticky;
+    left: 0;
+    z-index: 15;
+    background: inherit;
+}
+
+.sticky-corner {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 30;
+    background: #111827 !important;
+}
+
+/* Headers */
+.permission-header {
+    background: linear-gradient(135deg, #111827, #374151) !important;
+    color: white;
+    min-width: 110px;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.role-name-cell {
+    background: #f9fafb;
+    border-right: 2px solid #e5e7eb !important;
+    min-width: 220px;
+}
+
+.role-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #dbeafe, #eff6ff);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563eb;
+}
+
+/* Cells */
+.permission-cell {
+    transition: background-color 0.14s ease;
+}
+
+.permission-cell:hover {
+    background: #f1f5f9;
+}
+
+/* Checkbox */
+.permission-checkbox-container {
+    display: inline-block;
+}
+
+.permission-checkbox-label {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #cbd5e1;
+    border-radius: 6px;
+    background: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.permission-check-icon {
+    color: white;
+    font-size: 0.75rem;
+    opacity: 0;
+    transform: scale(0.7);
+    transition: all 0.18s ease;
+}
+
+.permission-checkbox:checked + .permission-checkbox-label {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: #059669;
+    box-shadow: 0 2px 8px rgba(16,185,129,0.25);
+}
+
+.permission-checkbox:checked + .permission-checkbox-label .permission-check-icon {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Footer & Count */
+.card-footer {
+    border-top: 1px solid #e5e7eb;
+}
+
+#selectedCount {
+    font-size: 0.9rem;
+    min-width: 40px;
+}
+
+/* Legend */
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .table-sticky-wrapper { max-height: 55vh; }
+    .permission-header { min-width: 100px; font-size: 0.73rem; }
+    .role-name-cell { min-width: 200px; }
+}
+
+@media (max-width: 576px) {
+    .search-container .input-group { flex-wrap: nowrap; }
+}
+</style>
+
+<script>
+// Your original script with minor safety improvements
+document.addEventListener('DOMContentLoaded', function() {
+
+    function updateStats() {
+        const checkedBoxes = document.querySelectorAll('.permission-checkbox:checked');
+        document.getElementById('selectedCount').textContent = checkedBoxes.length;
+    }
+
+    function applyCellTint(checkbox) {
+        const cell = checkbox.closest('.permission-cell');
+        if (cell) {
+            cell.style.backgroundColor = checkbox.checked ? '#ecfdf5' : '';
+        }
+    }
+
+    function setupSearch() {
+        const searchInput = document.getElementById('permissionSearch');
+        const clearBtn = document.getElementById('clearSearch');
+
+        if (!searchInput || !clearBtn) return;
+
+        clearBtn.style.visibility = 'hidden';
+
+        searchInput.addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase().trim();
+
+            document.querySelectorAll('.role-row').forEach(row => {
+                const role = (row.dataset.role || '').toLowerCase();
+                const title = row.querySelector('.role-title')?.textContent.toLowerCase() || '';
+                row.style.display = (role.includes(term) || title.includes(term)) ? '' : 'none';
+            });
+
+            clearBtn.style.visibility = term ? 'visible' : 'hidden';
+        });
+
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+            searchInput.focus();
+        });
+    }
+
+    function setupCheckboxes() {
+        document.querySelectorAll('.permission-checkbox').forEach(cb => {
+            applyCellTint(cb);
+            cb.addEventListener('change', function() {
+                applyCellTint(this);
+                updateStats();
+            });
+        });
+
+        document.getElementById('selectAllBtn')?.addEventListener('click', () => {
+            document.querySelectorAll('.permission-checkbox').forEach(cb => {
+                cb.checked = true;
+                cb.dispatchEvent(new Event('change'));
+            });
+        });
+
+        document.getElementById('deselectAllBtn')?.addEventListener('click', () => {
+            document.querySelectorAll('.permission-checkbox').forEach(cb => {
+                cb.checked = false;
+                cb.dispatchEvent(new Event('change'));
+            });
+        });
+    }
+
+    function setupForm() {
+        const form = document.getElementById('permissionForm');
+        if (!form) return;
+
+        form.addEventListener('submit', function() {
+            const btn = this.querySelector('button[type="submit"]');
+            if (!btn) return;
+
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                if (btn.disabled) {
+                    btn.innerHTML = original;
+                    btn.disabled = false;
+                }
+            }, 8000);
+        });
+    }
+
+    // Initialize
+    updateStats();
+    setupSearch();
+    setupCheckboxes();
+    setupForm();
+});
+</script>

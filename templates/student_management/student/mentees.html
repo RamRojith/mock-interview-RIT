@@ -1,0 +1,622 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+.my-mentees {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.my-mentees .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.my-mentees .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.my-mentees .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.my-mentees .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.my-mentees .stats-bar {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.my-mentees .stats-bar .title-info h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  margin: 0 0 0.25rem 0;
+}
+
+.my-mentees .stats-bar .title-info p {
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+.my-mentees .stats-numbers {
+  display: flex;
+  gap: 2rem;
+  text-align: center;
+}
+
+.my-mentees .stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.my-mentees .stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a4b8c;
+  line-height: 1;
+}
+
+.my-mentees .stat-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.my-mentees .filters-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.my-mentees .filters-card .card-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #374151;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.my-mentees .filters-card .card-header h5 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.my-mentees .filters-card .card-header i {
+  margin-right: 0.75rem;
+  color: #1a4b8c;
+}
+
+.my-mentees .filters-card .card-body {
+  padding: 1.5rem;
+}
+
+.my-mentees .form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.my-mentees .form-control,
+.my-mentees .form-select {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.my-mentees .form-control:focus,
+.my-mentees .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+}
+
+.my-mentees .btn-outline-secondary {
+  border: 1px solid #6b7280;
+  color: #6b7280;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.my-mentees .btn-outline-secondary:hover {
+  background: #6b7280;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.my-mentees .table-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.my-mentees .table-card .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.my-mentees .table-card .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.my-mentees .table-card .card-header i {
+  margin-right: 0.75rem;
+}
+
+.my-mentees .student-count-badge {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.my-mentees .table-container {
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+}
+
+.my-mentees .table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.my-mentees .table thead {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.my-mentees .table th {
+  color: white;
+  font-weight: 700;
+  padding: 1rem;
+  text-align: left;
+  border: none;
+  position: relative;
+}
+
+.my-mentees .table th:after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, transparent);
+}
+
+.my-mentees .table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #4b5563;
+  vertical-align: middle;
+}
+
+.my-mentees .table tbody tr:hover {
+  background-color: #f9fafb;
+  border-left: 3px solid #1a4b8c;
+  transform: translateX(2px);
+}
+
+.my-mentees .table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.my-mentees .badge {
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.my-mentees .badge.bg-secondary {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+  color: white;
+}
+
+.my-mentees .badge.bg-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: white;
+}
+
+.my-mentees .student-avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.my-mentees .table tbody tr:hover .student-avatar {
+  transform: scale(1.1);
+}
+
+.my-mentees .ca-info {
+  font-weight: 500;
+  color: #374151;
+}
+
+.my-mentees .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.my-mentees .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.my-mentees .alert {
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border: none;
+  font-weight: 500;
+}
+.table-container .table thead th {
+  background: #ffffff !important; /* Pure white */
+  color: #000000 !important;      /* Black text */
+  font-weight: 700;
+  border-bottom: 2px solid #d1d5db; /* optional neat bottom line */
+}
+
+.my-mentees .alert-danger {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-left: 4px solid #ef4444;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .my-mentees .page-header {
+    padding: 1rem;
+  }
+  
+  .my-mentees .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .my-mentees .stats-bar {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .my-mentees .stats-numbers {
+    gap: 1.5rem;
+  }
+  
+  .my-mentees .table-card .card-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .my-mentees {
+    padding: 1rem;
+  }
+  
+  .my-mentees .page-header {
+    padding: 0.75rem;
+  }
+  
+  .my-mentees .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .my-mentees .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .my-mentees .filters-card .card-body {
+    padding: 1rem;
+  }
+  
+  .my-mentees .table {
+    font-size: 0.8rem;
+  }
+  
+  .my-mentees .table th,
+  .my-mentees .table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .my-mentees .student-count-badge {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .my-mentees .table-card .card-header h5 {
+    font-size: 1.1rem;
+  }
+  
+  .my-mentees .stats-bar .title-info h2 {
+    font-size: 1.25rem;
+  }
+  
+  .my-mentees .stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .my-mentees .badge {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+  }
+}
+</style>
+
+<div class="my-mentees">
+  <div class="page-header">
+    <h1><i class="fas fa-user-graduate me-2"></i>My Mentees</h1>
+    <p class="header-subtitle">Manage and monitor your assigned student mentees</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="title-info">
+        <h2>Mentee Management</h2>
+        <p>Overview of students under your mentorship</p>
+      </div>
+      <div class="stats-numbers">
+        <div class="stat-item">
+          <span class="stat-value">{{ mentees|length }}</span>
+          <span class="stat-label">Total Mentees</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ batches|length }}</span>
+          <span class="stat-label">Batches</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Alert -->
+    {% if error %}
+    <div class="alert alert-danger">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+        <div>
+          <h6 class="alert-heading mb-1">Error</h6>
+          <p class="mb-0">{{ error }}</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Filters Card -->
+    <div class="filters-card">
+      <div class="card-header">
+        <h5><i class="fas fa-filter me-2"></i>Filter Mentees</h5>
+      </div>
+      <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+          <div class="col-md-8">
+            <label class="form-label">Filter by Batch</label>
+            <div class="d-flex gap-2">
+              <select name="batch" id="batch" class="form-select">
+                <option value="">All Batches</option>
+                {% for batch in batches %}
+                  <option value="{{ batch }}" {% if selected_batch == batch %}selected{% endif %}>
+                    {{ batch }}
+                  </option>
+                {% endfor %}
+              </select>
+              {% if selected_batch %}
+              <a href="{% url 'mentees' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-times me-1"></i> Clear
+              </a>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-4 text-md-end">
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="fas fa-search me-2"></i> Apply Filter
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Mentees Table -->
+    {% if mentees %}
+    <div class="table-card">
+      <div class="card-header">
+        <h5><i class="fas fa-list-alt me-2"></i>Mentee List</h5>
+        <div class="student-count-badge">
+          <i class="fas fa-users me-1"></i> {{ mentees|length }} Students
+        </div>
+      </div>
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th width="15%">Reg No</th>
+                <th width="25%">Student Name</th>
+                <th width="15%">Batch</th>
+                <th width="15%">Section</th>
+                <th width="30%">Class Advisor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for student in mentees %}
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="student-avatar me-2">
+                      <i class="fas fa-id-card"></i>
+                    </div>
+                    <strong>{{ student.reg_no|default:"N/A" }}</strong>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="student-avatar me-2">
+                      <i class="fas fa-user"></i>
+                    </div>
+                    <span>{{ student.name|default:"N/A" }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge bg-primary">{{ student.batch|default:"N/A" }}</span>
+                </td>
+                <td>
+                  <span class="badge bg-secondary">{{ student.section|default:"N/A" }}</span>
+                </td>
+                <td>
+                  {% if student.ca %}
+                    <div class="ca-info">
+                      <i class="fas fa-user-tie me-2 text-muted"></i>
+                      {{ student.ca.name }}
+                    </div>
+                  {% else %}
+                    <span class="text-muted">N/A</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="table-card">
+      <div class="card-header">
+        <h5><i class="fas fa-list-alt me-2"></i>Mentee List</h5>
+      </div>
+      <div class="card-body">
+        <div class="empty-state">
+          <i class="fas fa-user-graduate"></i>
+          <h5>No Mentees Found</h5>
+          <p class="text-muted">
+            {% if selected_batch %}
+              No mentees found for batch {{ selected_batch }}. Try selecting a different batch.
+            {% else %}
+              No mentees are currently assigned to you.
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Add animation to table rows
+  const tableRows = document.querySelectorAll('.table tbody tr');
+  tableRows.forEach((row, index) => {
+    row.style.animationDelay = `${index * 100}ms`;
+    row.classList.add('fade-in-up');
+  });
+
+  // Add hover effects
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-2px)';
+      this.style.transition = 'transform 0.2s ease';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0)';
+    });
+  });
+});
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .fade-in-up {
+    animation: fadeInUp 0.6s ease forwards;
+  }
+  
+  .table tbody tr {
+    opacity: 0;
+  }
+`;
+document.head.appendChild(style);
+</script>
+
+{% endblock %}

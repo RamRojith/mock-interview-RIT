@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+  .kpi{background:#fff;border-radius:14px;padding:1.25rem;box-shadow:0 4px 14px rgba(0,0,0,.06);border-left:5px solid #1a4b8c;height:100%;}
+  .kpi .v{font-size:1.9rem;font-weight:700;color:#1a4b8c;}
+  .kpi .l{color:#64748b;font-weight:600;font-size:.85rem;}
+  .kpi .i{font-size:1.6rem;color:#cbd5e1;}
+</style>
+<div class="container-fluid py-4" style="max-width:1300px;">
+  <h2 class="fw-bold text-primary mb-4"><i class="fa-solid fa-chart-line me-2"></i>Stock Dashboard</h2>
+
+  <div class="row g-3">
+    <div class="col-md-3 col-sm-6"><div class="kpi d-flex justify-content-between align-items-center"><div><div class="v">{{ total_items }}</div><div class="l">Total Assets</div></div><i class="fa-solid fa-boxes-stacked i"></i></div></div>
+    <div class="col-md-3 col-sm-6"><div class="kpi d-flex justify-content-between align-items-center"><div><div class="v">{{ total_entries }}</div><div class="l">Stock Entries</div></div><i class="fa-solid fa-file-invoice i"></i></div></div>
+    <div class="col-md-3 col-sm-6"><div class="kpi d-flex justify-content-between align-items-center"><div><div class="v">{{ pending_entries }}</div><div class="l">Pending Approvals</div></div><i class="fa-solid fa-clipboard-list i"></i></div></div>
+    <div class="col-md-3 col-sm-6"><div class="kpi d-flex justify-content-between align-items-center"><div><div class="v">{{ total_labs }}</div><div class="l">Labs</div></div><i class="fa-solid fa-flask i"></i></div></div>
+    <div class="col-md-3 col-sm-6"><div class="kpi d-flex justify-content-between align-items-center"><div><div class="v">{{ open_transfers }}</div><div class="l">Open Transfers</div></div><i class="fa-solid fa-right-left i"></i></div></div>
+    <div class="col-md-3 col-sm-6"><div class="kpi d-flex justify-content-between align-items-center"><div><div class="v">{{ open_verifications }}</div><div class="l">Open Verifications</div></div><i class="fa-solid fa-calendar-check i"></i></div></div>
+    <div class="col-md-3 col-sm-6"><div class="kpi d-flex justify-content-between align-items-center"><div><div class="v">{{ my_verifications }}</div><div class="l">My Verification Tasks</div></div><i class="fa-solid fa-list-check i"></i></div></div>
+    <div class="col-md-3 col-sm-6"><div class="kpi d-flex justify-content-between align-items-center"><div><div class="v">{{ condemned_items }}</div><div class="l">Condemned Items</div></div><i class="fa-solid fa-triangle-exclamation i"></i></div></div>
+  </div>
+
+  <div class="card shadow-sm border-0 mt-4">
+    <div class="card-header bg-primary text-white fw-semibold">Recent Stock Entries</div>
+    <div class="table-responsive">
+      <table class="table table-bordered mb-0 align-middle">
+        <thead class="table-light text-center"><tr><th>Bill No</th><th>Lab</th><th>Qty</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for e in recent_entries %}
+          <tr>
+            <td>{{ e.bill_number }}</td>
+            <td class="text-center">{{ e.register.lab.lab_code }} — {{ e.register.lab.name }}</td>
+            <td class="text-center">{{ e.quantity }}</td>
+            <td class="text-center">
+              {% if e.entry_status == "APPROVED_PRINCIPAL" %}<span class="badge bg-success">Approved</span>
+              {% elif e.entry_status == "REJECTED" %}<span class="badge bg-danger">Rejected</span>
+              {% else %}<span class="badge bg-warning text-dark">{{ e.get_entry_status_display }}</span>{% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center text-muted py-3">No entries yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock content %}

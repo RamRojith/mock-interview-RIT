@@ -1,0 +1,539 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.material-issue-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.material-issue-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.material-issue-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.material-issue-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.material-issue-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.material-issue-portal .custom-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.material-issue-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a4b8c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.material-issue-portal .card-body-custom {
+  padding: 1.5rem;
+}
+
+.material-issue-portal .summary-grid {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.material-issue-portal .summary-item {
+  flex: 1;
+  min-width: 220px;
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+}
+
+.material-issue-portal .summary-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 0.35rem;
+}
+
+.material-issue-portal .summary-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.material-issue-portal .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.material-issue-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.material-issue-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.material-issue-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.material-issue-portal .issue-input {
+  width: 130px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.9rem;
+}
+
+.material-issue-portal .issue-input:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26,75,140,0.1);
+  outline: none;
+}
+
+.material-issue-portal .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 40px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.material-issue-portal .badge-approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.material-issue-portal .badge-info {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.material-issue-portal .btn-primary-custom {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.65rem 1.5rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+}
+
+.material-issue-portal .btn-outline-custom {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  border-radius: 12px;
+  padding: 0.65rem 1.3rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.material-issue-portal .action-row {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.material-issue-portal .empty-row {
+  text-align: center;
+  padding: 2rem !important;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.material-issue-portal .ticket-line {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 0.35rem 0.6rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.material-issue-portal .ticket-line strong {
+  color: #1a4b8c;
+}
+
+@media (max-width: 768px) {
+  .material-issue-portal {
+    padding: 1rem;
+  }
+
+  .material-issue-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .material-issue-portal .card-header-custom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .material-issue-portal .btn-primary-custom,
+  .material-issue-portal .btn-outline-custom {
+    width: 100%;
+    justify-content: center;
+  }
+}
+</style>
+
+<div class="material-issue-portal">
+
+  {% if mat_request %}
+
+  <div class="page-header">
+    <h1><i class="fas fa-box-open me-2"></i> Issue Material</h1>
+    <p class="header-subtitle">Request No: <strong>{{ mat_request.request_no }}</strong></p>
+  </div>
+
+  <div class="page-container">
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-file-circle-check me-2"></i> Request Summary</span>
+        <span class="badge-status badge-approved">
+          <i class="fas fa-check-circle"></i> {{ mat_request.status }}
+        </span>
+      </div>
+
+      <div class="card-body-custom">
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="summary-label">Department</div>
+            <div class="summary-value">{{ mat_request.department.Department|default:"-" }}</div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-label">Purpose</div>
+            <div class="summary-value">{{ mat_request.purpose }}</div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-label">Location</div>
+            <div class="summary-value">{{ mat_request.location|default:"-" }}</div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-label">Stock Update</div>
+            <div class="summary-value">After Proof Approval</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if mat_request.ticket %}
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-ticket-alt me-2"></i> Ticket Details</span>
+      </div>
+
+      <div class="card-body-custom">
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="summary-label">Ticket No</div>
+            <div class="summary-value">#{{ mat_request.ticket.id }}</div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-label">Issue</div>
+            <div class="summary-value">{{ mat_request.ticket.issue }}</div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-label">Ticket Location</div>
+            <div class="summary-value">{{ mat_request.ticket.location }}</div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-label">Raised By</div>
+            <div class="summary-value">
+              {% if mat_request.ticket.student %}
+                Student: {{ mat_request.ticket.student.name }} - {{ mat_request.ticket.student.reg_no }}
+              {% elif mat_request.ticket.faculty %}
+                Faculty: {{ mat_request.ticket.faculty.name }} - {{ mat_request.ticket.faculty.faculty_id }}
+              {% else %}
+                -
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-label">Ticket Status</div>
+            <div class="summary-value">{{ mat_request.ticket.status }}</div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-label">Description</div>
+            <div class="summary-value">{{ mat_request.ticket.description }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-list-check me-2"></i> Issue Items</span>
+        <span class="badge-status badge-info">
+          <i class="fas fa-info-circle"></i> Stock will reduce after proof approval
+        </span>
+      </div>
+
+      <div class="card-body-custom">
+        <form method="post" onsubmit="return validateIssueForm();">
+          {% csrf_token %}
+
+          <div class="table-responsive">
+            <table class="data-table" id="issueTable">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Available Stock</th>
+                  <th>Requested Qty</th>
+                  <th>Issue Qty</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for req_item in mat_request.request_items.all %}
+                <tr>
+                  <td><strong>{{ req_item.item.item_name }}</strong></td>
+
+                  <td>
+                    <span class="available-stock">{{ req_item.item.stock_qty }}</span>
+                    {{ req_item.item.unit }}
+                  </td>
+
+                  <td>
+                    {{ req_item.requested_qty }} {{ req_item.item.unit }}
+                  </td>
+
+                  <td>
+                    <input type="number"
+                           step="0.01"
+                           min="0"
+                           max="{{ req_item.item.stock_qty }}"
+                           name="issue_qty_{{ req_item.id }}"
+                           value="{{ req_item.requested_qty }}"
+                           class="issue-input"
+                           required>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="4" class="empty-row">
+                    <i class="fas fa-inbox me-2"></i> No items found.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="action-row">
+            <button class="btn-primary-custom" type="submit">
+              <i class="fas fa-save"></i> Save Issue Quantity
+            </button>
+
+            <a href="{% url 'material_issue' %}" class="btn-outline-custom">
+              <i class="fas fa-arrow-left"></i> Back
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  {% else %}
+
+  <div class="page-header">
+    <h1><i class="fas fa-boxes-stacked me-2"></i> Issue Material</h1>
+    <p class="header-subtitle">Select an approved request to record issue quantity</p>
+  </div>
+
+  <div class="page-container">
+    <div class="custom-card">
+      <div class="card-header-custom">
+        <span><i class="fas fa-clipboard-list me-2"></i> Approved Material Requests</span>
+      </div>
+
+      <div class="card-body-custom">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Request No</th>
+                <th>Ticket</th>
+                <th>User</th>
+                <th>Department</th>
+                <th>Purpose</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for req in approved_requests %}
+              <tr>
+                <td><strong>{{ req.request_no }}</strong></td>
+
+                <td>
+                  {% if req.ticket %}
+                    <div class="ticket-line">
+                      <strong>#{{ req.ticket.id }}</strong>
+                    </div>
+                    <div class="ticket-line">
+                      {{ req.ticket.issue }}
+                    </div>
+                    <div class="ticket-line">
+                      {{ req.ticket.location }}
+                    </div>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if req.ticket.student %}
+                    Student: {{ req.ticket.student.name }}<br>
+                    {{ req.ticket.student.reg_no }}
+                  {% elif req.ticket.faculty %}
+                    Faculty: {{ req.ticket.faculty.name }}<br>
+                    {{ req.ticket.faculty.faculty_id }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td>{{ req.department.Department|default:"-" }}</td>
+
+                <td>{{ req.purpose }}</td>
+
+                <td>
+                  <span class="badge-status badge-approved">
+                    <i class="fas fa-check-circle"></i> {{ req.status }}
+                  </span>
+                </td>
+
+                <td>
+                  <a href="{% url 'material_issue_detail' req.id %}" class="btn-primary-custom">
+                    <i class="fas fa-box-open"></i> Issue
+                  </a>
+                </td>
+              </tr>
+
+              {% empty %}
+              <tr>
+                <td colspan="7" class="empty-row">
+                  <i class="fas fa-inbox me-2"></i> No approved material requests found.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% endif %}
+
+</div>
+
+<script>
+function validateIssueForm() {
+  const table = document.getElementById("issueTable");
+
+  if (!table) {
+    return true;
+  }
+
+  let valid = true;
+
+  document.querySelectorAll("#issueTable tbody tr").forEach(row => {
+    const stockElement = row.querySelector(".available-stock");
+    const issueInput = row.querySelector(".issue-input");
+
+    if (!stockElement || !issueInput) {
+      return;
+    }
+
+    const stock = parseFloat(stockElement.innerText || 0);
+    const issueQty = parseFloat(issueInput.value || 0);
+
+    if (issueQty > stock) {
+      alert("Issue quantity cannot be greater than available stock.");
+      issueInput.focus();
+      valid = false;
+    }
+  });
+
+  if (!valid) {
+    return false;
+  }
+
+  return confirm("Confirm issue quantity? Stock will be reduced only after proof approval.");
+}
+</script>
+
+{% endblock %}

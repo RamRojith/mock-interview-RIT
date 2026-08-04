@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<html>
+<head>
+    <title>Exam Date Entry</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h1>Exam Date Entry</h1>
+
+<!-- Modal Trigger -->
+<a href="#" id="examDateEntry" data-toggle="modal" data-target="#examDateModal" class="btn btn-primary">Open Exam Date Entry</a>
+
+<!-- Modal for Exam Date Entry -->
+<div class="modal fade" id="examDateModal" tabindex="-1" role="dialog" aria-labelledby="examDateModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="examDateModalLabel">Exam Date Entry</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="examDateForm" method="post" action="{% url 'exam_date_entry' %}">
+                    {% csrf_token %}
+
+                    <!-- Department Selection -->
+                    <div class="form-group">
+                        <label for="deptId">Select Department:</label>
+                        <select class="form-control" id="deptId" name="deptId" required>
+                            <option value="">Select Department...</option>
+                            {% for department in departments %}
+                            <option value="{{ department.id }}">{{ department.Department }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Program Selection -->
+                    <div class="form-group">
+                        <label for="programId">Select Program:</label>
+                        <select class="form-control" id="programId" name="programId" required>
+                            <option value="">Select a department first</option>
+                        </select>
+                    </div>
+
+                    <!-- Semester Selection -->
+                    <div class="form-group">
+                        <label for="semester">Select Semester:</label>
+                        <select class="form-control" id="semester" name="semester" required>
+                            <option value="">Select a program first</option>
+                        </select>
+                    </div>
+
+                    <!-- Hidden inputs for automatic course selection -->
+                    <input type="hidden" id="normalCourses" name="courseId[]">
+                    <input type="hidden" id="failedCourses" name="failedCourseCode[]">
+                    <input type="hidden" id="failedCourseData" name="failedCourseData">
+
+                    <!-- Start Date Selection -->
+                    <div class="form-group">
+                        <label for="startDate">Select Start Date:</label>
+                        <input type="date" class="form-control" id="startDate" name="startDate" required>
+                    </div>
+
+                    <!-- End Date Selection -->
+                    <div class="form-group">
+                        <label for="endDate">Select End Date:</label>
+                        <input type="date" class="form-control" id="endDate" name="endDate" required>
+                    </div>
+
+                    <!-- Holiday Date Selection (Multiple Selection) -->
+                    <div class="form-group">
+                        <label for="holidayDates">Select Holiday Dates:</label>
+                        <select class="form-control" id="holidayDates" name="holidayDates[]" multiple required>
+                            <!-- Dates will be populated dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Hidden Session Field (Automatically Assigned) -->
+                    <input type="hidden" id="session" name="session" value="">
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- jQuery for Dynamic Dropdowns and AJAX Form Submission -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $('#examDateEntry').click(function(e) {
+        e.preventDefault();  // Prevent the # from being added to the URL
+        $('#examDateModal').modal('show'); // Optional manual trigger
+    });
+    $(document).ready(function(){
+        // Load programs dynamically based on selected department
+        $('#deptId').change(function(){
+            var departmentId = $(this).val();
+            $.getJSON("{% url 'get_programs1' %}", {'department_id': departmentId}, function(data){
+                $('#programId').html('<option value="">Select a program...</option>');
+                $.each(data.programs, function(index, program){
+                    $('#programId').append('<option value="' + program.program_code + '">' + program.program_name + '</option>');
+                });
+                $('#semester').html('<option value="">Select a program first</option>');
+            });
+        });
+
+        // Load semesters dynamically based on selected program
+        $('#programId').change(function(){
+            var programId = $(this).val();
+            $.getJSON("{% url 'get_semesters' %}", {'program_id': programId}, function(data){
+                $('#semester').html('<option value="">Select a semester...</option>');
+                $.each(data.semesters, function(index, semester){
+                    $('#semester').append('<option value="' + semester + '">' + semester + '</option>');
+                });
+            });
+        });
+
+        // Load normal and failed courses dynamically based on selected semester
+        $('#semester').change(function(){
+            var programId = $('#programId').val();
+            var semester = $(this).val();
+
+            if (programId && semester) {
+                // Fetch normal courses
+                $.getJSON("{% url 'get_courses' %}", {'program_id': programId, 'semester': semester}, function(data){
+                    let normalCourses = [];
+                    $.each(data.courses, function(index, course){
+                        normalCourses.push(course.id);
+                    });
+                    $('#normalCourses').val(normalCourses); // Store all course IDs
+                });
+
+                // Fetch failed courses
+                $.getJSON("{% url 'get_failed_courses' %}", {'program_id': programId, 'semester': semester}, function(data){
+                    let failedCourses = [];
+                    let failedCourseData = [];
+
+                    $.each(data.failed_courses, function(index, course){
+                        failedCourses.push(course.course_code);
+                        failedCourseData.push({ code: course.course_code, title: course.title });
+                    });
+
+                    $('#failedCourses').val(failedCourses); // Store all failed course codes
+                    $('#failedCourseData').val(JSON.stringify(failedCourseData)); // Store JSON failed course data
+                });
+            }
+        });
+
+        // Populate holiday dropdown dynamically based on selected start and end date
+        $('#startDate, #endDate').change(function(){
+            var startDate = $('#startDate').val();
+            var endDate = $('#endDate').val();
+
+            if (startDate && endDate) {
+                var start = new Date(startDate);
+                var end = new Date(endDate);
+                var options = "";
+
+                while (start <= end) {
+                    var dateStr = start.toISOString().split('T')[0];
+                    options += '<option value="' + dateStr + '">' + dateStr + '</option>';
+                    start.setDate(start.getDate() + 1);
+                }
+
+                $('#holidayDates').html(options); // Update holiday selection dropdown
+            }
+        });
+
+        // Automatically assign session based on date
+        $('#startDate, #endDate').change(function(){
+            var today = new Date();
+            var hours = today.getHours();
+            var session = (hours < 12) ? "FN" : "AN"; // Morning: FN, Afternoon: AN
+            $('#session').val(session);
+        });
+
+        // AJAX form submission with redirect
+        $('#examDateForm').submit(function(event){
+            event.preventDefault();
+            console.log("Form submission intercepted by AJAX!");
+        
+            $.ajax({
+                type: "POST",
+                url: "{% url 'exam_date_entry' %}",
+                data: $(this).serialize(),
+                success: function(response){
+                    if (response.redirect_url) {
+                        window.location.href = response.redirect_url;
+                    }
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
+
+{% endblock %}
+
+

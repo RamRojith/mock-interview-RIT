@@ -1,0 +1,636 @@
+{% extends "base.html" %}
+{% load static %}
+{% load sm_tags %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+                <a href="{% url 'student_details' %}" class="btn btn-outline-secondary btn-sm me-3">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+                <div>
+                    <h2 class="mb-1">Edit Student Details</h2>
+                    <p class="text-muted mb-0">Update information for {{ student.name }} ({{ student.reg_no }})</p>
+                </div>
+            </div>
+
+            <!-- Student Summary Card -->
+            <div class="card bg-light border-0 mb-4">
+                <div class="card-body py-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center">
+                                <div class="summary-avatar me-3">
+                                    <img
+                                        src="{{ profile_preview }}"
+                                        alt="{{ student.name }}"
+                                        class="summary-avatar-img"
+                                        onerror="this.onerror=null;this.src='{% static 'images/profile.jpg' %}';"
+                                    >
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">{{ student.name }}</h5>
+                                    <div class="text-muted small">
+                                        <span class="me-3"><i class="fas fa-id-card me-1"></i>{{ student.reg_no }}</span>
+                                        {% if student.department %}
+                                            <span><i class="fas fa-building me-1"></i>{{ student.department.Department }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="text-muted small">
+                                <div><i class="fas fa-clock me-1"></i> Last updated: {% now "M d, Y" %}</div>
+                                {% if student.email %}
+                                <div><i class="fas fa-envelope me-1"></i> {{ student.email }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if messages %}
+              {% for m in messages %}
+                <div class="alert alert-{{ m.tags }} mb-3">{{ m }}</div>
+              {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
+
+                <!-- Personal Information Card -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2"></i>
+                            Personal Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+
+                            <!-- Profile Image Upload -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Profile Image</label>
+                                <div class="profile-upload-card">
+                                    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3">
+                                        <div class="profile-preview-wrap">
+                                            <img
+                                                id="profilePreview"
+                                                src="{{ profile_preview }}"
+                                                alt="Student Profile"
+                                                class="profile-preview-img"
+                                                onerror="this.onerror=null;this.src='{% static 'images/profile.jpg' %}';"
+                                            >
+                                        </div>
+
+                                        <div class="flex-grow-1">
+                                            <input
+                                                type="file"
+                                                id="profile_img"
+                                                name="profile_img"
+                                                class="form-control"
+                                                accept="image/*"
+                                            >
+                                            <div class="form-text">
+                                                Upload student profile image. Supported: JPG, JPEG, PNG
+                                            </div>
+
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" value="1" id="remove_profile_img" name="remove_profile_img">
+                                                <label class="form-check-label" for="remove_profile_img">
+                                                    Remove current profile image
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="aadhar_number" class="form-label fw-semibold">Aadhar Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                                    <input type="text" id="aadhar_number" name="aadhar_number" class="form-control"
+                                           value="{{ student.aadhar_number }}" placeholder="Enter 12-digit Aadhar number">
+                                </div>
+                                <div class="form-text">12-digit unique identification number</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="name" class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-signature"></i></span>
+                                    <input type="text" id="name" name="name" class="form-control"
+                                           value="{{ student.name }}" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="reg_no" class="form-label fw-semibold">Register Number <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                                    <input type="text" id="reg_no" name="reg_no" class="form-control"
+                                           value="{{ student.reg_no }}" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="email" class="form-label fw-semibold">Email Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" id="email" name="email" class="form-control"
+                                           value="{{ student.email }}" placeholder="student@example.com">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="mobile_no" class="form-label fw-semibold">Mobile Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                    <input type="text" id="mobile_no" name="mobile_no" class="form-control"
+                                           value="{{ student.mobile_no }}" placeholder="+91XXXXXXXXXX">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="gender" class="form-label fw-semibold">Gender</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-venus-mars"></i></span>
+                                    <select id="gender" name="gender" class="form-select">
+                                        <option value="">Select Gender</option>
+                                        <option value="Male" {% if student.gender == "Male" %}selected{% endif %}>Male</option>
+                                        <option value="Female" {% if student.gender == "Female" %}selected{% endif %}>Female</option>
+                                        <option value="Other" {% if student.gender == "Other" %}selected{% endif %}>Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="date_of_birth" class="form-label fw-semibold">Date of Birth</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
+                                    <input
+                                        type="date"
+                                        id="date_of_birth"
+                                        name="date_of_birth"
+                                        class="form-control"
+                                        {% if student.date_of_birth %}
+                                            value="{{ student.date_of_birth|date:'Y-m-d' }}"
+                                        {% endif %}
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="age" class="form-label fw-semibold">Age</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-birthday-cake"></i></span>
+                                    <input type="number" id="age" name="age" class="form-control"
+                                           value="{{ student.age }}" min="16" max="60" placeholder="18" readonly>
+                                    <span class="input-group-text">years</span>
+                                </div>
+                                <div class="invalid-feedback" id="age-invalid-feedback">
+                                    Please provide a valid Date of Birth.
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="is_active" class="form-label fw-semibold">Student Status</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user-check"></i></span>
+                                    <select id="is_active" name="is_active" class="form-select">
+                                        <option value="True" {% if student.is_active %}selected{% endif %}>Active</option>
+                                        <option value="False" {% if not student.is_active %}selected{% endif %}>Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="mode" class="form-label fw-semibold">Mode</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-route"></i></span>
+                                    <select id="mode" name="mode" class="form-select">
+                                        <option value="">Select Mode</option>
+                                        <option value="Hostel" {% if student.mode|lower == "hostel" %}selected{% endif %}>Hostel</option>
+                                        <option value="Transport" {% if student.mode|lower == "transport" %}selected{% endif %}>Transport</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Academic Information Card -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-success text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-graduation-cap me-2"></i>
+                            Academic Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                <label for="batch" class="form-label fw-semibold">Batch</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                    <input type="text" id="batch" name="batch" class="form-control"
+                                           value="{{ student.batch }}" placeholder="e.g., 2023">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="regulation" class="form-label fw-semibold">Regulation</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                    <input type="text" id="regulation" name="regulation" class="form-control"
+                                           value="{{ student.regulation }}" placeholder="e.g., 2023">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="department" class="form-label fw-semibold">Department</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-building"></i></span>
+                                    <select id="department" name="department" class="form-select">
+                                        <option value="">Select Department</option>
+                                        {% for d in departments %}
+                                            <option value="{{ d.id }}" {% if student.department_id == d.id %}selected{% endif %}>
+                                                {{ d.Department }}{% if d.degree_department_label %} - {{ d.degree_department_label }}{% endif %}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="year" class="form-label fw-semibold">Current Year</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                                    <select id="year" name="year" class="form-select">
+                                        <option value="">Select Year</option>
+                                        {% for y in years %}
+                                            <option value="{{ y }}" {% if student.year|stringformat:"s" == y|stringformat:"s" %}selected{% endif %}>
+                                                {{ y }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="semester" class="form-label fw-semibold">Current Semester</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-book"></i></span>
+                                    <select id="semester" name="semester" class="form-select">
+                                        <option value="">Select Semester</option>
+                                        {% for s in semesters %}
+                                            <option value="{{ s }}" {% if student.semester|stringformat:"s" == s|stringformat:"s" %}selected{% endif %}>
+                                                {{ s }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="year_of_admission" class="form-label fw-semibold">Year of Admission</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-calendar-check"></i></span>
+                                    <select id="year_of_admission" name="year_of_admission" class="form-select">
+                                        <option value="">Select Admission Year</option>
+                                        {% for y in years %}
+                                            <option value="{{ y }}"
+                                                {% if student.year_of_admission|stringformat:"s" == y|stringformat:"s" %}selected{% endif %}>
+                                                {{ y }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="semester_of_admission" class="form-label fw-semibold">Semester of Admission</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-book-open"></i></span>
+                                    <select id="semester_of_admission" name="semester_of_admission" class="form-select">
+                                        <option value="">Select Admission Semester</option>
+                                        {% for s in semesters %}
+                                            <option value="{{ s }}"
+                                                {% if student.semester_of_admission|stringformat:"s" == s|stringformat:"s" %}selected{% endif %}>
+                                                {{ s }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="section" class="form-label fw-semibold">Section</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-users"></i></span>
+                                    <select id="section" name="section" class="form-select">
+                                        <option value="">Select Section</option>
+                                        {% for sec in sections %}
+                                            <option value="{{ sec.section }}" {% if student.section == sec.section %}selected{% endif %}>
+                                                {{ sec.section }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{% url 'student_details' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="reset" class="btn btn-outline-danger" id="resetFormBtn">
+                                    <i class="fas fa-redo me-2"></i>Reset
+                                </button>
+                                <button type="submit" class="btn btn-success px-4">
+                                    <i class="fas fa-save me-2"></i>Update Student
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.avatar-lg {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+}
+
+.summary-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 2px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.summary-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.profile-upload-card {
+    border: 1px dashed #ced4da;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    background: #fafbfc;
+}
+
+.profile-preview-wrap {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #e9ecef;
+    background: #f8f9fa;
+    flex-shrink: 0;
+}
+
+.profile-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.card {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+}
+
+.form-control, .form-select {
+    border-left: none;
+    padding-left: 0;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    border-left: none;
+}
+
+.input-group:focus-within .input-group-text {
+    border-color: #86b7fe;
+}
+
+.badge {
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+.btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+}
+
+.was-validated .form-control:invalid,
+.form-control.is-invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + 0.75rem);
+}
+
+.was-validated .form-control:valid,
+.form-control.is-valid {
+    border-color: #198754;
+    padding-right: calc(1.5em + 0.75rem);
+}
+
+@media (max-width: 768px) {
+    .container-fluid {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .btn {
+        font-size: 0.875rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .profile-preview-wrap {
+        width: 90px;
+        height: 90px;
+    }
+}
+</style>
+
+<script>
+(function() {
+  'use strict';
+  window.addEventListener('load', function() {
+    var forms = document.getElementsByClassName('needs-validation');
+    Array.prototype.filter.call(forms, function(form) {
+      form.addEventListener('submit', function(event) {
+        if (form.checkValidity() === false) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  }, false);
+})();
+
+document.addEventListener('DOMContentLoaded', function() {
+  const dobField = document.getElementById('date_of_birth');
+  const ageField = document.getElementById('age');
+  const ageInvalidFeedback = document.getElementById('age-invalid-feedback');
+  const aadharField = document.getElementById('aadhar_number');
+  const mobileField = document.getElementById('mobile_no');
+  const profileInput = document.getElementById('profile_img');
+  const profilePreview = document.getElementById('profilePreview');
+  const removeProfileCheckbox = document.getElementById('remove_profile_img');
+  const resetFormBtn = document.getElementById('resetFormBtn');
+  const defaultProfileImage = "{% static 'images/profile.jpg' %}";
+  const initialProfileImage = "{{ profile_preview|escapejs }}";
+
+  function calculateAge(dobString) {
+    if (!dobString) return null;
+    const birthDate = new Date(dobString);
+    if (isNaN(birthDate.getTime())) return null;
+
+    const today = new Date();
+    birthDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    if (birthDate > today) return 'future';
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    return age;
+  }
+
+  function updateAge() {
+    if (!ageField) return;
+    const result = calculateAge(dobField?.value);
+
+    ageField.classList.remove('is-invalid', 'is-valid');
+    if (ageInvalidFeedback) {
+      ageInvalidFeedback.textContent = 'Please provide a valid Date of Birth.';
+    }
+
+    if (result === null) {
+      ageField.value = '';
+      return;
+    }
+
+    if (result === 'future') {
+      ageField.value = '';
+      ageField.classList.add('is-invalid');
+      if (ageInvalidFeedback) {
+        ageInvalidFeedback.textContent = 'Date of Birth cannot be in the future.';
+      }
+      return;
+    }
+
+    ageField.value = result;
+    ageField.classList.add('is-valid');
+  }
+
+  dobField?.addEventListener('change', updateAge);
+  dobField?.addEventListener('input', updateAge);
+  if (dobField?.value) {
+    setTimeout(updateAge, 0);
+  }
+
+  aadharField?.addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '').substring(0, 12);
+  });
+
+  mobileField?.addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9+]/g, '');
+  });
+
+  profileInput?.addEventListener('change', function() {
+    const file = this.files && this.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      if (profilePreview) {
+        profilePreview.src = e.target.result;
+      }
+      if (removeProfileCheckbox) {
+        removeProfileCheckbox.checked = false;
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+
+  removeProfileCheckbox?.addEventListener('change', function() {
+    if (this.checked && profilePreview) {
+      profilePreview.src = defaultProfileImage;
+      if (profileInput) {
+        profileInput.value = "";
+      }
+    } else if (!this.checked && profilePreview && !profileInput?.value) {
+      profilePreview.src = initialProfileImage || defaultProfileImage;
+    }
+  });
+
+  resetFormBtn?.addEventListener('click', function() {
+    setTimeout(function() {
+      if (profilePreview) {
+        profilePreview.src = initialProfileImage || defaultProfileImage;
+      }
+      if (removeProfileCheckbox) {
+        removeProfileCheckbox.checked = false;
+      }
+      updateAge();
+    }, 50);
+  });
+});
+</script>
+{% endblock %}

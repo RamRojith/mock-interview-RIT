@@ -1,0 +1,943 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Discontinue Alert -->
+    <div id="discontinueAlert" class="alert alert-dismissible fade d-none" role="alert"></div>
+
+    <!-- Top Actions -->
+    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 text-primary">Student Management</h2>
+            <p class="text-muted mb-0">Search, filter, paginate, and analyze student records</p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'sync_student_reg_numbers' %}" 
+               class="btn btn-success btn-sm shadow-sm"
+               onclick="return confirm('This will update Personal Details reg numbers from Student records. Continue?')">
+                <i class="fas fa-sync-alt me-1"></i> Sync Aadhaar → Reg No
+            </a>
+
+            <a href="{% url 'sync_user_to_admission_student_details' %}" 
+               class="btn btn-success btn-sm shadow-sm"
+               onclick="return confirm('This will update user details to match admission student details for all students. Continue?')">
+                <i class="fas fa-user-cog me-1"></i> Sync USER → Student Details
+            </a>
+
+            <a href="{% url 'sync_student_to_user_details' %}"
+               class="btn btn-success btn-sm shadow-sm"
+               onclick="return confirm('This will update student details to match user details for all students. Continue?')">
+                <i class="fas fa-exchange-alt me-1"></i> Sync Student → User Details
+            </a>
+
+            <a href="{% url 'sync_student_mode_from_admission' %}"
+               class="btn btn-primary btn-sm shadow-sm"
+               onclick="return confirm('This will pull each student\'s admission Mode (Hostel/Transport/Day Scholar) from the College Admission DB into Student Details. Continue?')">
+                <i class="fas fa-house-user me-1"></i> Sync Mode from Admission
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Total Students</div>
+                    <h3 class="fw-bold mb-0" id="totalCount">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Filtered Results</div>
+                    <h3 class="fw-bold mb-0 text-primary" id="filteredCount">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Active Students</div>
+                    <h3 class="fw-bold mb-0 text-success" id="activeCount">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Inactive Students</div>
+                    <h3 class="fw-bold mb-0 text-danger" id="inactiveCount">0</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pb-0">
+                    <h5 class="mb-1">Department Breakdown</h5>
+                    <small class="text-muted">Based on current filtered results</small>
+                </div>
+                <div class="card-body">
+                    <div id="deptAnalytics" class="row g-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pb-0">
+                    <h5 class="mb-1">Year & Semester Breakdown</h5>
+                    <small class="text-muted">Live updated with filters and search</small>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="fw-semibold mb-2">Year</label>
+                        <div id="yearAnalytics" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+                    <div>
+                        <label class="fw-semibold mb-2">Semester</label>
+                        <div id="semesterAnalytics" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light border-0 py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-filter text-primary me-2"></i> Filter Students
+            </h5>
+        </div>
+        <div class="card-body">
+            <form id="filterForm">
+                <div class="row g-3">
+                    <div class="col-xl-3 col-md-6">
+                        <label class="form-label fw-semibold">Search</label>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search reg no, name, batch, department...">
+                    </div>
+
+                    <div class="col-xl-2 col-md-6">
+                        <label class="form-label fw-semibold">Batch</label>
+                        <select id="batch" class="form-select">
+                            <option value="">All Batches</option>
+                            {% for b in batches %}
+                            <option value="{{ b }}">{{ b }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-xl-2 col-md-6">
+                        <label class="form-label fw-semibold">Department</label>
+                        <select id="department" class="form-select">
+                            <option value="">All Departments</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.Department }} - {{ dept.degree.degree_code|default:"N/A" }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-xl-1 col-md-6">
+                        <label class="form-label fw-semibold">Year</label>
+                        <select id="year" class="form-select">
+                            <option value="">All</option>
+                            {% for y in years %}
+                            <option value="{{ y }}">{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-xl-1 col-md-6">
+                        <label class="form-label fw-semibold">Sem</label>
+                        <select id="semester" class="form-select">
+                            <option value="">All</option>
+                            {% for s in semesters %}
+                            <option value="{{ s }}">{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-xl-1 col-md-6">
+                        <label class="form-label fw-semibold">Section</label>
+                        <select id="section" class="form-select">
+                            <option value="">All</option>
+                            {% for sec in sections %}
+                            <option value="{{ sec }}">{{ sec }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-xl-1 col-md-6">
+                        <label class="form-label fw-semibold">Status</label>
+                        <select id="status" class="form-select">
+                            <option value="">All</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+
+                    <div class="col-xl-1 col-md-6 d-flex align-items-end">
+                        <button type="button" id="clearFilters" class="btn btn-outline-secondary w-100">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light border-0 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0">
+                <i class="fas fa-list text-primary me-2"></i> Student Records
+            </h5>
+
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted small" id="tableInfo">Showing 0 to 0 of 0 entries</span>
+                <select id="perPage" class="form-select form-select-sm" style="width: 90px;">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                    <option value="150">150</option>
+                    <option value="200">200</option>
+                    <option value="500">500</option>
+                    <option value="1000">1000</option>
+                </select>
+
+                <button class="btn btn-sm btn-outline-primary" id="exportBtn" type="button">
+                    <i class="fas fa-download me-1"></i> Export CSV
+                </button>
+
+                <a href="#" class="btn btn-sm btn-outline-success" id="exportExcel2Btn">
+                    <i class="fas fa-file-excel me-1"></i> Export Excel 2
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="studentsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Reg No</th>
+                            <th>Name</th>
+                            <th>Batch</th>
+                            <th>Regulation</th>
+                            <th>Department</th>
+                            <th>Year</th>
+                            <th>Semester</th>
+                            <th>Section</th>
+                            <th>Mode</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        <tr>
+                            <td colspan="12" class="text-center py-4 text-muted">Loading students...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="noDataMessage" class="text-center py-5 d-none">
+                <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                <h5>No student records found</h5>
+                <p class="text-muted mb-0">Try changing filters or search terms.</p>
+            </div>
+        </div>
+
+        <div class="card-footer bg-white border-0">
+            <nav>
+                <ul class="pagination justify-content-center mb-0" id="pagination"></ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Discontinue Student — Form Modal -->
+<div class="modal fade" id="discontinueFormModal" tabindex="-1" aria-labelledby="discontinueFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="discontinueFormModalLabel">
+                    <i class="fas fa-ban me-2"></i>Discontinue Student
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3 text-muted small">
+                    Student: <strong id="discontinueFormStudentName" class="text-dark"></strong>
+                </p>
+                <div id="discontinueFormError" class="alert alert-danger py-2 d-none" role="alert"></div>
+                <form id="discontinueForm" novalidate onsubmit="return false;">
+                    <div class="mb-3">
+                        <label for="discontinuedDate" class="form-label fw-semibold">
+                            Discontinued Date <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" class="form-control" id="discontinuedDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="yearOfDiscontinuation" class="form-label fw-semibold">
+                            Year of Discontinuation <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" class="form-control" id="yearOfDiscontinuation"
+                               min="2000" max="2100" placeholder="e.g. 2024" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reasonForDiscontinuation" class="form-label fw-semibold">
+                            Reason for Discontinuation
+                        </label>
+                        <input type="text" class="form-control" id="reasonForDiscontinuation"
+                               maxlength="255" placeholder="Enter reason (optional)">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="discontinueFormSubmitBtn">
+                    <i class="fas fa-arrow-right me-1"></i> Proceed
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Discontinue Student — Confirmation Modal -->
+<div class="modal fade" id="discontinueConfirmModal" tabindex="-1" aria-labelledby="discontinueConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="discontinueConfirmModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Discontinuation
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-danger fw-semibold mb-3">
+                    This action cannot be undone. Please review the details before confirming.
+                </p>
+                <table class="table table-sm table-bordered mb-0">
+                    <tbody>
+                        <tr>
+                            <th class="bg-light" style="width:40%">Student</th>
+                            <td id="confirmStudentInfo"></td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Discontinued Date</th>
+                            <td id="confirmDiscontinuedDate"></td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Year of Discontinuation</th>
+                            <td id="confirmYear"></td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Reason</th>
+                            <td id="confirmReason"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="discontinueBackBtn">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </button>
+                <button type="button" class="btn btn-danger" id="discontinueConfirmBtn">
+                    <i class="fas fa-check me-1"></i> Confirm Discontinue
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+body {
+    background: #f7f9fc;
+}
+
+.stat-card {
+    border-radius: 1rem;
+    transition: 0.25s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.analytics-box {
+    border: 1px solid #eef1f4;
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    background: #fff;
+    transition: 0.2s ease;
+}
+
+.analytics-box:hover {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.status-badge {
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-active {
+    background: rgba(25, 135, 84, 0.12);
+    color: #198754;
+}
+
+.status-inactive {
+    background: rgba(220, 53, 69, 0.12);
+    color: #dc3545;
+}
+
+.student-avatar-wrap {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #eef3f8;
+    border: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.student-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.pagination .page-link {
+    border-radius: 0.5rem !important;
+    margin: 0 3px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const ajaxUrl = "{% url 'student_details_ajax' %}";
+    const exportExcel2Url = "{% url 'export_student_basic_excel' %}";
+
+    const searchInput = document.getElementById("searchInput");
+    const batch = document.getElementById("batch");
+    const department = document.getElementById("department");
+    const year = document.getElementById("year");
+    const semester = document.getElementById("semester");
+    const section = document.getElementById("section");
+    const status = document.getElementById("status");
+    const perPage = document.getElementById("perPage");
+    const clearFilters = document.getElementById("clearFilters");
+
+    const studentsTableBody = document.getElementById("studentsTableBody");
+    const pagination = document.getElementById("pagination");
+    const noDataMessage = document.getElementById("noDataMessage");
+    const studentsTable = document.getElementById("studentsTable");
+
+    let currentPage = 1;
+    let searchTimeout;
+
+    function getParams(page = 1) {
+        const params = new URLSearchParams();
+        params.append("page", page);
+        params.append("per_page", perPage.value);
+        params.append("search", searchInput.value);
+        params.append("batch", batch.value);
+        params.append("department", department.value);
+        params.append("year", year.value);
+        params.append("semester", semester.value);
+        params.append("section", section.value);
+        params.append("status", status.value);
+        return params;
+    }
+
+    function fetchStudents(page = 1) {
+        currentPage = page;
+
+        studentsTableBody.innerHTML = `
+            <tr>
+                <td colspan="12" class="text-center py-4 text-muted">
+                    <i class="fas fa-spinner fa-spin me-2"></i> Loading...
+                </td>
+            </tr>
+        `;
+
+        fetch(`${ajaxUrl}?${getParams(page).toString()}`, {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            renderCounts(data.counts);
+            renderAnalytics(data.analytics);
+            renderTable(data.students);
+            renderPagination(data.pagination);
+            renderTableInfo(data.pagination, data.counts.filtered_count);
+        })
+        .catch(error => {
+            studentsTableBody.innerHTML = `
+                <tr>
+                    <td colspan="12" class="text-center py-4 text-danger">
+                        Failed to load data
+                    </td>
+                </tr>
+            `;
+            console.error("Student fetch error:", error);
+        });
+    }
+
+    function renderCounts(counts) {
+        document.getElementById("totalCount").textContent = counts.total_count || 0;
+        document.getElementById("filteredCount").textContent = counts.filtered_count || 0;
+        document.getElementById("activeCount").textContent = counts.active_count || 0;
+        document.getElementById("inactiveCount").textContent = counts.inactive_count || 0;
+    }
+
+    function renderAnalytics(analytics) {
+        const deptAnalytics = document.getElementById("deptAnalytics");
+        const yearAnalytics = document.getElementById("yearAnalytics");
+        const semesterAnalytics = document.getElementById("semesterAnalytics");
+
+        deptAnalytics.innerHTML = "";
+        yearAnalytics.innerHTML = "";
+        semesterAnalytics.innerHTML = "";
+
+        if (analytics.dept_counts && analytics.dept_counts.length) {
+            analytics.dept_counts.forEach(item => {
+                deptAnalytics.innerHTML += `
+                    <div class="col-md-6">
+                        <div class="analytics-box d-flex justify-content-between align-items-center">
+                            <span class="me-2">${item.department__Department || "-"}</span>
+                            <span class="badge bg-primary rounded-pill">${item.count}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            deptAnalytics.innerHTML = `<div class="text-muted">No department data</div>`;
+        }
+
+        if (analytics.year_counts && analytics.year_counts.length) {
+            analytics.year_counts.forEach(item => {
+                yearAnalytics.innerHTML += `
+                    <span class="chip">${item.year || "-"} <span class="text-muted">(${item.count})</span></span>
+                `;
+            });
+        } else {
+            yearAnalytics.innerHTML = `<div class="text-muted">No year data</div>`;
+        }
+
+        if (analytics.semester_counts && analytics.semester_counts.length) {
+            analytics.semester_counts.forEach(item => {
+                semesterAnalytics.innerHTML += `
+                    <span class="chip">Sem ${item.semester || "-"} <span class="text-muted">(${item.count})</span></span>
+                `;
+            });
+        } else {
+            semesterAnalytics.innerHTML = `<div class="text-muted">No semester data</div>`;
+        }
+    }
+
+    function renderTable(students) {
+        if (!students || !students.length) {
+            studentsTableBody.innerHTML = "";
+            noDataMessage.classList.remove("d-none");
+            studentsTable.classList.add("d-none");
+            return;
+        }
+
+        noDataMessage.classList.add("d-none");
+        studentsTable.classList.remove("d-none");
+
+        const defaultProfile = "{% static 'images/profile.jpg' %}";
+
+        studentsTableBody.innerHTML = students.map(student => `
+            <tr>
+                <td>${student.sl_no}</td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="student-avatar-wrap me-2">
+                            <img
+                                src="${student.profile_img || defaultProfile}"
+                                alt="${student.name}"
+                                class="student-avatar-img"
+                                onerror="this.onerror=null;this.src='${defaultProfile}';"
+                            >
+                        </div>
+                        <span class="fw-semibold text-primary">${student.reg_no}</span>
+                    </div>
+                </td>
+                <td class="fw-semibold">${student.name}</td>
+                <td><span class="badge bg-secondary-subtle text-dark">${student.batch}</span></td>
+                <td><span class="badge bg-light text-dark border">${student.regulation}</span></td>
+                <td>${student.department}</td>
+                <td><span class="badge bg-info-subtle text-info">${student.year}</span></td>
+                <td><span class="badge bg-warning-subtle text-dark">${student.semester}</span></td>
+                <td><span class="badge bg-success-subtle text-dark">${student.section}</span></td>
+                <td><span class="badge bg-primary-subtle text-primary">${student.mode}</span></td>
+                <td>
+                    <span class="status-badge ${student.is_active ? 'status-active' : 'status-inactive'}">
+                        ${student.status_label}
+                    </span>
+                </td>
+                <td>
+                    <div class="d-flex flex-wrap gap-1">
+                        <a href="${student.edit_url}" class="btn btn-sm btn-outline-warning">
+                            <i class="fas fa-edit me-1"></i> Edit
+                        </a>
+                        ${student.is_discontinued
+                            ? `<span class="badge bg-danger align-self-center">Discontinued</span>`
+                            : `<button type="button"
+                                class="btn btn-sm btn-outline-danger discontinue-btn"
+                                data-student-id="${student.id}"
+                                data-student-name="${student.name}"
+                                data-student-reg="${student.reg_no}">
+                                <i class="fas fa-ban me-1"></i> Discontinue
+                               </button>`
+                        }
+                    </div>
+                </td>
+            </tr>
+        `).join("");
+    }
+
+    function renderTableInfo(paginationData, filteredCount) {
+        document.getElementById("tableInfo").textContent =
+            `Showing ${paginationData.start_index} to ${paginationData.end_index} of ${filteredCount} entries`;
+    }
+
+    function renderPagination(paginationData) {
+        let html = "";
+
+        html += `
+            <li class="page-item ${!paginationData.has_previous ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${paginationData.previous_page_number || 1}">Previous</a>
+            </li>
+        `;
+
+        for (let i = 1; i <= paginationData.total_pages; i++) {
+            if (
+                i === 1 ||
+                i === paginationData.total_pages ||
+                (i >= paginationData.current_page - 2 && i <= paginationData.current_page + 2)
+            ) {
+                html += `
+                    <li class="page-item ${i === paginationData.current_page ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>
+                `;
+            }
+        }
+
+        html += `
+            <li class="page-item ${!paginationData.has_next ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${paginationData.next_page_number || paginationData.total_pages}">Next</a>
+            </li>
+        `;
+
+        pagination.innerHTML = html;
+
+        pagination.querySelectorAll(".page-link").forEach(link => {
+            link.addEventListener("click", function (e) {
+                e.preventDefault();
+                const page = parseInt(this.dataset.page);
+                if (!this.parentElement.classList.contains("disabled")) {
+                    fetchStudents(page);
+                }
+            });
+        });
+    }
+
+    function exportCSV() {
+        const params = getParams(1);
+        params.append("per_page", "100000");
+
+        fetch(`${ajaxUrl}?${params.toString()}`, {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.students || !data.students.length) {
+                alert("No records to export");
+                return;
+            }
+
+            const rows = [];
+            rows.push([
+                "Reg No", "Name", "Batch", "Regulation", "Department",
+                "Year", "Semester", "Section", "Mode", "Status"
+            ].join(","));
+
+            data.students.forEach(student => {
+                rows.push([
+                    `"${student.reg_no || ""}"`,
+                    `"${(student.name || "").replace(/"/g, '""')}"`,
+                    `"${student.batch || ""}"`,
+                    `"${student.regulation || ""}"`,
+                    `"${(student.department || "").replace(/"/g, '""')}"`,
+                    `"${student.year || ""}"`,
+                    `"${student.semester || ""}"`,
+                    `"${student.section || ""}"`,
+                    `"${student.mode || ""}"`,
+                    `"${student.status_label || ""}"`
+                ].join(","));
+            });
+
+            const csvContent = "data:text/csv;charset=utf-8,\ufeff" + rows.join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "students_data.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        })
+        .catch(error => {
+            console.error("CSV export error:", error);
+            alert("Failed to export CSV");
+        });
+    }
+
+    function exportExcel2() {
+        const params = getParams(1);
+        window.location.href = `${exportExcel2Url}?${params.toString()}`;
+    }
+
+    [batch, department, year, semester, section, status, perPage].forEach(el => {
+        el.addEventListener("change", () => fetchStudents(1));
+    });
+
+    searchInput.addEventListener("input", function () {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => fetchStudents(1), 400);
+    });
+
+    clearFilters.addEventListener("click", function () {
+        searchInput.value = "";
+        batch.value = "";
+        department.value = "";
+        year.value = "";
+        semester.value = "";
+        section.value = "";
+        status.value = "";
+        perPage.value = "50";
+        fetchStudents(1);
+    });
+
+    document.getElementById("exportBtn").addEventListener("click", exportCSV);
+
+    document.getElementById("exportExcel2Btn").addEventListener("click", function (e) {
+        e.preventDefault();
+        exportExcel2();
+    });
+
+    fetchStudents(1);
+
+    // ── Discontinue Student ──────────────────────────────────────────────────
+
+    // ── Discontinue Student ──────────────────────────────────────────────────
+
+const discontinueAjaxUrl = "{% url 'discontinue_student_ajax' %}";
+let discontinuePending = {};
+
+const formModalEl = document.getElementById("discontinueFormModal");
+const confirmModalEl = document.getElementById("discontinueConfirmModal");
+
+function showModal(el) {
+    if (window.bootstrap && bootstrap.Modal) {
+        bootstrap.Modal.getOrCreateInstance(el).show();
+    } else if (window.jQuery) {
+        $("#" + el.id).modal("show");
+    } else {
+        alert("Bootstrap modal JS is not loaded.");
+    }
+}
+
+function hideModal(el) {
+    if (window.bootstrap && bootstrap.Modal) {
+        bootstrap.Modal.getOrCreateInstance(el).hide();
+    } else if (window.jQuery) {
+        $("#" + el.id).modal("hide");
+    }
+}
+
+function cleanupModalArtifacts() {
+    if (document.querySelector(".modal.show")) return;
+    document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
+    document.body.classList.remove("modal-open");
+    document.body.style.removeProperty("overflow");
+    document.body.style.removeProperty("padding-right");
+}
+
+document.addEventListener("click", function (e) {
+    const btn = e.target.closest(".discontinue-btn");
+    if (!btn) return;
+
+    cleanupModalArtifacts();
+
+    discontinuePending = {
+        student_id: btn.dataset.studentId,
+        student_name: btn.dataset.studentName,
+        student_reg: btn.dataset.studentReg,
+    };
+
+    const studentNameEl = document.getElementById("discontinueFormStudentName");
+    const discontinueForm = document.getElementById("discontinueForm");
+    const formError = document.getElementById("discontinueFormError");
+
+    if (studentNameEl) {
+        studentNameEl.textContent =
+            discontinuePending.student_name + " (" + discontinuePending.student_reg + ")";
+    }
+
+    if (discontinueForm) {
+        discontinueForm.reset();
+    }
+
+    if (formError) {
+        formError.classList.add("d-none");
+    }
+
+    showModal(formModalEl);
+});
+
+document.getElementById("discontinueFormSubmitBtn").addEventListener("click", function () {
+    const discontinuedDate = document.getElementById("discontinuedDate")?.value.trim();
+    const yearOfDiscontinuation = document.getElementById("yearOfDiscontinuation")?.value.trim();
+    const reasonForDiscontinuation = document.getElementById("reasonForDiscontinuation")?.value.trim() || "";
+
+    let errorDiv = document.getElementById("discontinueFormError");
+
+    if (!errorDiv) {
+        const modalBody = document.querySelector("#discontinueFormModal .modal-body");
+        errorDiv = document.createElement("div");
+        errorDiv.id = "discontinueFormError";
+        errorDiv.className = "alert alert-danger py-2 d-none";
+        errorDiv.setAttribute("role", "alert");
+
+        const form = document.getElementById("discontinueForm");
+        modalBody.insertBefore(errorDiv, form);
+    }
+
+    if (!discontinuedDate || !yearOfDiscontinuation) {
+        errorDiv.textContent = "Discontinued Date and Year of Discontinuation are required.";
+        errorDiv.classList.remove("d-none");
+        return;
+    }
+
+    errorDiv.classList.add("d-none");
+
+    discontinuePending.discontinued_date = discontinuedDate;
+    discontinuePending.year_of_discontinuation = yearOfDiscontinuation;
+    discontinuePending.reason_for_discontinuation = reasonForDiscontinuation;
+
+    document.getElementById("confirmStudentInfo").textContent =
+        discontinuePending.student_name + " (" + discontinuePending.student_reg + ")";
+    document.getElementById("confirmDiscontinuedDate").textContent = discontinuedDate;
+    document.getElementById("confirmYear").textContent = yearOfDiscontinuation;
+    document.getElementById("confirmReason").textContent = reasonForDiscontinuation || "-";
+
+    hideModal(formModalEl);
+
+    setTimeout(function () {
+        showModal(confirmModalEl);
+    }, 400);
+});
+
+document.getElementById("discontinueBackBtn").addEventListener("click", function () {
+    hideModal(confirmModalEl);
+
+    setTimeout(function () {
+        showModal(formModalEl);
+    }, 400);
+});
+
+document.getElementById("discontinueConfirmBtn").addEventListener("click", function () {
+    const confirmBtn = this;
+
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+
+    const formData = new FormData();
+    formData.append("student_id", discontinuePending.student_id);
+    formData.append("discontinued_date", discontinuePending.discontinued_date);
+    formData.append("year_of_discontinuation", discontinuePending.year_of_discontinuation);
+    formData.append("reason_for_discontinuation", discontinuePending.reason_for_discontinuation || "");
+
+    fetch(discontinueAjaxUrl, {
+        method: "POST",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest"
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideModal(confirmModalEl);
+
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="fas fa-check me-1"></i> Confirm Discontinue';
+
+        if (data.success) {
+    window.location.reload();
+} else {
+    window.location.reload();
+}
+    })
+    .catch(error => {
+        hideModal(confirmModalEl);
+
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="fas fa-check me-1"></i> Confirm Discontinue';
+
+        showDiscontinueAlert("danger", "Something went wrong. Please try again.");
+        console.error("Discontinue error:", error);
+    });
+});
+
+function showDiscontinueAlert(type, message) {
+    const alertDiv = document.getElementById("discontinueAlert");
+    alertDiv.className = "alert alert-" + type + " alert-dismissible fade show";
+    alertDiv.innerHTML =
+        message +
+        ' <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+    alertDiv.classList.remove("d-none");
+
+    setTimeout(function () {
+        alertDiv.classList.add("d-none");
+    }, 6000);
+}
+});
+</script>
+{% endblock %}

@@ -1,0 +1,602 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+.student-dashboard {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.student-dashboard .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.student-dashboard .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.student-dashboard .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.student-dashboard .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.student-dashboard .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.student-dashboard .stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: transform 0.3s ease;
+  border-left: 4px solid;
+}
+
+.student-dashboard .stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.student-dashboard .stat-card.academic {
+  border-left-color: #1a4b8c;
+}
+
+.student-dashboard .stat-card.achievements {
+  border-left-color: #f59e0b;
+}
+
+.student-dashboard .stat-card.activities {
+  border-left-color: #10b981;
+}
+
+.student-dashboard .stat-card.projects {
+  border-left-color: #8b5cf6;
+}
+
+.student-dashboard .stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.student-dashboard .academic .stat-icon {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+}
+
+.student-dashboard .achievements .stat-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.student-dashboard .activities .stat-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.student-dashboard .projects .stat-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.student-dashboard .stat-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1a4b8c;
+  line-height: 1;
+  display: block;
+}
+
+.student-dashboard .stat-label {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.student-dashboard .modules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 1.5rem;
+}
+
+.student-dashboard .module-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  border: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.student-dashboard .module-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.student-dashboard .card-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.student-dashboard .badge-academic {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+}
+
+.student-dashboard .badge-achievement {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.student-dashboard .badge-activity {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.student-dashboard .badge-professional {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+}
+
+.student-dashboard .badge-research {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.student-dashboard .card-icon-wrapper {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem 0;
+}
+
+.student-dashboard .card-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  color: #1a4b8c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.student-dashboard .card-title {
+  color: #1a4b8c;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.student-dashboard .card-description {
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  flex-grow: 1;
+}
+
+.student-dashboard .card-actions {
+  margin-top: auto;
+}
+
+.student-dashboard .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  justify-content: center;
+  width: 100%;
+}
+
+.student-dashboard .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+}
+
+.student-dashboard .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.student-dashboard .btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.student-dashboard .btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+}
+
+.student-dashboard .btn-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.student-dashboard .btn-warning:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+}
+
+.student-dashboard .quick-actions {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.student-dashboard .quick-actions h3 {
+  color: #1a4b8c;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.student-dashboard .quick-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.student-dashboard .quick-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #374151;
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.student-dashboard .quick-link:hover {
+  background: #1a4b8c;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.student-dashboard .quick-link-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #1a4b8c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.student-dashboard .quick-link:hover .quick-link-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.student-dashboard .quick-link-text {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .student-dashboard .page-header {
+    padding: 1rem;
+  }
+  
+  .student-dashboard .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .student-dashboard .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .student-dashboard .modules-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .student-dashboard {
+    padding: 1rem;
+  }
+  
+  .student-dashboard .page-header {
+    padding: 0.75rem;
+  }
+  
+  .student-dashboard .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .student-dashboard .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .student-dashboard .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-dashboard .modules-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-dashboard .stat-card {
+    padding: 1.25rem;
+  }
+  
+  .student-dashboard .stat-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
+  }
+  
+  .student-dashboard .stat-number {
+    font-size: 1.75rem;
+  }
+  
+  .student-dashboard .quick-links {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .student-dashboard .module-card {
+    padding: 1.25rem;
+  }
+  
+  .student-dashboard .card-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+  
+  .student-dashboard .card-title {
+    font-size: 1.1rem;
+  }
+  
+  .student-dashboard .quick-actions {
+    padding: 1.5rem;
+  }
+}
+</style>
+
+<div class="student-dashboard">
+  <div class="page-header">
+    <h1><i class="fas fa-user-graduate me-2"></i>Student Dashboard</h1>
+    <p class="header-subtitle">Access all your academic information, achievements, and activities in one place</p>
+  </div>
+
+  <div class="page-container">
+
+    <!-- Modules Grid -->
+    <div class="modules-grid">
+      <!-- Admission Details -->
+      <div class="module-card">
+        <div class="card-badge badge-academic">
+          <i class="fas fa-user-graduate me-1"></i>Academic
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-user-graduate"></i></div>
+        </div>
+        <h3 class="card-title">Admission Details</h3>
+        <p class="card-description">
+          View your complete admission information, personal records, academic history, and enrollment details in one comprehensive profile.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'student_admission_details' %}" class="btn btn-primary">
+            <i class="fas fa-eye me-2"></i>View Details
+          </a>
+        </div>
+      </div>
+
+      <!-- Achievements -->
+      <div class="module-card">
+        <div class="card-badge badge-achievement">
+          <i class="fas fa-trophy me-1"></i>Achievement
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-trophy"></i></div>
+        </div>
+        <h3 class="card-title">Academic Achievements</h3>
+        <p class="card-description">
+          Track all your academic and extracurricular accomplishments, awards, certificates, and recognition with detailed records.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'student_achievements_view' %}" class="btn btn-warning">
+            <i class="fas fa-award me-2"></i>View Achievements
+          </a>
+        </div>
+      </div>
+
+      <!-- Co/Extra Curricular -->
+      <div class="module-card">
+        <div class="card-badge badge-activity">
+          <i class="fas fa-star me-1"></i>Activity
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-star"></i></div>
+        </div>
+        <h3 class="card-title">Co/Extra Curricular</h3>
+        <p class="card-description">
+          Manage your participation in clubs, sports, cultural events, competitions, and other extracurricular activities.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'student_co_ex_curricular_view' %}" class="btn btn-success">
+            <i class="fas fa-running me-2"></i>View Activities
+          </a>
+        </div>
+      </div>
+
+      <!-- Professional Body -->
+      <div class="module-card">
+        <div class="card-badge badge-professional">
+          <i class="fas fa-users me-1"></i>Professional
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-users"></i></div>
+        </div>
+        <h3 class="card-title">Professional Body</h3>
+        <p class="card-description">
+          View your professional memberships, technical affiliations, certifications, and professional development activities.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'student_professional_view' %}" class="btn btn-primary">
+            <i class="fas fa-id-card me-2"></i>View Memberships
+          </a>
+        </div>
+      </div>
+
+      <!-- Publications -->
+      <div class="module-card">
+        <div class="card-badge badge-research">
+          <i class="fas fa-book-open me-1"></i>Research
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-book-open"></i></div>
+        </div>
+        <h3 class="card-title">Academic Publications</h3>
+        <p class="card-description">
+          Track your academic publications, research papers, conference proceedings, and scholarly work with complete citations.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'student_publications_view' %}" class="btn btn-warning">
+            <i class="fas fa-file-alt me-2"></i>View Publications
+          </a>
+        </div>
+      </div>
+
+      <!-- Projects -->
+      <div class="module-card">
+        <div class="card-badge badge-research">
+          <i class="fas fa-lightbulb me-1"></i>Research
+        </div>
+        <div class="card-icon-wrapper">
+          <div class="card-icon"><i class="fas fa-lightbulb"></i></div>
+        </div>
+        <h3 class="card-title">Academic Projects</h3>
+        <p class="card-description">
+          Access your academic projects, research work, innovation initiatives, and technical projects with detailed documentation.
+        </p>
+        <div class="card-actions">
+          <a href="{% url 'student_projects_view' %}" class="btn btn-success">
+            <i class="fas fa-project-diagram me-2"></i>View Projects
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Add animation to cards
+  const cards = document.querySelectorAll('.module-card');
+  cards.forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.1}s`;
+    card.classList.add('fade-in-up');
+  });
+
+  // Add animation to stat cards
+  const statCards = document.querySelectorAll('.stat-card');
+  statCards.forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.05}s`;
+    card.classList.add('fade-in-up');
+  });
+
+  // Add click animation to quick links
+  const quickLinks = document.querySelectorAll('.quick-link');
+  quickLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      this.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        this.style.transform = '';
+      }, 150);
+    });
+  });
+});
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .fade-in-up {
+    animation: fadeInUp 0.6s ease forwards;
+  }
+  
+  .module-card, .stat-card {
+    opacity: 0;
+  }
+`;
+document.head.appendChild(style);
+</script>
+
+{% endblock content %}

@@ -1,0 +1,535 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+    /* Main Container Styles */
+    .hall-ticket-container {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+    
+    /* Modal Styles */
+    .modal-header {
+        background-color: #4e73df;
+        color: white;
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Form Styles */
+    .form-label {
+        font-weight: 600;
+        color: #5a5c69;
+    }
+    
+    .form-select {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d3e2;
+        transition: all 0.3s;
+    }
+    
+    .form-select:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    
+    /* Button Styles */
+    .btn-primary {
+        background-color: #4e73df;
+        border-color: #4e73df;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2e59d9;
+        border-color: #2e59d9;
+        transform: translateY(-1px);
+    }
+    
+    .btn-danger {
+        background-color: #e74a3b;
+        border-color: #e74a3b;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    /* Student Card Styles */
+    .student-card {
+        background-color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        border-left: 4px solid #4e73df;
+        transition: transform 0.3s;
+    }
+    
+    .student-card:hover {
+        transform: translateY(-3px);
+    }
+    
+    .student-header {
+        border-bottom: 1px solid #e3e6f0;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .student-photo {
+        border: 3px solid #e3e6f0;
+        border-radius: 8px;
+    }
+    
+    /* Course Table Styles */
+    .course-table {
+        border-radius: 8px;
+        overflow: hidden;
+        width: 100%;
+        table-layout: auto;
+    }
+    
+    .course-table thead th {
+        background-color: #4e73df;
+        color: white;
+        font-weight: 600;
+        border: none;
+        white-space: nowrap;
+        padding: 12px 15px;
+    }
+    
+    .course-table tbody td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 10px 15px;
+    }
+    
+    .course-table tbody tr:nth-child(even) {
+        background-color: #f8f9fc;
+    }
+    
+    .course-table tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.1);
+    }
+    
+    /* Column Widths */
+    .course-table th:nth-child(1), 
+    .course-table td:nth-child(1) {
+        width: 15%;
+        min-width: 100px;
+    }
+    
+    .course-table th:nth-child(2), 
+    .course-table td:nth-child(2) {
+        width: 40%;
+        min-width: 200px;
+        white-space: normal;
+    }
+    
+    .course-table th:nth-child(3), 
+    .course-table td:nth-child(3) {
+        width: 10%;
+        min-width: 80px;
+    }
+    
+    .course-table th:nth-child(4), 
+    .course-table td:nth-child(4) {
+        width: 15%;
+        min-width: 100px;
+    }
+    
+    .course-table th:nth-child(5), 
+    .course-table td:nth-child(5) {
+        width: 20%;
+        min-width: 120px;
+    }
+    
+    /* Student Section with Scroll */
+    #studentSection {
+        display: none;
+        margin-top: 2rem;
+        max-height: 70vh;
+        overflow-y: auto;
+        padding-right: 15px;
+    }
+    
+    /* PDF Download Button Container */
+    .pdf-download-wrapper {
+        position: sticky;
+        top: 20px;
+        z-index: 1000;
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 1rem;
+    }
+    
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+        .student-card .row {
+            flex-direction: column-reverse;
+        }
+        
+        .student-photo-container {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .hall-ticket-container {
+            padding: 1rem;
+        }
+        
+        #studentSection {
+            max-height: none;
+            overflow-y: visible;
+        }
+        
+        .pdf-download-wrapper {
+            position: static;
+            justify-content: center;
+        }
+        
+        .course-table {
+            display: block;
+            overflow-x: auto;
+        }
+        
+        .course-table th, 
+        .course-table td {
+            white-space: nowrap;
+        }
+    }
+    
+    /* Custom Scrollbar */
+    #studentSection::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    #studentSection::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    #studentSection::-webkit-scrollbar-thumb {
+        background: #4e73df;
+        border-radius: 10px;
+    }
+    
+    #studentSection::-webkit-scrollbar-thumb:hover {
+        background: #2e59d9;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="hall-ticket-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-ticket-alt me-2"></i>Generate Hall Tickets
+            </h1>
+            <button id="generateHallTicket" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#hallTicketModal">
+                <i class="fas fa-plus me-2"></i>Generate Hall Ticket
+            </button>
+        </div>
+    </div>
+
+    <!-- Student Section with PDF Button -->
+    <div id="studentSection">
+        <div class="pdf-download-wrapper">
+            <button id="downloadPDF" class="btn btn-danger" style="display: none;">
+                <i class="fas fa-file-pdf me-2"></i>Download All as PDF
+            </button>
+        </div>
+        
+        <h2 class="mb-4">
+            <i class="fas fa-users me-2"></i>Student Hall Tickets
+        </h2>
+        <div id="studentList" class="row"></div>
+    </div>
+</div>
+
+<!-- Hall Ticket Modal -->
+<div class="modal fade" id="hallTicketModal" tabindex="-1" aria-labelledby="hallTicketModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="hallTicketModalLabel">
+                    <i class="fas fa-ticket-alt me-2"></i>Generate Hall Ticket
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="hallTicketForm" method="post">
+                    {% csrf_token %}
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label for="programmeOfStudy" class="form-label">
+                                <i class="fas fa-graduation-cap me-2"></i>Programme of Study
+                            </label>
+                            <select class="form-select" id="programmeOfStudy" name="programme_of_study" required>
+                                <option value="">Select Programme of Study...</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="deptId" class="form-label">
+                                <i class="fas fa-building me-2"></i>Department
+                            </label>
+                            <select class="form-select" id="deptId" name="deptId" required>
+                                <option value="">Select Programme of Study first</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label for="programCode" class="form-label">
+                                <i class="fas fa-book me-2"></i>Program
+                            </label>
+                            <select class="form-select" id="programCode" name="programCode" required>
+                                <option value="">Select department first</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="intakeBatch" class="form-label">
+                                <i class="fas fa-users me-2"></i>Intake-Batch
+                            </label>
+                            <select class="form-select" id="intakeBatch" name="intakeBatch" required>
+                                <option value="">Select program first</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </button>
+                        <button type="button" id="generateBtn" class="btn btn-primary">
+                            <i class="fas fa-check me-2"></i>Generate
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        window.onbeforeunload = function () {
+            localStorage.clear();
+        };
+
+        function loadHallTicketsFromLocalStorage() {
+            if (localStorage.getItem("hallTicketHTML")) {
+                $('#studentSection').show();
+                $('#downloadPDF').show();
+                $('#studentList').html(localStorage.getItem("hallTicketHTML"));
+            }
+        }
+
+        loadHallTicketsFromLocalStorage();
+
+        // Load Programme of Study
+        $.getJSON("{% url 'get_programmes_of_study' %}", function (data) {
+            $('#programmeOfStudy').html('<option value="">Select Programme of Study...</option>');
+            $.each(data.programmes, function (index, value) {
+                $('#programmeOfStudy').append(`<option value="${value}">${value}</option>`);
+            });
+        });
+
+        // Load Departments
+        $('#programmeOfStudy').change(function () {
+            const programme = $(this).val();
+            $('#deptId').html('<option value="">Loading...</option>');
+            $('#programCode').html('<option value="">Select department first</option>');
+            $('#intakeBatch').html('<option value="">Select program first</option>');
+
+            if (programme) {
+                $.getJSON("{% url 'get_departments_by_programme' %}", { 'programme_of_study': programme }, function (data) {
+                    $('#deptId').html('<option value="">Select Department...</option>');
+                    $.each(data.departments, function (index, dept) {
+                        $('#deptId').append(`<option value="${dept.id}">${dept.name}</option>`);
+                    });
+                });
+            }
+        });
+
+        // Load Programs
+        $('#deptId').change(function () {
+            const deptId = $(this).val();
+            const programme = $('#programmeOfStudy').val();
+            $('#programCode').html('<option value="">Loading...</option>');
+            $('#intakeBatch').html('<option value="">Select program first</option>');
+
+            if (deptId && programme) {
+                $.getJSON("{% url 'get_programs_by_dept_and_programme' %}", {
+                    'programme_of_study': programme,
+                    'department_id': deptId
+                }, function (data) {
+                    $('#programCode').html('<option value="">Select Program...</option>');
+                    $.each(data.programs, function (index, prog) {
+                        $('#programCode').append(`<option value="${prog.code}">${prog.name}</option>`);
+                    });
+                });
+            }
+        });
+
+        // Load Intake Batches
+        $('#programCode').change(function () {
+            const programCode = $(this).val();
+            const deptId = $('#deptId').val();
+            const programme = $('#programmeOfStudy').val();
+            $('#intakeBatch').html('<option value="">Loading...</option>');
+
+            if (programCode && deptId && programme) {
+                $.getJSON("{% url 'get_intakes_by_program' %}", {
+                    'programme_of_study': programme,
+                    'department_id': deptId,
+                    'program_code': programCode
+                }, function (data) {
+                    $('#intakeBatch').html('<option value="">Select Intake-Batch...</option>');
+                    $.each(data.intakes, function (index, intake) {
+                        $('#intakeBatch').append(`<option value="${intake.value}">${intake.label}</option>`);
+                    });
+                });
+            }
+        });
+
+        // Generate Hall Ticket
+        $('#generateBtn').click(function () {
+            const departmentId = $('#deptId').val();
+            const programCode = $('#programCode').val();
+            const intakeBatch = $('#intakeBatch').val();
+            const programmeOfStudy = $('#programmeOfStudy').val();
+
+            if (departmentId && programCode && intakeBatch && programmeOfStudy) {
+                $.getJSON("{% url 'fetch_student' %}", {
+                    'department_id': departmentId,
+                    'program_code': programCode,
+                    'intake_batch': intakeBatch,
+                    'programme_of_study': programmeOfStudy
+                }, function (data) {
+                    let html = '';
+                    $.each(data.students, function (index, student) {
+                        html += `
+                        <div class="col-12 mb-4">
+                            <div class="student-card">
+                                <div class="row">
+                                    <div class="col-md-10">
+                                        <div class="student-header">
+                                            <h4 class="mb-2">
+                                                <i class="fas fa-user-graduate me-2"></i>${student.name}
+                                                <small class="text-muted">(${student.register_number})</small>
+                                            </h4>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p class="mb-2"><strong><i class="fas fa-calendar-alt me-2"></i>Semester:</strong> ${student.current_semester}</p>
+                                                <p class="mb-2"><strong><i class="fas fa-users me-2"></i>Intake-Batch:</strong> ${student.Intake} - ${student.batch}</p>
+                                                <p class="mb-2"><strong><i class="fas fa-birthday-cake me-2"></i>DOB:</strong> ${student.date_of_birth}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p class="mb-2"><strong><i class="fas fa-graduation-cap me-2"></i>Programme:</strong> ${student.programme_of_study}</p>
+                                                <p class="mb-2"><strong><i class="fas fa-book me-2"></i>Program:</strong> ${student.program_name}</p>
+                                                <p class="mb-2"><strong><i class="fas fa-building me-2"></i>Department:</strong> ${student.department_name}</p>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <h5 class="mb-3"><i class="fas fa-book-open me-2"></i>Registered Courses</h5>
+                                        <div class="table-responsive">
+                                            <table class="table course-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th><i class="fas fa-hashtag me-2"></i>Code</th>
+                                                        <th><i class="fas fa-book me-2"></i>Title</th>
+                                                        <th><i class="fas fa-calendar me-2"></i>Semester</th>
+                                                        <th><i class="fas fa-clock me-2"></i>Session</th>
+                                                        <th><i class="fas fa-calendar-day me-2"></i>Date</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>`;
+                        const courses = data.courses[student.register_number];
+                        $.each(courses, function (i, course) {
+                            html += `
+                                                <tr>
+                                                    <td>${course.course_code}</td>
+                                                    <td>${course.course_title}</td>
+                                                    <td>${course.semester}</td>
+                                                    <td>${course.session}</td>
+                                                    <td>${course.date}</td>
+                                                </tr>`;
+                        });
+                        html += `
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 student-photo-container">
+                                        <img src="${student.photo_url}" alt="Student Photo" 
+                                             class="img-fluid student-photo"
+                                             style="width: 100%; max-width: 150px; height: auto;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+
+                    $('#studentList').html(html);
+                    $('#studentSection').show();
+                    $('#downloadPDF').show();
+
+                    localStorage.setItem("hallTicketHTML", html);
+                    localStorage.setItem("departmentId", departmentId);
+                    localStorage.setItem("programCode", programCode);
+                    localStorage.setItem("intakeBatch", intakeBatch);
+                    localStorage.setItem("programmeOfStudy", programmeOfStudy);
+
+                    $('.modal-backdrop').remove();
+                    $('body').removeClass('modal-open').css('overflow', 'auto');
+                    $('#hallTicketModal').modal('hide');
+                    
+                    // Scroll to student section after generation
+                    $('html, body').animate({
+                        scrollTop: $('#studentSection').offset().top - 20
+                    }, 500);
+                });
+            } else {
+                alert("Please select all fields before generating the hall ticket.");
+            }
+        });
+
+        // PDF Download
+        $('#downloadPDF').click(function () {
+            const departmentId = $('#deptId').val();
+            const programCode = $('#programCode').val();
+            const intakeBatch = $('#intakeBatch').val();
+            const programmeOfStudy = $('#programmeOfStudy').val();
+
+            if (departmentId && programCode && intakeBatch && programmeOfStudy) {
+                const url = `{% url 'download_hall_ticket_pdf' %}?department_id=${departmentId}&program_code=${programCode}&intake_batch=${intakeBatch}&programme_of_study=${programmeOfStudy}`;
+                window.open(url, '_blank');
+            } else {
+                alert("Missing parameters to download PDF.");
+            }
+        });
+    });
+</script>
+{% endblock %}

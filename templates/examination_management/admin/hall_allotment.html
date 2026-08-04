@@ -1,0 +1,1014 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+  .ha-wrap{ padding:18px; max-width:1400px; margin:0 auto; }
+  .ha-head{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:16px;
+    border-bottom:2px solid #111; padding-bottom:12px; margin-bottom:14px;
+  }
+  .ha-title{ font-weight:900; margin:0; }
+  .ha-meta{ font-size:.9rem; color:#6b7280; line-height:1.5; }
+  .ha-actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; align-items:center; }
+
+  .btnx{
+    border:1px solid #d1d5db; background:#fff; padding:9px 14px; border-radius:10px;
+    font-weight:800; cursor:pointer; text-decoration:none; display:inline-flex; gap:8px; align-items:center;
+    white-space:nowrap;
+  }
+  .btnx.primary{ background:#2563eb; color:#fff; border-color:#2563eb; }
+  .btnx.softdanger{ background:#fff5f5; color:#b91c1c; border-color:#fecaca; }
+  .btnx.remove-mini{ padding:6px 10px; border-radius:10px; font-size:.85rem; }
+  .btnx.ghost{ background:#fff; color:#111827; border-color:#d1d5db; }
+  .btnx:disabled{ opacity:.6; cursor:not-allowed; }
+
+  .ha-grid{ display:grid; grid-template-columns: 1.35fr .65fr; gap:14px; }
+  @media(max-width:992px){ .ha-grid{ grid-template-columns:1fr; } }
+
+  .ha-card{
+    background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:14px;
+    box-shadow:0 1px 8px rgba(0,0,0,.05);
+  }
+
+  .ha-form-row{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap:12px;
+  }
+  @media(max-width:992px){ .ha-form-row{ grid-template-columns:1fr; } }
+
+  .students-box{
+    max-height:360px;
+    overflow:auto;
+    border:1px solid #eef2f7;
+    border-radius:12px;
+  }
+  .tbl{ width:100%; border-collapse:collapse; }
+  .tbl th, .tbl td{ padding:10px; border-bottom:1px solid #eee; }
+  .tbl th{ background:#f8fafc; font-weight:900; position:sticky; top:0; z-index:1; }
+
+  .action-row{
+    display:flex;
+    gap:10px;
+    justify-content:flex-end;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+
+  .seat-grid{
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap:8px;
+  }
+  .seat-card{
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    background:#fff;
+    padding:10px 10px;
+    min-height:78px;
+    box-shadow:0 1px 5px rgba(0,0,0,.04);
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .seat-card.filled{ border-color:#c7d2fe; background:#fbfdff; }
+  .seat-title{ font-weight:900; font-size:.85rem; margin-bottom:2px; line-height:1.1; }
+  .regno{ font-weight:900; font-size:.80rem; margin:0; }
+  .dept{
+    font-size:.78rem; color:#6b7280; margin:0;
+    display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
+  }
+  .seat-sub{ font-size:.72rem; color:#6b7280; }
+
+  .summary-grid{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap:10px;
+  }
+  .metric{
+    border:1px solid #eef2f7;
+    border-radius:12px;
+    padding:10px 12px;
+    background:#fff;
+  }
+  .metric .k{ font-size:.78rem; color:#6b7280; font-weight:800; }
+  .metric .v{ font-size:1.15rem; font-weight:900; margin-top:3px; }
+
+  .remove-row{ margin:10px 0 12px; }
+
+  .cmodal-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,.45);
+    display:none; align-items:center; justify-content:center;
+    z-index:9999; padding:16px;
+  }
+  .cmodal{
+    width:min(560px, 100%);
+    background:#fff; border-radius:16px;
+    border:1px solid #e5e7eb;
+    box-shadow:0 10px 35px rgba(0,0,0,.25);
+    overflow:hidden;
+  }
+  .cmodal-head{
+    padding:14px 16px;
+    display:flex; gap:10px; align-items:center;
+    border-bottom:1px solid #eef2f7;
+  }
+  .cmodal-icon{
+    width:38px; height:38px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:900;
+    border:1px solid #e5e7eb;
+    background:#f8fafc;
+    color:#111827;
+  }
+  .cmodal-icon.danger{ background:#fff5f5; color:#b91c1c; border-color:#fecaca; }
+  .cmodal-icon.success{ background:#f0fdf4; color:#166534; border-color:#bbf7d0; }
+  .cmodal-title{ margin:0; font-weight:900; }
+  .cmodal-body{ padding:14px 16px; color:#374151; }
+  .cmodal-body .small{ color:#6b7280; font-size:.9rem; margin-top:6px; }
+  .cmodal-actions{
+    padding:14px 16px; border-top:1px solid #eef2f7;
+    display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;
+  }
+
+  .toast-wrap{ display:none; margin:12px 0; }
+  .toast{
+    border:1px solid #bbf7d0; background:#f0fdf4; color:#166534;
+    padding:10px 12px; border-radius:12px; font-weight:800;
+  }
+
+  .hint{ color:#6b7280; font-size:.85rem; font-weight:800; margin-top:6px; }
+</style>
+
+<div class="ha-wrap">
+
+  <form id="filterForm" method="get" action="{% url 'hall_allotment' %}" style="display:none;">
+    <input type="hidden" name="regulation" id="gReg">
+    <input type="hidden" name="degree_id" id="gDegree">
+    <input type="hidden" name="department_id" id="gDept">
+    <input type="hidden" name="batch" id="gBatch">
+    <input type="hidden" name="year" id="gYear">
+    <input type="hidden" name="semester" id="gSem">
+    <input type="hidden" name="exam_type" id="gExam">
+    <input type="hidden" name="hall_id" id="gHall">
+    <input type="hidden" name="load" id="gLoad" value="">
+    <input type="hidden" name="show_seats" id="gShowSeats" value="">
+    <input type="hidden" name="db_alias" id="gDbAlias" value="{{ selected_db_alias }}">
+  </form>
+
+  <div class="ha-head">
+    <div>
+      <h3 class="ha-title text-primary">Hall Allotment</h3>
+      <div class="ha-meta">
+        Regulation: <b>{{ selected.regulation|default:"-" }}</b> |
+
+        Degree:
+        <b>
+          {% if selected.degree_id %}
+            {% for dg in degrees %}
+              {% if selected.degree_id|stringformat:"s" == dg.id|stringformat:"s" %}
+                {{ dg.degree|upper }}
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            -
+          {% endif %}
+        </b> |
+
+        Department:
+        <b>
+          {% if selected.department_id %}
+            {% for d in departments %}
+              {% if selected.department_id|stringformat:"s" == d.id|stringformat:"s" %}
+                {{ d.Department }}
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            -
+          {% endif %}
+        </b> |
+
+        Batch: <b>{{ selected.batch|default:"-" }}</b> |
+        Year: <b>{{ selected.year|default:"-" }}</b> |
+        Semester: <b>{{ selected.semester|default:"-" }}</b> |
+        Exam Type: <b>{{ selected.exam_type|default:"SEMESTER" }}</b> |
+        Exam Date: <b>{% if selected_exam_date %}{{ selected_exam_date|date:"d-m-Y" }}{% else %}-{% endif %}</b> |
+        Session: <b>{{ selected_session_display|default:"-" }}</b>
+      </div>
+      <div class="hint"></div>
+    </div>
+
+    <div class="ha-actions">
+      <a href="javascript:history.back()" class="btnx">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+
+      <button type="button" class="btnx" id="btnPdf">
+        <i class="fas fa-file-pdf"></i> Seating PDF
+      </button>
+
+      <button type="button" class="btnx" id="btnHallStatementPdf">
+        <i class="fas fa-file-pdf"></i> Hall Arrangement Statement PDF
+      </button>
+
+      <button type="button" class="btnx" id="btnAbsPdf">
+        <i class="fas fa-file-pdf"></i> Absentees PDF
+      </button>
+
+      <button type="button" class="btnx" id="btnAbsSummaryPdf">
+        <i class="fas fa-file-pdf"></i> Absentees Summary PDF
+      </button>
+
+      <button type="button" class="btnx" id="btnDeptWisePdf">
+        <i class="fas fa-file-pdf"></i> Dept Wise PDF
+      </button>
+
+      <button type="button" class="btnx primary" id="btnProceed">
+        <i class="fas fa-users"></i> Proceed (Load Students)
+      </button>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastBox">
+    <div class="toast" id="toastMsg">Done</div>
+  </div>
+
+  <div class="remove-row">
+    <form method="post" action="{% url 'remove_hall_allotments' %}" id="removeAllotFormTop">
+      {% csrf_token %}
+      <input type="hidden" name="regulation" id="rhRegTop" value="{{ selected.regulation }}">
+      <input type="hidden" name="department_id" id="rhDeptTop" value="{{ selected.department_id }}">
+      <input type="hidden" name="degree_id" id="rhDegreeTop" value="{{ selected.degree_id }}">
+      <input type="hidden" name="batch" id="rhBatchTop" value="{{ selected.batch }}">
+      <input type="hidden" name="year" id="rhYearTop" value="{{ selected.year }}">
+      <input type="hidden" name="semester" id="rhSemTop" value="{{ selected.semester }}">
+      <input type="hidden" name="exam_type" id="rhExamTop" value="{{ selected.exam_type|default:'SEMESTER' }}">
+      <input type="hidden" name="hall_id" id="rhHallTop" value="{% if selected_hall %}{{ selected_hall.id }}{% endif %}">
+      <input type="hidden" name="db_alias" id="rhDbAliasTop" value="{{ selected_db_alias }}">
+
+      <button type="button" class="btnx softdanger remove-mini" id="btnRemoveOpen">
+        <i class="fas fa-trash"></i> Remove
+      </button>
+    </form>
+  </div>
+
+  <div class="ha-grid">
+    <div class="ha-card">
+
+      <div class="ha-form-row mb-3">
+
+        <div>
+          <label class="form-label fw-bold">Regulation</label>
+          <select class="form-select" id="fReg" required>
+            <option value="">-- Select Regulation --</option>
+            {% for r in regulations %}
+              <option value="{{ r }}" {% if selected.regulation == r %}selected{% endif %}>{{ r }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label fw-bold">Degree</label>
+          <select class="form-select" id="fDegree">
+            <option value="">-- Select Degree --</option>
+            {% for dg in degrees %}
+              <option value="{{ dg.id }}" {% if selected.degree_id|stringformat:"s" == dg.id|stringformat:"s" %}selected{% endif %}>
+                {{ dg.degree|upper }}
+              </option>
+            {% endfor %}
+          </select>
+          <div class="hint"></div>
+        </div>
+
+        <div>
+          <label class="form-label fw-bold">Department</label>
+          <select class="form-select" id="fDept">
+            <option value="">-- Select Department --</option>
+            {% for d in departments %}
+              <option value="{{ d.id }}" {% if selected.department_id|stringformat:"s" == d.id|stringformat:"s" %}selected{% endif %}>
+                {{ d.Department }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label fw-bold">Batch</label>
+          <select class="form-select" id="fBatch">
+            <option value="">-- Select Batch --</option>
+            {% for b in batches %}
+              <option value="{{ b }}" {% if selected.batch == b %}selected{% endif %}>{{ b }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label fw-bold">Year</label>
+          <select class="form-select" id="fYear">
+            <option value="">-- Select Year --</option>
+            {% for y in years %}
+              <option value="{{ y }}" {% if selected.year == y %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label fw-bold">Semester</label>
+          <select class="form-select" id="fSem">
+            <option value="">-- Select Semester --</option>
+            {% for s in semesters %}
+              <option value="{{ s }}" {% if selected.semester == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label fw-bold">Exam Type</label>
+          <select class="form-select" id="fExam">
+            {% with ex=selected.exam_type|default:"SEMESTER" %}
+              <option value="SEMESTER" {% if ex == "SEMESTER" %}selected{% endif %}>SEMESTER</option>
+            {% endwith %}
+          </select>
+        </div>
+
+      </div>
+
+      <form method="post" action="{% url 'save_hall_allotment' %}" id="allotForm">
+        {% csrf_token %}
+        <input type="hidden" name="regulation" id="hReg" value="{{ selected.regulation }}">
+        <input type="hidden" name="department_id" id="hDept" value="{{ selected.department_id }}">
+        <input type="hidden" name="degree_id" id="hDegree" value="{{ selected.degree_id }}">
+        <input type="hidden" name="batch" id="hBatch" value="{{ selected.batch }}">
+        <input type="hidden" name="year" id="hYear" value="{{ selected.year }}">
+        <input type="hidden" name="semester" id="hSem" value="{{ selected.semester }}">
+        <input type="hidden" name="exam_type" id="hExam" value="{{ selected.exam_type|default:'SEMESTER' }}">
+        <input type="hidden" name="db_alias" id="hDbAlias" value="{{ selected_db_alias }}">
+
+        <div class="row g-2 align-items-end mb-3">
+          <div class="col-lg-7">
+            <label class="form-label fw-bold">Select Hall</label>
+            <select class="form-select" name="hall_id" id="hallSelect" required>
+              <option value="">-- Select Hall --</option>
+              {% for h in halls %}
+                <option value="{{ h.id }}" {% if selected_hall and selected_hall.id == h.id %}selected{% endif %}>
+                  {{ h.hall_name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="action-row">
+              <button class="btnx primary" type="button" id="btnAllotOpen">
+                <i class="fas fa-chair"></i> Allot Selected Students
+              </button>
+              <button type="button" class="btnx" id="btnSelectAll">
+                <i class="fas fa-check-square"></i> Select All
+              </button>
+              <button type="button" class="btnx softdanger" id="btnClearUI">
+                <i class="fas fa-eraser"></i> Clear
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {% if selected_hall %}
+          <div class="ha-card mb-3" style="padding:12px;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <b>Allocation Summary</b>
+              <span style="font-size:.82rem; color:#6b7280;">Capacity: {{ hall_capacity }}</span>
+            </div>
+            <div class="summary-grid">
+              <div class="metric">
+                <div class="k">Allocated</div>
+                <div class="v">{{ allocated_count }}</div>
+              </div>
+              <div class="metric">
+                <div class="k">Remaining Seats</div>
+                <div class="v">{{ remaining_seats }}</div>
+              </div>
+              <div class="metric">
+                <div class="k">Selected</div>
+                <div class="v" id="selectedCount">0</div>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div class="ha-card mb-3" style="padding:12px;">
+            <div class="text-muted" style="font-weight:800;">
+              Select a <b>Hall</b> to view Allocated / Remaining seats.
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <b>Students</b>
+          <span style="font-size:.82rem; color:#6b7280;">Tick students and allot</span>
+        </div>
+
+        <div id="studentsBox" class="students-box">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th style="width:70px;" class="text-center">Pick</th>
+                <th>Reg No</th>
+                <th>Name</th>
+                <th>Dept</th>
+                <th>Exam Date</th>
+                <th>Session</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTbody">
+              {% if student_rows %}
+                {% for s in student_rows %}
+                  <tr>
+                    <td class="text-center">
+                      <input type="checkbox" name="student_ids" value="{{ s.id }}" class="stchk">
+                    </td>
+                    <td class="fw-bold">{{ s.reg_no }}</td>
+                    <td>{{ s.name }}</td>
+                    <td>{{ s.dept_name }}</td>
+                    <td>{% if s.exam_date %}{{ s.exam_date|date:"d-m-Y" }}{% else %}-{% endif %}</td>
+                    <td>{{ s.session_display|default:"-" }}</td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr id="studentsPlaceholderRow">
+                  <td colspan="6" class="text-muted">
+                    {% if not required_ok %}
+                      Select <b>Regulation + Batch + Year + Semester</b>, then click <b>Proceed</b>.
+                    {% else %}
+                      Click <b>Proceed (Load Students)</b>.
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </form>
+    </div>
+
+    <div>
+      <div class="ha-card mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <b>Seating Arrangement (5×5)</b>
+          <span style="font-size:.82rem; color:#6b7280;">
+            {% if selected_hall %}Hall: <b>{{ selected_hall.hall_name }}</b>{% else %}Hall: <b>-</b>{% endif %}
+          </span>
+        </div>
+
+        {% if selected_hall %}
+          {% if show_seats_flag %}
+            <div style="display:none;" id="seatData">
+              <table>
+                {% for pos, a in seat_map.items %}
+                  <tr data-row="{{ a.row_no }}" data-col="{{ a.col_no }}"
+                      data-seat="{{ a.seat_no }}"
+                      data-reg="{{ a.reg_no }}"
+                      data-dept="{{ a.department_name|default:'-' }}"></tr>
+                {% endfor %}
+              </table>
+            </div>
+            <div class="seat-grid" id="seatGrid"></div>
+          {% else %}
+            <button type="button" class="btnx primary" id="btnShowSeating" style="width:100%; justify-content:center;">
+              <i class="fas fa-th"></i> Show Seating
+            </button>
+          {% endif %}
+        {% else %}
+          <div class="text-muted" style="font-weight:800;">
+            Select a <b>Hall</b> to view seating arrangement.
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="ha-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <b>Allotted Students List</b>
+          <span style="font-size:.82rem; color:#6b7280;">
+            {% if selected_hall %}Hall: <b>{{ selected_hall.hall_name }}</b>{% else %}Hall: <b>-</b>{% endif %}
+          </span>
+        </div>
+
+        {% if selected_hall %}
+          <div class="students-box" style="max-height:280px;">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th style="width:90px;">Seat</th>
+                  <th>Reg No</th>
+                  <th>Department</th>
+                  <th>Exam Date</th>
+                  <th>Session</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if allocated_students %}
+                  {% for a in allocated_students %}
+                    <tr>
+                      <td class="fw-bold">{{ a.seat_no|default:"-" }}</td>
+                      <td class="fw-bold">{{ a.reg_no|default:"-" }}</td>
+                      <td>{{ a.department_name|default:"-" }}</td>
+                      <td>{% if a.exam_date %}{{ a.exam_date|date:"d-m-Y" }}{% else %}-{% endif %}</td>
+                      <td>
+                        {% if a.session == "FN" %}
+                          Forenoon (FN)
+                        {% elif a.session == "AN" %}
+                          Afternoon (AN)
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr><td colspan="5" class="text-muted">No students allotted yet.</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+
+          <div style="margin-top:10px; font-size:.85rem; color:#6b7280; font-weight:800;">
+            Total Allotted: <span class="text-dark">{{ allocated_count|default:"0" }}</span>
+          </div>
+        {% else %}
+          <div class="text-muted" style="font-weight:800;">
+            Select a <b>Hall</b> to view allotted students list.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cmodal-backdrop" id="removeModal">
+  <div class="cmodal" role="dialog" aria-modal="true" aria-labelledby="rmTitle">
+    <div class="cmodal-head">
+      <div class="cmodal-icon danger">!</div>
+      <div>
+        <h5 class="cmodal-title" id="rmTitle">Remove Hall Allotment?</h5>
+        <div style="font-size:.9rem; color:#6b7280; font-weight:800;">
+          Hall: <span id="rmHallName">-</span>
+        </div>
+      </div>
+    </div>
+    <div class="cmodal-body">
+      This will remove the allotment for the selected filters and hall.
+      <div class="small">This action cannot be undone.</div>
+    </div>
+    <div class="cmodal-actions">
+      <button type="button" class="btnx ghost" id="rmCancel">Cancel</button>
+      <button type="button" class="btnx softdanger" id="rmConfirm">
+        <i class="fas fa-trash"></i> Yes, Remove
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="cmodal-backdrop" id="allotModal">
+  <div class="cmodal" role="dialog" aria-modal="true" aria-labelledby="amTitle">
+    <div class="cmodal-head">
+      <div class="cmodal-icon success">✓</div>
+      <div>
+        <h5 class="cmodal-title" id="amTitle">Allot Students?</h5>
+        <div style="font-size:.9rem; color:#6b7280; font-weight:800;">
+          Hall: <span id="amHallName">-</span> | Selected: <span id="amCount">0</span>
+        </div>
+      </div>
+    </div>
+    <div class="cmodal-body">
+      Do you want to allot the selected students to this hall?
+      <div class="small">Click confirm to continue.</div>
+    </div>
+    <div class="cmodal-actions">
+      <button type="button" class="btnx ghost" id="amCancel">Cancel</button>
+      <button type="button" class="btnx primary" id="amConfirm">
+        <i class="fas fa-chair"></i> Confirm Allot
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+  function showToast(message, type="success"){
+    const box = document.getElementById("toastBox");
+    const msg = document.getElementById("toastMsg");
+    if(!box || !msg) return;
+
+    msg.textContent = message;
+
+    if(type === "success"){
+      msg.style.borderColor = "#bbf7d0";
+      msg.style.background  = "#f0fdf4";
+      msg.style.color       = "#166534";
+    }else if(type === "warning"){
+      msg.style.borderColor = "#fed7aa";
+      msg.style.background  = "#fff7ed";
+      msg.style.color       = "#9a3412";
+    }else{
+      msg.style.borderColor = "#fecaca";
+      msg.style.background  = "#fff5f5";
+      msg.style.color       = "#b91c1c";
+    }
+
+    box.style.display = "block";
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(()=>{ box.style.display="none"; }, 3500);
+  }
+
+  function updateSelectedCount(){
+    const el = document.getElementById("selectedCount");
+    if(!el) return;
+    el.textContent = document.querySelectorAll(".stchk:checked").length;
+  }
+
+  function syncToGetForm(){
+    const reg    = document.getElementById("fReg")?.value?.trim() || "";
+    const degree = document.getElementById("fDegree")?.value?.trim() || "";
+    const dept   = document.getElementById("fDept")?.value?.trim() || "";
+    const batch  = document.getElementById("fBatch")?.value?.trim() || "";
+    const year   = document.getElementById("fYear")?.value?.trim() || "";
+    const sem    = document.getElementById("fSem")?.value?.trim() || "";
+    const exam   = (document.getElementById("fExam")?.value?.trim() || "SEMESTER");
+    const hall   = document.getElementById("hallSelect")?.value?.trim() || "";
+
+    document.getElementById("gReg").value = reg;
+    document.getElementById("gDegree").value = degree;
+    document.getElementById("gDept").value = dept;
+    document.getElementById("gBatch").value = batch;
+    document.getElementById("gYear").value = year;
+    document.getElementById("gSem").value = sem;
+    document.getElementById("gExam").value = exam;
+    document.getElementById("gHall").value = hall;
+
+    document.getElementById("gDbAlias").value = "{{ selected_db_alias }}";
+    const url = new URL(window.location.href);
+    document.getElementById("gShowSeats").value = (url.searchParams.get("show_seats") === "1") ? "1" : "";
+  }
+
+  function syncHiddenPostInputs(){
+    const reg    = document.getElementById("fReg")?.value?.trim() || "";
+    const degree = document.getElementById("fDegree")?.value?.trim() || "";
+    const dept   = document.getElementById("fDept")?.value?.trim() || "";
+    const batch  = document.getElementById("fBatch")?.value?.trim() || "";
+    const year   = document.getElementById("fYear")?.value?.trim() || "";
+    const sem    = document.getElementById("fSem")?.value?.trim() || "";
+    const exam   = (document.getElementById("fExam")?.value?.trim() || "SEMESTER");
+    const hall   = document.getElementById("hallSelect")?.value?.trim() || "";
+
+    document.getElementById("hReg").value  = reg;
+    document.getElementById("hDept").value = dept;
+    document.getElementById("hDegree").value = degree;
+    document.getElementById("hBatch").value = batch;
+    document.getElementById("hYear").value = year;
+    document.getElementById("hSem").value  = sem;
+    document.getElementById("hExam").value = exam;
+
+    document.getElementById("rhRegTop").value  = reg;
+    document.getElementById("rhDeptTop").value = dept;
+    document.getElementById("rhDegreeTop").value = degree;
+    document.getElementById("rhBatchTop").value = batch;
+    document.getElementById("rhYearTop").value = year;
+    document.getElementById("rhSemTop").value  = sem;
+    document.getElementById("rhExamTop").value = exam;
+    document.getElementById("rhHallTop").value = hall;
+
+    document.getElementById("hDbAlias").value = "{{ selected_db_alias }}";
+    document.getElementById("rhDbAliasTop").value = "{{ selected_db_alias }}";
+  }
+
+  function seatNoPattern(rowIdx, colIdx){
+    const base = (colIdx * 5) + 1;
+    const isEvenCol = (colIdx % 2 === 0);
+    return isEvenCol ? (base + rowIdx) : (base + (4 - rowIdx));
+  }
+
+  function renderSeatsFromHidden(){
+    const grid = document.getElementById("seatGrid");
+    const seatData = document.getElementById("seatData");
+    if(!grid || !seatData) return;
+
+    grid.innerHTML = "";
+    const lookup = {};
+    seatData.querySelectorAll("tr[data-row][data-col]").forEach(tr=>{
+      lookup[`${tr.getAttribute("data-row")}-${tr.getAttribute("data-col")}`] = {
+        seat: tr.getAttribute("data-seat"),
+        reg: tr.getAttribute("data-reg"),
+        dept: tr.getAttribute("data-dept"),
+      };
+    });
+
+    for(let r=1; r<=5; r++){
+      for(let c=1; c<=5; c++){
+        const seatNo = seatNoPattern(r-1, c-1);
+        const info = lookup[`${r}-${c}`];
+
+        const card = document.createElement("div");
+        card.className = "seat-card" + (info ? " filled" : "");
+
+        if(info){
+          const shownSeat = (info.seat && info.seat !== "None") ? info.seat : seatNo;
+          card.innerHTML = `
+            <div class="seat-title">Seat ${shownSeat}</div>
+            <div class="regno">${info.reg || "-"}</div>
+            <div class="dept">${info.dept || "-"}</div>
+          `;
+        }else{
+          card.innerHTML = `
+            <div class="seat-title">Seat ${seatNo}</div>
+            <div class="seat-sub">Empty</div>
+          `;
+        }
+        grid.appendChild(card);
+      }
+    }
+  }
+
+  const degSelect = document.getElementById("fDegree");
+  if(degSelect){
+    degSelect.addEventListener("change", function(){
+      document.getElementById("fDept").value = "";
+      const url = new URL(window.location.href);
+
+      if(this.value) url.searchParams.set("degree_id", this.value);
+      else url.searchParams.delete("degree_id");
+
+      url.searchParams.delete("department_id");
+      url.searchParams.delete("load");
+      url.searchParams.delete("show_seats");
+
+      url.searchParams.set("db_alias", "{{ selected_db_alias }}");
+      window.location.href = url.toString();
+    });
+  }
+
+  const btnProceed = document.getElementById("btnProceed");
+  if(btnProceed){
+    btnProceed.addEventListener("click", function(){
+      const reg   = document.getElementById("fReg").value.trim();
+      const batch = document.getElementById("fBatch").value.trim();
+      const year  = document.getElementById("fYear").value.trim();
+      const sem   = document.getElementById("fSem").value.trim();
+
+      if(!reg || !batch || !year || !sem){
+        showToast("Select Regulation + Batch + Year + Semester.", "warning");
+        return;
+      }
+
+      syncToGetForm();
+      document.getElementById("gLoad").value = "1";
+      document.getElementById("filterForm").submit();
+    });
+  }
+
+  const btnShow = document.getElementById("btnShowSeating");
+  if(btnShow){
+    btnShow.addEventListener("click", function(){
+      const reg   = document.getElementById("fReg").value.trim();
+      const batch = document.getElementById("fBatch").value.trim();
+      const year  = document.getElementById("fYear").value.trim();
+      const sem   = document.getElementById("fSem").value.trim();
+
+      if(!reg || !batch || !year || !sem){
+        showToast("Select Regulation + Batch + Year + Semester.", "warning");
+        return;
+      }
+
+      syncToGetForm();
+      document.getElementById("gLoad").value = "1";
+      document.getElementById("gShowSeats").value = "1";
+      document.getElementById("filterForm").submit();
+    });
+  }
+
+  const btnSelAll = document.getElementById("btnSelectAll");
+  if(btnSelAll){
+    btnSelAll.addEventListener("click", function(){
+      document.querySelectorAll(".stchk").forEach(cb => cb.checked = true);
+      updateSelectedCount();
+    });
+  }
+
+  const btnClear = document.getElementById("btnClearUI");
+  if(btnClear){
+    btnClear.addEventListener("click", function(){
+      const tbody = document.getElementById("studentsTbody");
+      tbody.innerHTML = `
+        <tr id="studentsPlaceholderRow">
+          <td colspan="6" class="text-muted">
+            Student list cleared. Click <b>Proceed (Load Students)</b> to load again.
+          </td>
+        </tr>
+      `;
+      const sc = document.getElementById("selectedCount");
+      if(sc) sc.textContent = "0";
+      showToast("Student list cleared. Seating not changed.", "warning");
+    });
+  }
+
+  document.addEventListener("change", function(e){
+    if(e.target && e.target.classList && e.target.classList.contains("stchk")){
+      updateSelectedCount();
+    }
+  });
+  updateSelectedCount();
+
+  renderSeatsFromHidden();
+
+  const removeModal = document.getElementById("removeModal");
+  const rmHallName = document.getElementById("rmHallName");
+
+  function openRemoveModal(){
+    syncHiddenPostInputs();
+    const sel = document.getElementById("hallSelect");
+    rmHallName.textContent = sel?.selectedOptions?.[0]?.textContent?.trim() || "-";
+    removeModal.style.display = "flex";
+  }
+  function closeRemoveModal(){ removeModal.style.display = "none"; }
+
+  const btnRemoveOpen = document.getElementById("btnRemoveOpen");
+  if(btnRemoveOpen){
+    btnRemoveOpen.addEventListener("click", function(){
+      const hall = document.getElementById("hallSelect").value.trim();
+      if(!hall){
+        showToast("Please select hall to remove allotment.", "warning");
+        return;
+      }
+      openRemoveModal();
+    });
+  }
+
+  document.getElementById("rmCancel")?.addEventListener("click", closeRemoveModal);
+  removeModal?.addEventListener("click", function(e){ if(e.target === removeModal) closeRemoveModal(); });
+
+  document.getElementById("rmConfirm")?.addEventListener("click", function(){
+    syncHiddenPostInputs();
+    showToast("Removing allotment...", "warning");
+    document.getElementById("removeAllotFormTop").submit();
+  });
+
+  const allotModal = document.getElementById("allotModal");
+  const amHallName = document.getElementById("amHallName");
+  const amCount = document.getElementById("amCount");
+
+  function openAllotModal(){
+    syncHiddenPostInputs();
+    const sel = document.getElementById("hallSelect");
+    const hallText = sel?.selectedOptions?.[0]?.textContent?.trim() || "-";
+    const selected = document.querySelectorAll(".stchk:checked").length;
+    amHallName.textContent = hallText;
+    amCount.textContent = selected;
+    allotModal.style.display = "flex";
+  }
+  function closeAllotModal(){ allotModal.style.display = "none"; }
+
+  document.getElementById("btnAllotOpen")?.addEventListener("click", function(){
+    const reg  = document.getElementById("fReg").value.trim();
+    const hall = document.getElementById("hallSelect").value.trim();
+    const selected = document.querySelectorAll(".stchk:checked").length;
+
+    if(!reg){
+      showToast("Please select Regulation.", "warning");
+      return;
+    }
+    if(!hall){
+      showToast("Please select hall.", "warning");
+      return;
+    }
+    if(selected === 0){
+      showToast("Please select at least one student.", "warning");
+      return;
+    }
+    openAllotModal();
+  });
+
+  document.getElementById("amCancel")?.addEventListener("click", closeAllotModal);
+  allotModal?.addEventListener("click", function(e){ if(e.target === allotModal) closeAllotModal(); });
+
+  let submitting = false;
+  document.getElementById("amConfirm")?.addEventListener("click", function(){
+    if(submitting) return;
+    submitting = true;
+    this.disabled = true;
+    this.textContent = "Allotting...";
+    syncHiddenPostInputs();
+    showToast("✅ Allotting selected students...", "success");
+    document.getElementById("allotForm").submit();
+  });
+
+  document.getElementById("btnPdf")?.addEventListener("click", function(){
+    const reg  = document.getElementById("fReg").value.trim();
+    const batch= document.getElementById("fBatch").value.trim();
+    const year = document.getElementById("fYear").value.trim();
+    const sem  = document.getElementById("fSem").value.trim();
+    const exam = (document.getElementById("fExam").value.trim() || "SEMESTER");
+    const hall = document.getElementById("hallSelect").value.trim();
+
+    if(!hall){
+      showToast("Please select hall to open PDF.", "warning");
+      return;
+    }
+
+    const p = new URLSearchParams();
+    p.set("hall_id", hall);
+    if(reg)  p.set("regulation", reg);
+    if(batch)p.set("batch", batch);
+    if(year) p.set("year", year);
+    if(sem)  p.set("semester", sem);
+    if(exam) p.set("exam_type", exam);
+
+    const url = "{% url 'seating_arrangement_pdf' %}?" + p.toString();
+    window.open(url, "_blank");
+  });
+
+  document.getElementById("btnHallStatementPdf")?.addEventListener("click", function(){
+    const reg  = document.getElementById("fReg").value.trim();
+    const batch= document.getElementById("fBatch").value.trim();
+    const year = document.getElementById("fYear").value.trim();
+    const sem  = document.getElementById("fSem").value.trim();
+    const exam = (document.getElementById("fExam").value.trim() || "SEMESTER");
+
+    const p = new URLSearchParams();
+    if(reg)  p.set("regulation", reg);
+    if(batch)p.set("batch", batch);
+    if(year) p.set("year", year);
+    if(sem)  p.set("semester", sem);
+    if(exam) p.set("exam_type", exam);
+
+    {% comment %} const url = "{% url 'hall_arrangement_statement_pdf' %}?" + p.toString(); {% endcomment %}
+    window.open(url, "_blank");
+  });
+
+  document.getElementById("btnAbsPdf")?.addEventListener("click", function(){
+    const reg  = document.getElementById("fReg").value.trim();
+    const batch= document.getElementById("fBatch").value.trim();
+    const year = document.getElementById("fYear").value.trim();
+    const sem  = document.getElementById("fSem").value.trim();
+    const exam = (document.getElementById("fExam").value.trim() || "SEMESTER");
+
+    const p = new URLSearchParams();
+    if(reg)  p.set("regulation", reg);
+    if(batch)p.set("batch", batch);
+    if(year) p.set("year", year);
+    if(sem)  p.set("semester", sem);
+    if(exam) p.set("exam_type", exam);
+
+    const url = "{% url 'sem_absentees_statement_pdf' %}?" + p.toString();
+    window.open(url, "_blank");
+  });
+
+  document.getElementById("btnAbsSummaryPdf")?.addEventListener("click", function(){
+    const reg  = document.getElementById("fReg").value.trim();
+    const batch= document.getElementById("fBatch").value.trim();
+    const year = document.getElementById("fYear").value.trim();
+    const sem  = document.getElementById("fSem").value.trim();
+    const exam = (document.getElementById("fExam").value.trim() || "SEMESTER");
+
+    const p = new URLSearchParams();
+    if(reg)  p.set("regulation", reg);
+    if(batch)p.set("batch", batch);
+    if(year) p.set("year", year);
+    if(sem)  p.set("semester", sem);
+    if(exam) p.set("exam_type", exam);
+
+    const url = "{% url 'sem_absentees_statement_summary_pdf' %}?" + p.toString();
+    window.open(url, "_blank");
+  });
+
+  document.getElementById("btnDeptWisePdf")?.addEventListener("click", function(){
+    const reg   = document.getElementById("fReg").value.trim();
+    const degree= document.getElementById("fDegree").value.trim();
+    const dept  = document.getElementById("fDept").value.trim();
+    const batch = document.getElementById("fBatch").value.trim();
+    const year  = document.getElementById("fYear").value.trim();
+    const sem   = document.getElementById("fSem").value.trim();
+    const exam  = (document.getElementById("fExam").value.trim() || "SEMESTER");
+    const hall  = document.getElementById("hallSelect").value.trim();
+
+    if(!hall){
+      showToast("Please select hall to open Dept Wise PDF.", "warning");
+      return;
+    }
+
+    const p = new URLSearchParams();
+    p.set("hall_id", hall);
+    if(reg)    p.set("regulation", reg);
+    if(degree) p.set("degree", degree);
+    if(dept)   p.set("department_id", dept);
+    if(batch)  p.set("batch", batch);
+    if(year)   p.set("year", year);
+    if(sem)    p.set("semester", sem);
+    if(exam)   p.set("exam_type", exam);
+
+    {% comment %} const url = "{% url 'department_wise_attendance_pdf' %}?" + p.toString(); {% endcomment %}
+    window.open(url, "_blank");
+  });
+
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0 text-secondary">
+            <i class="fas fa-user-edit me-2"></i> Edit Student/User Account
+        </h2>
+        <a href="{% url 'student_user_accounts' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Accounts
+        </a>
+    </div>
+
+    <!-- Messages/Alerts -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-primary text-white py-3">
+            <h5 class="mb-0">Account Details</h5>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="row g-4">
+                    <!-- Editable Fields Column -->
+                    <div class="col-lg-6">
+                        <h6 class="mb-3 pb-2 border-bottom">Editable Information</h6>
+                        
+                        <!-- Username -->
+                        <div class="mb-3">
+                            <label for="username" class="form-label fw-semibold">Username <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required aria-required="true">
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required aria-required="true">
+                        </div>
+                        
+                        <!-- Department -->
+                        <div class="mb-3">
+                            <label for="department" class="form-label fw-semibold">Department</label>
+                            <select id="department" name="department" class="form-select">
+                                <option value="">Select Department</option>
+                                {% for dept in departments %}
+                                    <option value="{{ dept.id }}" {% if dept.id == user.Department_id %}selected{% endif %}>
+                                        {{ dept.Department }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Role -->
+                        <div class="mb-3">
+                            <label for="role" class="form-label fw-semibold">Role</label>
+                            <select id="role" name="role" class="form-select">
+                                <option value="">Select Role</option>
+                                {% for r in roles %}
+                                    <option value="{{ r.id }}" {% if r.id == user.role_id %}selected{% endif %}>
+                                        {{ r.role }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Profile Image -->
+                        <div class="mb-3">
+                            <label for="profile_img" class="form-label fw-semibold">Profile Image</label>
+                            {% if user.profile_img %}
+                                <div class="mb-2">
+                                    <img src="{{ user.profile_img.url }}" alt="Profile Image" class="img-thumbnail rounded-circle" style="height: 100px; width: 100px; object-fit: cover;">
+                                </div>
+                            {% endif %}
+                            <input type="file" class="form-control" id="profile_img" name="profile_img" accept="image/*">
+                        </div>
+
+                        <!-- Is Active Checkbox -->
+                        <div class="mb-3">
+                            <label for="is_active" class="form-label fw-semibold">Account Status</label>
+                            <div class="custom-switch">
+                                <input type="checkbox" class="custom-switch-input" id="is_active" name="is_active" {% if user.is_active %}checked{% endif %}>
+                                <label class="custom-switch-label" for="is_active">
+                                    <span class="custom-switch-text">Active</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Read-only Fields Column -->
+                    <div class="col-lg-6">
+                        <h6 class="mb-3 pb-2 border-bottom">System Information (Read-Only)</h6>
+                        
+                        <!-- Employee ID -->
+                        <div class="mb-3">
+                            <label for="employee_id" class="form-label fw-semibold text-muted">Register No</label>
+                            <input type="text" class="form-control non-editable" id="employee_id" value="{{ user.Employee_id }}" readonly>
+                        </div>
+                        
+                        <!-- Last Login -->
+                        <div class="mb-3">
+                            <label for="last_login" class="form-label fw-semibold text-muted">Last Login</label>
+                            <input type="text" class="form-control non-editable" id="last_login" value="{{ user.last_login|default:'Never' }}" readonly>
+                        </div>
+                        
+                        <!-- Date Joined -->
+                        <div class="mb-3">
+                            <label for="date_joined" class="form-label fw-semibold text-muted">Date Joined</label>
+                            <input type="text" class="form-control non-editable" id="date_joined" value="{{ user.date_joined }}" readonly>
+                        </div>
+                        
+                        <!-- Unique ID -->
+                        <div class="mb-3">
+                            <label for="unique_id" class="form-label fw-semibold text-muted">Unique ID</label>
+                            <input type="text" class="form-control non-editable" id="unique_id" value="{{ user.unique_id }}" readonly>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="d-flex gap-2 mt-4 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-save me-1"></i> Update Account
+                    </button>
+                    <a href="{% url 'student_user_accounts' %}" class="btn btn-outline-secondary px-4">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #0d6efd; /* Professional teal-blue */
+        --secondary-color: #6c757d; /* Muted gray */
+        --background-color: #f5f7fa; /* Light off-white */
+        --card-bg: #ffffff; /* White card background */
+        --non-editable-bg: #e9ecef; /* Light gray for non-editable fields */
+        --border-color: #dee2e6; /* Subtle border */
+        --text-color: #343a40; /* Dark gray text */
+        --accent-color: #28a745; /* Green for checkbox */
+    }
+
+    body {
+        background-color: var(--background-color);
+        color: var(--text-color);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    .container {
+        max-width: 1200px;
+    }
+
+    .card {
+        background-color: var(--card-bg);
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-header {
+        background-color: var(--primary-color);
+        border-radius: 0.75rem 0.75rem 0 0;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-color);
+    }
+
+    .form-control, .form-select {
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-color);
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(0, 86, 112, 0.25);
+    }
+
+    .non-editable {
+        background-color: var(--non-editable-bg) !important;
+        border: 1px solid var(--border-color);
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .border-bottom {
+        border-color: var(--border-color) !important;
+    }
+
+    .img-thumbnail.rounded-circle {
+        border: 2px solid var(--border-color);
+        transition: border-color 0.3s ease;
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        border-radius: 0.5rem;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #00465c;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-secondary {
+        border-radius: 0.5rem;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: var(--secondary-color);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .alert {
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Custom Checkbox Toggle Switch */
+    .custom-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+
+    .custom-switch-input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .custom-switch-label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 50px;
+        height: 24px;
+        background-color: #ccc;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .custom-switch-label:before {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: #fff;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .custom-switch-input:checked + .custom-switch-label {
+        background-color: var(--accent-color);
+    }
+
+    .custom-switch-input:checked + .custom-switch-label:before {
+        transform: translateX(26px);
+        background-color: #fff;
+    }
+
+    .custom-switch-label:hover {
+        background-color: #b3b3b3;
+    }
+
+    .custom-switch-input:checked + .custom-switch-label:hover {
+        background-color: #218838;
+    }
+
+    .custom-switch-text {
+        position: absolute;
+        left: 60px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.9rem;
+        color: var(--text-color);
+    }
+
+    /* Hover Effects for Form Elements */
+    .form-control:hover, .form-select:hover {
+        border-color: var(--primary-color);
+    }
+</style>
+
+<script>
+    // Image Preview for Profile Image Upload
+    document.querySelector('#profile_img').addEventListener('change', function (e) {
+        const [file] = e.target.files;
+        if (file) {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.className = 'img-thumbnail rounded-circle mb-2';
+            img.style = 'height: 100px; width: 100px; object-fit: cover;';
+            const existingImg = document.querySelector('.img-thumbnail');
+            if (existingImg) existingImg.remove();
+            e.target.parentElement.insertBefore(img, e.target);
+        }
+    });
+
+    // Confirmation for Deactivating Account
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const isActive = document.querySelector('#is_active').checked;
+        if (!isActive && {{ user.is_active|lower }} === 'true') {
+            if (!confirm('Are you sure you want to deactivate this account?')) {
+                e.preventDefault();
+            }
+        }
+    });
+</script>
+{% endblock %}

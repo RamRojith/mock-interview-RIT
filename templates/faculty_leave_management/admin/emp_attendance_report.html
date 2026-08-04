@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+{% load static flm_tags %}
+{% block content %}
+<style>
+.rpt-wrap{background:#f0f4f8;min-height:100vh;padding:16px 0;}
+.rpt-header{background:linear-gradient(135deg,#1a2a4a,#1e3a6e);color:#fff;border-radius:12px;padding:14px 20px;margin-bottom:12px;}
+.rpt-header h2{margin:0 0 2px;font-size:19px;font-weight:700;}
+.rpt-header p{margin:0;font-size:11.5px;opacity:.8;}
+.filter-box{background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.07);padding:12px 16px;margin-bottom:10px;}
+.filter-box .form-control,.filter-box .form-select{border-radius:6px;font-size:12px;min-height:32px;border:1px solid #dbe3ef;}
+.btn-go{background:#1565c0;color:#fff;border:none;border-radius:6px;min-height:32px;font-size:12px;font-weight:600;padding:0 12px;}
+.btn-rst{background:#f1f5f9;color:#374151;border:1px solid #dbe3ef;border-radius:6px;min-height:32px;font-size:12px;font-weight:600;padding:0 10px;}
+.tbl-wrap{background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.07);overflow:auto;}
+.att-table{border-collapse:collapse;font-size:11px;white-space:nowrap;}
+.att-table th,.att-table td{border:1px solid #c8d3e0;padding:3px 5px;text-align:center;}
+.att-table thead tr.hdr1 th{background:#1a2a4a;color:#fff;font-weight:700;font-size:11px;}
+.att-table thead tr.hdr2 th{background:#243b5e;color:#cbd5e1;font-weight:500;font-size:10px;}
+.att-table tbody tr:nth-child(even){background:#f8fafc;}
+.att-table tbody tr:hover{background:#eef4ff;}
+td.emp-name{text-align:left;font-weight:600;color:#1e3a5f;min-width:140px;padding-left:7px;}
+td.emp-id{color:#64748b;font-size:10px;min-width:42px;}
+/* Day cells */
+.dc-P  {background:#dcfce7;color:#166534;font-weight:700;}
+.dc-A  {background:#fee2e2;color:#b91c1c;font-weight:700;}
+.dc-H  {background:#fef9c3;color:#854d0e;font-weight:700;}
+.dc-L  {background:#dbeafe;color:#1e40af;font-weight:700;}
+.dc-SP {background:#fef3c7;color:#92400e;font-weight:600;}
+.dc-SH {background:#ffedd5;color:#9a3412;font-weight:700;}
+.dc-MO {background:#fee2e2;color:#991b1b;font-weight:700;}
+.dc-mix{background:#ede9fe;color:#5b21b6;font-weight:700;}
+.dc-fn {background:#fde68a;color:#78350f;font-weight:700;}
+.dc-an {background:#bfdbfe;color:#1e3a8a;font-weight:700;}
+.dc-ccl{background:#d1fae5;color:#065f46;font-weight:700;}
+.dc-per{background:#fce7f3;color:#9d174d;font-weight:700;}  /* PER/P, P/PER */
+/* Summary */
+td.sum{background:#f1f5f9;}
+.sv-days{font-weight:700;color:#1e3a5f;font-size:12px;}
+.sv-p   {font-weight:800;color:#16a34a;font-size:13px;}
+.sv-a   {font-weight:800;color:#dc2626;font-size:12px;}
+.sv-h   {font-weight:700;color:#d97706;font-size:12px;}
+.sv-s   {font-weight:600;color:#64748b;font-size:12px;}
+.sv-lv  {font-weight:700;color:#374151;font-size:11px;}
+.sv-perm{font-weight:600;color:#7c3aed;font-size:12px;}
+.sv-wl  {font-weight:600;color:#0369a1;font-size:12px;}
+.sv-hol {font-weight:600;color:#b45309;font-size:12px;}
+.err-box{background:#fff5f5;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;color:#991b1b;font-size:12px;margin-bottom:10px;}
+.warn-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px;color:#9a3412;font-size:12px;margin-bottom:10px;}
+.dbg-bar{font-size:11px;color:#64748b;margin-bottom:8px;}
+.formula-box{background:#fff;border:1px solid #dbe3ef;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.05);padding:12px 16px;margin-bottom:10px;}
+.formula-box h3{margin:0 0 8px;font-size:13px;font-weight:700;color:#1e3a5f;}
+.formula-box ul{margin:0;padding-left:16px;font-size:11px;color:#334155;line-height:1.7;}
+.formula-box code{background:#eff6ff;color:#1d4ed8;padding:1px 5px;border-radius:4px;font-size:10.5px;}
+.legend{display:flex;flex-wrap:wrap;gap:7px;font-size:11px;margin-bottom:8px;}
+.leg-item{display:flex;align-items:center;gap:3px;}
+.leg-dot{width:12px;height:12px;border-radius:2px;flex-shrink:0;}
+/* Landing page styles */
+.landing-card{background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:32px;max-width:900px;margin:40px auto;}
+.landing-card h2{font-size:24px;font-weight:700;color:#1a2a4a;margin-bottom:8px;}
+.landing-card p{color:#64748b;margin-bottom:24px;}
+</style>
+
+{% if show_landing %}
+<!-- ========================================
+     LANDING PAGE - Filter Form
+     ======================================== -->
+<div class="rpt-wrap">
+  <div class="container-fluid px-3">
+    <div class="landing-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <h2><i class="fas fa-calendar-alt me-2"></i>Employee Attendance Report</h2>
+          <p>Select filters to generate the attendance report</p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="{% url 'employee_mess_bills' %}" class="btn btn-sm" style="background:#2e6e70;color:#fff;font-weight:600;white-space:nowrap;">
+            <i class="fas fa-utensils me-1"></i>Mess Bills
+          </a>
+          <a href="{% url 'employee_punch_details' %}" class="btn btn-sm" style="background:#2e6e70;color:#fff;font-weight:600;white-space:nowrap;">
+            <i class="fas fa-fingerprint me-1"></i>Punch Details
+          </a>
+        </div>
+      </div>
+      
+      <form method="get" action="">
+        <input type="hidden" name="view_report" value="1">
+        
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-bold">From Date *</label>
+            <input type="date" name="from_date" class="form-control" value="{{ default_from_date }}" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">To Date *</label>
+            <input type="date" name="to_date" class="form-control" value="{{ default_to_date }}" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Department</label>
+            <select name="dept_id" class="form-select">
+              <option value="">All Departments</option>
+              {% for d in departments %}
+              <option value="{{ d.id }}">{{ d.Department }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Category</label>
+            <select name="category_id" class="form-select">
+              <option value="">All Categories</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}">{{ cat.category_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Allowed Permissions</label>
+            <input type="number" name="allowed_permissions" class="form-control" value="2" min="0" max="10" step="any">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Entry Time <small class="text-muted fw-normal">(no-shift users)</small></label>
+            <input type="time" name="entry_time" class="form-control" value="09:00">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Exit Time <small class="text-muted fw-normal">(no-shift users)</small></label>
+            <input type="time" name="exit_time" class="form-control" value="16:30">
+          </div>
+        </div>
+        
+        <div class="mt-4 d-flex gap-2">
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-chart-bar me-2"></i>Generate Report
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<!-- ========================================
+     REPORT VIEW PAGE
+     ======================================== -->
+<div class="rpt-wrap">
+<div class="container-fluid px-3">
+
+  <div class="rpt-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+      <h2><i class="fas fa-table me-2"></i>Attendance Report</h2>
+      <p>{{ period_start|date:"d M Y" }} &mdash; {{ period_end|date:"d M Y" }} &nbsp;|&nbsp; AY: {{ academic_year }}</p>
+    </div>
+    <div style="font-size:12px;opacity:.8;"><i class="fas fa-users me-1"></i>{{ report_rows|length }} emp</div>
+  </div>
+
+  {% if error_message %}
+  <div class="err-box"><i class="fas fa-exclamation-circle me-1"></i><pre style="margin:0;font-size:10px;white-space:pre-wrap;">{{ error_message }}</pre></div>
+  {% endif %}
+  {% if punch_errors %}
+  <div class="warn-box"><strong>Punch DB warnings:</strong>{% for e in punch_errors %}<div style="font-size:11px;">{{ e }}</div>{% endfor %}</div>
+  {% endif %}
+  <div class="dbg-bar"><i class="fas fa-info-circle me-1"></i>Punches: <strong>{{ debug_punch_count }}</strong> &nbsp;|&nbsp; Role map: <strong>{{ debug_role_map_size }}</strong> &nbsp;|&nbsp; Period: {{ period_days|length }} days &nbsp;|&nbsp; Leave types: <strong>{{ leave_types|length }}</strong></div>
+
+  <!-- DEBUG PANEL -->
+  {% if report_rows %}
+  {% if error_message or punch_errors %}
+    {% with r=report_rows.0 %}
+    <div style="background:#1e293b;color:#e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:12px;font-size:11px;font-family:monospace;overflow:auto;line-height:1.8;">
+      <div style="color:#94a3b8;font-weight:700;margin-bottom:6px;">DEBUG - {{ r.emp.name }} (ID: {{ r.emp.faculty_id }})</div>
+      <div><span style="color:#7dd3fc;">present:</span> {{ r.present }} &nbsp;
+           <span style="color:#7dd3fc;">absent:</span> {{ r.absent }} &nbsp;
+           <span style="color:#7dd3fc;">holidays:</span> {{ r.holidays }} &nbsp;
+           <span style="color:#7dd3fc;">working_days:</span> {{ r.working_days }} &nbsp;
+           <span style="color:#7dd3fc;">worked:</span> {{ r.worked }} &nbsp;
+           <span style="color:#7dd3fc;">permission:</span> {{ r.permission }}
+      </div>
+      <div style="margin-top:4px;"><span style="color:#86efac;">leave_used:</span>
+        {% for k,v in r.leave_used.items %}<span style="color:#bbf7d0;">{{ k }}</span>=<strong>{{ v }}</strong> {% empty %}<em style="color:#64748b;">(empty)</em>{% endfor %}
+      </div>
+      <div style="margin-top:4px;"><span style="color:#fbbf24;">leave_types (context):</span>
+        {% for lt in leave_types %}<span style="color:#fde68a;">{{ lt.code }}</span>({{ lt.name }}) {% endfor %}
+      </div>
+      <div style="margin-top:4px;"><span style="color:#c4b5fd;">balances:</span>
+        {% for k,v in r.balances.items %}<span style="color:#ddd6fe;">{{ k }}</span>=av:{{ v.available }}/us:{{ v.used }} {% empty %}<em style="color:#64748b;">(empty)</em>{% endfor %}
+      </div>
+      <div style="margin-top:4px;"><span style="color:#f9a8d4;">ccl:</span> claimed={{ r.ccl_claimed }} used={{ r.ccl_used }} remaining={{ r.ccl_remaining }}</div>
+      <div style="margin-top:4px;"><span style="color:#fb923c;">Employee_Holidays role_ids in period:</span> {{ debug_holiday_role_ids }}</div>
+      <div style="margin-top:4px;"><span style="color:#fb923c;">role_id_map (first 10):</span>
+        {% for fid,rid in debug_role_id_map.items %}fac{{ fid }}->role{{ rid }} {% endfor %}
+      </div>
+      <div style="margin-top:4px;"><span style="color:#fdba74;">day cells:</span>
+        {% for cell in r.day_cells %}<span style="color:#fed7aa;">{{ cell.date|date:"d" }}</span>:{{ cell.status }} {% endfor %}
+      </div>
+    </div>
+    {% endwith %}
+  {% endif %}
+  {% endif %}
+
+  <!-- Filters & Actions -->
+  <div class="filter-box">
+    <form method="get" class="row g-2 align-items-end">
+      <input type="hidden" name="view_report" value="1">
+      <input type="hidden" name="allowed_permissions" value="{{ allowed_permissions }}">
+      <input type="hidden" name="entry_time" value="{{ entry_time }}">
+      <input type="hidden" name="exit_time" value="{{ exit_time }}">
+
+      <div class="col-6 col-md-2">
+        <label class="form-label mb-1" style="font-size:11px;font-weight:600;">From</label>
+        <input type="date" name="from_date" value="{{ selected_from_date }}" class="form-control">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label mb-1" style="font-size:11px;font-weight:600;">To</label>
+        <input type="date" name="to_date" value="{{ selected_to_date }}" class="form-control">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label mb-1" style="font-size:11px;font-weight:600;">Department</label>
+        <select name="dept_id" class="form-select">
+          <option value="">All Departments</option>
+          {% for d in departments %}<option value="{{ d.id }}"{% if selected_dept == d.id|stringformat:"s" %} selected{% endif %}>{{ d.Department }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label mb-1" style="font-size:11px;font-weight:600;">Category</label>
+        <select name="category_id" class="form-select">
+          <option value="">All Categories</option>
+          {% for cat in categories %}<option value="{{ cat.id }}"{% if selected_category == cat.id|stringformat:"s" %} selected{% endif %}>{{ cat.category_name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-1" style="font-size:11px;font-weight:600;">Search</label>
+        <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Name / ID">
+      </div>
+      <div class="col-auto"><button type="submit" class="btn-go"><i class="fas fa-search me-1"></i>Filter</button></div>
+      <div class="col-auto"><a href="{% url 'employee_attandance_report' %}" class="btn-rst"><i class="fas fa-undo me-1"></i>New Report</a></div>
+    </form>
+    
+    <div class="mt-2 d-flex gap-2 flex-wrap">
+      <form method="get" action="{% url 'emp_attendance_export' %}" target="_blank" style="display:inline;">
+        <input type="hidden" name="dept_id" value="{{ selected_dept }}">
+        <input type="hidden" name="category_id" value="{{ selected_category }}">
+        <input type="hidden" name="search" value="{{ search }}">
+        <input type="hidden" name="from_date" value="{{ period_start|date:'Y-m-d' }}">
+        <input type="hidden" name="to_date" value="{{ period_end|date:'Y-m-d' }}">
+        <input type="hidden" name="perm_allowed" value="{{ allowed_permissions }}">
+        <input type="hidden" name="entry_time" value="{{ entry_time }}">
+        <input type="hidden" name="exit_time" value="{{ exit_time }}">
+        <input type="hidden" name="fmt" value="excel">
+        <button type="submit" class="btn-rst" style="background:#f0fdf4;color:#166534;border-color:#86efac;">
+          <i class="fas fa-file-excel me-1"></i>Export Excel
+        </button>
+      </form>
+
+      <form method="get" action="{% url 'emp_attendance_export' %}" target="_blank" style="display:inline;">
+        <input type="hidden" name="dept_id" value="{{ selected_dept }}">
+        <input type="hidden" name="category_id" value="{{ selected_category }}">
+        <input type="hidden" name="search" value="{{ search }}">
+        <input type="hidden" name="from_date" value="{{ period_start|date:'Y-m-d' }}">
+        <input type="hidden" name="to_date" value="{{ period_end|date:'Y-m-d' }}">
+        <input type="hidden" name="perm_allowed" value="{{ allowed_permissions }}">
+        <input type="hidden" name="entry_time" value="{{ entry_time }}">
+        <input type="hidden" name="exit_time" value="{{ exit_time }}">
+        <input type="hidden" name="fmt" value="pdf">
+        <button type="submit" class="btn-rst" style="background:#fef3c7;color:#92400e;border-color:#fcd34d;">
+          <i class="fas fa-file-pdf me-1"></i>Export PDF
+        </button>
+      </form>
+      
+      <form method="post" action="{% url 'sync_ccl_from_erp' %}" style="display:inline;" onsubmit="return confirm('Sync ALL CCL &amp; leave records from ERP? This may take a while.');">
+        {% csrf_token %}
+        <input type="hidden" name="all" value="1">
+        <button type="submit" class="btn-rst" style="background:#e0f2fe;color:#0369a1;border-color:#7dd3fc;">
+          <i class="fas fa-sync-alt me-1"></i>Sync All CCL from ERP
+        </button>
+      </form>
+      
+      {% comment %} <form method="post" action="{% url 'bulk_approve_all_ccl' %}" style="display:inline;" onsubmit="return confirm('This will approve ALL pending CCL applications following the approval hierarchy. Are you sure?');">
+        {% csrf_token %}
+        <button type="submit" class="btn-rst" style="background:#dcfce7;color:#166534;border-color:#86efac;">
+          <i class="fas fa-check-double me-1"></i>Approve All CCL
+        </button>
+      </form> {% endcomment %}
+    </div>
+
+  <div class="formula-box">
+    <h3><i class="fas fa-calculator me-1"></i>Summary Formula</h3>
+    <ul>
+      <li><code>Present</code> = total present credit from day status. <code>P = 1</code>, <code>H/P</code> or <code>P/H = 0.5</code>, <code>P/CL</code> or <code>CL/P = 0.5</code>, <code>CCL = 1</code> (CCL applied on holiday overrides H).</li>
+      <li><code>Working Days</code> = total period days - holiday credit. Sunday = <code>1</code>, role holiday <code>H/F = 1</code>, <code>H/H = 0.5</code>.</li>
+      <li><code>Worked</code> = <code>CL + CCL + WL + OD + VL + ML + Present + Holiday</code>. AB and LOP are NOT subtracted (already excluded from Present). Minimum shown is <code>0</code>.</li>
+      <li><code>Permission</code> = count of permission days in the period. Full day = <code>1</code>, half day = <code>0.5</code>. Includes <code>PER/P</code>, <code>P/PER</code>, and approved <code>PER</code> leave entries.</li>
+      <li><code>WL</code> = total <code>WL</code> (Work from Home) leave days used in the selected period.</li>
+      <li><code>Holiday</code> = total holiday credit counted for the period.</li>
+    </ul>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:#dcfce7;border:1px solid #86efac;"></div>P (Present)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#fee2e2;border:1px solid #fca5a5;"></div>A (Absent)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#fef9c3;border:1px solid #fde047;"></div>H (Holiday)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#dbeafe;border:1px solid #93c5fd;"></div>Leave (Approved Leave)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#fef3c7;border:1px solid #fcd34d;"></div>SP (Single Punch)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#ffedd5;border:1px solid #fdba74;"></div>SH (Short Hours)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#fee2e2;border:1px solid #fca5a5;"></div>MO (Missing OUT)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#d1fae5;border:1px solid #6ee7b7;"></div>CCL (Worked on Holiday)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#fce7f3;border:1px solid #f9a8d4;"></div>PER/P | P/PER (Permission)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#fde68a;border:1px solid #f59e0b;"></div>H/* (Forenoon Holiday)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#bfdbfe;border:1px solid #60a5fa;"></div>*/H (Afternoon Holiday)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#ede9fe;border:1px solid #c4b5fd;"></div>P/Leave (Half Present / Half Leave)</div>
+  </div>
+
+  <!-- Table -->
+  <div class="tbl-wrap">
+    <table class="att-table">
+      <thead>
+        <tr class="hdr1">
+          <th rowspan="2">#</th>
+          <th rowspan="2">ID</th>
+          <th rowspan="2" style="text-align:left;min-width:140px;">Name</th>
+          <th rowspan="2" class="sum">Policy</th>
+          {% for d in period_days %}
+          <th>{{ d|date:"d" }}<br><span style="font-size:9px;opacity:.7;">{{ d|date:"D" }}</span></th>
+          {% endfor %}
+          <!-- Leave type columns - dynamic from LeaveType model -->
+          {% for lt in leave_types %}
+          <th rowspan="2" class="sum" title="{{ lt.name }}">{{ lt.code }}</th>
+          {% endfor %}
+          <!-- Summary columns -->
+          <th rowspan="2" class="sum">Present</th>
+          <th rowspan="2" class="sum">Working<br>Days</th>
+          <th rowspan="2" class="sum">Worked</th>
+          <th rowspan="2" class="sum">Permission</th>
+          <th rowspan="2" class="sum">WL</th>
+          <th rowspan="2" class="sum">Holiday</th>
+        </tr>
+        <tr class="hdr2">
+          {% for d in period_days %}
+          <th>{{ d|date:"M" }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in report_rows %}
+        <tr>
+          <td style="color:#94a3b8;font-size:10px;">{{ forloop.counter }}</td>
+          <td class="emp-id">{{ row.emp.faculty_id }}</td>
+          <td class="emp-name">{{ row.emp.name|default:"-" }}</td>
+          <td class="sum" style="font-size:10px;color:#475569;font-weight:700;">{{ row.policy_name }}</td>
+
+          {% for cell in row.day_cells %}
+          {% with s=cell.status %}
+          <td class="
+            {% if not s %}
+            {% elif s == 'P' %}dc-P
+            {% elif s == 'A' %}dc-A
+            {% elif s == 'H' %}dc-H
+            {% elif s == 'S' %}dc-H
+            {% elif s == 'SP' %}dc-SP
+            {% elif s == 'SH' %}dc-SH
+            {% elif s == 'MO' %}dc-MO
+            {% elif s == 'H/CCL' or s == 'CCL' or s == 'P/CCL' or s == 'H/CCL' or s == 'CCL/H' %}dc-ccl
+            {% elif s == 'PER/P' or s == 'P/PER' or s == 'PER/PER' %}dc-per
+            {% elif s|slice:":2" == 'H/' %}dc-fn
+            {% elif s|slice:"-2:" == '/H' %}dc-an
+            {% elif '/' in s %}dc-mix
+            {% else %}dc-L
+            {% endif %}
+          " title="{{ cell.date|date:'d M Y' }}">{{ s }}</td>
+          {% endwith %}
+          {% endfor %}
+
+          <!-- Leave used - dynamic loop -->
+          {% for lt in leave_types %}
+          {% with val=row.leave_used|get_item:lt.code %}
+          <td class="sum sv-lv">{% if val %}{{ val|floatformat:"-1" }}{% else %}0{% endif %}</td>
+          {% endwith %}
+          {% endfor %}
+
+          <!-- Summary -->
+          <td class="sum sv-p">{{ row.present|floatformat:"-1" }}</td>
+          <td class="sum sv-days">{{ row.working_days|floatformat:"-1" }}</td>
+          <td class="sum sv-days">{{ row.worked|floatformat:"-1" }}</td>
+          <td class="sum sv-perm">{{ row.permission|floatformat:"-1" }}</td>
+          <td class="sum sv-wl">{% with val=row.leave_used|get_item:"WL" %}{% if val %}{{ val|floatformat:"-1" }}{% else %}0{% endif %}{% endwith %}</td>
+          <td class="sum sv-hol">{{ row.holidays|floatformat:"-1" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="200" style="padding:36px;color:#94a3b8;text-align:center;"><i class="fas fa-inbox fa-2x d-block mb-2"></i>No records found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</div>
+{% endif %}
+{% endblock %}

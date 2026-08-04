@@ -1,0 +1,1588 @@
+{% load static %}
+{% load user_tags %}
+{% load fm_tags %}
+{% get_user_announcements 10 as announcements %}
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Faculty Operations Portal - Ramco Institute of Technology</title>
+
+      <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+      <script src="{% static 'bootstrap/js/bootstrap.bundle.js' %}"></script>
+      <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+      <link rel="website icon" type="png" href="{% static 'images/ritlogo.png' %}">
+      <link rel="stylesheet" href="{% static 'DataTables/datatables.min.css' %}">
+      <script src="{% static 'DataTables/datatables.min.js' %}"></script>
+      <link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+/>
+      <script src="{% static 'js/timer.js' %}"></script>
+      <script src="{% static 'js/scripts.js' %}"></script>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+      {% include "chatbot/styles.html" %}
+
+      <style>
+         :root{
+            --rit-primary:#1a4b8c;
+            --rit-accent:#2c5aa0;
+            --rit-secondary:#f8b739;
+            --rit-success:#10b981;
+            --rit-danger:#ef4444;
+            --rit-warning:#f59e0b;
+            --rit-info:#3b82f6;
+            --rit-dark:#1e293b;
+            --rit-muted:#64748b;
+            --rit-border:#e2e8f0;
+            --rit-bg:#f8fafc;
+            --rit-shadow:0 4px 20px rgba(0,0,0,0.08);
+            --rit-shadow-lg:0 10px 30px rgba(0,0,0,0.15);
+         }
+
+         .faculty-dashboard {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            min-height: 100vh;
+         }
+
+         /* Header */
+         .dashboard-header {
+            background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+         }
+
+         .institute-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+         }
+
+         .institute-logo {
+            height: 50px;
+            width: auto;
+         }
+
+         .institute-text h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0;
+            line-height: 1.2;
+         }
+
+         .institute-text p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin: 0;
+         }
+
+         .header-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+         }
+
+         .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+         }
+
+         .profile-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+         }
+
+         .profile-img:hover {
+            transform: scale(1.05);
+            border-color: rgba(255, 255, 255, 0.6);
+         }
+
+         .profile-info {
+            text-align: right;
+         }
+
+         .profile-name {
+            font-weight: 600;
+            margin: 0;
+            font-size: 1rem;
+         }
+
+         .profile-role {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin: 0;
+         }
+
+         /* Notification Button */
+         .notification-btn {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border: none !important;
+            border-radius: 50%;
+            width: 46px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff !important;
+            position: relative;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+         }
+
+         .notification-btn:hover {
+            background: rgba(255, 255, 255, 0.25) !important;
+            transform: translateY(-2px);
+         }
+
+         .badge-notification {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff5f6d, #ffc371);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.68rem;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(255,95,109,0.28);
+            animation: pulse 1.8s infinite;
+         }
+
+         @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.12); }
+            100% { transform: scale(1); }
+         }
+
+         .dropdown-menu.notifications-dropdown {
+            width: 380px;
+            border-radius: 18px;
+            overflow: hidden;
+            border: none;
+            box-shadow: 0 18px 50px rgba(15,23,42,0.18);
+            padding: 0;
+         }
+
+         .notifications-dropdown .dropdown-header {
+            background: linear-gradient(135deg, var(--rit-primary), var(--rit-accent));
+            color: #fff;
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+         }
+
+         .notifications-dropdown .dropdown-footer {
+            background: #f8fafc;
+            padding: 0.9rem 1rem;
+            text-align: center;
+         }
+
+         .notification-item {
+            position: relative;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #edf2f7;
+         }
+
+         .notification-item:hover {
+            background: linear-gradient(135deg, rgba(26,75,140,0.05), rgba(26,75,140,0.02));
+            transform: translateX(4px);
+         }
+
+         .notification-item.unread {
+            background: linear-gradient(90deg, rgba(248,183,57,0.12) 0%, transparent 100%);
+            border-left: 4px solid var(--rit-secondary);
+         }
+
+         .notification-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #fff;
+            color: var(--rit-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(26,75,140,0.15);
+            flex-shrink: 0;
+         }
+
+         .notification-title {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            font-weight: 700;
+            color: #0f172a;
+            max-width: 220px;
+         }
+
+         .badge-new {
+            animation: pulse 1.8s infinite;
+         }
+
+         .view-file-btn {
+            min-width: 38px;
+            height: 34px;
+            padding: 0.25rem 0.55rem;
+            border-radius: 10px;
+         }
+
+         .meta {
+            color: var(--rit-muted);
+            font-size: 0.8rem;
+         }
+
+         .no-wrap {
+            white-space: normal;
+         }
+
+         @keyframes itemEnter {
+            0% {
+               transform: translateY(8px) scale(0.995);
+               opacity: 0;
+            }
+            60% {
+               transform: translateY(-2px) scale(1.002);
+               opacity: 0.9;
+            }
+            100% {
+               transform: translateY(0) scale(1);
+               opacity: 1;
+            }
+         }
+
+         .animate-item {
+            animation: itemEnter 0.38s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+         }
+
+         /* Content */
+         .dashboard-content {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+         }
+
+         .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+         }
+
+         .page-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1a4b8c;
+            margin-bottom: 0.5rem;
+            position: relative;
+            display: inline-block;
+         }
+
+         .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(135deg, #1a4b8c, #2c5aa0);
+            border-radius: 2px;
+         }
+
+         .page-subtitle {
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+            font-weight: 400;
+         }
+
+         /* Welcome Section */
+         .welcome-section {
+            background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+         }
+
+         .welcome-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+         }
+
+         .welcome-content {
+            position: relative;
+            z-index: 1;
+         }
+
+         .welcome-text h2 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+         }
+
+         .welcome-text p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin: 0;
+         }
+
+         /* Cards Grid */
+         .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+         }
+
+         .dashboard-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #f1f5f9;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+         }
+
+         .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(135deg, #1a4b8c, #2c5aa0);
+         }
+
+         .dashboard-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+         }
+
+         .card-icon {
+            font-size: 2.4rem;
+            margin-bottom: 0.9rem;
+            background: linear-gradient(135deg, #1a4b8c, #2c5aa0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 72px;
+            width: 72px;
+            border-radius: 50%;
+            background-color: rgba(26, 75, 140, 0.1);
+            margin: 0 auto 1rem;
+            transition: all 0.3s ease;
+         }
+
+         .dashboard-card:hover .card-icon {
+            transform: scale(1.1);
+            background-color: rgba(26, 75, 140, 0.15);
+         }
+
+         .card-title {
+            font-size: 1.08rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #1a4b8c;
+         }
+
+         .card-description {
+            color: #64748b;
+            margin-bottom: 1.25rem;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            flex-grow: 1;
+         }
+
+         .btn-card {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+         }
+
+         .btn-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+         }
+
+         .btn-card:hover::before {
+            left: 100%;
+         }
+
+         .btn-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+         }
+
+         /* Profile Popup */
+         .profile-popup {
+            position: absolute;
+            top: 70px;
+            right: 0;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 1.5rem;
+            width: 280px;
+            z-index: 1050;
+            display: none;
+            animation: slideDown 0.3s ease;
+            border: 1px solid #f1f5f9;
+         }
+
+         @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+         }
+
+         .profile-popup.show {
+            display: block;
+         }
+
+         .popup-header {
+            text-align: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+         }
+
+         .popup-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 0.75rem;
+            border: 3px solid #1a4b8c;
+         }
+
+         .popup-name {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            font-size: 1.1rem;
+            color: #1a4b8c;
+         }
+
+         .popup-role, .popup-department {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+         }
+
+         .popup-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+         }
+
+         .btn-popup {
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+         }
+
+         .btn-logout {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+         }
+
+         .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+         }
+
+         .btn-password {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+         }
+
+         .btn-password:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+         }
+
+         /* Alerts */
+         .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+         }
+
+         .custom-alert {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            animation: slideInRight 0.5s, fadeOut 0.5s 4.5s forwards;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+         }
+
+         .alert-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+         .alert-error { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
+         .alert-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+         .alert-info { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; }
+
+         @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+         }
+
+         @keyframes fadeOut {
+            to { opacity: 0; transform: translateX(100%); }
+         }
+
+         /* Vision/Mission Modal */
+         #visionMissionModal .modal-content {
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+         }
+
+         #visionMissionModal .modal-header {
+            background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-bottom: none;
+         }
+
+         #visionMissionModal .modal-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+         }
+
+         #visionMissionModal .modal-body {
+            padding: 2rem;
+            color: #374151;
+         }
+
+         #visionMissionModal .section-block {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #1a4b8c;
+         }
+
+         #visionMissionModal .section-block h6 {
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #1a4b8c;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+         }
+
+         #visionMissionModal .section-block p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #374151;
+            margin-bottom: 0;
+         }
+
+         #visionMissionModal .modal-footer {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 1.25rem 2rem;
+         }
+
+         /* Announcement Modal */
+         .announcement-modal-title {
+            font-size: clamp(1rem, 2.2vw, 1.25rem);
+            line-height: 1.1;
+         }
+
+         .announcement-item {
+            border-radius: 16px;
+         }
+
+         .announcement-item .card-body {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            flex-wrap: wrap;
+         }
+
+         .announcement-item .card-body > div:first-child {
+            flex: 1 1 60%;
+            min-width: 180px;
+         }
+
+         .announcement-item .card-body > .file-actions {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+         }
+
+         .announcement-item .card-title {
+            font-size: clamp(0.95rem, 1.6vw, 1.05rem);
+            word-break: break-word;
+            overflow-wrap: anywhere;
+         }
+
+         .announcement-item .card-text {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+         }
+
+         /* Responsive */
+         @media (max-width: 1280px) {
+            .cards-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+         }
+
+         @media (max-width: 1024px) {
+            .cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+         }
+
+         @media (max-width: 768px) {
+            .dashboard-header {
+               padding: 1rem;
+               flex-direction: column;
+               gap: 1rem;
+            }
+            .dashboard-content { padding: 1rem; }
+            .page-title { font-size: 2rem; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .profile-info { display: none; }
+            .alert-container { left: 1rem; right: 1rem; max-width: none; }
+            .dropdown-menu.notifications-dropdown {
+               width: min(92vw, 360px);
+            }
+         }
+
+         @media (max-width: 576px) {
+            .announcement-item .card-body > div:first-child {
+               flex-basis: 100%;
+            }
+            .announcement-item .card-body > .file-actions {
+               width: 100%;
+               justify-content: flex-start;
+               margin-top: 0.5rem;
+            }
+            .notification-title {
+               -webkit-line-clamp: 3;
+               max-width: 100%;
+            }
+         }
+
+         @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+         }
+      </style>
+   </head>
+
+   <body class="faculty-dashboard">
+
+      <!-- Header -->
+      <header class="dashboard-header">
+         <div class="institute-info">
+            <img src="{% static 'images/ritlogo.png' %}" alt="RIT Logo" class="institute-logo">
+            <div class="institute-text">
+               <h1>Ramco Institute of Technology</h1>
+               <p>Faculty Dashboard</p>
+            </div>
+         </div>
+
+         <div class="header-right">
+            <!-- Notification Dropdown -->
+            <div class="dropdown">
+               <button
+                  class="notification-btn btn position-relative dropdown-toggle"
+                  id="notificationDropdown"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                  title="Notifications"
+               >
+                  <i class="fas fa-bell fa-lg"></i>
+                  {% get_user_announcements as user_announcements %}
+                  {% with missing_count=profile_missing_count|default:0 %}
+                  {% if user_announcements or missing_count %}
+                  <span class="badge-notification">{{ user_announcements|length|add:missing_count }}</span>
+                  {% endif %}
+               </button>
+
+               <ul class="dropdown-menu dropdown-menu-end notifications-dropdown" aria-labelledby="notificationDropdown">
+                  <li class="dropdown-header">
+                     <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-bullhorn me-2"></i>Notifications
+                     </h6>
+                     {% if user_announcements or missing_count %}
+                     <span class="badge bg-light text-primary fs-6">{{ user_announcements|length|add:missing_count }} new</span>
+                  {% endif %}
+                  </li>
+                  {% endwith %}
+
+                  {% if profile_missing_fields %}
+                  <li>
+                     <div style="background:linear-gradient(135deg,#fff7ed,#fffbeb);border-bottom:1px solid #fed7aa;padding:14px 18px 12px;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                           <span style="font-size:.78rem;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:.5px;">
+                              <i class="fas fa-circle-exclamation me-1" style="color:#f97316;"></i>Profile Incomplete
+                           </span>
+                           <span style="font-size:.75rem;font-weight:700;color:#b45309;background:#fed7aa;padding:2px 10px;border-radius:999px;">{{ profile_completion_pct }}% done</span>
+                        </div>
+                        <div style="height:6px;background:#fed7aa;border-radius:4px;overflow:hidden;margin-bottom:11px;">
+                           <div style="height:100%;width:{{ profile_completion_pct }}%;background:linear-gradient(90deg,#f97316,#fb923c);border-radius:4px;"></div>
+                        </div>
+                        <div style="font-size:.72rem;font-weight:700;color:#7c3aed;margin-bottom:8px;">
+                           {{ profile_missing_count }} field{{ profile_missing_count|pluralize }} need{{ profile_missing_count|pluralize:"s," }} to be filled:
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:5px;max-height:88px;overflow:hidden;">
+                           {% for fld in profile_missing_fields|slice:":9" %}
+                           <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:#fff;border:1px solid #fed7aa;border-radius:20px;font-size:.7rem;font-weight:700;color:#374151;">
+                              <i class="fas fa-{{ fld.icon }}" style="font-size:.6rem;color:#f97316;"></i>{{ fld.label }}
+                           </span>
+                           {% endfor %}
+                           {% if profile_missing_count > 9 %}
+                           <span style="padding:3px 9px;background:#fef3c7;border:1px solid #fcd34d;border-radius:20px;font-size:.7rem;font-weight:700;color:#92400e;">+{{ profile_missing_count|add:"-9" }} more</span>
+                           {% endif %}
+                        </div>
+                        <a href="/faculty_management/faculty/faculty_general_information/"
+                           style="display:block;margin-top:11px;padding:8px 14px;background:linear-gradient(135deg,#ea580c,#f97316);color:#fff;border-radius:9px;font-size:.8rem;font-weight:800;text-align:center;text-decoration:none;box-shadow:0 4px 12px rgba(249,115,22,.3);">
+                           <i class="fas fa-pen-to-square me-1"></i>Complete My Profile Now
+                        </a>
+                     </div>
+                  </li>
+                  {% endif %}
+
+                  {% get_user_announcements 6 as dropdown_announcements %}
+                  {% if dropdown_announcements %}
+                     {% for ann in dropdown_announcements %}
+                     <li style="position: relative;">
+                        <a
+                           class="dropdown-item notification-item {% if not ann.is_read %}unread{% endif %} animate-item"
+                           href="#"
+                           data-bs-toggle="modal"
+                           data-bs-target="#announcementModal"
+                           style="animation-delay: {{ forloop.counter0 }}0ms;"
+                        >
+                           <div class="d-flex">
+                              <div class="me-3">
+                                 <div class="notification-icon">
+                                    <i class="fas fa-bullhorn fs-5"></i>
+                                 </div>
+                              </div>
+
+                              <div class="flex-grow-1">
+                                 <div class="d-flex justify-content-between align-items-start">
+                                    <div class="me-2">
+                  <strong class="d-block notification-title">
+                     {{ ann.title|default:"Announcement" }}
+                  </strong>
+                  <small class="d-block meta">{{ ann.created_at|timesince }} ago</small>
+
+                  {% if ann.created_by %}
+                  <small class="d-block text-muted mt-1">
+                     <i class="fas fa-user me-1"></i>
+                     {{ ann.created_by.name|default:"N/A" }}
+                     {% if ann.created_by.designation %}
+                        • {{ ann.created_by.designation }}
+                     {% endif %}
+                  </small>
+                  {% endif %}
+               </div>
+
+                                    {% if not ann.is_read %}
+                                    <span class="badge badge-new bg-danger rounded-pill mt-1">NEW</span>
+                                    {% endif %}
+                                 </div>
+
+                                 {% if ann.message %}
+                                 <p class="mb-0 text-muted small mt-1 no-wrap" style="max-width:260px;">
+                                    {{ ann.message|truncatewords:15 }}
+                                 </p>
+                                 {% endif %}
+
+                                 <div class="d-flex gap-2 align-items-center mt-2">
+                                    {% if ann.attachment %}
+                                    <button
+                                       type="button"
+                                       class="btn btn-sm btn-outline-primary view-file-btn"
+                                       title="Preview attachment"
+                                       data-title="{{ ann.title|escape }}"
+                                       data-message="{{ ann.message|escape }}"
+                                       data-url="{{ ann.attachment.url }}"
+                                       data-date="{{ ann.created_at|date:'M d, Y H:i' }}"
+                                    >
+                                       <i class="fas fa-paperclip"></i>
+                                    </button>
+                                    {% endif %}
+                                    <small class="text-muted">Tap to open</small>
+                                 </div>
+                              </div>
+                           </div>
+                        </a>
+                     </li>
+                     {% endfor %}
+                  {% else %}
+                     {% if not profile_missing_fields %}
+                     <li class="dropdown-item text-center py-5">
+                        <i class="fas fa-bell-slash text-muted fa-2x mb-3"></i>
+                        <p class="text-muted mb-0">No new notifications</p>
+                     </li>
+                     {% endif %}
+                  {% endif %}
+
+                  <li class="dropdown-footer">
+                     <button class="btn btn-sm btn-outline-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#announcementModal">
+                        <i class="fas fa-list me-1"></i>View All Announcements
+                     </button>
+                  </li>
+               </ul>
+            </div>
+
+            <div class="profile-section">
+               <div class="profile-info">
+                  <p class="profile-name">{{ request.user.username }}</p>
+                  <p class="profile-role">{{ request.user.role.role }}</p>
+               </div>
+
+               <img
+                  src="{% if request.user.profile_img %}{{ request.user.profile_img.url }}{% else %}{% static 'images/profile.jpg' %}{% endif %}"
+                  onerror="this.onerror=null; this.src='{% static 'images/profile.jpg' %}';"
+                  alt="Profile Image"
+                  class="profile-img"
+                  id="profileImage"
+               >
+            </div>
+         </div>
+      </header>
+
+      <!-- Profile Popup -->
+      <div class="profile-popup" id="profilePopup">
+         <div class="popup-header">
+            <img
+               src="{% if request.user.profile_img %}{{ request.user.profile_img.url }}{% else %}{% static 'images/profile.jpg' %}{% endif %}"
+               onerror="this.onerror=null; this.src='{% static 'images/profile.jpg' %}';"
+               alt="Profile Image"
+               class="popup-img"
+            >
+            <h4 class="popup-name">{{ request.user.username }}</h4>
+            <p class="popup-role">{{ request.user.role.role }}</p>
+            <p class="popup-role">{{ request.user.Employee_id }}</p>
+            <p class="popup-department">{{ request.user.Department.Department }}</p>
+         </div>
+
+         <div class="popup-actions">
+            {% user_data_count request.user.Employee_id as udata %}
+            {% if udata > 1 %}
+            <button class="btn btn-primary btn-popup" data-bs-toggle="modal" data-bs-target="#switchUserModal">Switch User</button>
+            {% endif %}
+            <button class="btn btn-popup btn-password" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+               <i class="fas fa-key me-2"></i> Change Password
+            </button>
+            <button class="btn btn-popup btn-logout" onclick="window.location.href='{% url 'logout' %}'">
+               <i class="fas fa-sign-out-alt me-2"></i> Logout
+            </button>
+         </div>
+      </div>
+
+      {% include 'switch_user_modal.html' %}
+
+      <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+         <div class="modal-dialog">
+            <div class="modal-content">
+               <div class="modal-header">
+                  <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                  <form method="post" action="{% url 'change_logged_in_password' %}">
+                     {% csrf_token %}
+                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                     <div class="form-group">
+                        <label for="faculty_current_password" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="faculty_current_password" name="current_password" required autocomplete="current-password">
+                     </div>
+                     <div class="form-group mt-3">
+                        <label for="faculty_new_password" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="faculty_new_password" name="new_password" required minlength="4" autocomplete="new-password">
+                        <div class="form-text">Minimum 4 characters. Do not use 123.</div>
+                     </div>
+                     <div class="form-group mt-3">
+                        <label for="faculty_confirm_password" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="faculty_confirm_password" name="confirm_password" required minlength="4" autocomplete="new-password">
+                     </div>
+                     <button type="submit" class="btn btn-primary mt-3">
+                        <i class="fas fa-save"></i> Update Password
+                     </button>
+                  </form>
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <!-- Alerts -->
+      {% if messages %}
+      <div class="alert-container">
+         {% for message in messages %}
+         <div class="custom-alert alert-{{ message.tags }}">
+            <i class="fas
+               {% if message.tags == 'success' %}fa-check-circle
+               {% elif message.tags == 'error' %}fa-exclamation-circle
+               {% elif message.tags == 'warning' %}fa-exclamation-triangle
+               {% else %}fa-info-circle{% endif %}">
+            </i>
+            <span>{{ message }}</span>
+         </div>
+         {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Announcements Modal -->
+      <div class="modal fade" id="announcementModal" tabindex="-1" aria-labelledby="announcementModalLabel" aria-hidden="true">
+         <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
+            <div class="modal-content shadow-lg border-0">
+               <div class="modal-header bg-primary text-white">
+                  <h5 class="modal-title announcement-modal-title" id="announcementModalLabel">
+                     <i class="fas fa-bullhorn me-2"></i>Announcements
+                  </h5>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+
+               <div class="modal-body p-3" style="max-height: 70vh; overflow-y: auto;">
+                  {% get_user_announcements as announcements %}
+                  {% if announcements %}
+                     {% for ann in announcements %}
+                     <div class="card mb-3 shadow-sm border-0 announcement-item">
+                        <div class="card-body">
+                           <div class="d-flex justify-content-between align-items-start w-100 flex-wrap">
+                              <div>
+                                 <h6 class="card-title fw-bold text-primary mb-1">
+   {{ ann.title|default:"(Untitled)" }}
+</h6>
+
+<p class="card-text small text-muted mb-1">
+   {{ ann.created_at|date:"M d, Y H:i" }}
+</p>
+
+{% if ann.created_by %}
+<p class="small text-muted mb-2">
+   <i class="fas fa-user me-1"></i>
+   <span class="fw-semibold text-dark">Created By:</span>
+   {{ ann.created_by.name|default:"N/A" }}
+
+   {% if ann.created_by.designation %}
+      <span class="text-muted">• {{ ann.created_by.designation }}</span>
+   {% endif %}
+</p>
+{% endif %}
+
+                                 <div class="small text-muted">
+                                    <div class="mb-1">
+                                       <i class="fas fa-calendar-day me-1"></i>
+                                       <span class="fw-semibold text-dark">Date:</span>
+                                       {% if ann.date %}{{ ann.date|date:"d-m-Y" }}{% else %}-{% endif %}
+                                       <span class="ms-2">
+                                          <i class="fas fa-clock me-1"></i>
+                                          <span class="fw-semibold text-dark">Time:</span>
+                                          {% if ann.time %}{{ ann.time|time:"H:i" }}{% else %}-{% endif %}
+                                       </span>
+                                    </div>
+
+                                    <div>
+                                       <i class="fas fa-bell me-1"></i>
+                                       <span class="fw-semibold text-dark">Notify From:</span>
+                                       {% if ann.notify_from %}{{ ann.notify_from|date:"d-m-Y H:i" }}{% else %}-{% endif %}
+                                       <span class="ms-2">
+                                          <span class="fw-semibold text-dark">Notify To:</span>
+                                          {% if ann.notify_to %}{{ ann.notify_to|date:"d-m-Y H:i" }}{% else %}-{% endif %}
+                                       </span>
+                                    </div>
+                                 </div>
+                              </div>
+
+                              <div class="file-actions text-end">
+                                 {% if ann.attachment %}
+                                 <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-danger view-file-btn mb-2"
+                                    data-title="{{ ann.title|escape }}"
+                                    data-message="{{ ann.message|escape }}"
+                                    data-url="{{ ann.attachment.url }}"
+                                    data-date="{{ ann.created_at|date:'M d, Y H:i' }}"
+                                 >
+                                    View Circular
+                                 </button>
+                                 {% endif %}
+
+                                 {% if ann.file %}
+                                 <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-dark view-file-btn"
+                                    data-title="{{ ann.title|escape }}"
+                                    data-message="{{ ann.message|escape }}"
+                                    data-url="{{ ann.file.url }}"
+                                    data-date="{{ ann.created_at|date:'M d, Y H:i' }}"
+                                 >
+                                    View Minutes
+                                 </button>
+                                 {% endif %}
+
+                                 {% if not ann.attachment and not ann.file %}
+                                 <span class="badge bg-light text-muted border">No File</span>
+                                 {% endif %}
+                              </div>
+                           </div>
+
+                           {% if ann.message %}
+                           {% if ann.message %}
+<div class="mt-2">
+   <p class="mb-1 text-secondary short-message">
+      {{ ann.message|truncatewords:20 }}
+   </p>
+
+   <p class="mb-0 text-secondary full-message d-none" style="white-space: pre-line;">
+      {{ ann.message }}
+   </p>
+
+   <button type="button" class="btn btn-sm btn-link p-0 view-more-btn">
+      View
+   </button>
+</div>
+{% endif %}
+                           {% endif %}
+                        </div>
+                     </div>
+                     {% endfor %}
+                  {% else %}
+                     <div class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p class="mb-0">No new announcements</p>
+                     </div>
+                  {% endif %}
+               </div>
+
+               <div class="modal-footer justify-content-between">
+                  <small class="text-muted">Showing latest {{ announcements|length }} announcements</small>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <!-- Announcement File Preview Modal -->
+      <div class="modal fade" id="announcementFileModal" tabindex="-1" aria-labelledby="announcementFileModalLabel" aria-hidden="true">
+         <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content shadow-lg border-0">
+               <div class="modal-header bg-secondary text-white">
+                  <h5 class="modal-title" id="announcementFileModalLabel">
+                     <i class="fas fa-paperclip me-2"></i><span id="fileModalTitle">Preview</span>
+                  </h5>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body p-3" id="fileModalBody" style="max-height: 75vh; overflow: auto;">
+                  <p class="text-muted small" id="fileModalDate"></p>
+                  <div id="fileModalMessage" class="mb-3 text-secondary"></div>
+                  <div id="fileEmbedContainer"></div>
+               </div>
+               <div class="modal-footer">
+                  <a id="fileModalDownload" class="btn btn-sm btn-primary" href="#" target="_blank">
+                     <i class="fas fa-download me-1"></i>Open / Download
+                  </a>
+                  <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <!-- Main Content -->
+      <main class="dashboard-content">
+         <div class="page-header">
+            <h1 class="page-title">Faculty Operations Portal</h1>
+            <p class="page-subtitle">Access teaching, student support, approvals, feedback, resources, and administrative services from one place.</p>
+         </div>
+
+         <section class="welcome-section">
+            <div class="welcome-content">
+               <div class="welcome-text">
+                  <h2>Welcome back, {{ request.user.username }}!</h2>
+                   <p>Access your academic, administrative, and campus service tools</p>
+               </div>
+            </div>
+         </section>
+
+         <div class="cards-grid">
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-user-graduate"></i></div>
+               <h3 class="card-title">Student Management</h3>
+               <p class="card-description">Manage mentees, attendance, student leave, internal assessment records, and student academic information.</p>
+               <button class="btn btn-card" onclick="window.location.href='{% url 'sm_home' %}'">
+                  Manage Students <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-clipboard-list"></i></div>
+               <h3 class="card-title">Course Management</h3>
+               <p class="card-description">Prepare course plans, submit subject willingness, manage courses, and review student attendance reports.</p>
+               <button class="btn btn-card" onclick="window.location.href='{% url 'cm_home' %}'">
+                  Manage Courses <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-file-signature"></i></div>
+               <h3 class="card-title">Examination Management</h3>
+               <p class="card-description">Create assessments, assign evaluation components, and enter internal assessment marks.</p>
+               <button class="btn btn-card" onclick="window.location.href='{% url 'em_home' %}'">
+                  Manage Examinations <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-money-check-alt"></i></div>
+               <h3 class="card-title">Fee Management</h3>
+               <p class="card-description">View fee records, payment details, and fee-related student information.</p>
+               <button class="btn btn-card" onclick="window.location.href='{% url 'fee_home' %}'">
+                  Manage Fees <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+               <h3 class="card-title">Faculty Management</h3>
+               <p class="card-description">Manage staff profiles, CA and mentor mapping, timetable details, and faculty records.</p>
+               <button class="btn btn-card" onclick="window.location.href='{% url 'fm_home' %}'">
+                  Manage Staff <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+               <h3 class="card-title">Employee Leave Management</h3>
+               <p class="card-description">Apply for leave or permission, claim CCL, and track employee leave approvals.</p>
+               <button class="btn btn-card" onclick="window.location.href='{% url 'flm_home' %}'">
+                  Manage Employee Leave <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-ticket-alt"></i></div>
+               <h3 class="card-title">NBA Management</h3>
+               <p class="card-description">Access NBA criteria, evidence records, department data, and accreditation support information.</p>
+               <button class="btn btn-card" onclick="window.location.href='{% url 'nba_home' %}'">
+                  Raise a Ticket <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+               <h3 class="card-title">Feedback Management</h3>
+               <p class="card-description">Review course feedback, survey responses, reports, and academic quality insights.</p>
+               <button class="btn btn-card" onclick="window.location.href='{% url 'feedback_home' %}'">
+                  View Reports <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-book-open"></i></div>
+               <h3 class="card-title">RIT Canvas</h3>
+               <p class="card-description">Share learning materials, manage academic content, and support digital course delivery.</p>
+               <button class="btn btn-card" onclick="window.location.href='https://www.ritcanvas.in/login'">
+                  Open RIT Canvas <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-code"></i></div>
+               <h3 class="card-title">Code2Day</h3>
+               <p class="card-description">
+    Learn by coding with hands-on programming exercises, coding contests, and real-time practice to strengthen your technical skills.
+</p>
+               <button class="btn btn-card" onclick="window.location.href='https://code2day.ramcoad.com/'">
+                  Open Code2Day <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-calculator"></i></div>
+               <h3 class="card-title">CGPA Calculator</h3>
+               <p class="card-description">Calculate semester GPA and overall CGPA based on grades and credits.</p>
+               <button class="btn btn-card" onclick="window.location.href='https://cgpa.ritrjpm.ac.in/'">
+                  Open CGPA Calculator <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-university"></i></div>
+               <h3 class="card-title">Library Management</h3>
+               <p class="card-description">Access library services, learning resources, and academic reference materials.</p>
+               <button class="btn btn-card" onclick="window.location.href='{% url 'library_home' %}'">
+                  Open Library <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-server"></i></div>
+               <h3 class="card-title">Data Center</h3>
+               <p class="card-description">Access institutional data services, reports, permissions, and shared operational resources.</p>
+               <button class="btn btn-card" onclick="window.location.href='{% url 'dc_home' %}'">
+                  Open Data Center <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-boxes-stacked"></i></div>
+               <h3 class="card-title">Stock Management</h3>
+               <p class="card-description">Manage inventory, stock entries, inter-department transfers, and annual stock verification.</p>
+               <button class="btn btn-card" onclick="window.location.href='{% url 'stock_home' %}'">
+                  Open Stock Management <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+
+            {% if request.user|is_faculty_or_hod %}
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-robot"></i></div>
+               <h3 class="card-title">Mock Interview</h3>
+               <p class="card-description">Create document-based mock interviews, upload teaching materials, assign students, and track performance.</p>
+               <button class="btn btn-card" onclick="window.location.href='{% url 'mock_interview:faculty_dashboard' %}'">
+                  Open Mock Interview <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+            {% endif %}
+
+            <div class="dashboard-card">
+               <div class="card-icon"><i class="fas fa-id-card"></i></div>
+               <h3 class="card-title">Faculty Profile</h3>
+               <p class="card-description">Update your personal, contact, academic, and professional profile information.</p>
+               <button class="btn btn-card" onclick="window.location.href='{% url 'faculty_general_information' %}'">
+                  Edit Profile <i class="fas fa-arrow-right ms-2"></i>
+               </button>
+            </div>
+         </div>
+      </main>
+
+      {% if vision or mission or peos or psos %}
+      <style>
+         #visionMissionModal .modal-dialog {
+            max-width: 1200px;
+            width: 95%;
+         }
+         #visionMissionModal .modal-content {
+            border-radius: 1rem;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.2);
+            border: none;
+         }
+         #visionMissionModal .modal-body {
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 2rem;
+            background-color: #f8f9fc;
+         }
+         #visionMissionModal .section-block {
+            background: #fff;
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.08);
+         }
+         #visionMissionModal .list-group-item {
+            background-color: #fff;
+            border: none;
+            border-bottom: 1px solid #e9ecef;
+            line-height: 1.6;
+         }
+         #visionMissionModal h6 {
+            font-weight: 600;
+            color: #333;
+         }
+         #visionMissionModal p {
+            font-size: 0.95rem;
+            color: #444;
+         }
+      </style>
+
+      <div class="modal fade" id="visionMissionModal" tabindex="-1" aria-labelledby="visionMissionModalLabel" aria-hidden="true">
+         <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+               <div class="modal-header bg-primary text-white">
+                  <h5 class="modal-title fw-bold" id="visionMissionModalLabel">
+                     <i class="fas fa-bullseye me-2"></i> Department Vision, Mission, PEO & PSO
+                  </h5>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+
+               <div class="modal-body">
+                  {% if vision %}
+                  <div class="section-block mb-4">
+                     <h6><i class="fas fa-lightbulb text-warning"></i> Vision ({{ vision.year }})</h6>
+                     <p>{{ vision.vision_statement|linebreaksbr }}</p>
+                  </div>
+                  {% endif %}
+
+                  {% if mission %}
+                  <div class="section-block mb-4">
+                     <h6><i class="fas fa-flag-checkered text-success"></i> Mission ({{ mission.year }})</h6>
+                     <p>{{ mission.mission_statement|linebreaksbr }}</p>
+                  </div>
+                  {% endif %}
+
+                  {% if peos %}
+                  <div class="section-block mb-4">
+                     <h6><i class="fas fa-graduation-cap text-info"></i> Program Educational Objectives (PEOs)</h6>
+                     <ul class="list-group list-group-flush mt-2">
+                        {% for peo in peos %}
+                        <li class="list-group-item">
+                           <strong>PEO {{ forloop.counter }}{% if peo.year %} ({{ peo.year }}){% endif %}:</strong>
+                           <p class="mb-0">{{ peo.peo_statement|linebreaksbr }}</p>
+                        </li>
+                        {% endfor %}
+                     </ul>
+                  </div>
+                  {% endif %}
+
+                  {% if psos %}
+                  <div class="section-block mb-3">
+                     <h6><i class="fas fa-cogs text-secondary"></i> Program Specific Outcomes (PSOs)</h6>
+                     <ul class="list-group list-group-flush mt-2">
+                        {% for pso in psos %}
+                        <li class="list-group-item">
+                           <strong>PSO {{ forloop.counter }}{% if pso.year %} ({{ pso.year }}){% endif %}:</strong>
+                           <p class="mb-0">{{ pso.pso_statement|linebreaksbr }}</p>
+                        </li>
+                        {% endfor %}
+                     </ul>
+                  </div>
+                  {% endif %}
+               </div>
+
+               <div class="modal-footer d-flex justify-content-between align-items-center bg-light">
+                  <small class="text-muted fst-italic">
+                     Empowering Excellence • {{ vision.department.Department|default:"Department" }}
+                  </small>
+                  <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                     Close <i class="fas fa-times ms-1"></i>
+                  </button>
+               </div>
+            </div>
+         </div>
+      </div>
+      {% endif %}
+
+      {% include "chatbot/widget.html" %}
+
+      <script>
+         document.addEventListener("DOMContentLoaded", function () {
+            const profileImage = document.getElementById('profileImage');
+            const popup = document.getElementById('profilePopup');
+
+            if (profileImage && popup) {
+               profileImage.addEventListener('click', function(e) {
+                  e.stopPropagation();
+                  popup.classList.toggle('show');
+               });
+
+               document.addEventListener('click', function(event) {
+                  if (!popup.contains(event.target) && event.target !== profileImage) {
+                     popup.classList.remove('show');
+                  }
+               });
+            }
+
+            {% if vision or mission %}
+            const showPopup = {{ show_popup|yesno:"true,false" }};
+            if (showPopup) {
+               setTimeout(() => {
+                  const modalEl = document.getElementById("visionMissionModal");
+                  if (modalEl) {
+                     const modal = new bootstrap.Modal(modalEl);
+                     modal.show();
+                  }
+               }, 1500);
+            }
+            {% endif %}
+
+            setTimeout(function () {
+               const alerts = document.querySelectorAll('.custom-alert');
+               alerts.forEach(alert => {
+                  alert.style.animation = 'fadeOut 0.5s forwards';
+                  setTimeout(() => alert.remove(), 500);
+               });
+            }, 5000);
+
+            // File Preview Modal
+            document.addEventListener("click", function (evt) {
+               const btn = evt.target.closest && evt.target.closest(".view-file-btn");
+               if (!btn) return;
+
+               evt.preventDefault();
+               evt.stopPropagation();
+
+               const title = btn.getAttribute("data-title") || "Attachment";
+               const message = btn.getAttribute("data-message") || "";
+               const url = btn.getAttribute("data-url") || "";
+               const date = btn.getAttribute("data-date") || "";
+
+               const titleEl = document.getElementById("fileModalTitle");
+               const dateEl = document.getElementById("fileModalDate");
+               const messageEl = document.getElementById("fileModalMessage");
+               const container = document.getElementById("fileEmbedContainer");
+               const download = document.getElementById("fileModalDownload");
+
+               if (!titleEl || !dateEl || !messageEl || !container || !download) return;
+
+               titleEl.textContent = title;
+               dateEl.textContent = date;
+               messageEl.textContent = message;
+               container.innerHTML = "";
+
+               if (url) {
+                  download.href = url;
+                  const lower = url.toLowerCase();
+
+                  if (lower.endsWith(".pdf")) {
+                     const iframe = document.createElement("iframe");
+                     iframe.src = url;
+                     iframe.style.width = "100%";
+                     iframe.style.height = "60vh";
+                     iframe.frameBorder = "0";
+                     container.appendChild(iframe);
+                  } else if (lower.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/)) {
+                     const img = document.createElement("img");
+                     img.src = url;
+                     img.className = "img-fluid rounded";
+                     container.appendChild(img);
+                  } else {
+                     const link = document.createElement("a");
+                     link.href = url;
+                     link.target = "_blank";
+                     link.className = "btn btn-outline-primary";
+                     link.textContent = "Open attachment";
+                     container.appendChild(link);
+                  }
+               } else {
+                  download.href = "#";
+               }
+
+               try {
+                  const ddToggle = document.getElementById("notificationDropdown");
+                  const ddInstance = bootstrap.Dropdown.getInstance(ddToggle) || new bootstrap.Dropdown(ddToggle);
+                  if (ddInstance) ddInstance.hide();
+               } catch (e) {}
+
+               const modalEl = document.getElementById("announcementFileModal");
+               if (modalEl) {
+                  const modal = new bootstrap.Modal(modalEl);
+                  modal.show();
+               }
+            });
+
+            // Re-animate notification items when dropdown opens
+            try {
+               const ddToggle = document.getElementById("notificationDropdown");
+               if (ddToggle) {
+                  ddToggle.addEventListener("shown.bs.dropdown", function () {
+                     const menu = ddToggle.nextElementSibling;
+                     if (!menu) return;
+
+                     const items = menu.querySelectorAll(".animate-item");
+                     items.forEach((el, idx) => {
+                        el.style.animationDelay = (idx * 45) + "ms";
+                        el.classList.remove("animate-item");
+                        void el.offsetWidth;
+                        el.classList.add("animate-item");
+                     });
+                  });
+               }
+            } catch (e) {}
+         });
+         document.addEventListener("click", function(e){
+    if(e.target.classList.contains("view-more-btn")){
+        const container = e.target.closest("div");
+        const shortMsg = container.querySelector(".short-message");
+        const fullMsg = container.querySelector(".full-message");
+
+        if(fullMsg.classList.contains("d-none")){
+            fullMsg.classList.remove("d-none");
+            shortMsg.classList.add("d-none");
+            e.target.textContent = "Hide";
+        } else {
+            fullMsg.classList.add("d-none");
+            shortMsg.classList.remove("d-none");
+            e.target.textContent = "View";
+        }
+    }
+});
+      </script>
+   </body>
+</html>

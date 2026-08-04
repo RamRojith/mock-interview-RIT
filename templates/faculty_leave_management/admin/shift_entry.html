@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+{% load static %}
+{% load flm_tags %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+    .shift-page {
+        background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+        min-height: 100vh;
+        padding: 28px 0;
+    }
+
+    .page-header-card {
+        background: linear-gradient(135deg, #0d47a1, #1565c0);
+        color: #fff;
+        border-radius: 22px;
+        padding: 24px 28px;
+        box-shadow: 0 14px 34px rgba(13, 71, 161, 0.18);
+        margin-bottom: 24px;
+    }
+
+    .page-header-card h2 {
+        margin: 0 0 6px 0;
+        font-weight: 700;
+        font-size: 28px;
+    }
+
+    .page-header-card p {
+        margin: 0;
+        opacity: 0.95;
+        font-size: 14px;
+    }
+
+    .main-card,
+    .table-card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        border: none;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0d47a1;
+        margin-bottom: 18px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .form-control {
+        border-radius: 12px;
+        min-height: 46px;
+        border: 1px solid #dbe3ef;
+        box-shadow: none;
+    }
+
+    .form-control:focus {
+        border-color: #1565c0;
+        box-shadow: 0 0 0 0.15rem rgba(21, 101, 192, 0.15);
+    }
+
+    .timing-box {
+        border: 1px solid #dbe7f7;
+        border-radius: 16px;
+        padding: 16px;
+        background: #f8fbff;
+        margin-bottom: 16px;
+    }
+
+    .timing-title {
+        font-weight: 700;
+        color: #0d47a1;
+        margin-bottom: 12px;
+        font-size: 15px;
+    }
+
+    .check-card {
+        border: 1px solid #e5edf7;
+        border-radius: 14px;
+        padding: 12px 14px;
+        background: #f8fbff;
+        height: 100%;
+    }
+
+    .check-card .form-check-label {
+        font-weight: 600;
+        color: #374151;
+        margin-left: 8px;
+    }
+
+    .btn-main {
+        background: linear-gradient(135deg, #0d47a1, #1565c0);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 22px;
+        font-weight: 600;
+        box-shadow: 0 8px 20px rgba(13, 71, 161, 0.20);
+    }
+
+    .btn-main:hover {
+        color: #fff;
+    }
+
+    .btn-generate {
+        background: linear-gradient(135deg, #00897b, #009688);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 22px;
+        font-weight: 600;
+        box-shadow: 0 8px 20px rgba(0, 150, 136, 0.18);
+    }
+
+    .btn-generate:hover {
+        color: #fff;
+    }
+
+    .btn-cancel {
+        border-radius: 12px;
+        padding: 10px 22px;
+        font-weight: 600;
+    }
+
+    .table thead th {
+        background: #0d47a1;
+        color: #fff;
+        border: none;
+        white-space: nowrap;
+        font-size: 14px;
+        padding: 14px 12px;
+    }
+
+    .table tbody td {
+        vertical-align: top;
+        padding: 14px 12px;
+    }
+
+    .badge-soft-success,
+    .badge-soft-danger,
+    .badge-soft-warning,
+    .badge-soft-primary,
+    .badge-soft-secondary {
+        display: inline-block;
+        padding: 7px 10px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 12px;
+    }
+
+    .badge-soft-success {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-soft-danger {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-soft-warning {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .badge-soft-primary {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .badge-soft-secondary {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .action-btn {
+        border-radius: 10px;
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+
+    .timing-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .timing-item {
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 1px solid #e5edf7;
+    }
+
+    .alert {
+        border-radius: 14px;
+    }
+</style>
+
+<div class="shift-page">
+    <div class="container-fluid px-4">
+
+        <div class="page-header-card">
+            <h2><i class="fas fa-business-time me-2"></i>Shift Master Entry</h2>
+            <p>Create one shift name, enter number of shifts, then define timings for each shift.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="main-card p-4">
+                    <h5 class="section-title">
+                        <i class="fas fa-layer-group me-2"></i>
+                        {% if edit_master %}Edit Shift Master{% else %}Add Shift Master{% endif %}
+                    </h5>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} mb-3">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <input type="hidden" name="master_id" value="{{ master_id|default:'' }}">
+
+                        <div class="mb-3">
+                            <label class="form-label">Shift Name</label>
+                            <input type="text"
+                                   name="shift_name"
+                                   class="form-control"
+                                   placeholder="Enter shift name"
+                                   value="{{ shift_name|default:'' }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">No. of Shifts</label>
+                            <input type="number"
+                                   name="no_of_shifts"
+                                   class="form-control"
+                                   min="1"
+                                   placeholder="Enter number of shifts"
+                                   value="{{ generated_rows|default:'' }}">
+                        </div>
+
+                        <div class="d-flex gap-2 flex-wrap mb-4">
+                            <button type="submit" name="action" value="generate" class="btn btn-generate">
+                                <i class="fas fa-table-list me-1"></i>Generate Shift Timings
+                            </button>
+
+                            {% if edit_master or generated_rows %}
+                                <a href="{% url 'shift_entry' %}" class="btn btn-outline-secondary btn-cancel">
+                                    <i class="fas fa-rotate-left me-1"></i>Reset
+                                </a>
+                            {% endif %}
+                        </div>
+
+                        {% if generated_rows %}
+                            <hr>
+                            <h6 class="section-title mb-3">
+                                <i class="fas fa-clock me-2"></i>Enter Shift Timings
+                            </h6>
+
+                            {% for i in ""|center:generated_rows %}
+                                <div class="timing-box">
+                                    <div class="timing-title">
+                                        Shift {{ forloop.counter }}
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Start Time</label>
+                                            <input type="time"
+                                                   name="start_time_{{ forloop.counter }}"
+                                                   class="form-control"
+                                                   value="{% for d in edit_details %}{% if d.shift_no == forloop.counter %}{{ d.start_time|time:'H:i' }}{% endif %}{% endfor %}">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">End Time</label>
+                                            <input type="time"
+                                                   name="end_time_{{ forloop.counter }}"
+                                                   class="form-control"
+                                                   value="{% for d in edit_details %}{% if d.shift_no == forloop.counter %}{{ d.end_time|time:'H:i' }}{% endif %}{% endfor %}">
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="check-card">
+                                                <div class="form-check">
+                                                    <input class="form-check-input"
+                                                           type="checkbox"
+                                                           name="is_next_day_{{ forloop.counter }}"
+                                                           id="is_next_day_{{ forloop.counter }}"
+                                                           {% for d in edit_details %}{% if d.shift_no == forloop.counter and d.is_next_day %}checked{% endif %}{% endfor %}>
+                                                    <label class="form-check-label" for="is_next_day_{{ forloop.counter }}">
+                                                        This shift ends on the next day
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+
+                            <div class="d-flex gap-2 flex-wrap mt-4">
+                                <button type="submit" name="action" value="save" class="btn btn-main">
+                                    <i class="fas fa-save me-1"></i>
+                                    {% if edit_master %}Update Shift Master{% else %}Save Shift Master{% endif %}
+                                </button>
+
+                                <a href="{% url 'shift_entry' %}" class="btn btn-outline-secondary btn-cancel">
+                                    <i class="fas fa-times me-1"></i>Cancel
+                                </a>
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="table-card p-4">
+                    <h5 class="section-title">
+                        <i class="fas fa-list me-2"></i>Shift Master List
+                    </h5>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Shift Name</th>
+                                    <th>No. of Shifts</th>
+                                    <th>Status</th>
+                                    <th>Shift Timings</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for master in masters %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td class="fw-semibold">{{ master.shift_name }}</td>
+                                    <td>
+                                        <span class="badge-soft-primary">
+                                            {{ master.no_of_shifts }} Shift{{ master.no_of_shifts|pluralize }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if master.is_active %}
+                                            <span class="badge-soft-success">Active</span>
+                                        {% else %}
+                                            <span class="badge-soft-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="timing-list">
+                                            {% for detail in master.shift_details.all %}
+                                                <div class="timing-item">
+                                                    <div class="fw-semibold text-primary mb-1">
+                                                        
+                                                    </div>
+                                                    <div>
+                                                        {{ detail.start_time|time:"h:i A" }} - {{ detail.end_time|time:"h:i A" }}
+                                                        {% if detail.is_next_day %}
+                                                            <span class="badge-soft-warning ms-1">Next Day</span>
+                                                        {% else %}
+                                                            <span class="badge-soft-secondary ms-1">Same Day</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            {% empty %}
+                                                <span class="text-muted">No timings added.</span>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a href="{% url 'shift_entry' %}?edit={{ master.id }}"
+                                               class="btn btn-sm btn-warning action-btn"
+                                               title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'shift_entry' %}?delete={{ master.id }}"
+                                               class="btn btn-sm btn-danger action-btn"
+                                               title="Delete"
+                                               onclick="return confirm('Are you sure you want to delete this shift master?');">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        No shift masters found.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock content %}

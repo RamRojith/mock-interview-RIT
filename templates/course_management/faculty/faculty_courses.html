@@ -1,0 +1,959 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="assigned-courses-page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <i class="fas fa-book-open"></i>
+        My Assigned Courses
+      </h1>
+      <p class="page-subtitle">
+        View and manage your assigned courses across every academic year
+      </p>
+      <div class="faculty-info">
+        <div class="info-badge">
+          <i class="fas fa-user-graduate"></i>
+          Faculty: {{ faculty.name }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COURSES CONTAINER -->
+  <div class="courses-container">
+
+    {% if assigned_courses %}
+
+      {% regroup assigned_courses by academic_year as year_groups %}
+
+      {% for year_group in year_groups %}
+        <div class="academic-year-section {% if year_group.grouper == current_academic_year %}is-current{% else %}is-previous{% endif %}">
+
+          <button type="button"
+                  class="year-header"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#year-body-{{ forloop.counter }}"
+                  aria-expanded="{% if year_group.grouper == current_academic_year %}true{% else %}false{% endif %}">
+            <div class="year-title-group">
+              <h2 class="year-title">
+                <i class="fas fa-calendar-alt"></i>
+                Academic Year {{ year_group.grouper|default:"—" }}
+              </h2>
+              {% if year_group.grouper == current_academic_year %}
+                <span class="year-tag current-tag"><i class="fas fa-star"></i> Current</span>
+              {% else %}
+                <span class="year-tag previous-tag">Previous</span>
+              {% endif %}
+            </div>
+            <div class="year-stats">
+              <span class="stat-badge">
+                <i class="fas fa-chart-bar"></i>
+                {{ year_group.list|length }} course{{ year_group.list|length|pluralize }}
+              </span>
+              <i class="fas fa-chevron-down toggle-chevron"></i>
+            </div>
+          </button>
+
+          <div class="year-body collapse {% if year_group.grouper == current_academic_year %}show{% endif %}"
+               id="year-body-{{ forloop.counter }}">
+            <div class="semester-grid">
+
+              {% regroup year_group.list by semester_order as semester_groups %}
+              {% for sem_group in semester_groups %}
+                <div class="semester-section">
+                  <div class="semester-header {% if sem_group.grouper == 0 %}even{% else %}odd{% endif %}">
+                    <h3 class="semester-title">
+                      {% if sem_group.grouper == 0 %}
+                        <i class="fas fa-leaf"></i> Even Semester
+                      {% else %}
+                        <i class="fas fa-tree"></i> Odd Semester
+                      {% endif %}
+                    </h3>
+                    <span class="semester-count">{{ sem_group.list|length }} course{{ sem_group.list|length|pluralize }}</span>
+                  </div>
+                  <div class="courses-grid">
+
+                    {% for assign in sem_group.list %}
+                      <a href="{% url 'faculty_course_students' assign.course.year assign.course.semester assign.course.id assign.batch assign.section assign.regulation.id %}"
+                         class="course-link"
+                         style="text-decoration: none; color: inherit; display: block;">
+
+                        <div class="course-card">
+                          <div class="card-header">
+                            <div class="course-code-badge">
+                              <span class="course-code">{{ assign.course.course_code }}</span>
+                            </div>
+                            <div class="batch-section">
+                              <span class="batch-badge">
+                                <i class="fas fa-users"></i> {{ assign.batch }} / {{ assign.section }}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div class="card-body">
+                            <h3 class="course-title">{{ assign.course.title }}</h3>
+
+                            <div class="course-details">
+                              <div class="detail-item">
+                                <div class="detail-icon">
+                                  <i class="fas fa-building"></i>
+                                </div>
+                                <div class="detail-content">
+                                  <span class="detail-label">Department</span>
+                                  <span class="detail-value">{{ assign.course.department.Department }}</span>
+                                </div>
+                              </div>
+
+                              <div class="detail-item">
+                                <div class="detail-icon">
+                                  <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <div class="detail-content">
+                                  <span class="detail-label">Year</span>
+                                  <span class="detail-value">{{ assign.course.year }}</span>
+                                </div>
+                              </div>
+
+                              <div class="detail-item">
+                                <div class="detail-icon">
+                                  <i class="fas fa-book-open"></i>
+                                </div>
+                                <div class="detail-content">
+                                  <span class="detail-label">Semester</span>
+                                  <span class="detail-value">{{ assign.course.semester }}</span>
+                                </div>
+                              </div>
+
+                              <div class="detail-item">
+                                <div class="detail-icon">
+                                  <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="detail-content">
+                                  <span class="detail-label">Regulation</span>
+                                  <span class="detail-value">{{ assign.course.regulation.year }}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="card-footer">
+                            <div class="action-button">
+                              <i class="fas fa-eye"></i>
+                              View Students / CO-PO Mapping
+                            </div>
+                          </div>
+                        </div>
+
+                      </a>
+                    {% endfor %}
+
+                  </div>
+                </div>
+              {% endfor %}
+
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+
+    {% else %}
+      <!-- EMPTY STATE -->
+      <div class="empty-state">
+        <div class="empty-content">
+          <div class="empty-icon">
+            <i class="fas fa-book-open"></i>
+          </div>
+          <h3>No Assigned Courses</h3>
+          <p class="empty-text">
+            There are no courses assigned to you at this time.
+            Please contact your department administrator for course assignments.
+          </p>
+          <div class="empty-actions">
+            <button class="btn btn-primary" onclick="location.reload()">
+              <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <a href="{% url 'faculty_dashboard' %}" class="btn btn-outline">
+              <i class="fas fa-home"></i> Go to Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<style>
+/* ASSIGNED COURSES PAGE STYLES */
+.assigned-courses-page {
+  --primary: #1a4b8c;
+  --primary-light: #2a5ba8;
+  --secondary: #f8b739;
+  --success: #28a745;
+  --danger: #dc3545;
+  --warning: #ffc107;
+  --info: #17a2b8;
+  --light: #f8f9fa;
+  --dark: #343a40;
+  --border: #e3e6f0;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Header Styles */
+.assigned-courses-page .page-header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 3rem;
+  margin-bottom: 2.5rem;
+  color: white;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.assigned-courses-page .page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+  opacity: 0.15;
+}
+
+.assigned-courses-page .header-content {
+  position: relative;
+  z-index: 1;
+}
+
+.assigned-courses-page .page-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.assigned-courses-page .page-title i {
+  font-size: 2.2rem;
+  opacity: 0.9;
+}
+
+.assigned-courses-page .page-subtitle {
+  font-size: 1.15rem;
+  opacity: 0.9;
+  margin-bottom: 1.5rem;
+  font-weight: 400;
+  max-width: 800px;
+  line-height: 1.6;
+}
+
+.assigned-courses-page .faculty-info {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.assigned-courses-page .info-badge {
+  background: rgba(255,255,255,0.15);
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: all 0.3s ease;
+}
+
+.assigned-courses-page .info-badge:hover {
+  background: rgba(255,255,255,0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.assigned-courses-page .info-badge i {
+  font-size: 1.1rem;
+}
+
+/* Academic Year Section */
+.assigned-courses-page .academic-year-section {
+  margin-bottom: 1.5rem;
+  animation: fadeInUp 0.5s ease-out;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: box-shadow 0.25s ease;
+}
+
+.assigned-courses-page .academic-year-section.is-current {
+  border-color: rgba(26, 75, 140, 0.35);
+  box-shadow: 0 6px 24px rgba(26, 75, 140, 0.12);
+}
+
+.assigned-courses-page .academic-year-section.is-previous {
+  opacity: 0.96;
+}
+
+.assigned-courses-page .year-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.75rem;
+  background: white;
+  border: none;
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  flex-wrap: wrap;
+}
+
+.assigned-courses-page .year-header[aria-expanded="true"] {
+  border-bottom-color: var(--border);
+}
+
+.assigned-courses-page .year-header:hover {
+  background: #f8fafc;
+}
+
+.assigned-courses-page .year-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.assigned-courses-page .year-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.assigned-courses-page .year-title i {
+  font-size: 1.3rem;
+  opacity: 0.8;
+}
+
+.assigned-courses-page .year-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: 50px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.assigned-courses-page .current-tag {
+  background: linear-gradient(135deg, var(--secondary) 0%, #f59e0b 100%);
+  color: white;
+}
+
+.assigned-courses-page .previous-tag {
+  background: #eef2f7;
+  color: #64748b;
+}
+
+.assigned-courses-page .year-stats {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.assigned-courses-page .stat-badge {
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+  color: white;
+  padding: 0.4rem 1.1rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(26, 75, 140, 0.2);
+  white-space: nowrap;
+}
+
+.assigned-courses-page .stat-badge i {
+  font-size: 0.85rem;
+}
+
+.assigned-courses-page .toggle-chevron {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  transition: transform 0.25s ease;
+}
+
+.assigned-courses-page .year-header[aria-expanded="true"] .toggle-chevron {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+
+/* Semester Grid */
+.assigned-courses-page .year-body {
+  background: #fafbfc;
+}
+
+.assigned-courses-page .semester-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.assigned-courses-page .semester-section {
+  background: white;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  border: 1px solid var(--border);
+}
+
+.assigned-courses-page .semester-header {
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.assigned-courses-page .semester-header.even {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+}
+
+.assigned-courses-page .semester-header.odd {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(29, 78, 216, 0.1) 100%);
+}
+
+.assigned-courses-page .semester-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.assigned-courses-page .semester-header.even .semester-title {
+  color: #065f46;
+}
+
+.assigned-courses-page .semester-header.odd .semester-title {
+  color: #1e40af;
+}
+
+.assigned-courses-page .semester-title i {
+  font-size: 1.1rem;
+}
+
+.assigned-courses-page .semester-count {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Courses Grid */
+.assigned-courses-page .courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+/* Course Link - Fixed to prevent text decoration inheritance */
+.assigned-courses-page .course-link {
+  text-decoration: none !important;
+  color: inherit !important;
+  display: block;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.assigned-courses-page .course-link:hover,
+.assigned-courses-page .course-link:focus,
+.assigned-courses-page .course-link:active {
+  text-decoration: none !important;
+  color: inherit !important;
+  outline: none;
+}
+
+.assigned-courses-page .course-link:hover {
+  transform: translateY(-4px);
+}
+
+/* Course Card - Ensure no text decoration here either */
+.assigned-courses-page .course-card {
+  background: white;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .course-link:hover .course-card {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-light);
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .course-card .card-header {
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  text-decoration: none !important;
+}
+
+/* Ensure all text elements inside card have no decoration */
+.assigned-courses-page .course-card * {
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .course-code-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.assigned-courses-page .course-code {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .batch-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.assigned-courses-page .batch-badge {
+  background: linear-gradient(135deg, var(--secondary) 0%, #f59e0b 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(248, 183, 57, 0.2);
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .batch-badge i {
+  font-size: 0.85rem;
+}
+
+.assigned-courses-page .card-body {
+  padding: 1.5rem;
+  flex: 1;
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .course-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin: 0 0 1.5rem 0;
+  line-height: 1.4;
+  min-height: 3.5em;
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .course-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .detail-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: var(--light);
+  border-radius: var(--radius-sm);
+  transition: all 0.3s ease;
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .detail-item:hover {
+  background: #f1f5f9;
+  transform: translateX(4px);
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .detail-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .detail-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .detail-label {
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.125rem;
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .detail-value {
+  color: var(--dark);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .card-footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .action-button {
+  background: var(--primary);
+  color: white;
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+  text-align: center;
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .course-link:hover .action-button {
+  background: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(26, 75, 140, 0.2);
+  text-decoration: none !important;
+}
+
+.assigned-courses-page .action-button i {
+  font-size: 1rem;
+}
+
+/* Empty State */
+.assigned-courses-page .empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  padding: 4rem 2rem;
+}
+
+.assigned-courses-page .empty-content {
+  max-width: 500px;
+  text-align: center;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.assigned-courses-page .empty-icon {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--light) 0%, #e5e7eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 2rem;
+}
+
+.assigned-courses-page .empty-icon i {
+  font-size: 3rem;
+  color: var(--primary);
+  opacity: 0.5;
+}
+
+.assigned-courses-page .empty-state h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 1rem;
+}
+
+.assigned-courses-page .empty-text {
+  color: #6b7280;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.assigned-courses-page .empty-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.assigned-courses-page .btn {
+  padding: 0.875rem 2rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.assigned-courses-page .btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color: white;
+}
+
+.assigned-courses-page .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.assigned-courses-page .btn-outline {
+  background: white;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+}
+
+.assigned-courses-page .btn-outline:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.2);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Stagger animation for course cards */
+.assigned-courses-page .course-card {
+  animation: fadeInUp 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.assigned-courses-page .course-card:nth-child(1) { animation-delay: 0.1s; }
+.assigned-courses-page .course-card:nth-child(2) { animation-delay: 0.2s; }
+.assigned-courses-page .course-card:nth-child(3) { animation-delay: 0.3s; }
+.assigned-courses-page .course-card:nth-child(4) { animation-delay: 0.4s; }
+.assigned-courses-page .course-card:nth-child(5) { animation-delay: 0.5s; }
+.assigned-courses-page .course-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .assigned-courses-page .courses-grid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  }
+}
+
+@media (max-width: 992px) {
+  .assigned-courses-page .page-header {
+    padding: 2rem;
+  }
+
+  .assigned-courses-page .page-title {
+    font-size: 2rem;
+  }
+
+  .assigned-courses-page .courses-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    padding: 1.25rem;
+  }
+
+  .assigned-courses-page .year-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .assigned-courses-page .year-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 768px) {
+  .assigned-courses-page {
+    padding: 15px;
+  }
+
+  .assigned-courses-page .page-header {
+    padding: 1.75rem;
+    border-radius: 12px;
+  }
+
+  .assigned-courses-page .page-title {
+    font-size: 1.75rem;
+  }
+
+  .assigned-courses-page .page-subtitle {
+    font-size: 1rem;
+  }
+
+  .assigned-courses-page .year-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .assigned-courses-page .year-title {
+    font-size: 1.25rem;
+  }
+
+  .assigned-courses-page .courses-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    padding: 1.25rem;
+  }
+
+  .assigned-courses-page .course-title {
+    font-size: 1.15rem;
+  }
+
+  .assigned-courses-page .empty-state {
+    min-height: 50vh;
+    padding: 3rem 1.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .assigned-courses-page {
+    padding: 10px;
+  }
+
+  .assigned-courses-page .page-header {
+    padding: 1.5rem;
+  }
+
+  .assigned-courses-page .page-title {
+    font-size: 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .assigned-courses-page .page-title i {
+    font-size: 1.8rem;
+  }
+
+  .assigned-courses-page .info-badge {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .assigned-courses-page .course-card .card-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .assigned-courses-page .batch-section {
+    align-items: flex-start;
+  }
+
+  .assigned-courses-page .empty-actions {
+    flex-direction: column;
+  }
+
+  .assigned-courses-page .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Scrollbar Styling */
+.assigned-courses-page .courses-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.assigned-courses-page .courses-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.assigned-courses-page .courses-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.assigned-courses-page .courses-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+</style>
+{% endblock content %}

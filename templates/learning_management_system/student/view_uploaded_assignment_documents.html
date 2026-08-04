@@ -1,0 +1,544 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Modern UI Kit -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    .assignment-scope {
+        /* Scope all styles under this class to prevent affecting base template */
+        --primary: #4361EE;
+        --primary-light: #EFF3FF;
+        --secondary: #3A0CA3;
+        --accent: #00B4D8;
+        --text-dark: #2B2D42;
+        --text-medium: #4A4B63;
+        --text-light: #8D8E9E;
+        --border: #E2E4ED;
+        --bg-light: #F8F9FC;
+
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 20px;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    .assignment-scope .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .assignment-scope .page-title {
+        font-weight: 700;
+        font-size: 1.6rem;
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .assignment-scope .page-title i {
+        color: var(--primary);
+        background: var(--primary-light);
+        padding: 8px;
+        border-radius: 8px;
+    }
+
+    .assignment-scope .badge {
+        background: var(--primary-light);
+        color: var(--primary);
+        padding: 5px 10px;
+        border-radius: 16px;
+        font-weight: 500;
+        font-size: 0.8rem;
+        margin-left: 8px;
+    }
+
+    .assignment-scope .btn {
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+    }
+
+    .assignment-scope .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .assignment-scope .btn-primary:hover {
+        background: var(--secondary);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(67, 97, 238, 0.15);
+    }
+
+    .assignment-scope .btn-primary:disabled {
+        background: var(--text-light);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .assignment-scope .assignments-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+    }
+
+    .assignment-scope .assignment-card {
+        background: white;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.02);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .assignment-scope .assignment-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(67, 97, 238, 0.08);
+    }
+
+    .assignment-scope .assignment-card-body {
+        padding: 14px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .assignment-scope .assignment-title {
+        font-weight: 600;
+        color: var(--text-dark);
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+
+    .assignment-scope .assignment-description {
+        color: var(--text-medium);
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+        line-height: 1.4;
+    }
+
+    .assignment-scope .assignment-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+
+    .assignment-scope .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: var(--text-medium);
+    }
+
+    .assignment-scope .meta-icon {
+        color: var(--primary);
+        width: 18px;
+        text-align: center;
+    }
+
+    .assignment-scope .assignment-file {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 12px;
+        font-size: 0.85rem;
+    }
+
+    .assignment-scope .file-link {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .assignment-scope .file-link:hover {
+        text-decoration: underline;
+    }
+
+    .assignment-scope .submission-status {
+        padding: 6px 10px;
+        border-radius: 16px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 10px;
+    }
+
+    .assignment-scope .status-submitted {
+        background: #E3FCEF;
+        color: #006644;
+    }
+
+    .assignment-scope .status-pending {
+        background: #FFF3E0;
+        color: #EF6C00;
+    }
+
+    .assignment-scope .status-not-submitted {
+        background: #FFEBEE;
+        color: #C62828;
+    }
+
+    .assignment-scope .status-marked {
+        background: #E3F2FD;
+        color: #1565C0;
+    }
+
+    .assignment-scope .due-date-passed {
+        color: #C62828;
+        font-weight: 500;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.85rem;
+    }
+
+    .assignment-scope .marked-info {
+        color: #1565C0;
+        font-weight: 500;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 8px;
+        background: #E3F2FD;
+        border-radius: 6px;
+        font-size: 0.85rem;
+    }
+
+    .assignment-scope .empty-state {
+        text-align: center;
+        padding: 2.5rem;
+        background: var(--bg-light);
+        border-radius: 10px;
+        border: 1px dashed var(--border);
+    }
+
+    .assignment-scope .empty-icon {
+        font-size: 2.5rem;
+        color: var(--primary);
+        opacity: 0.2;
+        margin-bottom: 1rem;
+    }
+
+    .assignment-scope .empty-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text-dark);
+        font-size: 1.2rem;
+    }
+
+    /* File Upload Styles */
+    .assignment-scope .file-upload-container {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+    }
+
+    .assignment-scope .file-upload-wrapper {
+        margin-bottom: 10px;
+    }
+
+    .assignment-scope .file-upload-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        border: 2px dashed var(--border);
+        border-radius: 6px;
+        background: var(--bg-light);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .assignment-scope .file-upload-label:hover {
+        border-color: var(--primary);
+        background: rgba(67, 97, 238, 0.03);
+    }
+
+    .assignment-scope .file-upload-icon {
+        font-size: 1.2rem;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+        opacity: 0.8;
+    }
+
+    .assignment-scope .file-upload-text {
+        font-weight: 500;
+        color: var(--text-medium);
+        margin-bottom: 0.3rem;
+        font-size: 0.85rem;
+    }
+
+    .assignment-scope .file-upload-subtext {
+        font-size: 0.75rem;
+        color: var(--text-light);
+    }
+
+    .assignment-scope .file-selected {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px;
+        background: var(--bg-light);
+        border-radius: 6px;
+        margin-bottom: 10px;
+    }
+
+    .assignment-scope .file-selected i {
+        color: var(--primary);
+    }
+
+    .assignment-scope .file-selected-info {
+        flex-grow: 1;
+    }
+
+    .assignment-scope .file-selected-name {
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+
+    .assignment-scope .file-selected-size {
+        font-size: 0.75rem;
+        color: var(--text-light);
+    }
+
+    .assignment-scope .file-selected-remove {
+        color: var(--text-light);
+        cursor: pointer;
+    }
+
+    
+</style>
+
+<div class="assignment-scope">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-tasks"></i>
+            Course Assignments
+            <span class="badge">{{ course_code }}</span>
+        </h1>
+    </div>
+    
+    <!-- Assignments Grid -->
+    {% if assignments %}
+    <div class="assignments-grid">
+        {% for assignment in assignments %}
+        <div class="assignment-card">
+            <div class="assignment-card-body">
+                <h3 class="assignment-title">{{ assignment.title }}</h3>
+                <p class="assignment-description">{{ assignment.description|truncatechars:80 }}</p>
+                
+                <div class="assignment-meta">
+                    <div class="meta-item">
+                        <span class="meta-icon"><i class="fas fa-calendar-alt"></i></span>
+                        <span>Due: {{ assignment.due_date|date:"M d, Y h:i A" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon"><i class="fas fa-star"></i></span>
+                        <span>Marks: {{ assignment.total_marks }}</span>
+                    </div>
+                </div>
+                
+                {% if assignment.assignment_file %}
+                <div class="assignment-file">
+                    <i class="fas fa-paperclip"></i>
+                    <a href="{{ assignment.assignment_file.url }}" target="_blank" class="file-link">
+                        View Assignment File
+                    </a>
+                </div>
+                {% endif %}
+                
+                <!-- Submission Status -->
+                {% with submission=assignment.submissions.first %}
+                <div class="submission-status status-{% if submission %}{{ submission.status }}{% else %}not-submitted{% endif %}">
+                    <i class="fas fa-{% if submission.status == 'completed' %}check-circle{% elif submission.status == 'pending' %}hourglass-half{% elif submission.status == 'marked' %}check-double{% else %}times-circle{% endif %}"></i>
+                    {% if submission %}{{ submission.get_status_display }}{% else %}Not Submitted{% endif %}
+                </div>
+                
+                {% if submission and submission.marks_obtained %}
+                <div class="meta-item">
+                    <span class="meta-icon"><i class="fas fa-check-circle"></i></span>
+                    <span>Marks Obtained: {{ submission.marks_obtained }}</span>
+                </div>
+                {% endif %}
+                
+                {% if submission and submission.feedback %}
+                <div class="meta-item">
+                    <span class="meta-icon"><i class="fas fa-comment"></i></span>
+                    <span>Feedback: {{ submission.feedback|truncatechars:40 }}</span>
+                </div>
+                {% endif %}
+                
+                {% if submission and submission.submitted_file %}
+                <div class="assignment-file">
+                    <i class="fas fa-paperclip"></i>
+                    <a href="{{ submission.submitted_file.url }}" target="_blank" class="file-link">
+                        View Your Submission
+                    </a>
+                </div>
+                {% endif %}
+                
+                <!-- Submit Section (Hidden if Marked) -->
+                <div class="file-upload-container">
+                    {% if submission and submission.status == 'marked' %}
+                        <div class="marked-info">
+                            <i class="fas fa-check-double"></i>
+                            Submission marked. No further submissions allowed.
+                        </div>
+                    {% elif assignment.is_past_due %}
+                        <div class="due-date-passed">
+                            <i class="fas fa-exclamation-circle"></i>
+                            Submission deadline passed
+                        </div>
+                    {% else %}
+                        <form method="POST" enctype="multipart/form-data" class="submission-form" action="{% url 'submit_canva_assignment' assignment.id %}" data-assignment-id="{{ assignment.id }}">
+                            {% csrf_token %}
+                            <div class="file-upload-wrapper">
+                                <input type="file" name="submitted_file" id="fileInput{{ assignment.id }}" style="display: none;" required>
+                                <label for="fileInput{{ assignment.id }}" class="file-upload-label" id="fileLabel{{ assignment.id }}">
+                                    <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+                                    <div class="file-upload-text">Browse or drag & drop</div>
+                                    <div class="file-upload-subtext">PDF, DOCX, ZIP (Max 25MB)</div>
+                                </label>
+                            </div>
+                            
+                            <div id="filePreview{{ assignment.id }}" class="file-selected" style="display: none;">
+                                <i class="fas fa-file-alt"></i>
+                                <div class="file-selected-info">
+                                    <div class="file-selected-name" id="fileName{{ assignment.id }}"></div>
+                                    <div class="file-selected-size" id="fileSize{{ assignment.id }}"></div>
+                                </div>
+                                <i class="fas fa-times file-selected-remove" onclick="clearFileSelection('{{ assignment.id }}')"></i>
+                            </div>
+                            
+                            <div class="submit-btn-wrapper">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-upload"></i> 
+                                    {% if assignment.submissions.exists %}
+                                        Update Submission
+                                    {% else %}
+                                        Submit Assignment
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+                {% endwith %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-tasks empty-icon"></i>
+        <h3 class="empty-title">No Assignments Available</h3>
+        <p>No assignments available for this course.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.submission-form').forEach(form => {
+            const assignmentId = form.getAttribute('data-assignment-id');
+            if (!assignmentId) return; // Skip if no assignment ID
+
+            const fileInput = document.getElementById(`fileInput${assignmentId}`);
+            const fileLabel = document.getElementById(`fileLabel${assignmentId}`);
+            const filePreview = document.getElementById(`filePreview${assignmentId}`);
+            const fileName = document.getElementById(`fileName${assignmentId}`);
+            const fileSize = document.getElementById(`fileSize${assignmentId}`);
+
+            // Skip if critical elements are missing
+            if (!fileInput || !fileLabel || !filePreview || !fileName || !fileSize) {
+                console.warn(`Missing elements for assignmentId ${assignmentId}`);
+                return;
+            }
+
+            // Handle file selection
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    fileLabel.style.display = 'none';
+                    filePreview.style.display = 'flex';
+                    fileName.textContent = file.name;
+                    fileSize.textContent = `${(file.size/1024/1024).toFixed(2)} MB`;
+                }
+            });
+
+            // Drag and drop functionality
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                fileLabel.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                fileLabel.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                fileLabel.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                fileLabel.style.borderColor = 'var(--primary)';
+                fileLabel.style.background = 'rgba(67, 97, 238, 0.05)';
+            }
+
+            function unhighlight() {
+                fileLabel.style.borderColor = 'var(--border)';
+                fileLabel.style.background = 'var(--bg-light)';
+            }
+
+            fileLabel.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                fileInput.files = files;
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }, false);
+        });
+    });
+
+    function clearFileSelection(assignmentId) {
+        const fileInput = document.getElementById(`fileInput${assignmentId}`);
+        const fileLabel = document.getElementById(`fileLabel${assignmentId}`);
+        const filePreview = document.getElementById(`filePreview${assignmentId}`);
+
+        if (fileInput && fileLabel && filePreview) {
+            fileInput.value = '';
+            filePreview.style.display = 'none';
+            fileLabel.style.display = 'flex';
+        } else {
+            console.warn(`Cannot clear file selection for assignmentId ${assignmentId}: elements missing`);
+        }
+    }
+</script>
+
+{% endblock %}

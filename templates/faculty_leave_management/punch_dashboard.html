@@ -1,0 +1,461 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .pdash {
+    background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+    min-height: 100vh;
+    padding: 28px 0;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .pdash .wrap {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  .pdash .hero {
+    background: linear-gradient(135deg, #0d47a1, #1565c0);
+    color: white;
+    border-radius: 22px;
+    padding: 24px 28px;
+    box-shadow: 0 14px 34px rgba(13, 71, 161, 0.18);
+    margin-bottom: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .pdash .hero h2 {
+    margin: 0 0 5px;
+    font-size: 26px;
+    font-weight: 800;
+  }
+
+  .pdash .hero p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 13.5px;
+  }
+
+  .pdash .date-chip {
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .pdash .cardx {
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    border: 1px solid #eef2f8;
+    padding: 20px;
+    margin-bottom: 22px;
+  }
+
+  .pdash .filters {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.9fr) minmax(180px, 0.9fr) minmax(260px, 1.25fr) auto;
+    gap: 14px;
+    align-items: end;
+  }
+
+  .pdash label {
+    display: block;
+    margin-bottom: 6px;
+    color: #374151;
+    font-size: 12.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .pdash .form-control,
+  .pdash .form-select {
+    min-height: 42px;
+    border: 1px solid #dbe3ef;
+    border-radius: 10px;
+    box-shadow: none;
+    font-size: 13.5px;
+  }
+
+  .pdash .btn-main,
+  .pdash .btn-soft {
+    min-height: 42px;
+    border-radius: 10px;
+    border: 0;
+    font-weight: 800;
+    font-size: 13.5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    text-decoration: none;
+    padding: 0 14px;
+  }
+
+  .pdash .btn-main {
+    background: linear-gradient(135deg, #1565c0, #0d47a1);
+    color: white;
+  }
+
+  .pdash .btn-soft {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #dbe3ef;
+  }
+
+  .pdash .stat-grid,
+  .pdash .dept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+  }
+
+  .pdash .stat {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #1565c0;
+  }
+
+  .pdash .stat.punched { border-left-color: #16a34a; }
+  .pdash .stat.single { border-left-color: #d97706; }
+  .pdash .stat.absent { border-left-color: #dc2626; }
+
+  .pdash .stat-num {
+    color: #0f172a;
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .pdash .stat-label {
+    margin-top: 6px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .pdash .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 14px;
+    color: #0d47a1;
+    font-size: 15px;
+    font-weight: 900;
+  }
+
+  .pdash .dept-card {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #bae6fd;
+    border-radius: 14px;
+    padding: 16px;
+  }
+
+  .pdash .dept-name {
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 900;
+    min-height: 34px;
+  }
+
+  .pdash .dept-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .pdash .mini {
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 10px;
+    padding: 8px;
+    text-align: center;
+  }
+
+  .pdash .mini strong {
+    display: block;
+    color: #0d47a1;
+    font-size: 18px;
+  }
+
+  .pdash .mini span {
+    color: #64748b;
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .pdash .table-wrap {
+    overflow: visible;
+  }
+
+  .pdash table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+  }
+
+  .pdash th {
+    background: linear-gradient(135deg, #0d47a1, #1565c0);
+    color: white;
+    padding: 12px 10px;
+    text-align: center;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+
+  .pdash td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #eef2f8;
+    border-right: 1px solid #f1f5f9;
+    vertical-align: middle;
+  }
+
+  .pdash tr:hover td {
+    background: #f8fbff;
+  }
+
+  .pdash .emp-name {
+    color: #0f172a;
+    font-weight: 900;
+  }
+
+  .pdash .emp-meta {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .pdash .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .pdash .badge-present { background: #dcfce7; color: #166534; }
+  .pdash .badge-single { background: #fef3c7; color: #92400e; }
+  .pdash .badge-absent { background: #fee2e2; color: #991b1b; }
+
+  .pdash .warn {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #9a3412;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 18px;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  @media (max-width: 1100px) {
+    .pdash .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .pdash table,
+    .pdash thead,
+    .pdash tbody,
+    .pdash tr,
+    .pdash td {
+      display: block;
+      width: 100%;
+    }
+
+    .pdash thead { display: none; }
+
+    .pdash tr {
+      border: 1px solid #dbeafe;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    .pdash td {
+      display: grid;
+      grid-template-columns: 118px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      border-right: 0;
+      text-align: left !important;
+    }
+
+    .pdash td::before {
+      content: attr(data-label);
+      color: #0d47a1;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .pdash { padding: 16px 0; }
+    .pdash .hero { padding: 20px; }
+    .pdash .hero h2 { font-size: 21px; }
+    .pdash .filters { grid-template-columns: 1fr; }
+    .pdash .dept-metrics { grid-template-columns: repeat(2, 1fr); }
+    .pdash td { grid-template-columns: 94px minmax(0, 1fr); }
+  }
+</style>
+
+<div class="pdash">
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <h2><i class="fas fa-fingerprint me-2"></i>Punch Dashboard</h2>
+        <p>Your department live view of who punched, single punched, and absent.</p>
+      </div>
+      <div class="date-chip">
+        <i class="fas fa-calendar-day me-1"></i>{{ selected_date|date:"d M Y" }}
+      </div>
+    </div>
+
+    <div class="cardx">
+      <form method="get" class="filters">
+        <div>
+          <label>Date</label>
+          <input type="date" name="date" class="form-control" value="{{ selected_date|date:'Y-m-d' }}">
+        </div>
+        <div>
+          <label>Status</label>
+          <select name="status" class="form-select">
+            <option value="">All Status</option>
+            <option value="present" {% if selected_status == "present" %}selected{% endif %}>Punched</option>
+            <option value="single" {% if selected_status == "single" %}selected{% endif %}>Single Punch</option>
+            <option value="absent" {% if selected_status == "absent" %}selected{% endif %}>Absent</option>
+          </select>
+        </div>
+        <div>
+          <label>Search</label>
+          <input type="text" name="search" class="form-control" value="{{ search }}" placeholder="Name / ID">
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn-main" type="submit"><i class="fas fa-filter"></i>View</button>
+          <a class="btn-soft" href="{% url 'punch_dashboard' %}"><i class="fas fa-undo"></i>Reset</a>
+        </div>
+      </form>
+    </div>
+
+    {% if punch_errors %}
+      <div class="warn">
+        <i class="fas fa-triangle-exclamation me-1"></i>
+        Punch DB warning: {% for err in punch_errors %}<span>{{ err }}</span>{% if not forloop.last %}, {% endif %}{% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="stat-grid mb-4">
+      <div class="stat">
+        <div class="stat-num">{{ overall.total }}</div>
+        <div class="stat-label">Total Faculty</div>
+      </div>
+      <div class="stat punched">
+        <div class="stat-num">{{ overall.punched }}</div>
+        <div class="stat-label">Kept Punch</div>
+      </div>
+      <div class="stat single">
+        <div class="stat-num">{{ overall.single }}</div>
+        <div class="stat-label">Single Punch</div>
+      </div>
+      <div class="stat absent">
+        <div class="stat-num">{{ overall.absent }}</div>
+        <div class="stat-label">Absent</div>
+      </div>
+    </div>
+
+    <div class="cardx">
+      <h5 class="section-title"><i class="fas fa-building"></i>Department Summary</h5>
+      {% if dept_rows %}
+        <div class="dept-grid">
+          {% for dept in dept_rows %}
+            <div class="dept-card">
+              <div class="dept-name">{{ dept.department }}</div>
+              <div class="dept-metrics">
+                <div class="mini"><strong>{{ dept.total }}</strong><span>Total</span></div>
+                <div class="mini"><strong>{{ dept.punched }}</strong><span>Punched</span></div>
+                <div class="mini"><strong>{{ dept.single }}</strong><span>Single</span></div>
+                <div class="mini"><strong>{{ dept.absent }}</strong><span>Absent</span></div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-muted py-3">No department data found for the selected filters.</div>
+      {% endif %}
+    </div>
+
+    <div class="cardx">
+      <h5 class="section-title"><i class="fas fa-users"></i>Faculty Punch Details</h5>
+      {% if rows %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Faculty</th>
+                <th>Department</th>
+                <th>First Punch</th>
+                <th>Last Punch</th>
+                <th>Work Time</th>
+                <th>Punches</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in rows %}
+                <tr>
+                  <td data-label="#">{{ forloop.counter }}</td>
+                  <td data-label="Faculty">
+                    <div class="emp-name">{{ row.faculty.name|default:"-" }}</div>
+                    <div class="emp-meta">{{ row.faculty.faculty_id|default:"-" }}{% if row.designation != "-" %} &middot; {{ row.designation }}{% endif %}</div>
+                  </td>
+                  <td data-label="Department">{{ row.department }}</td>
+                  <td data-label="First Punch">{{ row.first_in }}</td>
+                  <td data-label="Last Punch">{{ row.last_out }}</td>
+                  <td data-label="Work Time">{{ row.duration }}</td>
+                  <td data-label="Punches">{{ row.punch_count }}</td>
+                  <td data-label="Status">
+                    <span class="status-badge {{ row.badge }}">
+                      {% if row.badge == "badge-present" %}
+                        <i class="fas fa-check"></i>
+                      {% elif row.badge == "badge-single" %}
+                        <i class="fas fa-exclamation"></i>
+                      {% else %}
+                        <i class="fas fa-times"></i>
+                      {% endif %}
+                      {{ row.status }}
+                    </span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center text-muted py-5">
+          <i class="fas fa-folder-open fa-2x mb-2"></i>
+          <div class="fw-bold">No faculty punch data found</div>
+          <div>Try changing the date, department, or search filter.</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

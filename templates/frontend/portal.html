@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Operations Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="dashboard-body">
+    <div class="main-content">
+        <header class="app-header">
+            <!-- Left Side: Logo/Name -->
+            <div class="header-left">
+                <h2>College Operations</h2>
+            </div>
+            <!-- Right Side: User Profile, Role Switcher & Logout -->
+            <div class="header-right">
+                <span id="user-name">Loading...</span>
+                <div class="role-switcher">
+                    <select id="role-select" onchange="switchRole(this.value)" class="role-dropdown">
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+                <button onclick="logout()" class="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <div class="content-placeholder">
+            <h3>Welcome to the Faculty Portal</h3>
+            <p>Select a module from the left menu to proceed.</p>
+            <div style="margin-top:20px; color:#666;">
+                [Mock Content: Student Records, Attendance, Timetable, etc.]
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Chat Widget -->
+    <div class="widget-container">
+        <!-- Notification Bubble -->
+        <div id="notif-bubble" class="notif-bubble hidden">0</div>
+
+        <div id="chat-window" class="chat-window hidden">
+            <header>
+                <div class="header-content">
+                    <h1>ERP Assistant</h1>
+                    <p>Support System</p>
+                </div>
+                <button id="close-btn" class="close-btn">&times;</button>
+            </header>
+            <div id="chat-history" class="chat-history">
+                <!-- Greeting will be loaded dynamically -->
+            </div>
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Type query..." />
+                <button id="send-btn">Send</button>
+            </div>
+        </div>
+        <button id="chat-toggle-btn" class="chat-toggle-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+        </button>
+    </div>
+
+    <style>
+        .notif-bubble {
+            position: absolute;
+            top: -10px;
+            right: -5px;
+            background-color: #ff4444;
+            color: white;
+            border-radius: 50%;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1001;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .role-switcher {
+            margin: 0 15px;
+        }
+
+        .role-dropdown {
+            padding: 5px 10px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            background: white;
+            font-weight: bold;
+            color: #007bff;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .role-dropdown:hover {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+        }
+    </style>
+
+    <script>
+        // --- Auth Check ---
+        const facultyId = sessionStorage.getItem('faculty_id');
+        let activeRole = sessionStorage.getItem('user_role');
+        const name = sessionStorage.getItem('user_name');
+        const allRolesStr = sessionStorage.getItem('all_roles');
+        const allRoles = allRolesStr ? JSON.parse(allRolesStr) : [activeRole];
+
+        if (!facultyId) {
+            window.location.href = 'index.html'; // Redirect to login
+        }
+
+        document.getElementById('user-name').innerText = name || 'User';
+
+        // Populate Role Dropdown
+        const roleSelect = document.getElementById('role-select');
+        allRoles.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r;
+            opt.textContent = r;
+            if (r === activeRole) opt.selected = true;
+            roleSelect.appendChild(opt);
+        });
+
+        function switchRole(newRole) {
+            sessionStorage.setItem('user_role', newRole);
+            activeRole = newRole;
+
+            // Visual notification
+            appendMessage(`🔄 **Context Switched**: Role updated to **${newRole}**.`, 'bot');
+
+            // Optional: Reload content placeholder based on role
+            document.querySelector('.content-placeholder h3').innerText = `Welcome to the ${newRole} Portal`;
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // --- Chat Logic ---
+        const chatWindow = document.getElementById('chat-window');
+        const chatToggleBtn = document.getElementById('chat-toggle-btn');
+        const closeBtn = document.getElementById('close-btn');
+        const chatHistory = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const notifBubble = document.getElementById('notif-bubble');
+
+        let pendingNotifications = [];
+
+        chatToggleBtn.addEventListener('click', () => {
+            chatWindow.classList.toggle('hidden');
+        });
+
+        closeBtn.addEventListener('click', () => {
+            chatWindow.classList.add('hidden');
+        });
+
+        // Click on Bubble: Show Notifs in Chat as Cards
+        notifBubble.addEventListener('click', async () => {
+            if (pendingNotifications.length > 0) {
+                chatWindow.classList.remove('hidden');
+
+                // 1. Render Cards
+                pendingNotifications.forEach(n => {
+                    // n.timestamp is now pre-formatted by the backend: "HH:MM AM/PM | MM/DD/YYYY"
+                    const timestampStr = n.timestamp;
+
+                    // Handle Class Report vs Student Notification
+                    let sourceLine = "";
+                    if (n.student_name && n.student_name !== 'General') {
+                        sourceLine = `Notification from ${n.sender_name} regarding ${n.student_name}`;
+                    } else {
+                        // It's a Class Report or General update
+                        sourceLine = `Notification from ${n.sender_name} regarding General`;
+                    }
+
+                    const cardHTML = `
+                        <div class="notification-card">
+                            <div class="notif-header">Welcome, ${name}</div>
+                            <div class="notif-source">${sourceLine}</div>
+                            <div class="notif-body">${n.message}</div>
+                            <div class="notif-footer">${timestampStr}</div>
+                        </div>
+                    `;
+
+                    const msgDiv = document.createElement('div');
+                    msgDiv.innerHTML = cardHTML;
+                    msgDiv.style.marginBottom = "10px";
+                    msgDiv.style.width = "100%";
+                    chatHistory.appendChild(msgDiv);
+                });
+
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+
+                // 2. Mark as Read on Server
+                const ids = pendingNotifications.map(n => n.id);
+                try {
+                    await fetch('/api/notifications/read/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ids: ids })
+                    });
+                } catch (e) {
+                    console.error("Failed to mark as read", e);
+                }
+
+                // 3. Clear UI
+                notifBubble.classList.add('hidden');
+                notifBubble.innerText = '0';
+                pendingNotifications = [];
+            }
+        });
+
+        // Initial check
+        checkNotifications();
+        function appendMessage(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', sender + '-message');
+
+            // Simple Markdown-like formatter for Bold (**) and Newlines
+            let formattedText = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                .replace(/\n/g, '<br>'); // Newlines
+
+            msgDiv.innerHTML = formattedText;
+            chatHistory.appendChild(msgDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function appendChart(chartData) {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', 'bot-message');
+            msgDiv.style.maxWidth = '90%';
+
+            const canvas = document.createElement('canvas');
+            canvas.style.marginTop = '10px';
+            msgDiv.appendChild(canvas);
+
+            chatHistory.appendChild(msgDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(chartData),
+                    datasets: [{
+                        label: 'Marks',
+                        data: Object.values(chartData),
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, max: 100 }
+                    }
+                }
+            });
+        }
+
+        async function sendMessage() {
+            const query = userInput.value.trim();
+            if (!query) return;
+
+            appendMessage(query, 'user');
+            userInput.value = '';
+
+            try {
+                if (window.location.protocol === 'file:') {
+                    appendMessage("Error: Run via server (http://127.0.0.1:8000/).", 'bot');
+                    return;
+                }
+
+                const res = await fetch('/api/chat/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: query,
+                        faculty_id: parseInt(facultyId),
+                        role: activeRole,
+                        all_roles: allRoles
+                    })
+                });
+
+                if (!res.ok) {
+                    throw new Error(`Server ${res.status}`);
+                }
+
+                const data = await res.json();
+
+                // Handle Structured Response
+                if (typeof data.response === 'object' && data.response !== null) {
+                    if (data.response.type === 'chart') {
+                        appendMessage(data.response.text, 'bot');
+                        appendChart(data.response.data);
+                    } else {
+                        // If it's some other object, stringify it
+                        appendMessage(JSON.stringify(data.response), 'bot');
+                    }
+                } else {
+                    // Simple String Response (Error messages, greeting, etc)
+                    appendMessage(data.response, 'bot');
+                }
+            } catch (error) {
+                console.error(error);
+                appendMessage(`Error: ${error.message}`, 'bot');
+            }
+        }
+
+        async function sendInitialGreeting() {
+            // Send a hidden greeting trigger to get the "Hello Name" response
+            try {
+                const res = await fetch('/api/chat/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: "start",
+                        faculty_id: parseInt(facultyId),
+                        role: activeRole,
+                        all_roles: allRoles
+                    })
+                });
+                const data = await res.json();
+                appendMessage(data.response, 'bot');
+            } catch (e) {
+                console.error("Initial greeting failed", e);
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // --- Polling for Notifications ---
+        async function checkNotifications() {
+            if (!facultyId) return;
+            try {
+                const res = await fetch(`/api/notifications/?faculty_id=${facultyId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.length > 0) {
+                        pendingNotifications = data;
+                        notifBubble.innerText = data.length;
+                        notifBubble.classList.remove('hidden');
+                    }
+                }
+            } catch (e) {
+                console.error("Polling error", e);
+            }
+        }
+
+        // Poll every 5 seconds
+        setInterval(checkNotifications, 5000);
+        // Initial check
+        checkNotifications();
+        sendInitialGreeting();
+
+    </script>
+</body>
+
+</html>

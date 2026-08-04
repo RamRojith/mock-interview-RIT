@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+  .lab-wrap{padding:1.25rem 2rem 3rem;max-width:1650px;margin:0 auto;}
+
+  /* ---- Page header ---- */
+  .lab-header{
+    background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);
+    border-radius:16px;padding:1.75rem 2rem;margin-bottom:1.75rem;color:#fff;
+    box-shadow:0 8px 24px rgba(26,75,140,.18);position:relative;overflow:hidden;
+  }
+  .lab-header::after{
+    content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;
+    background:rgba(255,255,255,.08);
+  }
+  .lab-header h2{margin:0;font-weight:700;font-size:1.6rem;}
+  .lab-header p{margin:.35rem 0 0;color:rgba(255,255,255,.85);font-size:.92rem;}
+  .lab-header .back-link{
+    color:#fff;text-decoration:none;font-size:.85rem;opacity:.9;display:inline-flex;align-items:center;gap:.35rem;
+  }
+  .lab-header .back-link:hover{opacity:1;text-decoration:underline;color:#fff;}
+
+  /* ---- Step card (stage 1) ---- */
+  .step-badge{
+    display:inline-flex;align-items:center;gap:.55rem;background:#eef2ff;color:#1a4b8c;
+    font-weight:700;font-size:.78rem;padding:.35rem .9rem .35rem .35rem;border-radius:999px;margin-bottom:1rem;
+    letter-spacing:.02em;
+  }
+  .step-badge .num{
+    width:22px;height:22px;border-radius:50%;background:#1a4b8c;color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;flex-shrink:0;
+  }
+  .selector-card{
+    background:#fff;border-radius:16px;padding:2rem;box-shadow:0 4px 20px rgba(15,23,42,.06);
+    border:1px solid #eef1f5;
+  }
+  .field-label{font-weight:600;color:#334155;font-size:.85rem;margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem;}
+  .field-label i{color:#1a4b8c;width:16px;text-align:center;}
+  .selector-card .form-select,.selector-card .form-control{
+    border-radius:10px;border:1.5px solid #e2e8f0;padding:.55rem .75rem;font-size:.9rem;
+  }
+  .selector-card .form-select:focus,.selector-card .form-control:focus{
+    border-color:#2c5aa0;box-shadow:0 0 0 .2rem rgba(44,90,160,.12);
+  }
+  .btn-load-grid{
+    background:linear-gradient(135deg,#1a4b8c,#2c5aa0);border:none;border-radius:10px;
+    padding:.6rem 1rem;font-weight:600;color:#fff;transition:transform .15s ease,box-shadow .15s ease;
+  }
+  .btn-load-grid:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(26,75,140,.28);color:#fff;}
+  .hint-box{
+    background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:.7rem 1rem;
+    color:#64748b;font-size:.82rem;margin-top:1.25rem;display:flex;gap:.6rem;align-items:flex-start;
+  }
+  .hint-box i{color:#2c5aa0;margin-top:.15rem;}
+
+  /* ---- Summary bar (stage 2) ---- */
+  .summary-bar{
+    background:#fff;border-radius:14px;padding:1.1rem 1.4rem;margin-bottom:1.25rem;
+    box-shadow:0 2px 10px rgba(15,23,42,.05);border:1px solid #eef1f5;
+    display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;
+  }
+  .summary-pill{
+    background:#f1f5fb;border:1px solid #dbe4f3;border-radius:999px;padding:.4rem .9rem;
+    font-size:.82rem;color:#1e3a5f;display:flex;align-items:center;gap:.4rem;
+  }
+  .summary-pill i{color:#2c5aa0;}
+  .summary-pill strong{color:#0f2c52;}
+  .summary-pill.count{background:#e9f7ef;border-color:#bfe6cd;color:#166534;}
+  .summary-pill.count i{color:#16a34a;}
+
+  /* ---- Meta card (regulation/year) ---- */
+  .meta-card{
+    background:#fff;border-radius:14px;padding:1.25rem 1.4rem;margin-bottom:1.25rem;
+    box-shadow:0 2px 10px rgba(15,23,42,.05);border:1px solid #eef1f5;
+  }
+
+  /* ---- Timetable grid ---- */
+  .grid-card{
+    background:#fff;border-radius:16px;padding:1.25rem;box-shadow:0 4px 20px rgba(15,23,42,.06);
+    border:1px solid #eef1f5;overflow:hidden;
+  }
+  .tt-scroll{overflow-x:auto;border-radius:12px;}
+  .tt-table{border-collapse:separate;border-spacing:0;width:100%;background:#fff;min-width:1180px;}
+  .tt-table th,.tt-table td{border:1px solid #e6ebf2;padding:8px;text-align:center;vertical-align:middle;}
+  .tt-table thead th{
+    background:linear-gradient(135deg,#1a4b8c,#2c5aa0);color:#fff;font-size:.78rem;font-weight:600;
+    position:sticky;top:0;z-index:2;padding:12px 8px;text-transform:uppercase;letter-spacing:.03em;
+  }
+  .tt-table thead th:first-child{border-top-left-radius:10px;left:0;z-index:3;}
+  .tt-table thead th:last-child{border-top-right-radius:10px;}
+  .tt-table tbody tr:nth-child(even){background:#fafbfd;}
+  .tt-table tbody tr:hover{background:#eef4fc;}
+  .tt-table td.day{
+    background:#eef2f9;font-weight:700;color:#1a4b8c;white-space:nowrap;font-size:.85rem;
+    position:sticky;left:0;z-index:1;border-right:2px solid #dbe4f3;
+  }
+  .tt-table tbody tr:hover td.day{background:#e1eaf7;}
+  .tt-cell{padding:5px !important;}
+  .tt-cell select{
+    width:100%;min-width:165px;font-size:.78rem;border-radius:8px;border:1.5px solid #e2e8f0;
+    padding:.4rem .5rem;transition:border-color .15s ease,background-color .15s ease;
+  }
+  .tt-cell select:focus{border-color:#2c5aa0;box-shadow:0 0 0 .15rem rgba(44,90,160,.12);}
+  .tt-cell.slot-filled select{border-color:#86c9a3;background-color:#f2fbf6;color:#166534;font-weight:600;}
+  .tt-cell.slot-empty select{background-color:#fff;color:#64748b;}
+  .tt-legend{display:flex;gap:1.25rem;align-items:center;font-size:.78rem;color:#64748b;margin-top:.85rem;flex-wrap:wrap;}
+  .tt-legend .dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:.35rem;}
+  .tt-legend .dot.filled{background:#86c9a3;}
+  .tt-legend .dot.empty{background:#e2e8f0;}
+
+  /* ---- Action bar ---- */
+  .action-bar{
+    background:#fff;border-radius:14px;padding:1.1rem 1.4rem;margin-top:1.25rem;
+    box-shadow:0 2px 10px rgba(15,23,42,.05);border:1px solid #eef1f5;
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;
+  }
+  .btn-save-tt{
+    background:linear-gradient(135deg,#16a34a,#15803d);border:none;border-radius:10px;
+    padding:.65rem 1.5rem;font-weight:600;color:#fff;transition:transform .15s ease,box-shadow .15s ease;
+  }
+  .btn-save-tt:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(21,128,61,.28);color:#fff;}
+  .btn-cancel-tt{border-radius:10px;padding:.65rem 1.25rem;font-weight:500;}
+
+  /* ---- Danger zone ---- */
+  .danger-zone{
+    background:#fff5f5;border:1px solid #fecaca;border-radius:14px;padding:1.1rem 1.4rem;margin-top:1.25rem;
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;
+  }
+  .danger-zone .dz-text{color:#991b1b;font-size:.85rem;}
+  .danger-zone .dz-text strong{display:block;font-size:.92rem;margin-bottom:.1rem;}
+  .btn-delete-tt{
+    border-radius:10px;padding:.55rem 1.25rem;font-weight:600;border:1.5px solid #ef4444;color:#ef4444;
+    background:#fff;transition:background-color .15s ease,color .15s ease;
+  }
+  .btn-delete-tt:hover{background:#ef4444;color:#fff;}
+
+  @media (max-width:768px){
+    .lab-wrap{padding:1rem;}
+    .lab-header{padding:1.25rem 1.4rem;}
+    .selector-card{padding:1.25rem;}
+  }
+</style>
+
+<div class="lab-wrap">
+
+  <!-- ================= Header ================= -->
+  <div class="lab-header">
+    <a href="{% url 'lab_timetable_view' %}{% if lab_obj %}?lab={{ sel_lab }}&semester={{ sel_sem }}&dept={{ lab_obj.department_id }}&section={{ sel_section }}{% endif %}" class="back-link mb-2 d-inline-flex">
+      <i class="fas fa-arrow-left"></i> Back to Lab Timetables
+    </a>
+    <h2><i class="fa-solid fa-table-cells-large me-2"></i>{% if is_edit %}Edit Lab Timetable{% else %}Create Lab Timetable{% endif %}</h2>
+    <p>{% if is_edit %}Update the weekly schedule for this lab section.{% else %}Build the weekly 8-period × 5-day schedule for a lab section.{% endif %}</p>
+  </div>
+
+  {% if messages %}{% for m in messages %}
+    <div class="alert alert-{{ m.tags }} alert-dismissible fade show">{{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}{% endif %}
+
+  {% if not show_grid %}
+  <!-- ================= Stage 1: choose lab + semester + section ================= -->
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <span class="step-badge"><span class="num">1</span> Step 1 of 2 — Choose Lab, Semester &amp; Section</span>
+
+      <div class="selector-card">
+        <form method="get" action="{% url 'lab_timetable_create' %}">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+              <label class="field-label"><i class="fa-solid fa-flask"></i>Lab <span class="text-danger">*</span></label>
+              <select name="lab" id="tt_lab" class="form-select" required>
+                <option value="">-- Select Lab --</option>
+                {% for l in labs %}<option value="{{ l.id }}" data-dept="{{ l.department_id }}" {% if sel_lab == l.id|stringformat:'s' %}selected{% endif %}>{{ l.lab_code }} — {{ l.lab_name }} ({{ l.department.Department }})</option>{% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="field-label"><i class="fa-solid fa-layer-group"></i>Semester <span class="text-danger">*</span></label>
+              <select name="semester" class="form-select" required>
+                <option value="">--</option>
+                {% for s in semesters %}<option value="{{ s }}" {% if sel_sem == s %}selected{% endif %}>Semester {{ s }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="field-label"><i class="fa-solid fa-users-rectangle"></i>Section <span class="text-danger">*</span></label>
+              <select name="section" id="tt_section" class="form-select" required>
+                <option value="">{% if sel_lab %}-- Select --{% else %}-- Select lab first --{% endif %}</option>
+                {% if sel_section %}<option value="{{ sel_section }}" selected>{{ sel_section }}</option>{% endif %}
+              </select>
+            </div>
+          </div>
+
+          <div class="text-end mt-4">
+            <button type="submit" class="btn btn-load-grid px-4"><i class="fa-solid fa-table-cells me-2"></i>Load Timetable Grid</button>
+          </div>
+        </form>
+
+        <div class="hint-box">
+          <i class="fa-solid fa-circle-info"></i>
+          <div>
+            The <strong>course list</strong> is automatically filtered to the selected lab's department &amp; semester, and the <strong>section list</strong> only shows sections that actually exist for that department.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var labSelect = document.getElementById("tt_lab");
+    var sectionSelect = document.getElementById("tt_section");
+    var preselectedSection = "{{ sel_section|escapejs }}";
+
+    function loadSections(deptId, keepValue) {
+      sectionSelect.innerHTML = '<option value="">-- Loading... --</option>';
+      if (!deptId) {
+        sectionSelect.innerHTML = '<option value="">-- Select lab first --</option>';
+        return;
+      }
+      fetch("{% url 'lab_get_sections' %}?dept=" + encodeURIComponent(deptId))
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          var sections = (data && data.sections) ? data.sections : [];
+          sectionSelect.innerHTML = "";
+          var blank = document.createElement("option");
+          blank.value = "";
+          blank.textContent = sections.length ? "-- Select --" : "-- No sections found --";
+          sectionSelect.appendChild(blank);
+          sections.forEach(function (sec) {
+            var opt = document.createElement("option");
+            opt.value = sec;
+            opt.textContent = sec;
+            if (keepValue && sec === keepValue) opt.selected = true;
+            sectionSelect.appendChild(opt);
+          });
+        })
+        .catch(function () {
+          sectionSelect.innerHTML = '<option value="">-- Unable to load sections --</option>';
+        });
+    }
+
+    labSelect.addEventListener("change", function () {
+      var opt = this.options[this.selectedIndex];
+      var deptId = opt ? opt.getAttribute("data-dept") : "";
+      loadSections(deptId, null);
+    });
+
+    // On initial load, if a lab is already selected (GET params), fetch its sections
+    // and keep the previously chosen section selected.
+    if (labSelect.value) {
+      var initOpt = labSelect.options[labSelect.selectedIndex];
+      var initDept = initOpt ? initOpt.getAttribute("data-dept") : "";
+      loadSections(initDept, preselectedSection);
+    }
+  });
+  </script>
+
+  {% else %}
+  <!-- ================= Stage 2: the 8-period x 5-day editable grid ================= -->
+  <span class="step-badge"><span class="num">2</span> Step 2 of 2 — Build the Weekly Schedule</span>
+
+  <div class="summary-bar">
+    <span class="summary-pill"><i class="fa-solid fa-flask"></i>Lab: <strong>{{ lab_obj.lab_code }} — {{ lab_obj.lab_name }}</strong></span>
+    <span class="summary-pill"><i class="fa-solid fa-building"></i>Dept: <strong>{{ lab_obj.department.Department }}</strong></span>
+    <span class="summary-pill"><i class="fa-solid fa-layer-group"></i>Semester: <strong>{{ sel_sem }}</strong></span>
+    {% if sel_section %}<span class="summary-pill"><i class="fa-solid fa-users-rectangle"></i>Section: <strong>{{ sel_section }}</strong></span>{% endif %}
+    <span class="summary-pill count"><i class="fa-solid fa-book"></i>{{ courses|length }} course{{ courses|length|pluralize }} available</span>
+  </div>
+
+  <form method="post" action="{% if is_edit %}{% url 'lab_timetable_edit' timetable.id %}{% else %}{% url 'lab_timetable_create' %}{% endif %}">
+    {% csrf_token %}
+    {% if not is_edit %}
+      <input type="hidden" name="lab" value="{{ sel_lab }}">
+      <input type="hidden" name="semester" value="{{ sel_sem }}">
+      <input type="hidden" name="section" value="{{ sel_section }}">
+    {% endif %}
+
+    <div class="meta-card">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="field-label"><i class="fa-solid fa-scale-balanced"></i>Regulation</label>
+          <select name="regulation" class="form-select">
+            <option value="">--</option>
+            {% for r in regulations %}<option value="{{ r.id }}" {% if timetable and timetable.regulation_id == r.id %}selected{% endif %}>{{ r }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="field-label"><i class="fa-solid fa-calendar-days"></i>Academic Year</label>
+          <input type="text" name="year" class="form-control" value="{{ timetable.year|default:'' }}" placeholder="e.g. 2025-2026">
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-card">
+      <div class="tt-scroll">
+        <table class="tt-table">
+          <thead>
+            <tr>
+              <th style="min-width:120px;">Day \ Period</th>
+              <th>Period 1</th><th>Period 2</th><th>Period 3</th><th>Period 4</th>
+              <th>Period 5</th><th>Period 6</th><th>Period 7</th><th>Period 8</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in grid_rows %}
+            <tr>
+              <td class="day">{{ row.label }}</td>
+              {% for cell in row.cells %}
+              <td class="tt-cell {% if cell.course_id %}slot-filled{% else %}slot-empty{% endif %}">
+                <select name="slot_{{ row.day }}_{{ cell.period }}" class="tt-slot-select">
+                  <option value="">— Free —</option>
+                  {% for c in courses %}
+                    <option value="{{ c.id }}" {% if c.id == cell.course_id %}selected{% endif %}>{{ c.course_code }} - {{ c.title }} (P:{{ c.p_value }})</option>
+                  {% endfor %}
+                </select>
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tt-legend">
+        <span><span class="dot filled"></span>Course assigned</span>
+        <span><span class="dot empty"></span>Free period</span>
+        <span class="ms-auto"><i class="fa-solid fa-keyboard me-1"></i>Tip: click a cell and type the course code to jump to it quickly.</span>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <a href="{% url 'lab_timetable_view' %}?lab={{ sel_lab }}&semester={{ sel_sem }}&dept={{ lab_obj.department_id }}&section={{ sel_section }}" class="btn btn-outline-secondary btn-cancel-tt">
+        <i class="fas fa-xmark me-1"></i>Cancel
+      </a>
+      <button type="submit" class="btn btn-save-tt">
+        <i class="fas fa-floppy-disk me-2"></i>{% if is_edit %}Update Timetable{% else %}Save Timetable{% endif %}
+      </button>
+    </div>
+  </form>
+
+  {% if is_edit %}
+  <div class="danger-zone">
+    <div class="dz-text">
+      <strong><i class="fa-solid fa-triangle-exclamation me-1"></i>Danger Zone</strong>
+      Deleting this timetable removes all 40 scheduled slots permanently. This cannot be undone.
+    </div>
+    <form method="post" action="{% url 'lab_timetable_delete' timetable.id %}"
+          onsubmit="return confirm('Delete this lab timetable? This cannot be undone.');">
+      {% csrf_token %}
+      <button class="btn btn-delete-tt"><i class="fas fa-trash me-1"></i>Delete this Timetable</button>
+    </form>
+  </div>
+  {% endif %}
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".tt-slot-select").forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        var td = this.closest(".tt-cell");
+        if (!td) return;
+        if (this.value) {
+          td.classList.add("slot-filled");
+          td.classList.remove("slot-empty");
+        } else {
+          td.classList.add("slot-empty");
+          td.classList.remove("slot-filled");
+        }
+      });
+    });
+  });
+  </script>
+  {% endif %}
+</div>
+{% endblock content %}

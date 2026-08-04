@@ -1,0 +1,230 @@
+{% load static %}
+{% load flm_tags %}
+
+{% faculty_leave_types as leave_types %}
+
+<div class="modal fade" id="LeaveTypeModel" tabindex="-1" aria-labelledby="LeaveTypeModelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            
+            <!-- Modal Header -->
+            <div class="modal-header text-dark bg-light">
+                <h5 class="modal-title fw-bold" id="LeaveTypeModelModalLabel">Leave Type Management</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                {% if messages %}
+                <div class="mb-3">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="fas {% if message.tags == 'success' %}fa-check-circle text-success{% else %}fa-exclamation-triangle text-danger{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="container-fluid">
+                    <div class="row">
+                        <!-- Left: Add/Edit Form -->
+                        <div class="col-md-5 border-end">
+                            <form method="POST" id="leaveTypeForm" action="{% url 'faculty_leave_types' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" id="formAction" value="add">
+                                <input type="hidden" name="id" id="leaveTypeId">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-muted small">LEAVE NAME</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-umbrella text-primary"></i>
+                                        </span>
+                                        <input type="text" name="name" id="leaveName" class="form-control border-start-0" placeholder="Enter leave type name" required>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-muted small">LEAVE CODE</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-code text-primary"></i>
+                                        </span>
+                                        <input type="text" name="code" id="leaveCode" class="form-control border-start-0" placeholder="e.g. CL, SL, EL" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+    <label class="form-label fw-semibold text-muted small">TYPE</label>
+    <select name="is_leave" id="isLeave" class="form-select">
+         <option selected disabled> -- Select --</option>
+        <option value="true">Leave</option>
+        <option value="false">Permission</option>
+    </select>
+</div>
+
+<div class="mb-3">
+    <label class="form-label fw-semibold text-muted small">RESTRICTION</label>
+    <select name="restriction" id="restriction" class="form-select">
+        <option value="restricted">Restricted (cannot apply at 0 balance)</option>
+        <option value="unrestricted">Not Restricted (can apply even at 0)</option>
+    </select>
+</div>
+
+<div class="mb-3 form-check form-switch">
+    <input class="form-check-input" type="checkbox" id="isActive" name="is_active" value="true" checked>
+    <label class="form-check-label" for="isActive">Active</label>
+</div>
+                                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" id="submitBtn">
+                                    <i class="fas fa-plus me-2"></i><span>Add Leave Type</span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Right: Existing Leave Types -->
+                        <div class="col-md-7">
+                            <h6 class="fw-bold text-muted mb-3">
+                                <i class="fas fa-list me-2 text-primary"></i>Existing Leave Types
+                            </h6>
+
+                            {% if leave_types %}
+                                {% for lt in leave_types %}
+                                <div class="card mb-2 shadow-sm border-0">
+                                   <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
+    <div>
+        <h6 class="mb-0 fw-semibold">{{ lt.name }}</h6>
+        <small class="text-muted">{{ lt.code }}</small>
+
+        <!-- TYPE BADGE -->
+        <div class="mt-1">
+            {% if lt.is_leave %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                    Leave
+                </span>
+            {% else %}
+                <span class="badge bg-info-subtle text-info border border-info-subtle">
+                    Permission
+                </span>
+            {% endif %}
+
+            <!-- ACTIVE STATUS -->
+            {% if lt.is_active %}
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                    Active
+                </span>
+            {% else %}
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                    Inactive
+                </span>
+            {% endif %}
+
+            <!-- RESTRICTION STATUS -->
+            {% if lt.restriction == 'unrestricted' %}
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                    Not Restricted
+                </span>
+            {% else %}
+                <span class="badge bg-dark-subtle text-dark border border-dark-subtle">
+                    Restricted
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div>
+        <button type="button" 
+                class="btn btn-sm btn-outline-warning me-1"
+                onclick="editLeaveType('{{ lt.id }}', '{{ lt.name }}', '{{ lt.code }}', '{{ lt.is_leave }}', '{{ lt.is_active }}', '{{ lt.restriction|default:'restricted' }}')"
+                data-bs-toggle="tooltip"
+                title="Edit">
+            <i class="fas fa-edit"></i> Edit
+        </button>
+
+        <form method="POST" action="{% url 'faculty_leave_types' %}" class="d-inline" onsubmit="return confirmDelete();">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="id" value="{{ lt.id }}">
+            <button type="submit" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete">
+               Delete <i class="fas fa-trash"></i> 
+            </button>
+        </form>
+    </div>
+</div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                            <div class="text-center py-5 text-muted">
+                                <i class="fas fa-umbrella-beach fa-2x mb-2"></i>
+                                <p>No Leave Types Found</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer bg-gradient-primary text-white">
+                <div class="w-100 d-flex justify-content-between align-items-center">
+                    <small>
+                        <i class="fas fa-info-circle me-1"></i>
+                        Total {{ leave_types|length }} leave type{{ leave_types|length|pluralize }}
+                    </small>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.input-group-text { background-color: #f8fafc; border-color: #e2e8f0; }
+.card:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.btn-outline-warning:hover { background-color: #facc15; color: black; }
+.btn-outline-danger:hover { background-color: #ef4444; color: white; }
+</style>
+
+<script>
+function editLeaveType(id, name, code, is_leave, is_active, restriction) {
+    document.getElementById('leaveTypeId').value = id;
+    document.getElementById('leaveName').value = name;
+    document.getElementById('leaveCode').value = code;
+
+    document.getElementById('isLeave').value = is_leave === 'True' ? 'true' : 'false';
+    document.getElementById('isActive').checked = (is_active === 'True');
+
+    const restrictionEl = document.getElementById('restriction');
+    if (restrictionEl) restrictionEl.value = restriction || 'restricted';
+
+    document.getElementById('formAction').value = 'edit';
+
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerHTML = '<i class="fas fa-save me-2"></i><span>Update Leave Type</span>';
+    submitBtn.classList.remove('btn-primary');
+    submitBtn.classList.add('btn-warning');
+}
+
+function resetLeaveForm() {
+    document.getElementById('leaveTypeForm').reset();
+    document.getElementById('formAction').value = 'add';
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerHTML = '<i class="fas fa-plus me-2"></i><span>Add Leave Type</span>';
+    submitBtn.classList.remove('btn-warning');
+    submitBtn.classList.add('btn-primary');
+}
+
+function confirmDelete() {
+    return confirm('Are you sure you want to delete this leave type?');
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Removed modal auto-open logic
+    const modalEl = document.getElementById('LeaveTypeModel');
+    modalEl.addEventListener('hidden.bs.modal', resetLeaveForm);
+
+    // Enable tooltips for buttons
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
+});
+</script>

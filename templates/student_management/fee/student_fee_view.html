@@ -1,0 +1,625 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<!-- Font Awesome (keep if not already loaded in base.html) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.fee-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.fee-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+}
+
+.fee-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.fee-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.92;
+  margin-top: 0.5rem;
+}
+
+.fee-portal .page-container { max-width: 1400px; margin: 0 auto; }
+
+.fee-portal .card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: all 0.25s ease;
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+.fee-portal .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.fee-portal .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: #fff;
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+}
+
+.fee-portal .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.fee-portal .card-body { padding: 2rem; }
+
+.fee-portal .alert {
+  padding: 1.1rem 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-left: 4px solid;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.fee-portal .alert-info {
+  border-left-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1e40af;
+}
+
+.fee-portal .alert-danger {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  color: #991b1b;
+}
+
+.fee-portal .alert-success {
+  border-left-color: #10b981;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  color: #065f46;
+}
+
+.fee-portal .alert-warning {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  color: #92400e;
+}
+
+.fee-portal .alert i { font-size: 1.15rem; }
+
+/* Student Info Grid */
+.fee-portal .info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.fee-portal .info-card {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.25s ease;
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+.fee-portal .info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26,75,140,0.15);
+}
+
+.fee-portal .info-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.fee-portal .info-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.fee-portal .info-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1a4b8c;
+  line-height: 1.2;
+}
+
+/* Summary Badges */
+.fee-portal .summary-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.fee-portal .badge {
+  padding: 0.65rem 1.05rem;
+  border-radius: 25px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid;
+}
+
+.fee-portal .badge-info {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+
+.fee-portal .badge-secondary {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #475569;
+  border-color: #e2e8f0;
+}
+
+/* Tables */
+.fee-portal .table-responsive {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 2rem;
+}
+
+.fee-portal table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+}
+
+.fee-portal table th {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: #fff;
+  padding: 1rem 0.75rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fee-portal table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #374151;
+  font-weight: 600;
+}
+
+.fee-portal table tbody tr { transition: all 0.2s ease; }
+.fee-portal table tbody tr:hover {
+  background: rgba(26,75,140,0.03);
+  transform: translateY(-1px);
+}
+
+.fee-portal table tfoot {
+  background: #f8fafc;
+  font-weight: 800;
+}
+
+.fee-portal table tfoot td {
+  border-top: 2px solid #e2e8f0;
+  font-size: 1rem;
+  color: #1a4b8c;
+}
+
+/* Payment Summary */
+.fee-portal .payment-summary {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  border: 1px solid rgba(26,75,140,0.12);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.fee-portal .summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.fee-portal .summary-item {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid #f1f5f9;
+  transition: all 0.25s ease;
+}
+
+.fee-portal .summary-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+}
+
+.fee-portal .summary-label {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.fee-portal .summary-value {
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.fee-portal .text-danger { color: #ef4444 !important; }
+.fee-portal .text-success { color: #10b981 !important; }
+.fee-portal .text-muted { color: #6b7280 !important; }
+
+/* Buttons */
+.fee-portal .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.4rem;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.fee-portal .btn-outline-primary {
+  background: transparent;
+  color: #1a4b8c;
+  border: 2px solid #1a4b8c;
+}
+
+.fee-portal .btn-outline-primary:hover {
+  background: #1a4b8c;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26,75,140,0.30);
+}
+
+/* Receipt table */
+.fee-portal .receipt-table th {
+  background: linear-gradient(135deg, #475569 0%, #374151 100%);
+}
+
+/* Modal */
+.fee-portal .modal-content {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.fee-portal .modal-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: #fff;
+  border-bottom: none;
+  padding: 1.25rem 1.75rem;
+}
+
+.fee-portal .modal-header .btn-close { filter: invert(1); }
+
+.fee-portal .modal-body { padding: 0; }
+.fee-portal .modal-body iframe {
+  border: none;
+  width: 100%;
+  height: 75vh;
+  border-radius: 0 0 16px 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .fee-portal { padding: 1rem; }
+  .fee-portal .page-header h1 { font-size: 1.5rem; }
+  .fee-portal .card-body { padding: 1.25rem; }
+  .fee-portal .summary-grid { grid-template-columns: 1fr; }
+  .fee-portal .btn { width: 100%; justify-content: center; }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<div class="fee-portal">
+  <div class="page-header">
+    <h1><i class="fas fa-file-invoice-dollar me-2"></i>My Fee Details</h1>
+    <p class="header-subtitle">Track your fee payments and download receipts</p>
+  </div>
+
+  <div class="page-container">
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+          <i class="fas fa-info-circle"></i>
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Student Information -->
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="fas fa-user-graduate"></i> Student Information</h5>
+      </div>
+      <div class="card-body">
+        <div class="info-grid">
+
+          <div class="info-card">
+            <div class="info-icon"><i class="fas fa-id-card"></i></div>
+            <div>
+              <div class="info-label">Register Number</div>
+              <div class="info-value">{{ context_info.student.reg_no }}</div>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon"><i class="fas fa-signature"></i></div>
+            <div>
+              <div class="info-label">Name</div>
+              <div class="info-value">{{ context_info.student.name }}</div>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon"><i class="fas fa-building"></i></div>
+            <div>
+              <div class="info-label">Department</div>
+              <div class="info-value">
+                {{ context_info.department.Department|default:context_info.department }}
+              </div>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon"><i class="fas fa-tag"></i></div>
+            <div>
+              <div class="info-label">Quota</div>
+              <div class="info-value">{{ context_info.quota|default:"-" }}</div>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon"><i class="fas fa-layer-group"></i></div>
+            <div>
+              <div class="info-label">Mode</div>
+              <div class="info-value">{{ context_info.mode|default:"-" }}</div>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon"><i class="fas fa-users"></i></div>
+            <div>
+              <div class="info-label">Batch</div>
+              <div class="info-value">{{ context_info.student.batch }}</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    {% if fee_entries %}
+      <!-- Fee Summary -->
+      <div class="card">
+        <div class="card-header">
+          <h5><i class="fas fa-money-bill-wave"></i> Fee Summary</h5>
+        </div>
+        <div class="card-body">
+
+          <div class="summary-badges">
+            <span class="badge badge-info">
+              <i class="fas fa-info-circle"></i> Includes: {{ selected_fee_label }} fee + common fees
+            </span>
+            <span class="badge badge-secondary">
+              <i class="fas fa-calendar"></i> Current Year: {{ current_year_index }}
+            </span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Fee Type</th>
+                  <th>Degree</th>
+                  <th>Current Year Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in fee_entries %}
+                  <tr>
+                    {% if row.entry %}
+                      <td>{{ row.entry.fee_category.name }}</td>
+                      <td>{{ row.entry.degree.degree }}</td>
+                      <td>{{ row.current_amount }}</td>
+                    {% else %}
+                      <td colspan="2">{{ row.label }}</td>
+                      <td>{{ row.current_amount }}</td>
+                    {% endif %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="2" style="text-align:right;"><strong>Total (Current Year)</strong></td>
+                  <td><strong>{{ total_current_year }}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Payment Summary -->
+          <div class="payment-summary">
+            <div class="summary-grid">
+              <div class="summary-item">
+                <div class="summary-label">Pending Fee</div>
+                <div class="summary-value text-danger">{{ pending_total }}</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-label">Paid (Current Year)</div>
+                <div class="summary-value text-success">{{ entered_total }}</div>
+              </div>
+            </div>
+
+            {% if manual_entries and manual_entries.0.fee_receipt.fee_receipt %}
+              <div class="text-center">
+                <button type="button"
+                        class="btn btn-outline-primary"
+                        data-receipt-url="{{ manual_entries.0.fee_receipt.fee_receipt.url }}">
+                  <i class="fas fa-eye"></i> View Latest Receipt
+                </button>
+              </div>
+            {% endif %}
+          </div>
+
+          {% if manual_entries %}
+            <!-- Receipt History -->
+            <div class="receipt-history">
+              <h6 class="mb-3" style="color:#1a4b8c;font-weight:800;">
+                <i class="fas fa-history me-2"></i> Receipts (Current Year)
+              </h6>
+
+              <div class="table-responsive">
+                <table class="receipt-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Amount</th>
+                      <th>Receipt</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for me in manual_entries %}
+                      <tr>
+                        <td>{{ me.fee_receipt.uploaded_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ me.entered_fee }}</td>
+                        <td>
+                          {% if me.fee_receipt.fee_receipt %}
+                            <button type="button"
+                                    class="btn btn-outline-primary"
+                                    data-receipt-url="{{ me.fee_receipt.fee_receipt.url }}">
+                              <i class="fas fa-eye"></i> View
+                            </button>
+                          {% else %}
+                            <span class="text-muted">No file</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+
+      <!-- Receipt Modal -->
+      <div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title"><i class="fas fa-file-invoice me-2"></i>Receipt Preview</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <iframe id="receiptFrame" src=""></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          const modalEl = document.getElementById('receiptModal');
+          const frame = document.getElementById('receiptFrame');
+          if (!modalEl || !frame) return;
+
+          // Reset iframe when modal closes
+          modalEl.addEventListener('hidden.bs.modal', function () {
+            frame.src = '';
+          });
+
+          // Open receipt modal
+          document.querySelectorAll('[data-receipt-url]').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+              e.preventDefault();
+              const url = this.getAttribute('data-receipt-url');
+              if (url) {
+                frame.src = url;
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+              }
+            });
+          });
+
+          // Animation delay
+          document.querySelectorAll('.card').forEach((card, i) => {
+            card.style.animationDelay = `${i * 0.15}s`;
+          });
+
+          document.querySelectorAll('.info-card').forEach((card, i) => {
+            card.style.animationDelay = `${i * 0.08}s`;
+          });
+        });
+      </script>
+
+    {% else %}
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        No {{ selected_fee_label|default:"relevant" }} or common fees found for your department/quota.
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+{% endblock %}

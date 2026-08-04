@@ -1,0 +1,1520 @@
+{% extends "base.html" %}
+{% load static %}
+{% load feedback_tags %}
+
+{% block content %}
+
+<style>
+  :root{
+    --card:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --soft:#f8fafc;
+    --pri:#2563eb;
+    --success:#16a34a;
+    --r:16px;
+  }
+
+  .cfp{
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--ink);
+  }
+
+  .cfp *{
+    box-sizing: border-box;
+  }
+
+  .cfp .wrap{
+    max-width: 1600px;
+    margin: 18px auto;
+    padding: 0 12px;
+  }
+
+  .cfp .hero{
+    background: linear-gradient(
+      135deg,
+      rgba(37,99,235,.14),
+      rgba(99,102,241,.08)
+    );
+    border:1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px 18px;
+  }
+
+  .cfp .hero h3{
+    margin:0;
+    font-weight:600;
+    color:var(--ink);
+    text-align:left;
+  }
+
+  .cfp .sub{
+    color:var(--muted);
+    margin-top:4px;
+    text-align:left;
+  }
+
+  .cfp .cardx{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius: var(--r);
+    box-shadow: 0 8px 24px rgba(0,0,0,.06);
+  }
+
+  .cfp .pad{
+    padding:16px;
+  }
+
+  .cfp .filters{
+    display:grid;
+    grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr 1.6fr;
+    gap:12px;
+    align-items:end;
+    text-align:left;
+  }
+
+  @media (max-width: 1200px){
+    .cfp .filters{
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 700px){
+    .cfp .filters{
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .cfp .filters label,
+  .cfp .form-label{
+    font-weight:600;
+    color:var(--ink);
+    font-size:13px;
+    margin-bottom:6px;
+    display:block;
+  }
+
+  .cfp .filters select,
+  .cfp textarea,
+  .cfp .file-input{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:#fff;
+    font-weight:400;
+  }
+
+  .cfp textarea{
+    min-height:120px;
+    resize:vertical;
+  }
+
+  .cfp .filters select:disabled{
+    background:#f1f5f9;
+    cursor:not-allowed;
+    color:#94a3b8;
+  }
+
+  .cfp .btnx{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 14px;
+    border-radius:12px;
+    border:none;
+    font-weight:600;
+    cursor:pointer;
+    text-decoration:none;
+  }
+
+  .cfp .btn-pri{
+    background:var(--pri);
+    color:#fff;
+  }
+
+  .cfp .btn-soft{
+    background:#e5e7eb;
+    color:#111827;
+  }
+
+  .cfp .btn-pdf{
+    background:#0f172a;
+    color:#fff;
+  }
+
+  .cfp .btn-save{
+    background:var(--success);
+    color:#fff;
+  }
+
+  .cfp .stats{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:10px;
+    text-align:left;
+  }
+
+  .cfp .pill{
+    background:var(--soft);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:6px 10px;
+    font-size:13px;
+    color:var(--ink);
+    font-weight:500;
+  }
+
+  .cfp .selected-info{
+    margin-top:14px;
+    padding:14px 16px;
+    background:linear-gradient(135deg, #eff6ff, #f8fafc);
+    border:1px solid #dbeafe;
+    border-radius:14px;
+    color:#0f172a;
+    box-shadow:0 6px 18px rgba(37,99,235,.06);
+  }
+
+  .cfp .table-wrap{
+    overflow-x:auto;
+    overflow-y:visible;
+    border-radius:12px;
+    border:1px solid var(--border);
+    margin-top:12px;
+    background:#fff;
+  }
+
+  .cfp table.matrix{
+    width:100%;
+    border-collapse:collapse;
+    min-width:2250px;
+  }
+
+  .cfp .matrix th,
+  .cfp .matrix td{
+    border:1px solid var(--border);
+    padding:8px 10px;
+    vertical-align:middle;
+    text-align:center;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+
+  .cfp .matrix thead th{
+    background:var(--soft);
+    font-weight:600;
+    font-size:12px;
+  }
+
+  .cfp .leftcol{
+    text-align:left !important;
+  }
+
+  /*
+  -----------------------------------------------------------
+  Student information columns displayed only in this HTML page
+  -----------------------------------------------------------
+  */
+  .cfp .regno-head,
+  .cfp .regno-cell{
+    min-width:145px;
+    font-weight:600;
+  }
+
+  .cfp .student-head,
+  .cfp .student-cell{
+    min-width:220px;
+    max-width:280px;
+    text-align:left !important;
+  }
+
+  .cfp .student-cell{
+    white-space:normal !important;
+    line-height:1.4;
+    font-weight:600;
+  }
+
+  .cfp .qhead{
+    white-space:normal !important;
+    min-width:220px;
+    max-width:260px;
+    font-weight:600;
+  }
+
+  .cfp .extrahead{
+    white-space:normal !important;
+    min-width:180px;
+    max-width:240px;
+    font-weight:600;
+  }
+
+  .cfp .textcol{
+    white-space:normal !important;
+    min-width:220px;
+    max-width:320px;
+    text-align:left !important;
+    vertical-align:top !important;
+    line-height:1.5;
+  }
+
+  .cfp .totalcol{
+    background:#f8fafc;
+    font-weight:700;
+  }
+
+  .cfp .note{
+    color:var(--muted);
+    margin-top:8px;
+    text-align:left;
+  }
+
+  .cfp .summary-wrap{
+    margin-top:20px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:#fff;
+    overflow-x:auto;
+  }
+
+  .cfp .summary-table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1600px;
+    font-size:13px;
+  }
+
+  .cfp .summary-table th,
+  .cfp .summary-table td{
+    border:1px solid var(--border);
+    padding:8px 10px;
+    text-align:center;
+    vertical-align:middle;
+  }
+
+  .cfp .summary-table thead th{
+    background:var(--soft);
+    font-weight:600;
+    font-size:12.5px;
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+
+  .cfp .summary-table .leftcol{
+    text-align:left;
+    min-width:280px;
+    font-weight:600;
+  }
+
+  .cfp .summary-table .totalcol{
+    background:#f1f5f9;
+    font-weight:700;
+  }
+
+  .cfp .section-title{
+    font-size:16px;
+    font-weight:800;
+    margin-bottom:12px;
+    color:#0f172a;
+  }
+
+  .cfp .dashboard-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+    gap:18px;
+    margin-top:20px;
+  }
+
+  .cfp .dash-box{
+    position:relative;
+    overflow:hidden;
+    border:none;
+    border-radius:20px;
+    padding:20px;
+    color:#fff;
+    box-shadow:0 14px 30px rgba(0,0,0,.12);
+    min-height:170px;
+  }
+
+  .cfp .dash-box::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(
+      135deg,
+      rgba(255,255,255,.18),
+      rgba(255,255,255,.04)
+    );
+    pointer-events:none;
+  }
+
+  .cfp .dash-box:nth-child(1){
+    background:linear-gradient(135deg, #2563eb, #1d4ed8);
+  }
+
+  .cfp .dash-box:nth-child(2){
+    background:linear-gradient(135deg, #059669, #10b981);
+  }
+
+  .cfp .dash-box:nth-child(3){
+    background:linear-gradient(135deg, #7c3aed, #a855f7);
+  }
+
+  .cfp .dash-box:nth-child(4){
+    background:linear-gradient(135deg, #ea580c, #f59e0b);
+  }
+
+  .cfp .dash-title{
+    position:relative;
+    z-index:1;
+    font-size:14px;
+    font-weight:700;
+    color:rgba(255,255,255,.92);
+    margin-bottom:10px;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+  }
+
+  .cfp .dash-big{
+    position:relative;
+    z-index:1;
+    font-size:32px;
+    font-weight:800;
+    color:#fff;
+    line-height:1.15;
+    margin-bottom:6px;
+  }
+
+  .cfp .dash-sub{
+    position:relative;
+    z-index:1;
+    font-size:12px;
+    color:rgba(255,255,255,.86);
+    margin-top:6px;
+    line-height:1.5;
+  }
+
+  .cfp .course-box-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));
+    gap:18px;
+    margin-top:20px;
+  }
+
+  .cfp .course-summary-box{
+    background:linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border:1px solid #dbeafe;
+    border-radius:20px;
+    padding:18px;
+    box-shadow:0 10px 26px rgba(37,99,235,.08);
+    transition:all .25s ease;
+  }
+
+  .cfp .course-summary-box:hover{
+    transform:translateY(-4px);
+    box-shadow:0 16px 34px rgba(37,99,235,.14);
+  }
+
+  .cfp .course-summary-title{
+    font-size:16px;
+    font-weight:800;
+    color:#1e3a8a;
+    margin-bottom:4px;
+  }
+
+  .cfp .course-summary-sub{
+    color:#64748b;
+    font-size:12px;
+    margin-bottom:14px;
+    line-height:1.5;
+  }
+
+  .cfp .course-summary-avg{
+    display:inline-block;
+    background:linear-gradient(135deg, #dcfce7, #bbf7d0);
+    color:#166534;
+    font-size:24px;
+    font-weight:800;
+    padding:8px 16px;
+    border-radius:14px;
+    margin-bottom:14px;
+    border:1px solid #86efac;
+  }
+
+  .cfp .mini-stat-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+
+  .cfp .mini-pill{
+    background:linear-gradient(135deg, #eff6ff, #dbeafe);
+    border:1px solid #bfdbfe;
+    border-radius:999px;
+    padding:6px 12px;
+    font-size:12px;
+    color:#1d4ed8;
+    font-weight:700;
+  }
+
+  .cfp .cat-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .cfp .cat-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    padding:10px 12px;
+    background:linear-gradient(
+      135deg,
+      rgba(255,255,255,.96),
+      rgba(248,250,252,.92)
+    );
+    border:1px solid rgba(226,232,240,.9);
+    border-radius:12px;
+  }
+
+  .cfp .cat-name{
+    font-size:13px;
+    color:#0f172a;
+    font-weight:600;
+    line-height:1.4;
+  }
+
+  .cfp .cat-avg{
+    font-size:13px;
+    color:#fff;
+    font-weight:800;
+    white-space:nowrap;
+    background:linear-gradient(135deg, #2563eb, #3b82f6);
+    padding:6px 10px;
+    border-radius:10px;
+    min-width:64px;
+    text-align:center;
+  }
+
+  .cfp .remarks-grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:18px;
+    margin-top:18px;
+  }
+
+  @media (max-width: 900px){
+    .cfp .remarks-grid{
+      grid-template-columns:1fr;
+    }
+  }
+
+  .cfp .section-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:16px;
+    box-shadow:0 8px 24px rgba(0,0,0,.05);
+  }
+
+  .cfp .report-box{
+    margin-top:18px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:16px;
+    box-shadow:0 8px 24px rgba(0,0,0,.05);
+  }
+
+  .cfp .report-title{
+    font-size:15px;
+    font-weight:800;
+    color:#0f172a;
+    margin-bottom:12px;
+  }
+
+  .cfp .report-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .cfp .submitted-notes-wrap{
+    margin-top:20px;
+  }
+
+  .cfp .submitted-note-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:16px;
+    box-shadow:0 8px 24px rgba(0,0,0,.05);
+    margin-bottom:14px;
+  }
+
+  .cfp .submitted-note-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:10px;
+    flex-wrap:wrap;
+  }
+
+  .cfp .submitted-note-user{
+    font-weight:800;
+    color:#1e3a8a;
+  }
+
+  .cfp .submitted-note-line{
+    color:#0f172a;
+    line-height:1.6;
+    margin-top:6px;
+  }
+
+  .cfp .submitted-note-label{
+    font-weight:700;
+    color:#334155;
+  }
+</style>
+
+<link
+  rel="stylesheet"
+  href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css"
+>
+
+<link
+  rel="stylesheet"
+  href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css"
+>
+
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+>
+
+<div class="cfp">
+  <div class="wrap">
+
+    <div class="hero cardx">
+      <h3>View Feedbacks - Faculty Report</h3>
+
+      <div class="sub">
+        Department: {{ department.Department|default:department }}
+        &nbsp; | &nbsp;
+        Faculty: {{ faculty.name|default:faculty }}
+      </div>
+
+      <div class="stats">
+        <span class="pill">
+          Total Students: {{ total_students }}
+        </span>
+
+        <span class="pill">
+          Submitted: {{ submitted_students }}
+        </span>
+
+        <span class="pill">
+          Not Submitted: {{ not_submitted_students }}
+        </span>
+      </div>
+    </div>
+
+    <div class="cardx pad mt-3">
+
+      <form method="GET">
+        <div class="filters">
+
+          <div>
+            <label>Department</label>
+
+            {% if can_view_all_feedback_data %}
+              <select name="department_id" id="departmentSelect">
+                <option value="">Select Department</option>
+
+                {% for d in departments %}
+                  <option
+                    value="{{ d.id }}"
+                    {% if sel_department_id == d.id|stringformat:"s" %}
+                      selected
+                    {% endif %}
+                  >
+                    {{ d.Department }}
+                  </option>
+                {% endfor %}
+              </select>
+            {% else %}
+              <select disabled>
+                <option>
+                  {{ department.Department|default:department }}
+                </option>
+              </select>
+
+              <input
+                type="hidden"
+                name="department_id"
+                value="{{ department.id }}"
+              >
+            {% endif %}
+          </div>
+
+          <div>
+            <label>Batch</label>
+
+            <select name="batch">
+              <option value="">All</option>
+
+              {% for b in batches %}
+                <option
+                  value="{{ b }}"
+                  {% if sel_batch == b|stringformat:"s" %}
+                    selected
+                  {% endif %}
+                >
+                  {{ b }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label>Year</label>
+
+            <select name="year" id="yearSelect">
+              <option value="">All</option>
+
+              {% for y in years %}
+                <option
+                  value="{{ y }}"
+                  {% if sel_year == y|stringformat:"s" %}
+                    selected
+                  {% endif %}
+                >
+                  {{ y }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label>Semester</label>
+
+            <select name="semester" id="semesterSelect">
+              <option value="">All</option>
+
+              {% for s in semesters %}
+                <option
+                  value="{{ s }}"
+                  {% if sel_sem == s|stringformat:"s" %}
+                    selected
+                  {% endif %}
+                >
+                  {{ s }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label>Section</label>
+
+            <select name="section">
+              <option value="">All</option>
+
+              {% for s in sections %}
+                <option
+                  value="{{ s }}"
+                  {% if sel_section == s|stringformat:"s" %}
+                    selected
+                  {% endif %}
+                >
+                  {{ s }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label>Course Title</label>
+
+            <select
+              name="course_id"
+              id="courseSelect"
+              {% if not filters_applied %}disabled{% endif %}
+            >
+              <option value="">
+                {% if not filters_applied %}
+                  Select Year & Semester to load courses
+                {% else %}
+                  Select Course
+                {% endif %}
+              </option>
+
+              {% if filters_applied %}
+                {% for c in courses %}
+                  <option
+                    value="{{ c.id }}"
+                    {% if sel_course_id == c.id|stringformat:"s" %}
+                      selected
+                    {% endif %}
+                  >
+                    {{ c.course_code }} - {{ c.title }}
+                  </option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </div>
+
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end mt-3">
+          <button type="submit" class="btnx btn-pri">
+            Apply Filter
+          </button>
+
+          <a
+            href="{% url 'view_feedbacks' %}"
+            class="btnx btn-soft"
+          >
+            Reset
+          </a>
+
+          {% if sel_course_id and sel_year and sel_sem %}
+            <a
+              class="btnx btn-pdf"
+              target="_blank"
+              href="{% url 'view_feedbacks_pdf' %}?department_id={{ sel_department_id }}&batch={{ sel_batch }}&year={{ sel_year }}&semester={{ sel_sem }}&section={{ sel_section }}&course_id={{ sel_course_id }}"
+            >
+              <i class="fa-solid fa-file-pdf"></i>
+              PDF
+            </a>
+          {% endif %}
+
+          {% if sel_year and sel_sem %}
+            <a
+              class="btnx btn-pdf"
+              target="_blank"
+              href="{% url 'view_feedbacks_bulk_pdf' %}?department_id={{ sel_department_id }}&batch={{ sel_batch }}&year={{ sel_year }}&semester={{ sel_sem }}&section={{ sel_section }}"
+            >
+              <i class="fa-solid fa-file-pdf"></i>
+              Bulk PDF
+            </a>
+
+            {% comment %}
+            <a
+              class="btnx btn-pri"
+              target="_blank"
+              href="{% url 'view_feedbacks_bulk_excel_download' %}?department_id={{ sel_department_id }}&batch={{ sel_batch }}&year={{ sel_year }}&semester={{ sel_sem }}&section={{ sel_section }}"
+            >
+              <i class="fa-solid fa-file-excel"></i>
+              Bulk Excel
+            </a>
+            {% endcomment %}
+          {% endif %}
+        </div>
+      </form>
+
+      {% if sel_year and sel_sem and dashboard_course_boxes %}
+        <div class="selected-info">
+          <strong>Dashboard Filter:</strong>
+          {{ department.Department|default:"-" }}
+
+          &nbsp; | &nbsp;
+
+          <strong>Year:</strong>
+          {{ sel_year|default:"-" }}
+
+          &nbsp; | &nbsp;
+
+          <strong>Semester:</strong>
+          {{ sel_sem|default:"-" }}
+
+          &nbsp; | &nbsp;
+
+          <strong>Section:</strong>
+          {{ sel_section|default:"All" }}
+
+          &nbsp; | &nbsp;
+
+          <strong>Batch:</strong>
+          {{ sel_batch|default:"All" }}
+        </div>
+
+        <div class="dashboard-grid">
+
+          <div class="dash-box">
+            <div class="dash-title">
+              <i class="fa-solid fa-chart-line me-2"></i>
+              Overall Cumulative Average
+            </div>
+
+            <div class="dash-big">
+              {{ dashboard_overall.overall_avg_total }}
+            </div>
+
+            <div class="dash-sub">
+              Average of all filtered courses
+            </div>
+          </div>
+
+          <div class="dash-box">
+            <div class="dash-title">
+              <i class="fa-solid fa-users me-2"></i>
+              Overall Response Percentage
+            </div>
+
+            <div class="dash-big">
+              {{ dashboard_overall.overall_response_percentage }}%
+            </div>
+
+            <div class="dash-sub">
+              {{ dashboard_overall.total_responses }}
+              responses out of
+              {{ dashboard_overall.total_enrolled }}
+              enrolled
+            </div>
+          </div>
+
+          <div class="dash-box">
+            <div class="dash-title">
+              <i class="fa-solid fa-book-open me-2"></i>
+              Total Courses
+            </div>
+
+            <div class="dash-big">
+              {{ dashboard_overall.total_courses }}
+            </div>
+
+            <div class="dash-sub">
+              Filtered by department / year / semester / section
+            </div>
+          </div>
+
+          <div class="dash-box">
+            <div class="dash-title">
+              <i class="fa-solid fa-layer-group me-2"></i>
+              Overall Category Averages
+            </div>
+
+            <div class="cat-list">
+              {% for item in dashboard_category_averages %}
+                <div class="cat-item">
+                  <div class="cat-name">
+                    {{ item.category }}
+                  </div>
+
+                  <div class="cat-avg">
+                    {{ item.average }}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+        </div>
+
+        <div class="section-title mt-4">
+          <i class="fa-solid fa-chart-pie me-2"></i>
+          Course-wise Dashboard Cards
+        </div>
+
+        <div class="course-box-grid">
+          {% for course_box in dashboard_course_boxes %}
+            <div class="course-summary-box">
+
+              <div class="course-summary-title">
+                {{ course_box.course_code }}
+              </div>
+
+              <div class="course-summary-sub">
+                {{ course_box.course_title }}
+              </div>
+
+              <div class="course-summary-avg">
+                {{ course_box.grand_average }}
+              </div>
+
+              <div class="mini-stat-row">
+                <span class="mini-pill">
+                  <i class="fa-solid fa-square-poll-vertical me-1"></i>
+                  Responses: {{ course_box.response_count }}
+                </span>
+
+                <span class="mini-pill">
+                  <i class="fa-solid fa-user-graduate me-1"></i>
+                  Enrolled: {{ course_box.student_count }}
+                </span>
+              </div>
+
+              <div class="cat-list">
+                {% for item in course_box.category_averages %}
+                  <div class="cat-item">
+                    <div class="cat-name">
+                      {{ item.category }}
+                    </div>
+
+                    <div class="cat-avg">
+                      {{ item.average }}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if sel_course_id %}
+        <div class="selected-info">
+          <strong>Selected Subject:</strong>
+
+          {% if selected_course %}
+            {{ selected_course.course_code }} -
+            {{ selected_course.title }}
+          {% else %}
+            Selected Course
+          {% endif %}
+
+          &nbsp; | &nbsp;
+
+          <strong>Year:</strong>
+          {{ sel_year|default:"-" }}
+
+          &nbsp; | &nbsp;
+
+          <strong>Semester:</strong>
+          {{ sel_sem|default:"-" }}
+
+          &nbsp; | &nbsp;
+
+          <strong>Section:</strong>
+          {{ sel_section|default:"-" }}
+
+          &nbsp; | &nbsp;
+
+          <strong>Batch:</strong>
+          {{ sel_batch|default:"-" }}
+        </div>
+
+        <div class="table-wrap">
+          <table class="matrix" id="feedbackTable">
+            <thead>
+              <tr>
+                <th rowspan="2">
+                  S.No
+                </th>
+
+                <!-- Added only to the HTML table -->
+                <th rowspan="2" class="regno-head">
+                  Register Number
+                </th>
+
+                <!-- Added only to the HTML table -->
+                <th rowspan="2" class="student-head">
+                  Student Name
+                </th>
+
+                {% for c in category_spans %}
+                  <th colspan="{{ c.span }}">
+                    {{ c.category }}
+                  </th>
+                {% endfor %}
+
+                <th rowspan="2" class="totalcol">
+                  Total
+                </th>
+
+                <th rowspan="2" class="extrahead">
+                  Overall effectiveness (%)
+                </th>
+
+                <th rowspan="2" class="extrahead">
+                  Student satisfaction
+                </th>
+
+                <th rowspan="2" class="extrahead">
+                  Recommendation
+                </th>
+
+                <th rowspan="2" class="extrahead">
+                  Open comments
+                </th>
+              </tr>
+
+              <tr>
+                {% for q in ordered_questions %}
+                  <th class="qhead">
+                    {{ q.question_text }}
+                  </th>
+                {% endfor %}
+              </tr>
+            </thead>
+
+            <tbody>
+              {% if rows %}
+                {% for r in rows %}
+                  <tr>
+                    <td>
+                      {{ r.sno }}
+                    </td>
+
+                    <!-- Register number for the respective student -->
+                    <td class="regno-cell">
+                      {{ r.reg_no|default:"-" }}
+                    </td>
+
+                    <!-- Student name for the respective student -->
+                    <td class="student-cell">
+                      {{ r.student_name|default:"-" }}
+                    </td>
+
+                    {% for q in ordered_questions %}
+                      <td>
+                        {{ r.marks|get_item:q.id|default:"-" }}
+                      </td>
+                    {% endfor %}
+
+                    <td class="totalcol">
+                      {{ r.total }}
+                    </td>
+
+                    <td>
+                      {{ r.overall_effectiveness_percentage }}
+                    </td>
+
+                    <td>
+                      {{ r.student_satisfaction }}
+                    </td>
+
+                    <td class="textcol">
+                      {{ r.recommendation_to_continue_improve }}
+                    </td>
+
+                    <td class="textcol">
+                      {{ r.open_comments_for_improvement }}
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <!--
+                  Previous colspan used +9.
+                  Two new columns were added, so it is now +11.
+                  -->
+                  <td colspan="{{ ordered_questions|length|add:'11' }}">
+                    No students found.
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          * Marks, total, and additional feedback values are calculated
+          only for the selected course.
+        </div>
+
+        {% if show_summary and summary_rows %}
+          <div class="cardx pad mt-4">
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+              <div class="section-title mb-0">
+                <i class="fa-solid fa-chart-bar me-2"></i>
+                Course-wise Question Average Summary
+              </div>
+
+              {% if sel_year and sel_sem %}
+                <a
+                  class="btnx btn-pdf"
+                  target="_blank"
+                  href="{% url 'view_feedbacks_summary_pdf' %}?department_id={{ sel_department_id }}&batch={{ sel_batch }}&year={{ sel_year }}&semester={{ sel_sem }}&section={{ sel_section }}"
+                >
+                  <i class="fa-solid fa-file-pdf"></i>
+                  Summary PDF
+                </a>
+              {% endif %}
+            </div>
+
+            <div class="summary-wrap">
+              <table class="summary-table" id="summaryTable">
+                <thead>
+                  <tr>
+                    <th rowspan="2" class="leftcol">
+                      Course Code - Title
+                    </th>
+
+                    {% for c in category_spans %}
+                      <th colspan="{{ c.span }}">
+                        {{ c.category }}
+                      </th>
+                    {% endfor %}
+
+                    <th rowspan="2" class="totalcol">
+                      Avg Total
+                    </th>
+
+                    <th rowspan="2">
+                      Responses
+                    </th>
+
+                    <th rowspan="2">
+                      Enrolled
+                    </th>
+                  </tr>
+
+                  <tr>
+                    {% for q in ordered_questions %}
+                      <th class="qhead">
+                        {{ forloop.counter }}
+                      </th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {% for row in summary_rows %}
+                    <tr>
+                      <td class="leftcol">
+                        <strong>
+                          {{ row.course_code }}
+                        </strong>
+
+                        <br>
+
+                        <small style="color:#64748b;">
+                          {{ row.course_title|truncatechars:70 }}
+                        </small>
+                      </td>
+
+                      {% for q in ordered_questions %}
+                        <td>
+                          {{ row.question_averages|get_item:q.id|default:"0.00" }}
+                        </td>
+                      {% endfor %}
+
+                      <td class="totalcol">
+                        {{ row.grand_average }}
+                      </td>
+
+                      <td>
+                        {{ row.response_count }}
+                      </td>
+
+                      <td>
+                        {{ row.student_count }}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="note mt-2">
+              * Averages are calculated based on actual feedback
+              submissions only (Responses column).
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="submitted-notes-wrap mt-4">
+          <div class="section-title">
+            <i class="fa-solid fa-users-viewfinder me-2"></i>
+            Other Users Remarks / Action Plans
+          </div>
+
+          {% if other_feedback_notes %}
+            {% for note in other_feedback_notes %}
+              <div class="submitted-note-card">
+
+                <div class="submitted-note-head">
+                  <div class="submitted-note-user">
+                    <i class="fa-solid fa-user me-2"></i>
+                    {{ note.faculty.name|default:"Unknown User" }}
+                  </div>
+                </div>
+
+                <div class="submitted-note-line">
+                  <span class="submitted-note-label">
+                    Remarks:
+                  </span>
+
+                  {{ note.remarks|default:"-" }}
+                </div>
+
+                <div class="submitted-note-line">
+                  <span class="submitted-note-label">
+                    Action Plan:
+                  </span>
+
+                  {{ note.action_taken|default:"-" }}
+                </div>
+
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="submitted-note-card">
+              <div class="submitted-note-line">
+                No other users remarks/action plans submitted yet
+                for this selected subject.
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
+        <form
+          method="POST"
+          enctype="multipart/form-data"
+          class="mt-4"
+        >
+          {% csrf_token %}
+
+          <input
+            type="hidden"
+            name="department_id"
+            value="{{ sel_department_id }}"
+          >
+
+          <input
+            type="hidden"
+            name="batch"
+            value="{{ sel_batch }}"
+          >
+
+          <input
+            type="hidden"
+            name="year"
+            value="{{ sel_year }}"
+          >
+
+          <input
+            type="hidden"
+            name="semester"
+            value="{{ sel_sem }}"
+          >
+
+          <input
+            type="hidden"
+            name="section"
+            value="{{ sel_section }}"
+          >
+
+          <input
+            type="hidden"
+            name="course_id"
+            value="{{ sel_course_id }}"
+          >
+
+          <div class="remarks-grid">
+
+            <div class="section-card">
+              <div class="section-title">
+                <i class="fa-solid fa-comment-dots me-2"></i>
+                Your Remarks
+              </div>
+
+              <label class="form-label">
+                Enter subject-wise remarks
+              </label>
+
+              <textarea
+                name="remarks"
+                placeholder="Enter remarks for the selected subject..."
+              >{{ feedback_note.remarks|default:'' }}</textarea>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title">
+                <i class="fa-solid fa-list-check me-2"></i>
+                Your Action Taken / Action Plan
+              </div>
+
+              <label class="form-label">
+                Enter action details
+              </label>
+
+              <textarea
+                name="action_taken"
+                placeholder="Enter action taken or action plan..."
+              >{{ feedback_note.action_taken|default:'' }}</textarea>
+            </div>
+
+          </div>
+
+          <div class="report-box">
+            <div class="report-title">
+              <i class="fa-solid fa-file-arrow-up me-2"></i>
+              Submitted Report
+            </div>
+
+            {% if feedback_note and feedback_note.report_file %}
+              <div class="report-row mb-3">
+                <span>
+                  <strong>Current Report:</strong>
+                </span>
+
+                <a
+                  href="{{ feedback_note.report_file.url }}"
+                  target="_blank"
+                  class="btnx btn-pdf"
+                >
+                  <i class="fa-solid fa-file-lines"></i>
+                  View Submitted Report
+                </a>
+              </div>
+            {% else %}
+              <div class="report-row mb-3">
+                <span>
+                  <strong>Current Report:</strong>
+                </span>
+
+                <span class="text-muted">
+                  No report uploaded yet
+                </span>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="d-flex justify-content-end mt-3">
+            <button
+              type="submit"
+              class="btnx btn-save"
+            >
+              <i class="fa-solid fa-floppy-disk"></i>
+              Save Your Remarks, Action
+            </button>
+          </div>
+        </form>
+
+      {% else %}
+        <div class="note mt-3">
+          Select a Course Title and click Apply Filter to view
+          the question-wise marks table, remarks and action details.
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
+
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.colVis.min.js"></script>
+
+<script>
+$(document).ready(function() {
+
+  {% if sel_course_id and rows %}
+    $('#feedbackTable').DataTable({
+      pageLength: 25,
+
+      lengthMenu: [
+        [10, 25, 50, 100, -1],
+        [10, 25, 50, 100, 'All']
+      ],
+
+      dom:
+        '<"row"<"col-md-6"B><"col-md-6"f>>' +
+        '<"row"<"col-md-12"tr>>' +
+        '<"row"<"col-md-6"l><"col-md-6"p>>',
+
+      buttons: [
+        {
+          extend: 'excelHtml5',
+          text: 'Excel'
+        },
+        {
+          extend: 'print',
+          text: 'Print'
+        },
+        {
+          extend: 'colvis',
+          text: 'Columns'
+        }
+      ],
+
+      scrollX: true,
+      autoWidth: false,
+      responsive: false,
+
+      /*
+      S.No remains the default ordering column.
+      Register Number is column 1.
+      Student Name is column 2.
+      */
+      order: [[0, 'asc']],
+
+      columnDefs: [
+        {
+          targets: 0,
+          width: '65px'
+        },
+        {
+          targets: 1,
+          width: '145px'
+        },
+        {
+          targets: 2,
+          width: '220px'
+        }
+      ]
+    });
+  {% endif %}
+
+  {% if show_summary and summary_rows %}
+    $('#summaryTable').DataTable({
+      paging: false,
+      searching: false,
+      info: false,
+      scrollX: true,
+      ordering: false,
+      autoWidth: false
+    });
+  {% endif %}
+
+  $('#departmentSelect').change(function() {
+    $('select[name="batch"]').val('');
+    $('#yearSelect').val('');
+    $('#semesterSelect').val('');
+    $('select[name="section"]').val('');
+    $('#courseSelect').val('');
+
+    $(this).closest('form').submit();
+  });
+
+  $('#yearSelect, #semesterSelect').change(function() {
+    var year = $('#yearSelect').val();
+    var semester = $('#semesterSelect').val();
+
+    if (year && semester) {
+      $('#courseSelect').prop('disabled', false);
+    } else {
+      $('#courseSelect').prop('disabled', true);
+      $('#courseSelect').val('');
+    }
+  });
+
+});
+</script>
+
+{% endblock %}

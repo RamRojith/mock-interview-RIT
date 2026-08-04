@@ -1,0 +1,1175 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+/* ===== CSS Variables ===== */
+:root {
+  --primary-blue: #1a4b8c;
+  --primary-blue-light: #2c5aa0;
+  --primary-blue-dark: #0d3a6c;
+  --blue-light: #f0f9ff;
+  --blue-light-2: #e0f2fe;
+  --blue-border: #bae6fd;
+  --white: #ffffff;
+  --off-white: #f8fafc;
+  --gray-light: #f1f5f9;
+  --gray-border: #e2e8f0;
+  --gray-medium: #cbd5e1;
+  --gray-text: #64748b;
+  --dark-text: #1e293b;
+  --black: #000000;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
+  --shadow-blue: 0 4px 20px rgba(26, 75, 140, 0.15);
+  --shadow-blue-hover: 0 8px 40px rgba(26, 75, 140, 0.25);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Global Styles ===== */
+.course-plan {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, var(--off-white) 0%, var(--gray-light) 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  color: var(--dark-text);
+}
+
+/* ===== Plan Container ===== */
+.course-plan .plan-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ===== Card Styles ===== */
+.course-plan .form-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-border);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 2rem;
+  overflow: hidden;
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Form Header ===== */
+.course-plan .form-header {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  color: var(--white);
+  padding: 1.5rem;
+  border-bottom: none;
+}
+
+.course-plan .form-header h5 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.course-plan .form-header i { font-size: 1.3rem; }
+
+/* ===== Form Body ===== */
+.course-plan .form-body { padding: 2rem; }
+
+/* ===== Form Elements ===== */
+.course-plan .form-label {
+  font-weight: 600;
+  color: var(--dark-text);
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.course-plan .form-control,
+.course-plan .form-select {
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius-md);
+  padding: 0.875rem 1rem;
+  font-size: 0.95rem;
+  transition: var(--transition);
+  background: var(--white);
+}
+
+.course-plan .form-control:focus,
+.course-plan .form-select:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+.course-plan textarea.form-control { min-height: 100px; resize: vertical; }
+
+/* ===== Reset Filter Button ===== */
+.course-plan .reset-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius-md);
+  color: var(--primary-blue);
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+  margin: 1rem 0;
+}
+
+.course-plan .reset-filter-btn:hover {
+  background: var(--off-white);
+  border-color: var(--primary-blue);
+  transform: translateY(-2px);
+}
+
+/* ===== Buttons ===== */
+.course-plan .btn-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: var(--transition);
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(26, 75, 140, 0.3);
+}
+
+.course-plan .btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+  background: linear-gradient(135deg, var(--primary-blue-dark) 0%, var(--primary-blue) 100%);
+}
+
+/* ===== Saved Plans Card ===== */
+.course-plan .saved-plans-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+  animation-delay: 0.2s;
+}
+
+/* ===== Saved Plans Header ===== */
+.course-plan .saved-plans-header {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  color: var(--white);
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: none;
+}
+
+.course-plan .saved-plans-header h6 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.course-plan .saved-header-row{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:1rem;
+}
+
+.course-plan .saved-header-row .btn-light{
+  margin-left:auto; /* pushes to the far right */
+}
+
+/* ===== Download Button (Header) ===== */
+.course-plan .saved-header-row .btn-light{
+  background: var(--white);
+  color: var(--primary-blue);
+  border: 1px solid rgba(255,255,255,.75);
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.course-plan .saved-header-row .btn-light:hover{
+  background: rgba(255,255,255,.92);
+  transform: translateY(-1px);
+}
+
+/* ===== Table Styles ===== */
+.course-plan .table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 0;
+}
+
+.course-plan .table th {
+  background: var(--off-white);
+  color: var(--primary-blue);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem;
+  border-bottom: 2px solid var(--gray-border);
+}
+
+.course-plan .table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--gray-light);
+  vertical-align: middle;
+  color: var(--dark-text);
+  font-size: 0.95rem;
+}
+
+.course-plan .table tbody tr { transition: var(--transition); }
+.course-plan .table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.03);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ===== Table Cell Classes ===== */
+.course-plan .td-unit,
+.course-plan .td-co,
+.course-plan .td-period,
+.course-plan .td-delivery,
+.course-plan .td-topic,
+.course-plan .td-beyond,
+.course-plan .td-innovation,
+.course-plan .td-justify,
+.course-plan .td-created {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.course-plan .td-topic { max-width: 250px; }
+
+/* ===== Action Buttons ===== */
+.course-plan .d-flex.gap-2 { gap: 0.5rem !important; }
+.course-plan .btn-sm {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+.course-plan .btn-primary {
+  background: var(--primary-blue);
+  color: var(--white);
+  border: none;
+}
+.course-plan .btn-primary:hover {
+  background: var(--primary-blue-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+}
+.course-plan .btn-danger {
+  background: #dc2626;
+  color: var(--white);
+  border: none;
+}
+.course-plan .btn-danger:hover {
+  background: #b91c1c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* ===== Empty State ===== */
+.course-plan .text-center {
+  color: var(--gray-text);
+  padding: 3rem 1rem;
+  font-style: italic;
+}
+
+/* ===== Alert Styles ===== */
+.course-plan .alert {
+  border-radius: var(--radius-md);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border: none;
+  font-weight: 500;
+}
+.course-plan .alert-success { background: #d1fae5; color: #065f46; border-left: 4px solid #059669; }
+.course-plan .alert-error,
+.course-plan .alert-danger { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+.course-plan .alert-warning { background: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; }
+.course-plan .alert-info { background: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; }
+
+/* ===== Modal Styles ===== */
+.course-plan .modal-content {
+  border-radius: var(--radius-lg);
+  border: none;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.course-plan .modal-header {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  color: var(--white);
+  border-bottom: none;
+  padding: 1.5rem;
+}
+.course-plan .modal-title {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.course-plan .btn-close-white { filter: brightness(0) invert(1); opacity: 0.8; transition: var(--transition); }
+.course-plan .btn-close-white:hover { opacity: 1; }
+.course-plan .modal-body { padding: 1.5rem; }
+.course-plan .modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--gray-border);
+  background: var(--off-white);
+}
+.course-plan .modal-footer .btn-secondary {
+  background: var(--gray-light);
+  color: var(--dark-text);
+  border: 1px solid var(--gray-border);
+}
+.course-plan .modal-footer .btn-secondary:hover { background: var(--gray-medium); }
+
+/* ===== Delivery Method Other Box ===== */
+.course-plan #delivery_other_box { transition: var(--transition); }
+
+/* ===== Pagination Styles ===== */
+.course-plan .pagination-wrap{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:1rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--gray-border);
+  background: linear-gradient(180deg, #fff, var(--off-white));
+}
+.course-plan .pagination-info{
+  color: var(--gray-text);
+  font-size: .9rem;
+  font-weight: 600;
+}
+.course-plan .pagination{
+  margin: 0;
+  display:flex;
+  gap:.35rem;
+  flex-wrap: wrap;
+}
+.course-plan .page-link{
+  border: 1px solid var(--gray-border);
+  border-radius: 10px;
+  padding: .45rem .75rem;
+  color: var(--primary-blue);
+  background: #fff;
+  font-weight: 700;
+  font-size: .9rem;
+  text-decoration: none;
+  transition: var(--transition);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width: 40px;
+}
+.course-plan .page-link:hover{
+  border-color: var(--primary-blue);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(26,75,140,.12);
+}
+.course-plan .page-link.active{
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(26,75,140,.22);
+}
+.course-plan .page-link.disabled{
+  opacity: .45;
+  pointer-events: none;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 1024px) {
+  .course-plan .form-body { padding: 1.5rem; }
+  .course-plan .saved-plans-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+}
+
+@media (max-width: 768px) {
+  .course-plan { padding: 1rem; }
+  .course-plan .form-body { padding: 1.25rem; }
+  .course-plan .form-header h5 { font-size: 1.25rem; }
+  .course-plan .table-responsive { border-radius: var(--radius-md); overflow: hidden; }
+  .course-plan .table td,
+  .course-plan .table th { padding: 0.75rem; font-size: 0.85rem; }
+  .course-plan .btn-success { width: 100%; justify-content: center; }
+  .course-plan .reset-filter-btn { width: 100%; justify-content: center; }
+  .course-plan .pagination-wrap{ flex-direction: column; align-items: stretch; }
+  .course-plan .pagination{ justify-content: center; }
+  .course-plan .pagination-info{ text-align: center; }
+}
+
+@media (max-width: 480px) {
+  .course-plan .d-flex.gap-2 { flex-direction: column; align-items: stretch; }
+  .course-plan .btn-sm { width: 100%; }
+}
+</style>
+
+<div class="course-plan">
+  <div class="plan-container">
+
+    <!-- CREATE FORM -->
+    <div class="form-card">
+      <div class="form-header">
+        <h5><i class="fas fa-plus-circle me-2"></i>Create New Course Plan</h5>
+      </div>
+
+      <div class="form-body">
+        <form id="createPlanForm" method="post" action="{% url 'course_plan' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create">
+
+          <!-- ✅ keep current page on submit -->
+          <input type="hidden" name="page" id="cp_current_page">
+
+          <div class="row g-3">
+
+            <div class="col-md-3">
+              <label class="form-label">Academic Year</label>
+              <select name="academic_year" id="academic_year" class="form-select" required>
+                <option value="" selected disabled>Select</option>
+                {% for ay in academic_years %}
+                <option value="{{ ay }}">{{ ay }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Degree</label>
+              <select name="degree" id="degree" class="form-select" required>
+                <option value="" selected disabled>Select</option>
+                {% for d in degrees %}
+                <option value="{{ d.id }}">{{ d.degree }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Department</label>
+              <select name="department" id="department" class="form-select" required></select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Regulation</label>
+              <select name="regulation" id="regulation" class="form-select" required>
+                <option value="" selected disabled>Select</option>
+                {% for r in regulations %}
+                <option value="{{ r.id }}">{{ r.year }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Year</label>
+              <select name="year" id="year" class="form-select" required></select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Semester</label>
+              <select name="semester" id="semester" class="form-select" required></select>
+            </div>
+
+            <a href="{% url 'course_plan' %}" class="reset-filter-btn">
+              <i class="fas fa-redo-alt me-2"></i> Reset Filter
+            </a>
+
+            <div class="col-12">
+              <label class="form-label">Course</label>
+              <select name="course" id="course" class="form-select" required></select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Unit / Module</label>
+              <input type="text" name="unit_module_no" class="form-control" required>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">CO No</label>
+              <input type="text" name="co_no" class="form-control" required>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Period No</label>
+              <input type="text" name="period_no" class="form-control">
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Delivery Method</label>
+              <select name="delivery_method" id="delivery_method" class="form-select" required>
+                <option value="" disabled selected>Select Method</option>
+
+                <option value="Lecture (Chalk & Talk)">Lecture (Chalk & Talk)</option>
+                <option value="PPT Based Teaching">PPT Based Teaching</option>
+                <option value="Tutorial Session">Tutorial Session</option>
+                <option value="Laboratory / Practical Session">Laboratory / Practical Session</option>
+                <option value="Assignment">Assignment</option>
+                <option value="Classroom Demonstration">Classroom Demonstration</option>
+
+                <option value="Project-Based Learning">Project-Based Learning (PBL)</option>
+                <option value="Case Study">Case Study</option>
+                <option value="Seminar / Presentation">Seminar / Student Presentation</option>
+                <option value="Group Discussion">Group Discussion / Peer Learning</option>
+                <option value="Flipped Classroom">Flipped Classroom</option>
+                <option value="ICT Enabled Teaching">ICT-enabled Teaching</option>
+                <option value="Experiential Learning">Experiential Learning</option>
+                <option value="Industrial Visit">Industrial Visits / Field Trips</option>
+                <option value="Guest Lecture">Guest Lecture (Industry Expert)</option>
+                <option value="Online Platform">Online Platforms (NPTEL / SWAYAM / Coursera)</option>
+                <option value="Quiz">Quiz (Online/Offline)</option>
+                <option value="Problem Based Learning">Problem-Based Learning</option>
+                <option value="Tutorial Sheets">Tutorial Sheets / Practice Problems</option>
+                <option value="Mentoring">Mentoring / One-to-One Guidance</option>
+
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="col-md-3 d-none" id="delivery_other_box">
+              <label class="form-label">Specify Method</label>
+              <input type="text" class="form-control" id="delivery_other_input" placeholder="Enter method">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Topic</label>
+              <textarea name="topic" rows="2" class="form-control" required></textarea>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Content Beyond Syllabus</label>
+              <textarea name="content_beyond_syllabus" rows="2" class="form-control"></textarea>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Innovative Practice</label>
+              <textarea name="innovative_practice" rows="2" class="form-control"></textarea>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Justification</label>
+              <textarea name="justify" rows="2" class="form-control"></textarea>
+            </div>
+
+          </div>
+
+          <button class="btn btn-success mt-3"><i class="fas fa-save me-1"></i> Save Plan</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- SAVED PLANS -->
+    <div class="saved-plans-card">
+
+      <div class="saved-plans-header">
+        <div class="saved-header-row">
+          <h6 class="mb-0"><i class="fas fa-history me-2"></i>Saved Course Plans</h6>
+
+          <!-- ✅ CHANGED: open modal instead of direct download -->
+          <button type="button" class="btn btn-sm btn-light text-primary ms-auto"
+                  data-bs-toggle="modal" data-bs-target="#downloadCoursePdfModal">
+            <i class="fas fa-file-download me-1"></i> Download Course PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Unit</th>
+              <th>CO</th>
+              <th>Period</th>
+              <th>Delivery</th>
+              <th>Topic</th>
+              <th>Beyond</th>
+              <th>Innovation</th>
+              <th>Justify</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody id="plansTbody">
+            {% for p in page_obj %}
+            <tr id="planRow-{{ p.id }}">
+              <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+              <td class="td-unit">{{ p.unit_module_no }}</td>
+              <td class="td-co">{{ p.co_no }}</td>
+              <td class="td-period">{{ p.period_no }}</td>
+              <td class="td-delivery">{{ p.delivery_method }}</td>
+              <td class="td-topic">{{ p.topic }}</td>
+              <td class="td-beyond">{{ p.content_beyond_syllabus|default:"-" }}</td>
+              <td class="td-innovation">{{ p.innovative_practice|default:"-" }}</td>
+              <td class="td-justify">{{ p.justify|default:"-" }}</td>
+              <td class="td-created">{{ p.created_at|date:"d-m-Y" }}</td>
+
+              <td>
+                <div class="d-flex gap-2">
+
+                  <!-- EDIT BUTTON -->
+                  <button type="button"
+                    class="btn btn-sm btn-primary btn-edit-plan"
+                    title="Edit"
+                    data-bs-toggle="modal"
+                    data-bs-target="#editPlanModal"
+                    data-id="{{ p.id }}"
+                    data-academic_year="{{ p.academic_year }}"
+                    data-unit_module_no="{{ p.unit_module_no }}"
+                    data-co_no="{{ p.co_no }}"
+                    data-delivery_method="{{ p.delivery_method }}"
+                    data-period_no="{{ p.period_no }}"
+                    data-topic="{{ p.topic|escapejs }}"
+                    data-content_beyond_syllabus="{{ p.content_beyond_syllabus|default:''|escapejs }}"
+                    data-innovative_practice="{{ p.innovative_practice|default:''|escapejs }}"
+                    data-justify="{{ p.justify|default:''|escapejs }}">
+                    <i class="fas fa-edit"></i>
+                  </button>
+
+                  <!-- ✅ DELETE FORM (reload + messages + preserve selections + preserve page) -->
+                  <form action="{% url 'course_plan' %}" method="post"
+                        onsubmit="return confirm('Delete this plan?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="plan_id" value="{{ p.id }}">
+
+                    <!-- ✅ keep current page -->
+                    <input type="hidden" name="page" value="{{ page_obj.number }}">
+
+                    <!-- ✅ current selections copied by JS -->
+                    <input type="hidden" name="academic_year" id="h_academic_year_{{ p.id }}">
+                    <input type="hidden" name="degree" id="h_degree_{{ p.id }}">
+                    <input type="hidden" name="department" id="h_department_{{ p.id }}">
+                    <input type="hidden" name="regulation" id="h_regulation_{{ p.id }}">
+                    <input type="hidden" name="year" id="h_year_{{ p.id }}">
+                    <input type="hidden" name="semester" id="h_semester_{{ p.id }}">
+                    <input type="hidden" name="course" id="h_course_{{ p.id }}">
+
+                    <button class="btn btn-sm btn-danger">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </form>
+
+                </div>
+              </td>
+            </tr>
+
+            {% empty %}
+            <tr id="noPlansRow">
+              <td colspan="10" class="text-center">No course plans created yet</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+
+        </table>
+      </div>
+
+      <!-- ✅ PAGINATION (5 per page) -->
+      {% if page_obj.paginator.num_pages > 1 %}
+      <div class="pagination-wrap">
+
+        <div class="pagination-info">
+          Page <strong>{{ page_obj.number }}</strong> of <strong>{{ page_obj.paginator.num_pages }}</strong>
+          &nbsp;|&nbsp;
+          Showing <strong>{{ page_obj.start_index }}</strong> - <strong>{{ page_obj.end_index }}</strong>
+          of <strong>{{ page_obj.paginator.count }}</strong>
+        </div>
+
+        <div class="pagination">
+          <!-- Previous -->
+          {% if page_obj.has_previous %}
+            <a class="page-link" href="{% url 'course_plan' %}{% if base_qs %}?{{ base_qs }}&page={{ page_obj.previous_page_number }}{% else %}?page={{ page_obj.previous_page_number }}{% endif %}">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          {% else %}
+            <span class="page-link disabled"><i class="fas fa-chevron-left"></i></span>
+          {% endif %}
+
+          <!-- Page Numbers -->
+          {% for n in page_range %}
+            {% if n == page_obj.number %}
+              <span class="page-link active">{{ n }}</span>
+            {% else %}
+              <a class="page-link" href="{% url 'course_plan' %}{% if base_qs %}?{{ base_qs }}&page={{ n }}{% else %}?page={{ n }}{% endif %}">{{ n }}</a>
+            {% endif %}
+          {% endfor %}
+
+          <!-- Next -->
+          {% if page_obj.has_next %}
+            <a class="page-link" href="{% url 'course_plan' %}{% if base_qs %}?{{ base_qs }}&page={{ page_obj.next_page_number }}{% else %}?page={{ page_obj.next_page_number }}{% endif %}">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          {% else %}
+            <span class="page-link disabled"><i class="fas fa-chevron-right"></i></span>
+          {% endif %}
+        </div>
+
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<!-- ✅ DOWNLOAD COURSE PDF MODAL -->
+<div class="modal fade" id="downloadCoursePdfModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h6 class="modal-title mb-0"><i class="fas fa-file-pdf me-2"></i>Download Course Report</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-2 text-muted" style="font-size: 13px;">
+          Select the course to generate the PDF report.
+        </div>
+
+        <label class="form-label">Course</label>
+        <select class="form-select" id="pdfCourseSelect">
+          <option value="">Loading courses...</option>
+        </select>
+
+        <div class="small text-muted mt-2">
+          Note: Course list is based on Department / Regulation / Year / Semester selection.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="btnDownloadCoursePdf">
+          <i class="fas fa-download me-1"></i> Download
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal fade" id="editPlanModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%); color: #fff;">
+        <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Course Plan</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form id="editPlanForm" method="post" action="{% url 'course_plan' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="edit">
+        <input type="hidden" name="plan_id" id="ep_id">
+
+        <!-- ✅ keep current page -->
+        <input type="hidden" name="page" id="ep_keep_page">
+
+        <!-- ✅ preserve selections after edit -->
+        <input type="hidden" name="degree" id="ep_keep_degree">
+        <input type="hidden" name="department" id="ep_keep_department">
+        <input type="hidden" name="regulation" id="ep_keep_regulation">
+        <input type="hidden" name="year" id="ep_keep_year">
+        <input type="hidden" name="semester" id="ep_keep_semester">
+        <input type="hidden" name="course" id="ep_keep_course">
+
+        <div class="modal-body">
+          <div class="row g-3">
+
+            <div class="col-md-4">
+              <label class="form-label">Academic Year</label>
+              <select name="academic_year" id="ep_academic_year" class="form-select" required>
+                <option value="" disabled>Select</option>
+                {% for ay in academic_years %}
+                <option value="{{ ay }}">{{ ay }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Unit / Module</label>
+              <input type="text" name="unit_module_no" id="ep_unit_module_no" class="form-control" required>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">CO No</label>
+              <input type="text" name="co_no" id="ep_co_no" class="form-control" required>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Delivery Method</label>
+              <input type="text" name="delivery_method" id="ep_delivery_method" class="form-control" required>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Period No</label>
+              <input type="text" name="period_no" id="ep_period_no" class="form-control">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Topic</label>
+              <textarea name="topic" id="ep_topic" rows="2" class="form-control" required></textarea>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Content Beyond Syllabus</label>
+              <textarea name="content_beyond_syllabus" id="ep_cbs" rows="2" class="form-control"></textarea>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Innovative Practice</label>
+              <textarea name="innovative_practice" id="ep_ip" rows="2" class="form-control"></textarea>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Justification</label>
+              <textarea name="justify" id="ep_justify" rows="2" class="form-control"></textarea>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button class="btn btn-primary"><i class="fas fa-save me-1"></i> Save changes</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- JS (restore selections after reload + keep delete/edit hidden fields updated + ✅ Download modal course-wise PDF) -->
+<script>
+(function () {
+
+  const urls = {
+    deps: "{% url 'cp_get_departments' %}",
+    ys: "{% url 'cp_get_years_semesters' %}",
+    courses: "{% url 'cp_get_courses' %}",
+    pdf: "{% url 'course_plan_pdf' %}"
+  };
+
+  const selected = {
+    academic_year: "{{ selected.academic_year|default:''|escapejs }}",
+    degree: "{{ selected.degree|default:''|escapejs }}",
+    department: "{{ selected.department|default:''|escapejs }}",
+    regulation: "{{ selected.regulation|default:''|escapejs }}",
+    year: "{{ selected.year|default:''|escapejs }}",
+    semester: "{{ selected.semester|default:''|escapejs }}",
+    course: "{{ selected.course|default:''|escapejs }}",
+    page: "{{ selected.page|default:'1'|escapejs }}"
+  };
+
+  const ayEl = document.getElementById('academic_year');
+  const degreeEl = document.getElementById('degree');
+  const deptEl = document.getElementById('department');
+  const regEl = document.getElementById('regulation');
+  const yearEl = document.getElementById('year');
+  const semEl = document.getElementById('semester');
+  const courseEl = document.getElementById('course');
+
+  function reset(sel, text) {
+    sel.innerHTML = `<option value="" disabled selected>${text}</option>`;
+  }
+
+  async function fetchJson(url){
+    const r = await fetch(url);
+    return await r.json();
+  }
+
+  function fillDeleteHiddenFields(){
+    document.querySelectorAll('form[action="{% url "course_plan" %}"] input[name="action"][value="delete"]').forEach(actionInput => {
+      const form = actionInput.closest("form");
+      if(!form) return;
+
+      const planId = form.querySelector('input[name="plan_id"]')?.value;
+      if(!planId) return;
+
+      const setHidden = (name, value) => {
+        const hidden = document.getElementById(`h_${name}_${planId}`);
+        if(hidden) hidden.value = value || "";
+      };
+
+      setHidden("academic_year", ayEl?.value);
+      setHidden("degree", degreeEl?.value);
+      setHidden("department", deptEl?.value);
+      setHidden("regulation", regEl?.value);
+      setHidden("year", yearEl?.value);
+      setHidden("semester", semEl?.value);
+      setHidden("course", courseEl?.value);
+    });
+  }
+
+  function fillEditKeepHiddenFields(){
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if(el) el.value = val || "";
+    };
+
+    set("ep_keep_degree", degreeEl?.value);
+    set("ep_keep_department", deptEl?.value);
+    set("ep_keep_regulation", regEl?.value);
+    set("ep_keep_year", yearEl?.value);
+    set("ep_keep_semester", semEl?.value);
+    set("ep_keep_course", courseEl?.value);
+
+    // ✅ keep current page
+    set("ep_keep_page", selected.page || "1");
+  }
+
+  // ✅ keep current page on CREATE submit
+  const cpPage = document.getElementById("cp_current_page");
+  if(cpPage) cpPage.value = selected.page || "1";
+
+  // -------------------- DROPDOWN AJAX (same) --------------------
+
+  degreeEl.addEventListener('change', async () => {
+    reset(deptEl, 'Select Department');
+    const depData = await fetchJson(`${urls.deps}?degree_id=${degreeEl.value}`);
+    depData.departments.forEach(d => deptEl.innerHTML += `<option value="${d.id}">${d.name}</option>`);
+
+    reset(yearEl, 'Select Year');
+    reset(semEl, 'Select Semester');
+    reset(courseEl, 'Select Course');
+
+    fillDeleteHiddenFields();
+    fillEditKeepHiddenFields();
+  });
+
+  async function loadYearOptions() {
+    reset(yearEl, 'Select Year');
+    reset(semEl, 'Select Semester');
+    if (!deptEl.value || !regEl.value) return;
+
+    const ysData = await fetchJson(`${urls.ys}?department_id=${deptEl.value}&regulation_id=${regEl.value}`);
+    ysData.years.forEach(y => yearEl.innerHTML += `<option value="${y}">Year ${y}</option>`);
+
+    fillDeleteHiddenFields();
+    fillEditKeepHiddenFields();
+  }
+
+  deptEl.addEventListener('change', loadYearOptions);
+  regEl.addEventListener('change', loadYearOptions);
+
+  yearEl.addEventListener('change', function () {
+    reset(semEl, 'Select Semester');
+    const y = parseInt(this.value);
+    const semMap = { 1: [1, 2], 2: [3, 4], 3: [5, 6], 4: [7, 8] };
+
+    if (semMap[y]) {
+      semMap[y].forEach(s => semEl.innerHTML += `<option value="${s}">Semester ${s}</option>`);
+    }
+
+    reset(courseEl, 'Select Course');
+    fillDeleteHiddenFields();
+    fillEditKeepHiddenFields();
+  });
+
+  semEl.addEventListener('change', async () => {
+    reset(courseEl, 'Select Course');
+    if (!deptEl.value || !regEl.value || !yearEl.value || !semEl.value) return;
+
+    const cData = await fetchJson(
+      `${urls.courses}?department_id=${deptEl.value}&regulation_id=${regEl.value}&year=${yearEl.value}&semester=${semEl.value}`
+    );
+    cData.courses.forEach(c => courseEl.innerHTML += `<option value="${c.id}">${c.label}</option>`);
+
+    fillDeleteHiddenFields();
+    fillEditKeepHiddenFields();
+  });
+
+  courseEl.addEventListener("change", () => { fillDeleteHiddenFields(); fillEditKeepHiddenFields(); });
+  ayEl.addEventListener("change", () => { fillDeleteHiddenFields(); fillEditKeepHiddenFields(); });
+
+  // -------------------- ✅ RESTORE AFTER RELOAD --------------------
+
+  async function restoreSelections(){
+    if (selected.academic_year && ayEl) ayEl.value = selected.academic_year;
+
+    if (selected.degree && degreeEl) {
+      degreeEl.value = selected.degree;
+
+      reset(deptEl, 'Select Department');
+      const depData = await fetchJson(`${urls.deps}?degree_id=${selected.degree}`);
+      depData.departments.forEach(d => deptEl.innerHTML += `<option value="${d.id}">${d.name}</option>`);
+      if (selected.department) deptEl.value = selected.department;
+    }
+
+    if (selected.regulation && regEl) regEl.value = selected.regulation;
+
+    if (selected.department && selected.regulation) {
+      reset(yearEl, 'Select Year');
+      reset(semEl, 'Select Semester');
+
+      const ysData = await fetchJson(`${urls.ys}?department_id=${selected.department}&regulation_id=${selected.regulation}`);
+      ysData.years.forEach(y => yearEl.innerHTML += `<option value="${y}">Year ${y}</option>`);
+
+      if (selected.year) yearEl.value = selected.year;
+
+      if (selected.year) {
+        reset(semEl, 'Select Semester');
+        const y = parseInt(selected.year);
+        const semMap = { 1: [1, 2], 2: [3, 4], 3: [5, 6], 4: [7, 8] };
+        if (semMap[y]) semMap[y].forEach(s => semEl.innerHTML += `<option value="${s}">Semester ${s}</option>`);
+      }
+
+      if (selected.semester) semEl.value = selected.semester;
+
+      if (selected.year && selected.semester) {
+        reset(courseEl, 'Select Course');
+        const cData = await fetchJson(
+          `${urls.courses}?department_id=${selected.department}&regulation_id=${selected.regulation}&year=${selected.year}&semester=${selected.semester}`
+        );
+        cData.courses.forEach(c => courseEl.innerHTML += `<option value="${c.id}">${c.label}</option>`);
+        if (selected.course) courseEl.value = selected.course;
+      }
+    }
+
+    fillDeleteHiddenFields();
+    fillEditKeepHiddenFields();
+  }
+
+  document.addEventListener("DOMContentLoaded", restoreSelections);
+
+  /* ------------------ EDIT MODAL (fill) ------------------ */
+  const modalEl = document.getElementById('editPlanModal');
+
+  function setVal(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.value = value || '';
+  }
+
+  if(modalEl){
+    modalEl.addEventListener('show.bs.modal', function (event) {
+      const btn = event.relatedTarget;
+      if (!btn) return;
+
+      setVal('ep_id', btn.getAttribute('data-id'));
+      setVal('ep_academic_year', btn.getAttribute('data-academic_year'));
+      setVal('ep_unit_module_no', btn.getAttribute('data-unit_module_no'));
+      setVal('ep_co_no', btn.getAttribute('data-co_no'));
+      setVal('ep_delivery_method', btn.getAttribute('data-delivery_method'));
+      setVal('ep_period_no', btn.getAttribute('data-period_no'));
+      setVal('ep_topic', btn.getAttribute('data-topic'));
+      setVal('ep_cbs', btn.getAttribute('data-content_beyond_syllabus'));
+      setVal('ep_ip', btn.getAttribute('data-innovative_practice'));
+      setVal('ep_justify', btn.getAttribute('data-justify'));
+
+      // keep current selections for redirect after edit + page
+      fillEditKeepHiddenFields();
+    });
+  }
+
+  /* ------------------ ✅ DOWNLOAD PDF MODAL (Course-wise) ------------------ */
+  const dlModal = document.getElementById("downloadCoursePdfModal");
+  const pdfSel = document.getElementById("pdfCourseSelect");
+  const pdfBtn = document.getElementById("btnDownloadCoursePdf");
+
+  function currentVal(id){
+    return document.getElementById(id)?.value || "";
+  }
+
+  async function loadCoursesForPdf(){
+    // must have dept/reg/year/sem to load same filtered list
+    const department_id = currentVal("department");
+    const regulation_id = currentVal("regulation");
+    const year = currentVal("year");
+    const semester = currentVal("semester");
+
+    if(!department_id || !regulation_id || !year || !semester){
+      pdfSel.innerHTML = `<option value="">Please select Department, Regulation, Year & Semester</option>`;
+      return;
+    }
+
+    const url = `${urls.courses}?department_id=${department_id}&regulation_id=${regulation_id}&year=${year}&semester=${semester}`;
+    try{
+      const data = await fetchJson(url);
+      const courses = data.courses || [];
+
+      if(!courses.length){
+        pdfSel.innerHTML = `<option value="">No courses found</option>`;
+        return;
+      }
+
+      pdfSel.innerHTML = `<option value="">Select Course</option>` +
+        courses.map(c => `<option value="${c.id}">${c.label}</option>`).join("");
+
+      // auto select current selected course if exists
+      const currentCourse = currentVal("course");
+      if(currentCourse) pdfSel.value = currentCourse;
+
+    }catch(e){
+      pdfSel.innerHTML = `<option value="">Failed to load courses</option>`;
+    }
+  }
+
+  if(dlModal){
+    dlModal.addEventListener("shown.bs.modal", loadCoursesForPdf);
+  }
+
+  if(pdfBtn){
+    pdfBtn.addEventListener("click", function(){
+      const course_id = pdfSel.value;
+      if(!course_id){
+        alert("Please select a course.");
+        return;
+      }
+      const academic_year = currentVal("academic_year");
+
+      const u = new URL(urls.pdf, window.location.origin);
+      u.searchParams.set("course_id", course_id);
+      if(academic_year) u.searchParams.set("academic_year", academic_year);
+
+      window.open(u.toString(), "_blank");
+    });
+  }
+
+})();
+</script>
+
+<script>
+document.getElementById("delivery_method").addEventListener("change", function () {
+  const box = document.getElementById("delivery_other_box");
+  const input = document.getElementById("delivery_other_input");
+
+  if (this.value === "Other") {
+    box.classList.remove("d-none");
+    input.name = "delivery_method";
+  } else {
+    box.classList.add("d-none");
+    input.name = "";
+  }
+});
+</script>
+
+{% endblock %}

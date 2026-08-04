@@ -1,0 +1,602 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  :root{
+    --ink:#111827;
+    --muted:#6b7280;
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --border:#e5e7eb;
+    --pri:#0d6efd;
+    --good:#16a34a;
+    --bad:#6b7280;
+    --warn:#f59e0b;
+  }
+
+  .page-wrap{
+    background: var(--bg);
+    border-radius: 18px;
+    padding: 18px;
+  }
+
+  .page-head{
+    background: linear-gradient(135deg, rgba(13,110,253,.14), rgba(13,110,253,.03));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+
+  .page-title{
+    margin:0;
+    color:var(--ink);
+    font-weight:800;
+    letter-spacing:.2px;
+  }
+
+  .page-sub{
+    margin:2px 0 0 0;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 10px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background: rgba(255,255,255,.7);
+    color:var(--muted);
+    font-size:12px;
+    font-weight:600;
+    white-space:nowrap;
+  }
+
+  .cardx{
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(17,24,39,.06);
+    overflow:hidden;
+  }
+
+  .cardx .cardx-head{
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    background: linear-gradient(180deg, #fff, #fbfcff);
+  }
+
+  .cardx .cardx-body{
+    padding: 14px;
+  }
+
+  .label{
+    font-weight:700;
+    color:var(--ink);
+    font-size:13px;
+  }
+
+  .hint{
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  .form-select[multiple]{
+    border-radius: 12px;
+  }
+
+  .btn-soft{
+    background: rgba(13,110,253,.08);
+    border: 1px solid rgba(13,110,253,.18);
+    color: var(--pri);
+    font-weight:700;
+  }
+
+  .btn-soft:hover{
+    background: rgba(13,110,253,.12);
+  }
+
+  .table thead th{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--muted);
+    border-bottom:1px solid var(--border) !important;
+  }
+
+  .table tbody td{
+    vertical-align: middle;
+    border-top: 1px solid rgba(229,231,235,.7);
+  }
+
+  .badge-pill{
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-weight:800;
+    font-size:12px;
+  }
+
+  .b-yes{
+    background: rgba(22,163,74,.12) !important;
+    color: var(--good) !important;
+  }
+
+  .b-no{
+    background: rgba(107,114,128,.12) !important;
+    color: var(--bad) !important;
+  }
+
+  .action-btns .btn{
+    border-radius: 10px;
+    font-weight:700;
+  }
+
+  .searchbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .mini{
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .role-dropdown-btn{
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    text-align: left;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 10px 12px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .role-dropdown-menu{
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px;
+    box-shadow: 0 10px 25px rgba(17,24,39,.08);
+    max-height: 320px;
+    overflow: hidden;
+  }
+
+  .role-search{
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+
+  .role-check-list{
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .role-check-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 6px;
+    border-radius:10px;
+  }
+
+  .role-check-item:hover{
+    background:#f8fafc;
+  }
+
+  .role-check-item label{
+    margin: 0;
+    width: 100%;
+    cursor: pointer;
+    color: var(--ink);
+    font-size: 14px;
+  }
+
+  .dropdown-toggle::after{
+    margin-left: auto;
+  }
+</style>
+
+<div class="container mt-4">
+  <div class="page-wrap">
+
+    <!-- HEADER -->
+    <div class="page-head mb-3">
+      <div>
+        <h4 class="page-title">Feedback Data Permissions</h4>
+        <p class="page-sub">Assign who can view all feedback data or only department-wise feedback data.</p>
+      </div>
+      <div class="chip">
+        <i class="fa-solid fa-shield-halved"></i>
+        Role-based access control
+      </div>
+    </div>
+
+
+
+    <!-- FORM CARD -->
+    <div class="cardx mb-4">
+      <div class="cardx-head">
+        <div class="d-flex align-items-center gap-2">
+          <div class="fw-bold" style="color:var(--ink);">
+            <i class="fa-solid fa-pen-to-square me-1"></i>
+            <span id="formTitle">
+              {% if edit_permission %}Edit Feedback Permission{% else %}Create / Update Feedback Permission{% endif %}
+            </span>
+          </div>
+          <span class="hint">Same form supports create and edit</span>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-soft" onclick="resetForm()">
+            <i class="fa-solid fa-rotate-left me-1"></i> Reset
+          </button>
+        </div>
+      </div>
+
+      <div class="cardx-body">
+        <form method="post" class="row g-3" id="permForm">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="save">
+          <input type="hidden" name="perm_id" id="permId" value="{% if edit_permission %}{{ edit_permission.id }}{% endif %}">
+
+          <!-- ROLE SEARCH / DROPDOWN -->
+          <div class="col-md-6">
+            <label class="label mb-2">Roles</label>
+
+            {% if edit_permission %}
+              <select
+                name="roles[]"
+                id="roleSelect"
+                class="form-select"
+                required
+                disabled
+              >
+                {% for role in roles %}
+                  {% if edit_permission.role_id == role.id %}
+                    <option value="{{ role.id }}" selected>{{ role.role }}</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+
+              <div class="hint mt-2">
+                Editing is for a <b>single role</b>. Role selection is locked.
+              </div>
+            {% else %}
+              <div class="dropdown">
+                <button class="btn role-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" id="roleDropdownButton">
+                  <span id="selectedRolesText">Select roles</span>
+                </button>
+
+                <div class="dropdown-menu role-dropdown-menu">
+                  <input
+                    type="text"
+                    id="roleSearch"
+                    class="form-control form-control-sm role-search"
+                    placeholder="Search roles..."
+                    onkeyup="filterRoles()"
+                  >
+
+                  <div class="role-check-list" id="roleCheckboxList">
+                    {% for role in roles %}
+                      <div class="role-check-item role-item" data-role-text="{{ role.role|lower }}">
+                        <input
+                          class="form-check-input role-checkbox"
+                          type="checkbox"
+                          name="roles[]"
+                          value="{{ role.id }}"
+                          id="role_{{ role.id }}"
+                          onchange="updateSelectedRolesText()"
+                        >
+                        <label for="role_{{ role.id }}">{{ role.role }}</label>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+
+              <div class="hint mt-2">
+                Tick one or more roles from the dropdown list.
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- PERMISSIONS -->
+          <div class="col-md-6">
+            <label class="label d-block mb-2">Permissions</label>
+
+            <div class="card p-3" style="border-radius:14px;border:1px solid var(--border);">
+              <div class="form-check form-switch mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="can_view_all_feedback_data"
+                  id="viewAll"
+                  {% if edit_permission and edit_permission.can_view_all_feedback_data %}checked{% endif %}
+                >
+                <label class="form-check-label fw-semibold" for="viewAll">
+                  View All Feedback Data
+                </label>
+                <div class="hint">Can see feedback data across all departments.</div>
+              </div>
+
+              <hr class="my-2">
+
+              <div class="form-check form-switch">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="can_view_department_feedback_data"
+                  id="viewDept"
+                  {% if edit_permission and edit_permission.can_view_department_feedback_data %}checked{% endif %}
+                >
+                <label class="form-check-label fw-semibold" for="viewDept">
+                  View Department Feedback Data
+                </label>
+                <div class="hint">Restricted to department scope.</div>
+              </div>
+            </div>
+
+            <div class="hint mt-2">
+              Tip: If both are off, the role will have no feedback access.
+            </div>
+          </div>
+
+          <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="fa-solid fa-floppy-disk me-1"></i>
+              {% if edit_permission %}Update{% else %}Save{% endif %}
+            </button>
+
+            {% if edit_permission %}
+              <a href="{% url 'feedback_permission' %}" class="btn btn-outline-secondary">
+                Cancel Edit
+              </a>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SEARCH PERMISSIONS -->
+    <div class="cardx mb-3">
+      <div class="cardx-body">
+        <div class="searchbar">
+          <div style="min-width:260px; flex:1;">
+            <label class="label mb-2">Search Existing Permissions</label>
+            <input
+              type="text"
+              id="searchInput"
+              class="form-control"
+              placeholder="Search permission by role name..."
+            >
+            <div class="hint mt-1">Example: HOD, Principal, Staff</div>
+          </div>
+
+          <div class="d-flex gap-2 mt-4 mt-md-0">
+            <button class="btn btn-primary" type="button" onclick="loadPermissions(1)">
+              <i class="fa-solid fa-magnifying-glass me-1"></i> Search
+            </button>
+            <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="cardx">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width:70px;">#</th>
+              <th>Role</th>
+              <th style="width:170px;">All Feedback</th>
+              <th style="width:190px;">Department Feedback</th>
+              <th style="width:220px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="permissionBody">
+            <tr>
+              <td colspan="5" class="text-center py-4 text-muted">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="pagination" class="mt-3"></div>
+
+  </div>
+</div>
+
+<script>
+let allRoleOptions = [];
+
+document.addEventListener("DOMContentLoaded", () => {
+  const roleItems = document.querySelectorAll(".role-item");
+  allRoleOptions = Array.from(roleItems);
+  updateSelectedRolesText();
+  loadPermissions();
+});
+
+function filterRoles() {
+  const searchInput = document.getElementById("roleSearch");
+  if (!searchInput) return;
+
+  const search = searchInput.value.toLowerCase();
+  const roleItems = document.querySelectorAll(".role-item");
+
+  roleItems.forEach(item => {
+    const text = item.getAttribute("data-role-text") || "";
+    item.style.display = text.includes(search) ? "flex" : "none";
+  });
+}
+
+function updateSelectedRolesText() {
+  const selected = Array.from(document.querySelectorAll(".role-checkbox:checked"));
+  const textHolder = document.getElementById("selectedRolesText");
+  if (!textHolder) return;
+
+  if (selected.length === 0) {
+    textHolder.textContent = "Select roles";
+  } else if (selected.length <= 2) {
+    const labels = selected.map(cb => {
+      const label = document.querySelector(`label[for="${cb.id}"]`);
+      return label ? label.textContent.trim() : cb.value;
+    });
+    textHolder.textContent = labels.join(", ");
+  } else {
+    textHolder.textContent = `${selected.length} roles selected`;
+  }
+}
+
+function resetForm() {
+  window.location.href = "{% url 'feedback_permission' %}";
+}
+
+function loadPermissions(page = 1) {
+  const search = document.getElementById("searchInput").value || "";
+
+  fetch(`{% url 'feedback_permission_api' %}?page=${page}&search=${encodeURIComponent(search)}`)
+    .then(res => res.json())
+    .then(data => {
+      const body = document.getElementById("permissionBody");
+      body.innerHTML = "";
+
+      if (!data.results.length) {
+        body.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center py-4 text-muted">No results found</td>
+          </tr>
+        `;
+        renderPagination(data);
+        return;
+      }
+
+      data.results.forEach((permission, index) => {
+        body.innerHTML += `
+          <tr>
+            <td class="text-muted fw-semibold">${((data.page - 1) * data.page_size) + (index + 1)}</td>
+            <td class="fw-semibold" style="color:var(--ink);">${escapeHtml(permission.role)}</td>
+            <td>
+              <span class="badge badge-pill ${permission.can_view_all ? 'b-yes' : 'b-no'}">
+                ${permission.can_view_all ? 'YES' : 'NO'}
+              </span>
+            </td>
+            <td>
+              <span class="badge badge-pill ${permission.can_view_dept ? 'b-yes' : 'b-no'}">
+                ${permission.can_view_dept ? 'YES' : 'NO'}
+              </span>
+            </td>
+            <td class="action-btns">
+              <a class="btn btn-sm btn-outline-primary me-2"
+                 href="{% url 'feedback_permission' %}?edit=${permission.id}">
+                 <i class="fa-solid fa-pen me-1"></i> Edit
+              </a>
+
+              <form method="post" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="perm_id" value="${permission.id}">
+                <button type="submit" class="btn btn-sm btn-outline-danger"
+                        onclick="return confirm('Delete this feedback permission?')">
+                  <i class="fa-solid fa-trash me-1"></i> Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+        `;
+      });
+
+      renderPagination(data);
+    })
+    .catch(() => {
+      document.getElementById("permissionBody").innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center py-4 text-danger">Failed to load data.</td>
+        </tr>
+      `;
+    });
+}
+
+function renderPagination(data) {
+  const pagination = document.getElementById("pagination");
+  pagination.innerHTML = "";
+
+  const wrap = document.createElement("div");
+  wrap.className = "d-flex align-items-center justify-content-between flex-wrap gap-2";
+
+  const left = document.createElement("div");
+  left.className = "d-flex gap-2";
+
+  if (data.has_prev) {
+    left.innerHTML += `<button class="btn btn-outline-secondary" onclick="loadPermissions(${data.page - 1})">Prev</button>`;
+  } else {
+    left.innerHTML += `<button class="btn btn-outline-secondary" disabled>Prev</button>`;
+  }
+
+  if (data.has_next) {
+    left.innerHTML += `<button class="btn btn-outline-secondary" onclick="loadPermissions(${data.page + 1})">Next</button>`;
+  } else {
+    left.innerHTML += `<button class="btn btn-outline-secondary" disabled>Next</button>`;
+  }
+
+  const right = document.createElement("div");
+  right.className = "mini";
+  right.innerHTML = `Page <b>${data.page}</b> of <b>${data.total_pages}</b> · Total <b>${data.total_count}</b>`;
+
+  wrap.appendChild(left);
+  wrap.appendChild(right);
+  pagination.appendChild(wrap);
+}
+
+function clearSearch() {
+  document.getElementById("searchInput").value = "";
+  loadPermissions(1);
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, function (m) {
+    return ({
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;',
+      "'":'&#39;'
+    })[m];
+  });
+}
+
+document.getElementById("permForm").addEventListener("submit", function(e){
+  const permId = document.getElementById("permId").value;
+  if (!permId) {
+    const checked = document.querySelectorAll(".role-checkbox:checked");
+    if (checked.length === 0) {
+      e.preventDefault();
+      alert("Please select at least one role.");
+    }
+  }
+});
+</script>
+
+{% endblock %}

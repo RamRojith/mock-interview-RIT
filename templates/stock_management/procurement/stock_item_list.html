@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid py-4" style="max-width:1300px;">
+  <h2 class="fw-bold text-primary mb-3"><i class="fa-solid fa-boxes-stacked me-2"></i>Stock Items (Assets)</h2>
+
+  {% if messages %}{% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}{% endif %}
+
+  <form method="get" class="mb-3 d-flex gap-2 flex-wrap" style="max-width:600px;">
+    <select name="lab" class="form-select form-select-sm">
+      <option value="">All labs</option>
+      {% for l in labs %}<option value="{{ l.id }}" {% if selected_lab == l.id|stringformat:'s' %}selected{% endif %}>{{ l.lab_code }} — {{ l.name }}</option>{% endfor %}
+    </select>
+    <select name="condition" class="form-select form-select-sm">
+      <option value="">All conditions</option>
+      {% for val, label in condition_choices %}<option value="{{ val }}" {% if selected_condition == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <button class="btn btn-sm btn-outline-primary">Filter</button>
+  </form>
+
+  <div class="card shadow-sm border-0">
+    <div class="table-responsive">
+      <table class="table table-bordered mb-0 align-middle">
+        <thead class="table-light text-center"><tr><th>Asset Tag</th><th>Description</th><th>Current Lab</th><th>Condition</th><th></th></tr></thead>
+        <tbody>
+          {% for it in items %}
+          <tr>
+            <td>{{ it.asset_tag }}</td>
+            <td>{{ it.entry.item_description|truncatechars:50 }}</td>
+            <td class="text-center">{% if it.current_lab %}{{ it.current_lab.lab_code }} — {{ it.current_lab.name }}{% else %}-{% endif %}</td>
+            <td class="text-center">
+              {% if it.condition == "WORKING" %}<span class="badge bg-success">Working</span>
+              {% elif it.condition == "CONDEMNED" %}<span class="badge bg-danger">Condemned</span>
+              {% elif it.condition == "MISSING" %}<span class="badge bg-dark">Missing</span>
+              {% else %}<span class="badge bg-warning text-dark">{{ it.get_condition_display }}</span>{% endif %}
+            </td>
+            <td class="text-center"><a href="{% url 'stock_item_detail' it.id %}" class="btn btn-sm btn-outline-primary">View</a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center text-muted py-3">No stock items yet. Items are generated when an entry is Principal-approved.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,592 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.inventory-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.inventory-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.inventory-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.inventory-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.inventory-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.inventory-portal .custom-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.inventory-portal .card-header-custom {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a4b8c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.inventory-portal .card-body-custom {
+  padding: 1.5rem;
+}
+
+.inventory-portal .inventory-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.inventory-portal .item-entry-row,
+.inventory-portal .grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.inventory-portal .item-entry-row {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 16px;
+  align-items: end;
+}
+
+.inventory-portal .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.inventory-portal .form-control,
+.inventory-portal .form-select,
+.inventory-portal .inventory-search {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.inventory-portal .form-control:focus,
+.inventory-portal .form-select:focus,
+.inventory-portal .inventory-search:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26,75,140,0.1);
+  outline: none;
+}
+
+.inventory-portal .inventory-search {
+  width: 260px;
+}
+
+.inventory-portal .btn-primary-custom {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.inventory-portal .btn-primary-custom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26,75,140,0.25);
+}
+
+.inventory-portal .btn-secondary-custom {
+  background: #64748b;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inventory-portal .btn-secondary-custom:hover {
+  background: #475569;
+}
+
+.inventory-portal .remove-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 1.3rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.inventory-portal .remove-btn:hover {
+  background: #fecaca;
+}
+
+.inventory-portal .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.inventory-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.inventory-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.inventory-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.85rem;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.inventory-portal .data-table tbody tr:hover {
+  background: rgba(26,75,140,0.03);
+}
+
+.inventory-portal .low-row {
+  background: #fff7ed;
+}
+
+.inventory-portal .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.inventory-portal .badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.inventory-portal .badge-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.inventory-portal .action-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-right: 0.4rem;
+}
+
+.inventory-portal .action-btn.edit {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.inventory-portal .action-btn.delete {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.inventory-portal .empty-row {
+  text-align: center;
+  padding: 2rem !important;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.inventory-portal .modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.inventory-portal .modal-overlay.show {
+  display: flex;
+}
+
+.inventory-portal .modal-box {
+  background: white;
+  border-radius: 20px;
+  width: 950px;
+  max-width: 100%;
+  padding: 1.5rem;
+  box-shadow: 0 20px 45px rgba(15,23,42,0.25);
+}
+
+.inventory-portal .modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.inventory-portal .modal-head h4 {
+  margin: 0;
+  color: #1a4b8c;
+}
+
+.inventory-portal .modal-close {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: #f1f5f9;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.inventory-portal .check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  font-weight: 600;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media(max-width: 992px) {
+  .inventory-portal .item-entry-row,
+  .inventory-portal .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media(max-width: 768px) {
+  .inventory-portal {
+    padding: 1rem;
+  }
+
+  .inventory-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .inventory-portal .item-entry-row,
+  .inventory-portal .grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-portal .card-header-custom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inventory-portal .inventory-search {
+    width: 100%;
+  }
+
+  .inventory-portal .btn-primary-custom,
+  .inventory-portal .btn-secondary-custom {
+    width: 100%;
+  }
+}
+</style>
+
+<div class="inventory-portal">
+
+  <div class="page-header">
+    <h1><i class="fas fa-boxes-stacked me-2"></i> Inventory Item Entry</h1>
+    <p class="header-subtitle">
+      Add multiple inventory items, edit existing items and delete items
+    </p>
+  </div>
+
+  <div class="page-container">
+
+    <!-- ADD INVENTORY -->
+    <div class="custom-card">
+
+      <div class="card-header-custom">
+        <span><i class="fas fa-plus-circle me-2"></i> Add Inventory Items</span>
+
+        <button type="button"
+                class="btn-secondary-custom"
+                onclick="addItemRow()">
+          + Add Row
+        </button>
+      </div>
+
+      <div class="card-body-custom">
+
+        <form method="post" class="inventory-form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="add">
+
+          <div id="itemRows">
+            <div class="item-entry-row">
+
+              <div class="form-group">
+                <label>Item Code</label>
+                <input type="text" name="item_code[]" class="form-control" required>
+              </div>
+
+              <div class="form-group">
+                <label>Item Name</label>
+                <input type="text" name="item_name[]" class="form-control" required>
+              </div>
+
+              <div class="form-group">
+                <label>Item Type</label>
+                <select name="item_type[]" class="form-select" required>
+                  <option value="">Select Type</option>
+                  {% for type in item_types %}
+                    <option value="{{ type.id }}">{{ type.type_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Category</label>
+                <select name="category[]" class="form-select">
+                  <option value="">Select Category</option>
+                  {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Unit</label>
+                <input type="text" name="unit[]" class="form-control" placeholder="Nos / Meter / Kg" required>
+              </div>
+
+              <div class="form-group">
+                <label>Opening Stock</label>
+                <input type="number" step="0.01" name="stock_qty[]" class="form-control" min="0" required>
+              </div>
+
+              <div class="form-group">
+                <label>Minimum Stock</label>
+                <input type="number" step="0.01" name="minimum_qty[]" class="form-control" min="0" required>
+              </div>
+
+              <div class="form-group">
+                <label>Unit Rate</label>
+                <input type="number" step="0.01" name="unit_rate[]" class="form-control" min="0">
+              </div>
+
+              <div>
+                <button type="button" class="remove-btn" onclick="removeItemRow(this)">×</button>
+              </div>
+
+            </div>
+          </div>
+
+          <button class="btn-primary-custom" type="submit">
+            <i class="fas fa-paper-plane me-2"></i> Submit All
+          </button>
+        </form>
+
+      </div>
+    </div>
+
+    <!-- INVENTORY TABLE -->
+    <div class="custom-card">
+
+      <div class="card-header-custom">
+        <span><i class="fas fa-warehouse me-2"></i> Inventory List</span>
+
+        <input type="text"
+               id="inventorySearch"
+               class="inventory-search"
+               placeholder="Search inventory...">
+      </div>
+
+      <div class="card-body-custom">
+
+        <div class="table-responsive">
+
+          <table id="inventoryTable" class="data-table">
+
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Item</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Unit</th>
+                <th>Stock</th>
+                <th>Minimum</th>
+                <th>Rate</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              {% for item in items %}
+              <tr class="{% if item.stock_qty <= item.minimum_qty %}low-row{% endif %}">
+
+                <td><strong>{{ item.item_code }}</strong></td>
+                <td>{{ item.item_name }}</td>
+                <td>{{ item.item_type.type_name|default:"-" }}</td>
+                <td>{{ item.category.name|default:"-" }}</td>
+                <td>{{ item.unit|default:"-" }}</td>
+                <td>{{ item.stock_qty }}</td>
+                <td>{{ item.minimum_qty }}</td>
+                <td>{{ item.unit_rate }}</td>
+
+                <td>
+                  {% if item.stock_qty <= item.minimum_qty %}
+                    <span class="badge-status badge-danger">
+                      <i class="fas fa-triangle-exclamation"></i> Low Stock
+                    </span>
+                  {% else %}
+                    <span class="badge-status badge-success">
+                      <i class="fas fa-circle-check"></i> Available
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td>
+
+                  <button
+                    type="button"
+                    class="action-btn edit"
+                    onclick="openEditModal(
+                      '{{ item.id }}',
+                      '{{ item.item_code|escapejs }}',
+                      '{{ item.item_name|escapejs }}',
+                      '{{ item.item_type.id|default:'' }}',
+                      '{{ item.category.id|default:'' }}',
+                      '{{ item.unit|escapejs }}',
+                      '{{ item.stock_qty }}',
+                      '{{ item.minimum_qty }}',
+                      '{{ item.unit_rate }}',
+                      '{{ item.vendor_name|default:''|escapejs }}',
+                      '{{ item.active }}'
+                    )">
+                    Edit
+                  </button>
+
+                  <form method="post"
+                        style="display:inline;"
+                        onsubmit="return confirm('Delete this inventory item?');">
+
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="item_id" value="{{ item.id }}">
+
+                    <button type="submit" class="action-btn delete">
+                      Delete
+                    </button>
+
+                  </form>
+
+                </td>
+              </tr>
+
+              {% empty %}
+              <tr>
+                <td colspan="10" class="empty-row">
+                  <i class="fas fa-inbox me-2"></i>
+                  No inventory items found.
+                </td>
+              </tr>
+              {% endfor %}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function addItemRow() {
+  const container = document.getElementById("itemRows");
+  const firstRow = container.querySelector(".item-entry-row");
+  const newRow = firstRow.cloneNode(true);
+
+  newRow.querySelectorAll("input").forEach(input => {
+    input.value = "";
+  });
+
+  newRow.querySelectorAll("select").forEach(select => {
+    select.selectedIndex = 0;
+  });
+
+  container.appendChild(newRow);
+}
+
+function removeItemRow(btn) {
+  const rows = document.querySelectorAll("#itemRows .item-entry-row");
+
+  if (rows.length === 1) {
+    alert("At least one row is required.");
+    return;
+  }
+
+  btn.closest(".item-entry-row").remove();
+}
+</script>
+{% endblock %}

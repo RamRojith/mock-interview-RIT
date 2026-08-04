@@ -1,0 +1,614 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  /* ===== Page layout ===== */
+  .la-page {
+    padding: 22px 18px;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  .la-alert {
+    border: 1px solid #f3c6c6;
+    background: #fff3f3;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+  }
+  .la-alert .title {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-weight: 800;
+    color: #b42318;
+    margin-bottom: 8px;
+  }
+  .la-alert ul { margin: 0; padding-left: 18px; color:#7a1f1f; }
+  .la-alert li { margin: 6px 0; }
+
+  .la-title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 6px 0 10px;
+  }
+  .la-title-row h2 {
+    margin: 0;
+    font-weight: 900;
+    letter-spacing: .2px;
+    color: #111827;
+  }
+  .la-title-row .hint {
+    color: #6b7280;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .la-card {
+    background: #fff;
+    border: 1px solid #eef0f6;
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(17,24,39,.06);
+  }
+
+  .la-creator {
+    padding: 16px 16px 14px;
+    margin-bottom: 16px;
+  }
+  .la-creator .rowx {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+  .la-creator label {
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 6px;
+  }
+  .la-creator .tip {
+    color: #6b7280;
+    font-size: 12px;
+    margin-top: 6px;
+  }
+
+  .la-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 992px){
+    .la-columns { grid-template-columns: 1fr; }
+  }
+
+  .la-col-head {
+    padding: 14px 16px;
+    border-bottom: 1px solid #eef0f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .la-col-head h5 {
+    margin: 0;
+    font-weight: 900;
+    color: #111827;
+  }
+  .la-col-head .sub {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  .la-col-body {
+    padding: 12px 16px 14px;
+  }
+
+  .la-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #e6e9f2;
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: #fbfcff;
+    margin-bottom: 12px;
+  }
+  .la-search input {
+    border: 0;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 14px;
+  }
+
+  .la-dropzone {
+    border: 2px dashed #d7dbea;
+    border-radius: 14px;
+    min-height: 270px;
+    padding: 12px;
+    background: #fff;
+  }
+  .la-dropzone.drag-over {
+    background: #f4f9ff;
+    border-color: #7bb7ff;
+  }
+
+  .role-card {
+    border: 1px solid #eef0f6;
+    border-radius: 14px;
+    padding: 12px 12px;
+    background: #fff;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 10px;
+    box-shadow: 0 6px 14px rgba(17,24,39,.05);
+    cursor: grab;
+  }
+  .role-card:active { cursor: grabbing; }
+
+  .role-pill {
+    font-size: 11px;
+    font-weight: 900;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #eef5ff;
+    color: #1d4ed8;
+    white-space: nowrap;
+  }
+  .role-name {
+    font-weight: 800;
+    color: #374151;
+  }
+
+  .role-tools {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .cross-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6b7280;
+    font-size: 12px;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .dept-select {
+    min-width: 180px;
+  }
+
+  .ghost-note {
+    color: #6b7280;
+    font-size: 13px;
+    padding: 10px 4px;
+  }
+
+  /* Bottom sticky bar */
+  .la-bottom {
+    position: sticky;
+    bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+  }
+  .la-bottom .left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #6b7280;
+    font-size: 13px;
+  }
+  .la-check {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    background: #22c55e;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-weight: 900;
+    font-size: 12px;
+  }
+
+  .btn {
+    border-radius: 12px !important;
+    font-weight: 800;
+  }
+
+  /* Messages */
+  #msgBox .alert { border-radius: 12px; }
+
+  /* --- IMPORTANT: Hide all drag/drop UI handles text (optional) --- */
+  .la-title-row .hint { display: none; }     /* hide “Drag roles…” text */
+</style>
+
+<div class="la-page">
+
+  <div class="la-alert">
+    <div class="title">
+      <span>⚠️ Important</span>
+      <span style="color:#6b7280;font-weight:700;">Cross-department approvals (New approvals only)</span>
+    </div>
+    <ul>
+      <li>If the approver is not from the creator’s department, enable <b>Cross Dept</b> and select the approver’s department.</li>
+      <li>This update is applicable only for <b>new approvals</b>.</li>
+    </ul>
+  </div>
+
+  <div class="la-title-row">
+    <h2>Library Approvers</h2>
+    <div class="hint">Drag roles from left → right to set hierarchy</div>
+  </div>
+
+  <!-- Creator Role Card -->
+  <div class="la-card la-creator">
+    <div class="rowx">
+      <div>
+        <label class="form-label">Select Creator Role</label>
+        <select id="creatorRole" class="form-select">
+          <option value="">-- Select a Role --</option>
+          {% for r in roles %}
+            <option value="{{ r.id }}">{{ r.role }}</option>
+          {% endfor %}
+        </select>
+        <div class="tip">Tip: Choose the role who is creating the book request (creator).</div>
+      </div>
+
+      <div class="text-end">
+        <button type="button" class="btn btn-outline-secondary px-4" id="clearBtn">Clear Hierarchy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two columns -->
+  <div class="la-columns">
+
+    <!-- Available Roles -->
+    <div class="la-card">
+      <div class="la-col-head">
+        <div>
+          <h5>Available Roles</h5>
+        </div>
+        <div class="sub">Search</div>
+      </div>
+
+      <div class="la-col-body">
+        <div class="la-search">
+          <span style="color:#64748b;">🔎</span>
+          <input id="searchAvailable" type="text" placeholder="Search available roles...">
+        </div>
+
+        <div id="availableZone" class="la-dropzone" data-zone="available">
+          <!-- role cards injected -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Approval Hierarchy -->
+    <div class="la-card">
+      <div class="la-col-head">
+        <div>
+          <h5>Approval Hierarchy</h5>
+        </div>
+        <div class="sub">Order matters</div>
+      </div>
+
+      <div class="la-col-body">
+        <div class="la-search">
+          <span style="color:#64748b;">🔎</span>
+          <input id="searchHierarchy" type="text" placeholder="Search hierarchy roles...">
+        </div>
+
+        <div id="hierarchyZone" class="la-dropzone" data-zone="hierarchy">
+          <div id="emptyHint" class="ghost-note">Add roles here to create approval hierarchy...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="msgBox" class="mt-3"></div>
+
+  <!-- Bottom bar -->
+  <div class="la-bottom">
+    <div class="left">
+      <div class="la-check">✓</div>
+      <div>After arranging, click <b>Submit</b> to save the hierarchy.</div>
+    </div>
+
+    <button class="btn btn-primary px-4 py-2" type="button" id="submitBtn">
+      Submit Hierarchy
+    </button>
+  </div>
+
+</div>
+
+<script>
+  // =========================================================
+  // ✅ UPDATED: NO DRAG & DROP (buttons based) + proper alignment
+  // ✅ DOES NOT require view changes (still posts same JSON)
+  // =========================================================
+
+  const ROLES = [
+    {% for r in roles %}
+      { id: "{{ r.id }}", name: "{{ r.role|escapejs }}" },
+    {% endfor %}
+  ];
+
+  const DEPARTMENTS = [
+    {% for d in departments %}
+      { id: "{{ d.id }}", name: "{{ d.Department|default_if_none:''|escapejs }}" },
+    {% endfor %}
+  ];
+
+  let hierarchy = [];                          // [{id,isCrossDepartment,departmentId}]
+  let availableIds = ROLES.map(r => String(r.id));
+
+  const availableZone = document.getElementById("availableZone");
+  const hierarchyZone = document.getElementById("hierarchyZone");
+  const emptyHint = document.getElementById("emptyHint");
+
+  const searchAvailable = document.getElementById("searchAvailable");
+  const searchHierarchy = document.getElementById("searchHierarchy");
+
+  const clearBtn = document.getElementById("clearBtn");
+  const submitBtn = document.getElementById("submitBtn");
+  const msgBox = document.getElementById("msgBox");
+
+  function showMsg(type, text){
+    msgBox.innerHTML = `
+      <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        ${text}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+  }
+
+  function deptOptions(selectedId){
+    let html = `<option value="">-- Select Department --</option>`;
+    DEPARTMENTS.forEach(d => {
+      const sel = (selectedId && String(selectedId) === String(d.id)) ? "selected" : "";
+      html += `<option value="${d.id}" ${sel}>${d.name}</option>`;
+    });
+    return html;
+  }
+
+  function roleById(id){
+    return ROLES.find(r => String(r.id) === String(id));
+  }
+
+  function render(){
+    // Empty hint
+    emptyHint.style.display = hierarchy.length ? "none" : "block";
+
+    // Render Available
+    const qA = (searchAvailable.value || "").trim().toLowerCase();
+    availableZone.innerHTML = "";
+
+    const available = availableIds
+      .map(id => roleById(id))
+      .filter(r => r && (!qA || r.name.toLowerCase().includes(qA)));
+
+    if (!available.length){
+      availableZone.innerHTML = `<div class="ghost-note">No roles found.</div>`;
+    } else {
+      available.forEach(r => availableZone.appendChild(makeAvailableRow(r.id, r.name)));
+    }
+
+    // Render Hierarchy
+    const qH = (searchHierarchy.value || "").trim().toLowerCase();
+    hierarchyZone.innerHTML = "";
+    if (!hierarchy.length) hierarchyZone.appendChild(emptyHint);
+
+    const filteredHierarchy = hierarchy.filter(item => {
+      const r = roleById(item.id);
+      return r && (!qH || r.name.toLowerCase().includes(qH));
+    });
+
+    filteredHierarchy.forEach((item) => {
+      const r = roleById(item.id);
+      const level = hierarchy.findIndex(x => String(x.id) === String(item.id)) + 1; // actual order index
+      hierarchyZone.appendChild(makeHierarchyRow(item, level, r ? r.name : "Role"));
+    });
+  }
+
+  // -----------------------
+  // ✅ Available row (Add button)
+  // -----------------------
+  function makeAvailableRow(id, name){
+    const div = document.createElement("div");
+    div.className = "role-card";
+    div.style.cursor = "default";
+    div.innerHTML = `
+      <span class="role-pill">ROLE</span>
+      <div class="role-name">${name}</div>
+      <div class="role-tools">
+        <button type="button" class="btn btn-sm btn-outline-primary">Add ➜</button>
+      </div>
+    `;
+
+    div.querySelector("button").addEventListener("click", () => {
+      const rid = String(id);
+      // remove from available
+      availableIds = availableIds.filter(x => String(x) !== rid);
+      // add to hierarchy
+      if (!hierarchy.some(x => String(x.id) === rid)) {
+        hierarchy.push({ id: rid, isCrossDepartment: false, departmentId: "" });
+      }
+      render();
+    });
+
+    return div;
+  }
+
+  // -----------------------
+  // ✅ Hierarchy row (Up/Down/Remove)
+  // -----------------------
+  function makeHierarchyRow(item, level, name){
+    const div = document.createElement("div");
+    div.className = "role-card";
+    div.style.cursor = "default";
+
+    const isFirst = level === 1;
+    const isLast = level === hierarchy.length;
+
+    div.innerHTML = `
+      <span class="role-pill">LEVEL ${level}</span>
+      <div>
+        <div class="role-name">${name}</div>
+        <div style="margin-top:6px;color:#6b7280;font-size:12px;">
+          Use Up/Down to set order. Use Cross Dept if needed.
+        </div>
+      </div>
+      <div class="role-tools">
+        <button type="button" class="btn btn-sm btn-outline-secondary upBtn" ${isFirst ? "disabled" : ""}>▲</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary downBtn" ${isLast ? "disabled" : ""}>▼</button>
+
+        <label class="cross-wrap">
+          <input type="checkbox" class="form-check-input crossDept" ${item.isCrossDepartment ? "checked" : ""}>
+          <span>Cross Dept</span>
+        </label>
+
+        <select class="form-select form-select-sm dept-select deptSelect" ${item.isCrossDepartment ? "" : "disabled"}>
+          ${deptOptions(item.departmentId)}
+        </select>
+
+        <button type="button" class="btn btn-sm btn-outline-danger removeBtn">Remove</button>
+      </div>
+    `;
+
+    // Up/Down
+    div.querySelector(".upBtn").addEventListener("click", () => {
+      const idx = hierarchy.findIndex(x => String(x.id) === String(item.id));
+      if (idx > 0) {
+        [hierarchy[idx-1], hierarchy[idx]] = [hierarchy[idx], hierarchy[idx-1]];
+        render();
+      }
+    });
+
+    div.querySelector(".downBtn").addEventListener("click", () => {
+      const idx = hierarchy.findIndex(x => String(x.id) === String(item.id));
+      if (idx !== -1 && idx < hierarchy.length - 1) {
+        [hierarchy[idx+1], hierarchy[idx]] = [hierarchy[idx], hierarchy[idx+1]];
+        render();
+      }
+    });
+
+    // Toggle cross dept
+    const cross = div.querySelector(".crossDept");
+    const deptSel = div.querySelector(".deptSelect");
+
+    cross.addEventListener("change", () => {
+      const idx = hierarchy.findIndex(x => String(x.id) === String(item.id));
+      if (idx === -1) return;
+
+      hierarchy[idx].isCrossDepartment = cross.checked;
+      if (!cross.checked) {
+        hierarchy[idx].departmentId = "";
+        deptSel.value = "";
+        deptSel.disabled = true;
+      } else {
+        deptSel.disabled = false;
+      }
+    });
+
+    deptSel.addEventListener("change", () => {
+      const idx = hierarchy.findIndex(x => String(x.id) === String(item.id));
+      if (idx === -1) return;
+      hierarchy[idx].departmentId = deptSel.value;
+    });
+
+    // Remove
+    div.querySelector(".removeBtn").addEventListener("click", () => {
+      const idx = hierarchy.findIndex(x => String(x.id) === String(item.id));
+      if (idx !== -1) {
+        hierarchy.splice(idx, 1);
+        if (!availableIds.includes(String(item.id))) availableIds.push(String(item.id));
+        availableIds.sort((a,b) => Number(a) - Number(b));
+        render();
+      }
+    });
+
+    return div;
+  }
+
+  // Search
+  searchAvailable.addEventListener("input", render);
+  searchHierarchy.addEventListener("input", render);
+
+  // Clear hierarchy
+  clearBtn.addEventListener("click", () => {
+    hierarchy.forEach(x => {
+      if (!availableIds.includes(String(x.id))) availableIds.push(String(x.id));
+    });
+    hierarchy = [];
+    availableIds.sort((a,b) => Number(a) - Number(b));
+    render();
+  });
+
+  // Submit (same JSON payload)
+  submitBtn.addEventListener("click", async () => {
+    const creatorRole = document.getElementById("creatorRole").value;
+    if (!creatorRole) return showMsg("warning", "Please select Creator Role.");
+    if (!hierarchy.length) return showMsg("warning", "Please add at least one role into Approval Hierarchy.");
+
+    for (const h of hierarchy) {
+      if (h.isCrossDepartment && !h.departmentId) {
+        const r = roleById(h.id);
+        return showMsg("warning", `Department is required for cross-department approver (${r ? r.name : "role"}).`);
+      }
+    }
+
+    const roleHierarchy = hierarchy.map(h => ({
+      id: h.id,
+      isCrossDepartment: !!h.isCrossDepartment,
+      departmentId: h.departmentId || ""
+    }));
+
+    try {
+      const resp = await fetch(window.location.href, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body: JSON.stringify({ creatorRole, roleHierarchy })
+      });
+
+      const ct = resp.headers.get("content-type") || "";
+      if (ct.includes("application/json")) {
+        const out = await resp.json();
+        if (!resp.ok) return showMsg("danger", out.error || "Save failed");
+        return showMsg("success", out.message || "Saved successfully");
+      } else {
+        const text = await resp.text();
+        return showMsg("danger",
+          `Server returned non-JSON (HTTP ${resp.status}).<br>
+           <small class="text-muted">This usually means redirect/login/permission error OR server error page.</small><br>
+           <div class="mt-2 p-2 border rounded bg-light" style="max-height:160px; overflow:auto;">
+             <small>${text.replaceAll("<","&lt;").replaceAll(">","&gt;").slice(0, 400)}</small>
+           </div>`
+        );
+      }
+    } catch (e) {
+      console.error(e);
+      return showMsg("danger", "Fetch failed. Check browser console + Django terminal.");
+    }
+  });
+
+  // Initial render
+  render();
+</script>
+{% endblock %}

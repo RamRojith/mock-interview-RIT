@@ -1,0 +1,1009 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .dc-dash-page {
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        min-height: 100vh;
+        padding: 1.5rem 2rem;
+    }
+
+    .dc-dash-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* ===== Title card ===== */
+    .dc-title-card {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: #fff;
+        border-radius: 16px;
+        padding: 1.75rem 2rem;
+        box-shadow: 0 8px 24px rgba(26, 75, 140, 0.25);
+        margin-bottom: 1.75rem;
+    }
+
+    .dc-title-card h2 {
+        font-size: 1.7rem;
+        font-weight: 700;
+        margin: 0 0 0.35rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .dc-title-card p {
+        margin: 0;
+        font-size: 0.95rem;
+        opacity: 0.92;
+        font-weight: 400;
+    }
+
+    /* ===== Cards ===== */
+    .dc-card-box {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.75rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid #1a4b8c;
+        width: 100%;
+        margin-bottom: 1.75rem;
+    }
+
+    .dc-section-title {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.25rem;
+        font-size: 1.05rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* ===== Filter form ===== */
+    .dc-filter-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.4rem;
+        font-size: 0.85rem;
+    }
+
+    .dc-lock-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        margin-left: 0.4rem;
+        padding: 0.1rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .dc-filter-form .form-select,
+    .dc-filter-form .form-control {
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+        padding: 0.55rem 0.85rem;
+        font-size: 0.92rem;
+    }
+
+    .dc-filter-form .form-select:focus,
+    .dc-filter-form .form-control:focus {
+        border-color: #1a4b8c;
+        box-shadow: 0 0 0 0.2rem rgba(26, 75, 140, 0.2);
+    }
+
+    .dc-btn-apply {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: #fff;
+        border: none;
+        padding: 0.6rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 12px rgba(26, 75, 140, 0.25);
+    }
+
+    .dc-btn-apply:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(26, 75, 140, 0.35);
+        color: #fff;
+    }
+
+    .dc-btn-pdf {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        color: #fff;
+        border: none;
+        padding: 0.6rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .dc-btn-pdf:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.35);
+        color: #fff;
+    }
+
+    .dc-btn-reset {
+        background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+        color: #fff;
+        border: none;
+        padding: 0.6rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        transition: all 0.25s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .dc-btn-reset:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(71, 85, 105, 0.3);
+        color: #fff;
+    }
+
+    /* ===== Count line ===== */
+    .dc-count-line {
+        font-size: 0.95rem;
+        color: #374151;
+        font-weight: 500;
+        margin-bottom: 1rem;
+    }
+
+    .dc-count-line #dcCount {
+        color: #1a4b8c;
+        font-weight: 700;
+    }
+
+    /* ===== Table ===== */
+    .dc-table {
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 0;
+    }
+
+    .dc-table thead th {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: #fff;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        vertical-align: middle;
+        border-color: #1a4b8c;
+        padding: 0.85rem 0.75rem;
+        font-weight: 600;
+    }
+
+    .dc-table tbody td {
+        vertical-align: middle;
+        font-size: 0.88rem;
+        padding: 0.75rem;
+        color: #111827;
+        word-break: break-word;
+    }
+
+    .dc-table tbody tr:hover {
+        background: rgba(26, 75, 140, 0.04);
+    }
+
+    .dc-empty-row td {
+        text-align: center;
+        color: #64748b;
+        padding: 1.5rem !important;
+        font-style: italic;
+    }
+
+    /* ===== Status badges ===== */
+    .dc-badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        white-space: nowrap;
+        letter-spacing: 0.3px;
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .dc-badge-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .dc-badge-approved,
+    .dc-badge-resolved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .dc-badge-rejected {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .dc-badge-in_progress {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .dc-badge-closed,
+    .dc-badge-deactivated {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    /* ===== Type pills ===== */
+    .dc-type-pill {
+        display: inline-block;
+        padding: 0.3rem 0.65rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+        background: #eef2ff;
+        color: #3730a3;
+    }
+
+    .dc-type-wifi {
+        background: #e0f2fe;
+        color: #075985;
+    }
+
+    .dc-type-query {
+        background: #ede9fe;
+        color: #5b21b6;
+    }
+
+    .dc-type-guest {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .dc-type-system_support {
+        background: #ffedd5;
+        color: #9a3412;
+    }
+
+    .dc-type-email_relogin {
+        background: #fce7f3;
+        color: #9d174e;
+    }
+
+    /* ===== Summary cards ===== */
+    .dc-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .dc-stat-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 1.1rem 1.25rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        border-left: 5px solid #1a4b8c;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .dc-stat-card .dc-stat-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .dc-stat-card .dc-stat-value {
+        font-size: 1.9rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1;
+    }
+
+    .dc-stat-total { border-left-color: #1a4b8c; }
+    .dc-stat-wifi { border-left-color: #0284c7; }
+    .dc-stat-query { border-left-color: #7c3aed; }
+    .dc-stat-guest { border-left-color: #16a34a; }
+    .dc-stat-system { border-left-color: #ea580c; }
+    .dc-stat-email { border-left-color: #db2777; }
+    .dc-stat-student { border-left-color: #0891b2; }
+    .dc-stat-faculty { border-left-color: #4f46e5; }
+    .dc-stat-hostel { border-left-color: #b45309; }
+    .dc-stat-day { border-left-color: #0d9488; }
+
+    .dc-subcards-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #1a4b8c;
+        margin: 0.25rem 0 0.85rem;
+    }
+
+    .dc-year-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 0.85rem;
+    }
+
+    .dc-year-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        text-align: center;
+    }
+
+    .dc-year-card .dc-year-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 0.3rem;
+    }
+
+    .dc-year-card .dc-year-value {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #1a4b8c;
+    }
+
+    .dc-year-empty {
+        color: #94a3b8;
+        font-style: italic;
+        font-size: 0.88rem;
+    }
+
+    /* ===== View button ===== */
+    .dc-btn-view {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: #fff;
+        border: none;
+        padding: 0.35rem 0.85rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: all 0.2s ease;
+    }
+
+    .dc-btn-view:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+        color: #fff;
+    }
+
+    /* ===== Application detail modal ===== */
+    #dcViewModal .modal-header {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: #fff;
+    }
+
+    #dcViewModal .modal-header .btn-close {
+        filter: invert(1) grayscale(1) brightness(2);
+    }
+
+    .dc-view-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.9rem 1.2rem;
+    }
+
+    .dc-view-field .dc-view-k {
+        font-size: 0.72rem;
+        color: #6b7280;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 0.15rem;
+    }
+
+    .dc-view-field .dc-view-v {
+        font-size: 0.92rem;
+        color: #111827;
+        font-weight: 600;
+        word-break: break-word;
+        white-space: pre-line;
+    }
+
+    .dc-view-section-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #1a4b8c;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin: 1.3rem 0 0.8rem;
+        padding-top: 1rem;
+        border-top: 1px dashed #e2e8f0;
+    }
+
+    .dc-view-section-label:first-child {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+    }
+
+    @media (max-width: 768px) {
+        .dc-dash-page {
+            padding: 1rem;
+        }
+
+        .dc-card-box {
+            padding: 1rem;
+        }
+
+        .dc-title-card {
+            padding: 1.25rem;
+        }
+
+        .dc-title-card h2 {
+            font-size: 1.3rem;
+        }
+    }
+</style>
+
+<div class="dc-dash-page">
+    <div class="dc-dash-container">
+
+        <!-- Page title card -->
+        <div class="dc-title-card">
+            <h2><i class="fas fa-database"></i> Applications Dashboard</h2>
+            <p>All Data Center applications &mdash; WiFi, Network Query, Guest WiFi, System Support &amp; Email Relogin</p>
+        </div>
+
+        <!-- Summary cards (reflect the current filters) -->
+        <div class="dc-cards-grid">
+            <div class="dc-stat-card dc-stat-total">
+                <span class="dc-stat-label">Total Applications</span>
+                <span class="dc-stat-value" id="sumTotal">{{ summary.total }}</span>
+            </div>
+            <div class="dc-stat-card dc-stat-wifi">
+                <span class="dc-stat-label">WiFi Applications</span>
+                <span class="dc-stat-value" id="sumWifi">{{ summary.by_type.wifi }}</span>
+            </div>
+            <div class="dc-stat-card dc-stat-query">
+                <span class="dc-stat-label">Network Queries</span>
+                <span class="dc-stat-value" id="sumQuery">{{ summary.by_type.query }}</span>
+            </div>
+            <div class="dc-stat-card dc-stat-guest">
+                <span class="dc-stat-label">Guest WiFi</span>
+                <span class="dc-stat-value" id="sumGuest">{{ summary.by_type.guest }}</span>
+            </div>
+            <div class="dc-stat-card dc-stat-system">
+                <span class="dc-stat-label">System Support</span>
+                <span class="dc-stat-value" id="sumSystem">{{ summary.by_type.system_support }}</span>
+            </div>
+            <div class="dc-stat-card dc-stat-email">
+                <span class="dc-stat-label">Email Relogin</span>
+                <span class="dc-stat-value" id="sumEmail">{{ summary.by_type.email_relogin }}</span>
+            </div>
+            <div class="dc-stat-card dc-stat-student">
+                <span class="dc-stat-label">Student Applicants</span>
+                <span class="dc-stat-value" id="sumStudent">{{ summary.by_user.student }}</span>
+            </div>
+            <div class="dc-stat-card dc-stat-faculty">
+                <span class="dc-stat-label">Faculty Applicants</span>
+                <span class="dc-stat-value" id="sumFaculty">{{ summary.by_user.faculty }}</span>
+            </div>
+        </div>
+
+        <!-- WiFi hostel / dayscholar + year breakdown -->
+        <div class="dc-card-box">
+            <div class="dc-section-title"><i class="fas fa-wifi"></i> WiFi Applications &mdash; Hosteller / Dayscholar &amp; Year-wise</div>
+
+            <div class="dc-cards-grid">
+                <div class="dc-stat-card dc-stat-hostel">
+                    <span class="dc-stat-label">Hosteller (WiFi)</span>
+                    <span class="dc-stat-value" id="sumHostel">{{ summary.wifi_hostel }}</span>
+                </div>
+                <div class="dc-stat-card dc-stat-day">
+                    <span class="dc-stat-label">Dayscholar (WiFi)</span>
+                    <span class="dc-stat-value" id="sumDayscholar">{{ summary.wifi_dayscholar }}</span>
+                </div>
+            </div>
+
+            <div class="dc-subcards-title">WiFi applications by year</div>
+            <div class="dc-year-grid" id="sumYearGrid">
+                {% for label, count in summary.wifi_by_year.items %}
+                    <div class="dc-year-card">
+                        <div class="dc-year-label">{{ label }}</div>
+                        <div class="dc-year-value">{{ count }}</div>
+                    </div>
+                {% empty %}
+                    <div class="dc-year-empty">No WiFi student applications in the current filter.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="dc-card-box">
+            <div class="dc-section-title"><i class="fas fa-sliders"></i> Filters</div>
+
+            <form id="dcFilterForm" method="get" class="dc-filter-form">
+                <div class="row g-3 align-items-end">
+                    <div class="col-lg-3 col-md-6">
+                        <label class="dc-filter-label" for="dcAppType">Application Type</label>
+                        <select name="app_type" id="dcAppType" class="form-select">
+                            {% for key, label in app_type_choices %}
+                                <option value="{{ key }}" {% if selected.app_type == key %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <label class="dc-filter-label" for="dcUserType">User</label>
+                        <select name="user_type" id="dcUserType" class="form-select">
+                            {% for key, label in user_type_choices %}
+                                <option value="{{ key }}" {% if selected.user_type == key %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <label class="dc-filter-label" for="dcStatus">Status</label>
+                        <select name="status" id="dcStatus" class="form-select">
+                            {% for key, label in status_choices %}
+                                <option value="{{ key }}" {% if selected.status == key %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <label class="dc-filter-label" for="dcDepartment">
+                            Department
+                            {% if department_locked %}
+                                <span class="dc-lock-pill"><i class="fas fa-lock"></i> Your department</span>
+                            {% endif %}
+                        </label>
+                        <select name="department" id="dcDepartment" class="form-select"
+                                {% if department_locked %}disabled{% endif %}>
+                            {% if department_locked %}
+                                <option value="{{ locked_department_name }}" selected>{{ locked_department_name }}</option>
+                            {% else %}
+                                {% for key, label in department_choices %}
+                                    <option value="{{ key }}" {% if selected.department == key %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <label class="dc-filter-label" for="dcYear">Year (Students)</label>
+                        <select name="year" id="dcYear" class="form-select">
+                            {% for key, label in year_choices %}
+                                <option value="{{ key }}" {% if selected.year == key %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <label class="dc-filter-label" for="dcDateFrom">From Date</label>
+                        <input type="date" name="date_from" id="dcDateFrom" class="form-control"
+                               value="{{ selected.date_from }}">
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <label class="dc-filter-label" for="dcDateTo">To Date</label>
+                        <input type="date" name="date_to" id="dcDateTo" class="form-control"
+                               value="{{ selected.date_to }}">
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <label class="dc-filter-label" for="dcSearch">Search</label>
+                        <input type="text" name="q" id="dcSearch" class="form-control"
+                               placeholder="Search by name, register number, reference or email..."
+                               value="{{ selected.q }}">
+                    </div>
+
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <button type="submit" class="dc-btn-apply">
+                                <i class="fas fa-filter me-1"></i> Apply
+                            </button>
+                            <a id="dcExportPdf" class="dc-btn-pdf" href="{% url 'application_dashboard' %}?export=pdf" target="_blank" rel="noopener">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </a>
+                            <a class="dc-btn-reset" href="{% url 'application_dashboard' %}">
+                                <i class="fas fa-rotate-left"></i> Reset
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results card -->
+        <div class="dc-card-box">
+            <div class="dc-section-title"><i class="fas fa-list-check"></i> Applications Register</div>
+
+            <div class="dc-count-line">
+                Showing <span id="dcCount">{{ filtered_count }}</span> of {{ total_count }} applications
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered dc-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Type</th>
+                            <th>Reference</th>
+                            <th>Applicant</th>
+                            <th>Reg / ID No</th>
+                            <th>User</th>
+                            <th>Year</th>
+                            <th>Category</th>
+                            <th>Department</th>
+                            <th>College Email</th>
+                            <th>Status</th>
+                            <th>Submitted On</th>
+                            <th>Details</th>
+                            <th>View</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dcRows">
+                        {% for r in rows %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><span class="dc-type-pill dc-type-{{ r.app_type_key }}">{{ r.app_type }}</span></td>
+                                <td>{{ r.reference }}</td>
+                                <td>{{ r.name }}</td>
+                                <td>{{ r.register_no }}</td>
+                                <td>{{ r.user_type }}</td>
+                                <td>{{ r.year_label|default:"-" }}</td>
+                                <td>{{ r.student_type|default:"-" }}</td>
+                                <td>{{ r.department }}</td>
+                                <td>{{ r.email }}</td>
+                                <td><span class="dc-badge dc-badge-{{ r.status_key }}">{{ r.status }}</span></td>
+                                <td>{{ r.submitted_at|date:"d-m-Y h:i A" }}</td>
+                                <td>{{ r.detail }}</td>
+                                <td>
+                                    <button type="button" class="dc-btn-view dc-view-btn" data-idx="{{ forloop.counter0 }}">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr class="dc-empty-row">
+                                <td colspan="14">No applications match the selected filters.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{{ rows_for_json|json_script:"dcRowsData" }}
+
+<!-- Application detail modal -->
+<div class="modal fade" id="dcViewModal" tabindex="-1" aria-labelledby="dcViewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dcViewModalLabel"><i class="fas fa-circle-info me-2"></i>Application Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="dcViewModalBody">
+                <!-- populated by JS -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        "use strict";
+
+        var BASE = "{% url 'application_dashboard' %}";
+        var form = document.getElementById("dcFilterForm");
+        var rowsBody = document.getElementById("dcRows");
+        var countEl = document.getElementById("dcCount");
+        var exportLink = document.getElementById("dcExportPdf");
+        var searchInput = document.getElementById("dcSearch");
+
+        // Rows currently on screen, indexed the same way as the rendered table —
+        // the View button looks up its row here instead of re-fetching from the server.
+        var currentRows = [];
+        var initialRowsEl = document.getElementById("dcRowsData");
+        if (initialRowsEl) {
+            try {
+                currentRows = JSON.parse(initialRowsEl.textContent) || [];
+            } catch (e) {
+                currentRows = [];
+            }
+        }
+
+        function escapeHtml(value) {
+            if (value === null || value === undefined) {
+                return "";
+            }
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        // Mirror the server-side status badge classes.
+        function statusClass(statusKey) {
+            switch (statusKey) {
+                case "pending":
+                    return "dc-badge dc-badge-pending";
+                case "approved":
+                    return "dc-badge dc-badge-approved";
+                case "resolved":
+                    return "dc-badge dc-badge-resolved";
+                case "rejected":
+                    return "dc-badge dc-badge-rejected";
+                case "in_progress":
+                    return "dc-badge dc-badge-in_progress";
+                case "closed":
+                    return "dc-badge dc-badge-closed";
+                case "deactivated":
+                    return "dc-badge dc-badge-deactivated";
+                default:
+                    return "dc-badge";
+            }
+        }
+
+        function typeClass(typeKey) {
+            var allowed = ["wifi", "query", "guest", "system_support", "email_relogin"];
+            if (allowed.indexOf(typeKey) !== -1) {
+                return "dc-type-pill dc-type-" + typeKey;
+            }
+            return "dc-type-pill";
+        }
+
+        function fieldValue(name) {
+            return form.elements[name] ? form.elements[name].value : "";
+        }
+
+        function currentParams() {
+            var params = new URLSearchParams();
+            params.set("app_type", fieldValue("app_type"));
+            params.set("user_type", fieldValue("user_type"));
+            params.set("status", fieldValue("status"));
+            params.set("department", fieldValue("department"));
+            params.set("year", fieldValue("year"));
+            params.set("date_from", fieldValue("date_from"));
+            params.set("date_to", fieldValue("date_to"));
+            params.set("q", fieldValue("q"));
+            return params;
+        }
+
+        function setText(id, value) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.textContent = (value === null || value === undefined) ? "0" : value;
+            }
+        }
+
+        function updateSummary(summary) {
+            if (!summary) {
+                return;
+            }
+            var byType = summary.by_type || {};
+            var byUser = summary.by_user || {};
+            setText("sumTotal", summary.total);
+            setText("sumWifi", byType.wifi);
+            setText("sumQuery", byType.query);
+            setText("sumGuest", byType.guest);
+            setText("sumSystem", byType.system_support);
+            setText("sumEmail", byType.email_relogin);
+            setText("sumStudent", byUser.student);
+            setText("sumFaculty", byUser.faculty);
+            setText("sumHostel", summary.wifi_hostel);
+            setText("sumDayscholar", summary.wifi_dayscholar);
+
+            var grid = document.getElementById("sumYearGrid");
+            if (grid) {
+                var years = summary.wifi_by_year || {};
+                var keys = Object.keys(years);
+                if (keys.length === 0) {
+                    grid.innerHTML = '<div class="dc-year-empty">No WiFi student applications in the current filter.</div>';
+                } else {
+                    var html = "";
+                    for (var i = 0; i < keys.length; i++) {
+                        html +=
+                            '<div class="dc-year-card">' +
+                            '<div class="dc-year-label">' + escapeHtml(keys[i]) + "</div>" +
+                            '<div class="dc-year-value">' + escapeHtml(years[keys[i]]) + "</div>" +
+                            "</div>";
+                    }
+                    grid.innerHTML = html;
+                }
+            }
+        }
+
+        function syncExport() {
+            if (!exportLink) {
+                return;
+            }
+            exportLink.href = BASE + "?" + currentParams().toString() + "&export=pdf";
+        }
+
+        function fieldHtml(label, value) {
+            return '<div class="dc-view-field"><div class="dc-view-k">' + escapeHtml(label) +
+                '</div><div class="dc-view-v">' + escapeHtml(value || "-") + "</div></div>";
+        }
+
+        function renderDetailModal(row) {
+            var body = document.getElementById("dcViewModalBody");
+            if (!body || !row) {
+                return;
+            }
+
+            var html = '<div class="dc-view-section-label">Application Overview</div><div class="dc-view-grid">';
+            html += fieldHtml("Application Type", row.app_type);
+            html += fieldHtml("Reference", row.reference);
+            html += '<div class="dc-view-field"><div class="dc-view-k">Status</div><div class="dc-view-v">' +
+                '<span class="' + statusClass(row.status_key) + '">' + escapeHtml(row.status) + "</span></div></div>";
+            html += fieldHtml("Submitted On", row.submitted_at);
+            html += "</div>";
+
+            html += '<div class="dc-view-section-label">Applicant</div><div class="dc-view-grid">';
+            html += fieldHtml("Name", row.name);
+            html += fieldHtml("Reg / ID No", row.register_no);
+            html += fieldHtml("User Type", row.user_type);
+            html += fieldHtml("Gender", row.gender);
+            html += fieldHtml("Year", row.year);
+            html += fieldHtml("Category", row.student_type);
+            html += fieldHtml("Department", row.department);
+            html += fieldHtml("College Email", row.email);
+            html += "</div>";
+
+            if (row.extra && row.extra.length) {
+                html += '<div class="dc-view-section-label">Additional Details</div><div class="dc-view-grid">';
+                row.extra.forEach(function (item) {
+                    html += fieldHtml(item.label, item.value);
+                });
+                html += "</div>";
+            }
+
+            body.innerHTML = html;
+        }
+
+        function renderRows(rows) {
+            currentRows = rows || [];
+
+            if (currentRows.length === 0) {
+                rowsBody.innerHTML =
+                    '<tr class="dc-empty-row"><td colspan="14">No applications match the selected filters.</td></tr>';
+                return;
+            }
+
+            var html = "";
+            for (var i = 0; i < currentRows.length; i++) {
+                var r = currentRows[i];
+                html +=
+                    "<tr>" +
+                    "<td>" + (i + 1) + "</td>" +
+                    '<td><span class="' + typeClass(r.app_type_key) + '">' + escapeHtml(r.app_type) + "</span></td>" +
+                    "<td>" + escapeHtml(r.reference) + "</td>" +
+                    "<td>" + escapeHtml(r.name) + "</td>" +
+                    "<td>" + escapeHtml(r.register_no) + "</td>" +
+                    "<td>" + escapeHtml(r.user_type) + "</td>" +
+                    "<td>" + escapeHtml(r.year) + "</td>" +
+                    "<td>" + escapeHtml(r.student_type) + "</td>" +
+                    "<td>" + escapeHtml(r.department) + "</td>" +
+                    "<td>" + escapeHtml(r.email) + "</td>" +
+                    '<td><span class="' + statusClass(r.status_key) + '">' + escapeHtml(r.status) + "</span></td>" +
+                    "<td>" + escapeHtml(r.submitted_at) + "</td>" +
+                    "<td>" + escapeHtml(r.detail) + "</td>" +
+                    '<td><button type="button" class="dc-btn-view dc-view-btn" data-idx="' + i + '">' +
+                    '<i class="fas fa-eye"></i> View</button></td>' +
+                    "</tr>";
+            }
+            rowsBody.innerHTML = html;
+        }
+
+        function fetchRows() {
+            var url = BASE + "?" + currentParams().toString() + "&format=json";
+            fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+                .then(function (resp) {
+                    if (!resp.ok) {
+                        throw new Error("Request failed: " + resp.status);
+                    }
+                    return resp.json();
+                })
+                .then(function (data) {
+                    renderRows(data.rows || []);
+                    updateSummary(data.summary);
+                    if (countEl) {
+                        countEl.textContent = (typeof data.count === "number") ? data.count : (data.rows ? data.rows.length : 0);
+                    }
+                    syncExport();
+                })
+                .catch(function (err) {
+                    console.error("Failed to load applications:", err);
+                });
+        }
+
+        function debounce(fn, wait) {
+            var timer = null;
+            return function () {
+                var context = this;
+                var args = arguments;
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+                    fn.apply(context, args);
+                }, wait);
+            };
+        }
+
+        if (form) {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                fetchRows();
+            });
+
+            var selects = form.querySelectorAll(
+                'select[name="app_type"], select[name="user_type"], select[name="status"], ' +
+                'select[name="department"], select[name="year"]'
+            );
+            selects.forEach(function (sel) {
+                sel.addEventListener("change", fetchRows);
+            });
+
+            var dateInputs = form.querySelectorAll('input[name="date_from"], input[name="date_to"]');
+            dateInputs.forEach(function (inp) {
+                inp.addEventListener("change", fetchRows);
+            });
+
+            if (searchInput) {
+                searchInput.addEventListener("input", debounce(fetchRows, 300));
+            }
+        }
+
+        document.addEventListener("click", function (e) {
+            var btn = e.target.closest(".dc-view-btn");
+            if (!btn) {
+                return;
+            }
+            var idx = parseInt(btn.getAttribute("data-idx"), 10);
+            var row = currentRows[idx];
+            if (!row) {
+                return;
+            }
+            renderDetailModal(row);
+            var modalEl = document.getElementById("dcViewModal");
+            if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            }
+        });
+
+        // Keep the PDF export link in sync with the initial filters.
+        syncExport();
+    })();
+</script>
+{% endblock %}

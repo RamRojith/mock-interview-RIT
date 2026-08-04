@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid py-4" style="max-width:1300px;">
+  <h2 class="fw-bold text-primary mb-3"><i class="fa-solid fa-file-circle-check me-2"></i>Verification Report Approvals</h2>
+
+  {% if messages %}{% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}{% endif %}
+
+  {% if is_iso %}
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-primary text-white fw-semibold">ISO Coordinator — Reports awaiting your approval</div>
+    <div class="table-responsive">
+      <table class="table table-bordered mb-0 align-middle">
+        <thead class="table-light text-center"><tr><th>Lab</th><th>Cycle</th><th>Submitted By</th><th>Submitted</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for r in iso_reports %}
+          <tr>
+            <td>{{ r.assignment.lab.lab_code }} — {{ r.assignment.lab.name }}</td>
+            <td class="text-center">{{ r.assignment.cycle.financial_year }}</td>
+            <td>{{ r.submitted_by.name|default:"-" }}</td>
+            <td class="text-center">{{ r.submitted_at|date:"d M Y" }}</td>
+            <td style="min-width:280px;">
+              <div class="d-flex gap-2 align-items-center">
+                <a href="{% url 'verification_report_pdf' r.id %}" target="_blank" class="btn btn-sm btn-outline-secondary">Statement</a>
+                <form method="post" action="{% url 'verification_report_action' r.id %}">{% csrf_token %}
+                  <input type="hidden" name="action" value="iso_approve"><input type="hidden" name="next" value="{% url 'verification_report_approvals' %}">
+                  <button class="btn btn-sm btn-success">Approve</button>
+                </form>
+                <form method="post" action="{% url 'verification_report_action' r.id %}" class="d-flex gap-1">{% csrf_token %}
+                  <input type="hidden" name="action" value="reject"><input type="hidden" name="next" value="{% url 'verification_report_approvals' %}">
+                  <input type="text" name="reason" class="form-control form-control-sm" placeholder="Reason" style="max-width:110px;">
+                  <button class="btn btn-sm btn-danger">Reject</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center text-muted py-3">No reports awaiting ISO approval.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if is_principal %}
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-dark text-white fw-semibold">Principal — ISO-approved reports awaiting final approval</div>
+    <div class="table-responsive">
+      <table class="table table-bordered mb-0 align-middle">
+        <thead class="table-light text-center"><tr><th>Lab</th><th>Cycle</th><th>Submitted By</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for r in principal_reports %}
+          <tr>
+            <td>{{ r.assignment.lab.lab_code }} — {{ r.assignment.lab.name }}</td>
+            <td class="text-center">{{ r.assignment.cycle.financial_year }}</td>
+            <td>{{ r.submitted_by.name|default:"-" }}</td>
+            <td style="min-width:280px;">
+              <div class="d-flex gap-2 align-items-center">
+                <a href="{% url 'verification_report_pdf' r.id %}" target="_blank" class="btn btn-sm btn-outline-secondary">Statement</a>
+                <form method="post" action="{% url 'verification_report_action' r.id %}">{% csrf_token %}
+                  <input type="hidden" name="action" value="principal_approve"><input type="hidden" name="next" value="{% url 'verification_report_approvals' %}">
+                  <button class="btn btn-sm btn-success">Final Approve</button>
+                </form>
+                <form method="post" action="{% url 'verification_report_action' r.id %}" class="d-flex gap-1">{% csrf_token %}
+                  <input type="hidden" name="action" value="reject"><input type="hidden" name="next" value="{% url 'verification_report_approvals' %}">
+                  <input type="text" name="reason" class="form-control form-control-sm" placeholder="Reason" style="max-width:110px;">
+                  <button class="btn btn-sm btn-danger">Reject</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center text-muted py-3">No reports awaiting final approval.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if not is_iso and not is_principal %}
+    <div class="alert alert-info">You do not have an ISO or Principal role for report approvals.</div>
+  {% endif %}
+</div>
+{% endblock content %}

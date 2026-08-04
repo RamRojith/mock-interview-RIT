@@ -1,0 +1,974 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load lms_tags %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ===== CSS Variables ===== */
+:root {
+  --primary-blue: #1a4b8c;
+  --primary-blue-light: #2c5aa0;
+  --primary-blue-dark: #0d3a6c;
+  --secondary-blue: #3b82f6;
+  --accent-blue: #60a5fa;
+  --light-blue: #f0f9ff;
+  --light-blue-2: #e0f2fe;
+  --light-blue-3: #dbeafe;
+  --white: #ffffff;
+  --off-white: #f8fafc;
+  --gray-light: #f1f5f9;
+  --gray-border: #e2e8f0;
+  --gray-medium: #cbd5e1;
+  --gray-text: #64748b;
+  --dark-text: #1e293b;
+  --success: #1a4b8c;
+  --success-dark: #0d3a6c;
+  --warning: #f59e0b;
+  --warning-dark: #d97706;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --shadow-blue: 0 4px 20px rgba(26, 75, 140, 0.15);
+  --shadow-blue-hover: 0 8px 40px rgba(26, 75, 140, 0.25);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Global Styles ===== */
+.student-course-dashboard {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+/* ===== Page Header ===== */
+.student-course-dashboard .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  border-radius: var(--radius-lg);
+  color: var(--white);
+  box-shadow: var(--shadow-md);
+}
+
+.student-course-dashboard .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+/* ===== Header Content ===== */
+.student-course-dashboard .header-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.student-course-dashboard .header-info-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: var(--transition);
+}
+
+.student-course-dashboard .header-info-card:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.student-course-dashboard .header-info-card .info-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+}
+
+.student-course-dashboard .header-info-card .info-item:not(:last-child) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.student-course-dashboard .header-info-card .info-item i {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--white);
+  border-radius: var(--radius-sm);
+  font-size: 1.1rem;
+}
+
+.student-course-dashboard .header-info-card .info-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.student-course-dashboard .header-info-card .info-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  opacity: 1;
+}
+
+/* ===== Stats Grid ===== */
+.student-course-dashboard .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.student-course-dashboard .stat-card {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  transition: var(--transition);
+}
+
+.student-course-dashboard .stat-card:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-3px);
+}
+
+.student-course-dashboard .stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.25);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.student-course-dashboard .stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.student-course-dashboard .stat-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+/* ===== Page Container ===== */
+.student-course-dashboard .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ===== Card Styling ===== */
+.student-course-dashboard .card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-border);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: var(--transition);
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.student-course-dashboard .card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.student-course-dashboard .current-semester {
+  border: 2px solid var(--success);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.student-course-dashboard .current-semester:hover {
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
+}
+
+.student-course-dashboard .card-header {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  color: var(--white);
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+}
+
+.student-course-dashboard .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.student-course-dashboard .current-semester .card-header {
+  background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+}
+
+.student-course-dashboard .card-body {
+  padding: 2rem;
+}
+
+/* ===== Courses Grid ===== */
+.student-course-dashboard .courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ===== Course Card ===== */
+.student-course-dashboard .course-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-border);
+  padding: 1.5rem;
+  transition: var(--transition);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.student-course-dashboard .course-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+}
+
+.student-course-dashboard .current-semester .course-card::before {
+  background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+}
+
+.student-course-dashboard .course-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-blue-hover);
+  border-color: var(--primary-blue);
+}
+
+.student-course-dashboard .current-semester .course-card:hover {
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
+  border-color: var(--success);
+}
+
+/* Course Header */
+.student-course-dashboard .course-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.student-course-dashboard .course-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.student-course-dashboard .enrolled-badge {
+  background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+  color: var(--white);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.student-course-dashboard .completed-badge {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  color: var(--white);
+  box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+}
+
+.student-course-dashboard .course-code {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--primary-blue);
+  background: rgba(26, 75, 140, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  border: 1px solid rgba(26, 75, 140, 0.2);
+}
+
+/* Course Title */
+.student-course-dashboard .course-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--dark-text);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
+}
+
+.student-course-dashboard .course-subtitle {
+  font-size: 0.95rem;
+  color: var(--gray-text);
+  margin: 0 0 1.5rem 0;
+  line-height: 1.6;
+}
+
+/* Course Info Grid */
+.student-course-dashboard .course-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.student-course-dashboard .info-field {
+  background: var(--light-blue);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  border: 1px solid var(--light-blue-2);
+  transition: var(--transition);
+}
+
+.student-course-dashboard .info-field:hover {
+  background: var(--light-blue-2);
+  border-color: var(--accent-blue);
+}
+
+.student-course-dashboard .info-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.student-course-dashboard .info-label i {
+  font-size: 0.9rem;
+}
+
+.student-course-dashboard .info-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--dark-text);
+}
+
+/* Progress Section */
+.student-course-dashboard .progress-section {
+  background: linear-gradient(135deg, var(--off-white) 0%, var(--gray-light) 100%);
+  border-radius: var(--radius-sm);
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+  border: 1px solid var(--gray-border);
+}
+
+.student-course-dashboard .progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.student-course-dashboard .progress-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-blue);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.student-course-dashboard .progress-percentage {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--primary-blue);
+}
+
+.student-course-dashboard .current-semester .progress-percentage {
+  color: var(--success-dark);
+}
+
+.student-course-dashboard .progress-bar-container {
+  width: 100%;
+  height: 10px;
+  background: var(--white);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--gray-border);
+}
+
+.student-course-dashboard .progress-bar {
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  border-radius: 5px;
+  transition: width 1s ease-in-out;
+}
+
+.student-course-dashboard .current-semester .progress-bar {
+  background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+}
+
+.student-course-dashboard .progress-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--gray-text);
+}
+
+.student-course-dashboard .progress-stats span:last-child {
+  font-weight: 600;
+  color: var(--primary-blue);
+}
+
+/* Course Footer */
+.student-course-dashboard .course-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--gray-border);
+  margin-top: 1.5rem;
+}
+
+.student-course-dashboard .enrollment-date {
+  font-size: 0.9rem;
+  color: var(--gray-text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.student-course-dashboard .action-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.student-course-dashboard .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: var(--transition);
+  border: none;
+  cursor: pointer;
+}
+
+.student-course-dashboard .btn-primary {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  color: var(--white);
+  border: 2px solid transparent;
+  box-shadow: 0 4px 15px rgba(26, 75, 140, 0.3);
+}
+
+.student-course-dashboard .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+  background: linear-gradient(135deg, var(--primary-blue-dark) 0%, var(--primary-blue) 100%);
+}
+
+/* ===== Empty State ===== */
+.student-course-dashboard .empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--gray-text);
+}
+
+.student-course-dashboard .empty-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--light-blue) 0%, var(--light-blue-2) 100%);
+  color: var(--primary-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  box-shadow: 0 4px 15px rgba(26, 75, 140, 0.15);
+}
+
+.student-course-dashboard .empty-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--dark-text);
+  margin-bottom: 0.75rem;
+}
+
+.student-course-dashboard .empty-text {
+  color: var(--gray-text);
+  max-width: 500px;
+  margin: 0 auto 1.5rem;
+  line-height: 1.6;
+}
+
+.student-course-dashboard .empty-list {
+  max-width: 500px;
+  margin: 0 auto 2rem;
+  text-align: left;
+  background: var(--off-white);
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-border);
+}
+
+.student-course-dashboard .empty-list li {
+  color: var(--gray-text);
+  line-height: 1.8;
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.student-course-dashboard .empty-list li::before {
+  content: '•';
+  color: var(--primary-blue);
+  font-size: 1.5rem;
+  position: absolute;
+  left: 0;
+  top: -2px;
+}
+
+/* ===== Animations ===== */
+.student-course-dashboard .card:nth-child(1) { animation-delay: 0.1s; }
+.student-course-dashboard .card:nth-child(2) { animation-delay: 0.2s; }
+.student-course-dashboard .card:nth-child(3) { animation-delay: 0.3s; }
+
+.student-course-dashboard .course-card:nth-child(1) { animation-delay: 0.1s; }
+.student-course-dashboard .course-card:nth-child(2) { animation-delay: 0.2s; }
+.student-course-dashboard .course-card:nth-child(3) { animation-delay: 0.3s; }
+.student-course-dashboard .course-card:nth-child(4) { animation-delay: 0.4s; }
+.student-course-dashboard .course-card:nth-child(5) { animation-delay: 0.5s; }
+.student-course-dashboard .course-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* ===== Responsive Design ===== */
+@media (max-width: 1200px) {
+  .student-course-dashboard .courses-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .student-course-dashboard .courses-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-course-dashboard .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .student-course-dashboard {
+    padding: 1rem;
+  }
+  
+  .student-course-dashboard .page-header {
+    padding: 1.25rem;
+  }
+  
+  .student-course-dashboard .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .student-course-dashboard .header-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-course-dashboard .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-course-dashboard .card-body {
+    padding: 1.5rem;
+  }
+  
+  .student-course-dashboard .course-info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-course-dashboard .course-footer {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .student-course-dashboard .action-buttons {
+    flex-direction: column;
+  }
+  
+  .student-course-dashboard .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .student-course-dashboard .course-card {
+    padding: 1.25rem;
+  }
+  
+  .student-course-dashboard .course-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .student-course-dashboard .empty-state {
+    padding: 2rem 1rem;
+  }
+  
+  .student-course-dashboard .empty-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+  
+  .student-course-dashboard .empty-title {
+    font-size: 1.3rem;
+  }
+}
+</style>
+
+<div class="student-course-dashboard">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1><i class="fa-solid fa-book-open me-2"></i>Academic Dashboard</h1>
+    
+    <div class="header-content">
+      
+    </div>
+    
+    
+  </div>
+
+  <!-- Page Container -->
+  <div class="page-container">
+    {% if current_semester_enrollments or other_semester_groups %}
+      <!-- Current Semester Section -->
+      {% if current_semester_enrollments %}
+        <div class="card current-semester">
+          <div class="card-header">
+            <h5><i class="fa-solid fa-rocket me-2"></i>Current Semester</h5>
+          </div>
+          <div class="card-body">
+            <div class="courses-grid">
+              {% for enrollment in current_semester_enrollments %}
+                <div class="course-card" onclick="window.location.href='{% url 'view_folders_and_files' course_id=enrollment.course_id %}'">
+                  <div class="course-header">
+                    <span class="course-badge enrolled-badge">
+                      <i class="fa-solid fa-circle-check"></i> Enrolled
+                    </span>
+                    <span class="course-code">{{ enrollment.course.course_code|default:"—" }}</span>
+                  </div>
+                  
+                  <h3 class="course-title">{{ enrollment.course.title|default:"Course Title Not Available" }}</h3>
+                  
+                  <div class="course-info-grid">
+                    <div class="info-field">
+                      <div class="info-label">
+                        <i class="fa-solid fa-building"></i> Department
+                      </div>
+                      <div class="info-value">{{ enrollment.department.Department|default:"—" }}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="info-label">
+                        <i class="fa-solid fa-scale-balanced"></i> Regulation
+                      </div>
+                      <div class="info-value">{{ enrollment.regulation.regulation|default:enrollment.regulation|default:"—" }}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="info-label">
+                        <i class="fa-solid fa-layer-group"></i> Batch
+                      </div>
+                      <div class="info-value">{{ enrollment.batch|default:"—" }}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="info-label">
+                        <i class="fa-solid fa-users"></i> Section
+                      </div>
+                      <div class="info-value">{{ enrollment.section|default:"—" }}</div>
+                    </div>
+                  </div>
+                  
+                  <div class="course-footer">
+                    <div class="enrollment-date">
+                      <i class="fa-regular fa-calendar"></i>
+                      Enrolled {{ enrollment.enrollment_date|date:"d M Y"|default:"—" }}
+                    </div>
+                    <div class="action-buttons">
+                      <a href="{% url 'view_folders_and_files' course_id=enrollment.course_id %}" class="btn btn-primary">
+                        <i class="fa-solid fa-folder-open"></i> View Course
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Other Semesters Sections -->
+      {% for semester, enrollments in other_semester_groups.items %}
+        <div class="card">
+          <div class="card-header">
+            <h5><i class="fa-solid fa-history me-2"></i>Semester {{ semester }}</h5>
+          </div>
+          <div class="card-body">
+            <div class="courses-grid">
+              {% for enrollment in enrollments %}
+                <div class="course-card" onclick="window.location.href='{% url 'view_folders_and_files' course_id=enrollment.course_id %}'" >
+                  <div class="course-header">
+                    <span class="course-badge completed-badge">
+                      <i class="fa-solid fa-flag-checkered"></i> Completed
+                    </span>
+                    <span class="course-code">{{ enrollment.course.course_code|default:"—" }}</span>
+                  </div>
+                  
+                  <h3 class="course-title">{{ enrollment.course.title|default:"Course Title Not Available" }}</h3>
+                  <p class="course-subtitle">{{ enrollment.course.description|truncatechars:120|default:"No description available" }}</p>
+                  
+                  <div class="course-info-grid">
+                    <div class="info-field">
+                      <div class="info-label">
+                        <i class="fa-solid fa-building"></i> Department
+                      </div>
+                      <div class="info-value">{{ enrollment.department.Department|default:"—" }}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="info-label">
+                        <i class="fa-solid fa-scale-balanced"></i> Regulation
+                      </div>
+                      <div class="info-value">{{ enrollment.regulation.regulation|default:enrollment.regulation|default:"—" }}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="info-label">
+                        <i class="fa-solid fa-layer-group"></i> Batch
+                      </div>
+                      <div class="info-value">{{ enrollment.batch|default:"—" }}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="info-label">
+                        <i class="fa-solid fa-users"></i> Section
+                      </div>
+                      <div class="info-value">{{ enrollment.section|default:"—" }}</div>
+                    </div>
+                  </div>
+                  
+                  <div class="course-footer">
+                    <div class="enrollment-date">
+                      <i class="fa-regular fa-calendar"></i>
+                      Completed {{ enrollment.enrollment_date|date:"d M Y"|default:"—" }}
+                    </div>
+                    <div class="action-buttons">
+                      <a href="{% url 'view_folders_and_files' course_id=enrollment.course_id %}" class="btn btn-primary">
+                        <i class="fa-solid fa-folder-open"></i> View Archive
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+      
+    {% else %}
+      <!-- Empty State -->
+      <div class="card">
+        <div class="card-body">
+          <div class="empty-state">
+            <div class="empty-icon">
+              <i class="fa-solid fa-book-open-reader"></i>
+            </div>
+            <h3 class="empty-title">No Enrolled Courses Found</h3>
+            <p class="empty-text">
+              It looks like you haven't been enrolled in any courses yet. Here are some possible reasons:
+            </p>
+            <div class="empty-list">
+              <li>The enrollment period for this semester hasn't started yet</li>
+              <li>Your course registrations are pending approval from the department</li>
+              <li>There might be a temporary system issue</li>
+              <li>You may need to contact your academic advisor for course enrollment</li>
+            </div>
+            <p class="empty-text" style="font-weight: 600; color: #1a4b8c;">
+              <i class="fa-solid fa-life-ring"></i> Please contact your department administrator or academic advisor for assistance.
+            </p>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Calculate total courses and credits
+  function calculateTotals() {
+    const currentCourses = {{ current_semester_enrollments|length }};
+    let otherCourses = 0;
+    let totalCredits = 0;
+    
+    // Calculate courses from other semesters
+    {% for sem, items in other_semester_groups.items %}
+      otherCourses += {{ items|length }};
+      {% for enrollment in items %}
+        totalCredits += {{ enrollment.course.credits|default:3 }};
+      {% endfor %}
+    {% endfor %}
+    
+    // Add current semester credits
+    {% for enrollment in current_semester_enrollments %}
+      totalCredits += {{ enrollment.course.credits|default:3 }};
+    {% endfor %}
+    
+    // Update DOM elements
+    const totalCoursesElement = document.getElementById('total-courses-count');
+    const totalCreditsElement = document.getElementById('total-credits');
+    
+    if (totalCoursesElement) {
+      totalCoursesElement.textContent = currentCourses + otherCourses;
+    }
+    
+    if (totalCreditsElement) {
+      totalCreditsElement.textContent = totalCredits;
+    }
+  }
+  
+  calculateTotals();
+  
+  // Add animation delays to course cards
+  const courseCards = document.querySelectorAll('.student-course-dashboard .course-card');
+  courseCards.forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.1}s`;
+  });
+  
+  // Course card hover effects
+  courseCards.forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-4px)';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0)';
+    });
+  });
+  
+  // Add click ripple effect
+  courseCards.forEach(card => {
+    card.addEventListener('click', function(e) {
+      if (e.target.tagName === 'A' || e.target.closest('a')) {
+        return; // Don't interfere with button clicks
+      }
+      
+      // Create ripple effect
+      const ripple = document.createElement('span');
+      const rect = this.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const x = e.clientX - rect.left - size / 2;
+      const y = e.clientY - rect.top - size / 2;
+      
+      ripple.style.cssText = `
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(26, 75, 140, 0.3);
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        width: ${size}px;
+        height: ${size}px;
+        top: ${y}px;
+        left: ${x}px;
+        pointer-events: none;
+      `;
+      
+      this.appendChild(ripple);
+      
+      // Remove ripple after animation
+      setTimeout(() => {
+        ripple.remove();
+      }, 600);
+    });
+  });
+  
+  // Add CSS for ripple animation
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes ripple {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  // Animate progress bars on scroll
+  function animateProgressBars() {
+    const progressBars = document.querySelectorAll('.student-course-dashboard .progress-bar');
+    
+    progressBars.forEach(bar => {
+      const rect = bar.getBoundingClientRect();
+      const isVisible = (rect.top >= 0 && rect.bottom <= window.innerHeight);
+      
+      if (isVisible && !bar.classList.contains('animated')) {
+        bar.classList.add('animated');
+        bar.style.transition = 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+      }
+    });
+  }
+  
+  // Initial check
+  animateProgressBars();
+  
+  // Check on scroll
+  window.addEventListener('scroll', animateProgressBars);
+});
+</script>
+{% endblock %}

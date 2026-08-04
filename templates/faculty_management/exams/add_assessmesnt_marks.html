@@ -1,0 +1,1144 @@
+{% extends "base.html" %}
+{% load static %}
+{% load fm_tags %}
+
+{% block content %}
+<div class="marks-page">
+  <div class="container py-4">
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="header-container">
+        <div class="header-content">
+          <div class="header-text">
+            <h1 class="page-title">
+              <i class="fas fa-pencil-alt"></i>
+              Assign Marks
+            </h1>
+            <p class="page-subtitle">
+              Enter and manage student marks for assessments
+            </p>
+          </div>
+          <div class="header-stats">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-id-card"></i>
+              </div>
+              <div class="stat-info">
+                <h3>{{ request.user.Employee_id }}</h3>
+                <p>Faculty ID</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="main-card">
+      <!-- Card Header -->
+      <div class="card-header-custom">
+        <div class="header-left">
+          <div class="header-icon">
+            <i class="fas fa-tasks"></i>
+          </div>
+          <div class="header-title">
+            <h2>Marks Entry</h2>
+            <p class="header-subtitle">Select assignment and assessment to enter marks</p>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="badge-info">
+            <i class="fas fa-info-circle"></i>
+            Weighted marks calculated automatically
+          </span>
+        </div>
+      </div>
+
+      <!-- Card Body -->
+      <div class="card-body-custom">
+        <!-- FILTER FORM -->
+        <form method="get" class="filter-form">
+          <input type="hidden" name="fid" value="{{ faculty_id }}">
+
+          <div class="filter-grid">
+            <!-- Assignment selector -->
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-book-open"></i>
+                Your Assigned Subjects
+              </label>
+              <div class="select-wrapper">
+                <select class="form-select modern-select" name="asf" onchange="this.form.submit()">
+                  <option value="">Select Assignment</option>
+                  {% for a in assignments %}
+                    <option value="{{ a.id }}" {% if selected_asf and selected_asf.id == a.id %}selected{% endif %}>
+                      {{ a.course }} | Sem {{ a.course.semester }}{% if a.section %} - Section {{ a.section }}{% endif %}
+                    </option>
+                  {% endfor %}
+                </select>
+                <i class="select-arrow fas fa-chevron-down"></i>
+              </div>
+            </div>
+
+            <!-- Assessment selector -->
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-clipboard-check"></i>
+                Assessment
+              </label>
+              <div class="select-wrapper">
+                <select class="form-select modern-select" name="assessment" {% if not selected_asf %}disabled{% endif %} onchange="this.form.submit()">
+                  <option value="">Select Assessment</option>
+                  {% for a in assessments %}
+                    {% firstof a.customAssessmentname a.Assessmentname a.assessment.assessment_name as label %}
+                    {% if label %}
+                      <option value="{{ a.id }}" {% if selected_assessment and selected_assessment.id == a.id %}selected{% endif %}>
+                        {{ label }}
+                        {% if a.internal_assessment and a.internal_assessment.iat %} ({{ a.internal_assessment.iat }}){% endif %}
+                        {% if a.module %} (Module {{ a.module }}){% endif %}
+                        {% if a.course and a.course.semester %} (Sem {{ a.course.semester }}){% endif %}
+                      </option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+                <i class="select-arrow fas fa-chevron-down"></i>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        {% if selected_asf and selected_assessment %}
+          <div class="selection-summary">
+            <!-- Header summary -->
+            <div class="summary-content">
+              <div class="summary-left">
+                <div class="summary-item">
+                  <i class="fas fa-book"></i>
+                  <span class="summary-label">Course:</span>
+                  <span class="summary-value">{{ selected_asf.course }}</span>
+                </div>
+                <div class="summary-item">
+                  <i class="fas fa-layer-group"></i>
+                  <span class="summary-label">Semester:</span>
+                  <span class="summary-value">{{ selected_asf.course.semester }}</span>
+                </div>
+                {% if selected_asf.section %}
+                <div class="summary-item">
+                  <i class="fas fa-users"></i>
+                  <span class="summary-label">Section:</span>
+                  <span class="summary-value">{{ selected_asf.section }}</span>
+                </div>
+                {% endif %}
+              </div>
+              <div class="summary-right">
+                <div class="summary-item highlight">
+                  <i class="fas fa-clipboard-list"></i>
+                  <span class="summary-label">Assessment:</span>
+                  <span class="summary-value">
+                    {% firstof selected_assessment.customAssessmentname selected_assessment.Assessmentname selected_assessment.assessment.assessment_name as sel_label %}
+                    {{ sel_label|default:"(unnamed)" }}
+                  </span>
+                </div>
+                {% if max_marks %}
+                <div class="summary-item max-marks">
+                  <i class="fas fa-star"></i>
+                  <span class="summary-label">Max Marks:</span>
+                  <span class="summary-value" id="maxMarks">{{ max_marks }}</span>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- PDF button -->
+            <div class="pdf-section">
+              <a
+                class="btn btn-pdf"
+                href="{% url 'marks_pdf' %}?fid={{ faculty_id }}&asf={{ selected_asf.id }}&assessment={{ selected_assessment.id }}"
+                target="_blank"
+                rel="noopener"
+              >
+                <i class="fas fa-file-pdf"></i>
+                <span>Download PDF</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- MARKS FORM -->
+          <form method="post" class="marks-form">
+            {% csrf_token %}
+            <input type="hidden" name="fid" value="{{ faculty_id }}">
+            <input type="hidden" name="asf" value="{{ selected_asf.id }}">
+            <input type="hidden" name="assessment" value="{{ selected_assessment.id }}">
+
+            <div class="table-container">
+              <table class="marks-table">
+                <thead>
+                  <tr>
+                    <th class="col-sno"><i class="fas fa-hashtag"></i> #</th>
+                    <th class="col-student"><i class="fas fa-user-graduate"></i> Student</th>
+                    <th class="col-marks"><i class="fas fa-pencil-alt"></i> Marks (Raw)</th>
+                    <th class="col-weighted"><i class="fas fa-weight-hanging"></i> Weighted</th>
+                    <th class="col-remarks"><i class="fas fa-comment"></i> Remarks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for s in students %}
+                    {% with m=marks_map|get_item:s.id %}
+                      <tr class="student-row">
+                        <td class="sno-cell">
+                          <span class="sno-badge">{{ forloop.counter }}</span>
+                        </td>
+                        <td class="student-cell">
+                          <div class="student-info">
+                            <div class="student-avatar">
+                              {{ s.full_name|default:s.name|default:s|make_list|first|upper }}
+                            </div>
+                            <div class="student-details">
+                              {% if s.reg_no %}
+                                <span class="student-reg">{{ s.reg_no }}</span>
+                              {% endif %}
+                              <span class="student-name">{{ s.full_name|default:s.name|default:s }}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td class="marks-cell">
+                          <div class="marks-input-wrapper">
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              {% if max_marks %}max="{{ max_marks }}"{% endif %}
+                              class="marks-input"
+                              name="mark_{{ s.id }}"
+                              value="{{ m.marks_raw|default_if_none:'' }}"
+                              placeholder="Enter marks"
+                              oninput="validateMarks(this, {{ max_marks|default:'null' }})"
+                            >
+                            {% if max_marks %}
+                              <span class="max-indicator">/{{ max_marks }}</span>
+                            {% endif %}
+                          </div>
+                        </td>
+
+                        <td class="weighted-cell">
+                          <div class="weighted-value {% if m and m.marks_weighted is not None %}has-value{% endif %}">
+                            {% if m and m.marks_weighted is not None %}
+                              {{ m.marks_weighted }}
+                            {% else %}
+                              <span class="text-muted">—</span>
+                            {% endif %}
+                          </div>
+                          <div class="weighted-note">Calculated on save</div>
+                        </td>
+
+                        <td class="remarks-cell">
+                          <input
+                            type="text"
+                            class="remarks-input"
+                            name="remark_{{ s.id }}"
+                            value="{{ m.remarks|default:'' }}"
+                            placeholder="Add remarks (optional)"
+                          >
+                        </td>
+                      </tr>
+                    {% endwith %}
+                  {% empty %}
+                    <tr>
+                      <td colspan="5" class="empty-row">
+                        <div class="empty-message">
+                          <i class="fas fa-user-slash"></i>
+                          <p>No students found for the selected assignment.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="form-actions">
+              <button type="reset" class="btn btn-outline" onclick="return confirm('Reset all unsaved changes?')">
+                <i class="fas fa-undo-alt"></i>
+                Reset
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                Save Marks
+              </button>
+            </div>
+          </form>
+        {% else %}
+          <div class="selection-placeholder">
+            <div class="placeholder-icon">
+              <i class="fas fa-hand-pointer"></i>
+            </div>
+            <h3>No Selection Made</h3>
+            <p>Please select an assignment and assessment above to enter marks</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Modern CSS Reset */
+:root {
+  --primary: #1a4b8c;
+  --primary-light: #2a5ba8;
+  --primary-dark: #0d3a7a;
+  --secondary: #f8b739;
+  --secondary-light: #ffd166;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  --light: #f8f9fa;
+  --dark: #1e293b;
+  --gray-100: #f8fafc;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --border-radius: 12px;
+  --border-radius-sm: 8px;
+  --border-radius-lg: 16px;
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+  min-height: 100vh;
+}
+
+/* Marks Page */
+.marks-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Header Section */
+.header-section {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-radius: var(--border-radius-lg);
+  padding: 32px 40px;
+  margin-bottom: 32px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.header-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+  opacity: 0.1;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.header-text .page-title {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-text .page-title i {
+  font-size: 28px;
+  opacity: 0.9;
+}
+
+.header-text .page-subtitle {
+  font-size: 16px;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+/* Stat Card */
+.stat-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-icon {
+  width: 56px;
+  height: 56px;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-size: 24px;
+}
+
+.stat-info h3 {
+  font-size: 32px;
+  font-weight: 800;
+  margin: 0;
+  color: white;
+  line-height: 1;
+  font-family: monospace;
+}
+
+.stat-info p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Main Card */
+.main-card {
+  background: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.card-header-custom {
+  padding: 24px 32px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-icon i {
+  color: white;
+  font-size: 20px;
+}
+
+.header-title h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin: 0;
+}
+
+.header-subtitle {
+  font-size: 14px;
+  color: var(--gray-600);
+  margin: 4px 0 0;
+}
+
+.badge-info {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-info i {
+  font-size: 12px;
+}
+
+.card-body-custom {
+  padding: 32px;
+}
+
+/* Filter Form */
+.filter-form {
+  margin-bottom: 24px;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-700);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-label i {
+  color: var(--primary);
+  font-size: 14px;
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.modern-select {
+  width: 100%;
+  padding: 12px 40px 12px 16px;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--border-radius-sm);
+  font-size: 14px;
+  transition: var(--transition);
+  background: white;
+  appearance: none;
+  cursor: pointer;
+}
+
+.modern-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+.modern-select:disabled {
+  background: var(--gray-100);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.select-arrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+  pointer-events: none;
+  font-size: 12px;
+}
+
+/* Selection Summary */
+.selection-summary {
+  background: var(--gray-100);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin-bottom: 32px;
+  border: 1px solid var(--gray-200);
+}
+
+.summary-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.summary-left, .summary-right {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-item i {
+  color: var(--primary);
+  font-size: 16px;
+}
+
+.summary-item.highlight i {
+  color: var(--secondary);
+}
+
+.summary-item.max-marks i {
+  color: var(--success);
+}
+
+.summary-label {
+  font-size: 14px;
+  color: var(--gray-600);
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+/* PDF Button */
+.pdf-section {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-pdf {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 10px 20px;
+  border-radius: var(--border-radius-sm);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: var(--transition);
+  border: 1px solid #fecaca;
+}
+
+.btn-pdf:hover {
+  background: #fecaca;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+.btn-pdf i {
+  font-size: 16px;
+}
+
+/* Marks Form */
+.marks-form {
+  margin-top: 24px;
+}
+
+/* Table Container */
+.table-container {
+  overflow-x: auto;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--gray-200);
+  background: white;
+  margin-bottom: 24px;
+}
+
+/* Marks Table */
+.marks-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.marks-table thead {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid var(--gray-200);
+}
+
+.marks-table th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.marks-table th i {
+  margin-right: 8px;
+  color: var(--primary);
+  font-size: 12px;
+}
+
+.marks-table tbody tr {
+  border-bottom: 1px solid var(--gray-200);
+  transition: var(--transition);
+}
+
+.marks-table tbody tr:hover {
+  background: var(--gray-100);
+}
+
+.marks-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.marks-table td {
+  padding: 16px;
+  vertical-align: middle;
+}
+
+/* Column Widths */
+.col-sno { width: 80px; }
+.col-student { min-width: 250px; }
+.col-marks { width: 220px; }
+.col-weighted { width: 150px; }
+.col-remarks { min-width: 200px; }
+
+/* SNO Cell */
+.sno-cell {
+  text-align: center;
+}
+
+.sno-badge {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  background: var(--gray-200);
+  border-radius: 50%;
+  line-height: 32px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+/* Student Cell */
+.student-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.student-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 4px 8px rgba(26, 75, 140, 0.15);
+}
+
+.student-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.student-reg {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  background: #dbeafe;
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.student-name {
+  font-weight: 600;
+  color: var(--gray-800);
+  font-size: 14px;
+}
+
+/* Marks Cell */
+.marks-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.marks-input {
+  width: 120px;
+  padding: 10px 12px;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--border-radius-sm);
+  font-size: 14px;
+  transition: var(--transition);
+  background: white;
+}
+
+.marks-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+.marks-input.error {
+  border-color: var(--danger);
+  background: #fef2f2;
+}
+
+.max-indicator {
+  color: var(--gray-500);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Weighted Cell */
+.weighted-value {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--gray-800);
+}
+
+.weighted-value.has-value {
+  color: var(--success);
+}
+
+.weighted-note {
+  font-size: 11px;
+  color: var(--gray-500);
+  margin-top: 4px;
+}
+
+/* Remarks Cell */
+.remarks-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--border-radius-sm);
+  font-size: 14px;
+  transition: var(--transition);
+  background: white;
+}
+
+.remarks-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+/* Empty Row */
+.empty-row {
+  padding: 60px 0;
+}
+
+.empty-message {
+  text-align: center;
+  color: var(--gray-500);
+}
+
+.empty-message i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: var(--gray-400);
+}
+
+.empty-message p {
+  font-size: 16px;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 75, 140, 0.3);
+}
+
+.btn-outline {
+  background: white;
+  color: var(--gray-700);
+  border: 2px solid var(--gray-200);
+}
+
+.btn-outline:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-300);
+  transform: translateY(-2px);
+}
+
+/* Selection Placeholder */
+.selection-placeholder {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.placeholder-icon {
+  width: 100px;
+  height: 100px;
+  background: var(--gray-100);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.placeholder-icon i {
+  font-size: 40px;
+  color: var(--gray-400);
+}
+
+.selection-placeholder h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 8px;
+}
+
+.selection-placeholder p {
+  color: var(--gray-600);
+  font-size: 14px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .marks-page {
+    padding: 16px;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+  
+  .filter-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .summary-content {
+    flex-direction: column;
+  }
+  
+  .summary-left, .summary-right {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .stat-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-section {
+    padding: 24px;
+  }
+  
+  .page-title {
+    font-size: 24px;
+  }
+  
+  .card-header-custom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .card-body-custom {
+    padding: 20px;
+  }
+  
+  .marks-table th,
+  .marks-table td {
+    padding: 12px;
+  }
+  
+  .student-info {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .student-avatar {
+    margin: 0 auto;
+  }
+  
+  .marks-input-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .marks-input {
+    width: 100%;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .btn-pdf {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .marks-page {
+    padding: 12px;
+  }
+  
+  .header-section {
+    padding: 20px;
+  }
+  
+  .badge-info {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .sno-badge {
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    font-size: 12px;
+  }
+}
+
+/* Loading States */
+.modern-select.loading {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='2' x2='12' y2='6'%3E%3C/line%3E%3Cline x1='12' y1='18' x2='12' y2='22'%3E%3C/line%3E%3Cline x1='4.93' y1='4.93' x2='7.76' y2='7.76'%3E%3C/line%3E%3Cline x1='16.24' y1='16.24' x2='19.07' y2='19.07'%3E%3C/line%3E%3Cline x1='2' y1='12' x2='6' y2='12'%3E%3C/line%3E%3Cline x1='18' y1='12' x2='22' y2='12'%3E%3C/line%3E%3Cline x1='4.93' y1='19.07' x2='7.76' y2='16.24'%3E%3C/line%3E%3Cline x1='16.24' y1='7.76' x2='19.07' y2='4.93'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 40px center;
+  background-size: 16px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+// Add fade-in animations
+document.addEventListener('DOMContentLoaded', function() {
+  const elements = document.querySelectorAll('.main-card, .stat-card');
+  elements.forEach((el, index) => {
+    el.style.opacity = '0';
+    el.style.animation = `fadeIn 0.6s ease-out ${index * 0.1}s forwards`;
+  });
+});
+
+// Marks validation function
+function validateMarks(input, maxMarks) {
+  const value = parseFloat(input.value);
+  
+  if (input.value === '') {
+    input.classList.remove('error');
+    return;
+  }
+  
+  if (isNaN(value) || value < 0) {
+    input.classList.add('error');
+  } else if (maxMarks !== null && value > maxMarks) {
+    input.classList.add('error');
+  } else {
+    input.classList.remove('error');
+  }
+}
+
+// Add confirm dialog for reset button
+document.addEventListener('DOMContentLoaded', function() {
+  const resetBtn = document.querySelector('button[type="reset"]');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function(e) {
+      if (!confirm('Reset all unsaved changes?')) {
+        e.preventDefault();
+      }
+    });
+  }
+});
+
+// Auto-hide success messages after 5 seconds
+document.addEventListener('DOMContentLoaded', function() {
+  const alerts = document.querySelectorAll('.alert');
+  alerts.forEach(alert => {
+    setTimeout(() => {
+      alert.style.opacity = '0';
+      setTimeout(() => alert.remove(), 500);
+    }, 5000);
+  });
+});
+</script>
+{% endblock %}

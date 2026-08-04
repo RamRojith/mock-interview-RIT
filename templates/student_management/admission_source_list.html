@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Admission Sources</h2>
+
+    <div class="card shadow rounded">
+        <div class="card-body">
+            <table id="admissionTable" class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Source Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for source in sources %}
+                    <tr>
+                        <td>{{ source.id }}</td>
+                        <td>{{ source.admission_sourse }}</td>
+                        <td>
+                            <a href="{% url 'edit_admission_source' source.id %}" class="btn btn-sm btn-primary">
+                                Edit
+                            </a>
+                            <a href="{% url 'delete_admission_source' source.id %}"
+                               onclick="return confirm('Are you sure you want to delete this?');"
+                               class="btn btn-sm btn-danger">
+                                Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">No sources found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- DataTables & Bootstrap JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#admissionTable').DataTable({
+            "pageLength": 5,
+            "lengthMenu": [5, 10, 20, 50],
+            "ordering": true,
+            "searching": true,
+            "info": true
+        });
+    });
+</script>
+{% endblock content %}

@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% load sm_tags authorizer_tags static %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Filter Card -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Student Details</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" id="filterForm" autocomplete="off" class="row g-3">
+                <!-- Department -->
+                <div class="col-md-4">
+                    <select class="form-select" id="department" name="department">
+                        <option value="">Select Department</option>
+                        {% dept_data as depts %}
+                        {% for dept in depts %}
+                            <option value="{{ dept.id }}" {% if selected_dept == dept.id|stringformat:"s" %}selected{% endif %}>
+                                {{ dept.Department }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Program -->
+                <div class="col-md-4" id="departmentContainer" style="display: {% if selected_dept %}block{% else %}none{% endif %};">
+                    <select class="form-select" id="program_name" name="program_name">
+                        <option value="">Select Program</option>
+                        {% if programs %}
+                            {% for program in programs %}
+                                <option value="{{ program.program_code }}" {% if selected_program == program.program_code %}selected{% endif %}>
+                                    {{ program.program_name }}
+                                </option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        <i class="fas fa-filter me-1"></i>Filter
+                    </button>
+                    <a href="{% url 'update_student_details' %}" class="btn btn-outline-secondary flex-grow-1" id="clearFilter">
+                        <i class="fas fa-times me-1"></i>Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-users me-2"></i>Student Records</h5>
+            <a href="{% url 'export_student_details_excel' %}" class="btn btn-success">
+                <i class="fas fa-file-excel me-1"></i>Export
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                <table class="table table-hover mb-0" id="studentTable">
+                    <thead class="sticky-top bg-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Photo</th>
+                            <th>First Name</th>
+                            <th>Surname</th>
+                            <th>Programme</th>
+                            <th>Intake</th>
+                            <th>Batch</th>
+                            <th>Year</th>
+                            <th>Semester</th>
+                            <th>Reg Number</th>
+                            <th>Department</th>
+                            <th>Program</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if data %}
+                            {% for row in data %}
+                                <tr class="align-middle">
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        {% if row.passport_size_photo %}
+                                            <img src="{{ row.passport_size_photo.url }}" 
+                                                 alt="{{ row.first_name }}" 
+                                                 class="rounded-circle" width="40" height="40" style="object-fit: cover;"
+                                                 onerror="this.onerror=null; 
+                                                          this.outerHTML = '<div class=\'d-flex align-items-center justify-content-center rounded-circle bg-light\' style=\'width: 40px; height: 40px;\' title=\'Image not found\'><i class=\'fas fa-user text-muted\'></i></div>';">
+                                        {% else %}
+                                            <div class="rounded-circle bg-light d-flex justify-content-center align-items-center" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-user text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ row.title }}{{ row.first_name }}</td>
+                                    <td>{{ row.surname }}</td>
+                                    <td>{{ row.programme_of_study }}</td>
+                                    <td><span class="badge bg-info text-dark">{{ row.Intake }}</span></td>
+                                    <td><span class="badge bg-dark text-white">{{ row.batch }}</span></td>
+                                    <td>{{ row.year }}</td>
+                                    <td>{{ row.semester }}</td>
+                                    <td><strong>{{ row.reg_number }}</strong></td>
+                                    <td>{{ row.department.Department }}</td>
+                                    <td>{{ row.program_name }}</td>
+                                    <td>
+                                        <a href="{% url 'edit_student' row.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="13" class="text-center py-5 text-muted">
+                                    <i class="fas fa-user-graduate mb-2" style="font-size:2rem;"></i>
+                                    <div>No student records found</div>
+                                    {% if selected_dept or selected_program %}
+                                        <small>Try adjusting filters or <a href="javascript:void(0)" onclick="document.getElementById('clearFilter').click()">clear all filters</a></small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#studentTable').DataTable({
+        paging: true,
+        searching: true,
+        info: true,
+        order: [[0, 'asc']],
+        columnDefs: [{ orderable: false, targets: [1, 12] }]
+    });
+
+    // Department → Program dynamic
+    $('#department').change(function() {
+        var deptId = $(this).val();
+        var container = $('#departmentContainer');
+        var programDropdown = $('#program_name');
+
+        if (deptId) {
+            container.show();
+            fetch(`{% url 'get_programs' pk=0 %}`.replace('0', deptId))
+                .then(res => res.json())
+                .then(data => {
+                    programDropdown.html('<option selected disabled value="">Select Program</option>');
+                    data.forEach(p => programDropdown.append(`<option value="${p.program_code}">${p.program_name}</option>`));
+                });
+        } else {
+            container.hide();
+        }
+    });
+
+    $('#clearFilter').click(function() {
+        $('#department').val('');
+        $('#program_name').html('<option selected disabled value="">Select Program</option>');
+        $('#departmentContainer').hide();
+        $('#filterForm').submit();
+    });
+});
+</script>
+
+<style>
+.table-hover tbody tr:hover { background-color: rgba(0, 123, 255, 0.05); }
+.table-responsive::-webkit-scrollbar { width: 6px; height: 6px; }
+.table-responsive::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+.table-responsive::-webkit-scrollbar-thumb:hover { background: #555; }
+.sticky-top { position: sticky; top: 0; z-index: 10; }
+.card { border-radius: 0.5rem; }
+</style>
+{% endblock content %}

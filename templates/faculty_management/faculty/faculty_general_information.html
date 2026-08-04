@@ -1,0 +1,791 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty General Information - Ramco Institute of Technology</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+        <link rel="website icon" type="png" href="{% static 'images/ritlogo.png' %}">
+
+    <style>
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --secondary: #2c3e50;
+            --accent: #1abc9c;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --gray: #6c757d;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--secondary);
+            min-height: 100vh;
+            padding-bottom: 2rem;
+        }
+        
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--box-shadow);
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .header-title {
+            color: var(--secondary);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            position: relative;
+            padding-bottom: 1rem;
+        }
+        
+        .header-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            border-radius: 2px;
+        }
+        
+        .section-header {
+            color: var(--secondary);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+        
+        .section-header i {
+            color: var(--accent);
+            background: rgba(26, 188, 156, 0.1);
+            padding: 10px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: var(--border-radius);
+            padding: 0.75rem 1rem;
+            border: 1px solid #e1e5eb;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .readonly-field {
+            background-color: #f8f9fa;
+            color: var(--gray);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            border: none;
+            padding: 0.85rem 2.5rem;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        .required-field::after {
+            content: " *";
+            color: var(--danger);
+        }
+        
+        .section-divider {
+            margin: 2.5rem 0;
+            border-top: 1px dashed #e1e5eb;
+        }
+        
+        .form-section {
+            margin-bottom: 2.5rem;
+        }
+        
+        /* Enhanced File Upload Styles */
+        .file-upload-container {
+            margin-bottom: 1rem;
+        }
+        
+        .file-upload-area {
+            border: 2px dashed #d1d9e6;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            transition: var(--transition);
+            background-color: #fafbfc;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background-color: rgba(52, 152, 219, 0.03);
+        }
+        
+        .file-upload-area i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .file-upload-text {
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .file-upload-hint {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .file-input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .file-preview {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: var(--light);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .file-preview i {
+            color: var(--danger);
+            font-size: 1.5rem;
+        }
+        
+        .file-info {
+            flex-grow: 1;
+        }
+        
+        .file-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .file-size {
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .file-action-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .file-action-btn:hover {
+            color: var(--primary-dark);
+        }
+        
+        .existing-file {
+            background-color: rgba(40, 167, 69, 0.1);
+            border-left: 4px solid var(--success);
+        }
+        
+        .existing-file i {
+            color: var(--success);
+        }
+        
+        /* Form Grid Improvements */
+        .form-row {
+            margin-bottom: 1.25rem;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 1.5rem;
+            }
+            
+            .section-header {
+                font-size: 1.1rem;
+            }
+            
+            .file-upload-area {
+                padding: 1.5rem;
+            }
+        }
+        
+        /* Custom checkbox and radio styles */
+        .form-check-input:checked {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        /* Animation for form sections */
+        .form-section {
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Status indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-complete {
+            background-color: var(--success);
+        }
+        
+        .status-incomplete {
+            background-color: var(--warning);
+        }
+        
+        /* Progress bar for multi-step forms (if needed in future) */
+        .progress-container {
+            margin-bottom: 2rem;
+        }
+        
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(to right, var(--primary), var(--accent));
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4 mb-5">
+        <h3 class="header-title">Faculty General Information</h3>
+
+        <form method="POST" enctype="multipart/form-data" class="form-container">
+            {% csrf_token %}
+
+            <!-- Personal Information -->
+            <div class="form-section">
+                <h5 class="section-header">
+                    <i class="fas fa-user-graduate"></i> Personal Information
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label required-field">Full Name</label>
+                        <input type="text" name="name" class="form-control readonly-field" value="{{ username }}" readonly>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" name="dob" class="form-control" value="{{ info.dob|date:'Y-m-d' }}">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Phone Number</label>
+                        <input type="text" name="phone" class="form-control" value="{{ info.phone|default:'' }}">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Blood Group</label>
+                        <select name="blood_group" class="form-select">
+                            <option value="">Select Blood Group</option>
+                            <option value="A+" {% if info.blood_group == "A+" %}selected{% endif %}>A+</option>
+                            <option value="A-" {% if info.blood_group == "A-" %}selected{% endif %}>A-</option>
+                            <option value="B+" {% if info.blood_group == "B+" %}selected{% endif %}>B+</option>
+                            <option value="B-" {% if info.blood_group == "B-" %}selected{% endif %}>B-</option>
+                            <option value="AB+" {% if info.blood_group == "AB+" %}selected{% endif %}>AB+</option>
+                            <option value="AB-" {% if info.blood_group == "AB-" %}selected{% endif %}>AB-</option>
+                            <option value="O+" {% if info.blood_group == "O+" %}selected{% endif %}>O+</option>
+                            <option value="O-" {% if info.blood_group == "O-" %}selected{% endif %}>O-</option>
+                            <option value="A1+" {% if info.blood_group == "A1+" %}selected{% endif %}>A1+</option>
+                            <option value="A1-" {% if info.blood_group == "A1-" %}selected{% endif %}>A1-</option>
+                            <option value="A2+" {% if info.blood_group == "A2+" %}selected{% endif %}>A2+</option>
+                            <option value="A2-" {% if info.blood_group == "A2-" %}selected{% endif %}>A2-</option>
+                            <option value="Bombay (Oh)" {% if info.blood_group == "Bombay (Oh)" %}selected{% endif %}>Bombay (Oh)</option>
+                            <option value="Rh null" {% if info.blood_group == "Rh null" %}selected{% endif %}>Rh null</option>
+                            <option value="Unknown" {% if info.blood_group == "Unknown" %}selected{% endif %}>Unknown</option>
+                            <option value="Not Tested" {% if info.blood_group == "Not Tested" %}selected{% endif %}>Not Tested</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Address</label>
+                        <textarea name="address" class="form-control" rows="2">{{ info.address|default:'' }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Professional Information -->
+            <div class="form-section">
+                <h5 class="section-header">
+                    <i class="fas fa-briefcase"></i> Professional Information
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Employee ID</label>
+                        <input type="text" class="form-control readonly-field" value="{{ employee_id }}" readonly>
+                        <small class="text-muted">Set during pre-authorization and cannot be changed.</small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Role</label>
+                        <input type="text" class="form-control readonly-field" value="{{ role }}" readonly>
+                        <small class="text-muted">Assigned at signup and cannot be changed.</small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Department</label>
+                        <input type="text" class="form-control readonly-field" value="{{ department }}" readonly>
+                        <small class="text-muted">Assigned at signup and cannot be changed.</small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label required-field">Designation</label>
+                        <select name="designation" class="form-select" required>
+                            <option value="">Select Designation</option>
+                            {% for d in designations %}
+                                <option value="{{ d.id }}" {% if info and info.designation and info.designation.id == d.id %}selected{% endif %}>
+                                    {{ d.designation_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Category</label>
+                        <input type="text" class="form-control readonly-field"
+                               value="{{ category_display }}" readonly>
+                        <small class="text-muted">Assigned by the administration and cannot be changed.</small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Date of Joining</label>
+                        <input type="date" class="form-control readonly-field" value="{{ info.doj|date:'Y-m-d' }}" readonly>
+                        <small class="text-muted">Set by the administration and cannot be changed.</small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">College Email</label>
+                        <input type="email" name="college_email" class="form-control readonly-field" value="{{ college_email }}" readonly>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Personal Email</label>
+                        <input type="email" name="personal_email" class="form-control" value="{{ info.personal_email|default:'' }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Identity & Identification Numbers -->
+            <div class="form-section">
+                <h5 class="section-header">
+                    <i class="fas fa-id-card-alt"></i> Identity & Identification Numbers
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">PAN Number</label>
+                        <input type="text" name="PAN_number" class="form-control" value="{{ info.PAN_number|default:'' }}" placeholder="ABCDE1234F">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Aadhar Number</label>
+                        <input type="text" name="Aadhar_number" class="form-control" value="{{ info.Aadhar_number|default:'' }}" placeholder="Enter 12 digits">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">APAAR ID</label>
+                        <input type="text" name="apaar_id" class="form-control" value="{{ info.apaar_id|default:'' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Anna University ID</label>
+                        <input type="text" name="anu_id" class="form-control" value="{{ info.anu_id|default:'' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">AICTE ID</label>
+                        <input type="text" name="aicte_id" class="form-control" value="{{ info.aicte_id|default:'' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Anna University Affiliation ID</label>
+                        <input type="text" name="annauniversity_affiliation_id" class="form-control" value="{{ info.annauniversity_affiliation_id|default:'' }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Demographics -->
+            <div class="form-section">
+                <h5 class="section-header">
+                    <i class="fas fa-globe-americas"></i> Demographics
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Community</label>
+                        <input type="text" name="community" class="form-control" value="{{ info.community|default:'' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Caste</label>
+                        <input type="text" name="caste" class="form-control" value="{{ info.caste|default:'' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Religion</label>
+                        <input type="text" name="religion" class="form-control" value="{{ info.religion|default:'' }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Service Details -->
+            <div class="form-section">
+    <h5 class="section-header">
+        <i class="fas fa-clipboard-check"></i> Service Details
+    </h5>
+    <div class="row g-3">
+        <!-- Type of Appointment -->
+        <div class="col-md-4">
+            <label class="form-label">Type of Appointment</label>
+            <select name="appointment_type" class="form-select">
+                <option value="">Select Type</option>
+                {% for key, value in info.APPOINTMENT_TYPE_CHOICES %}
+                    <option value="{{ key }}" {% if info.appointment_type == key %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Mode of Recruitment -->
+        <div class="col-md-4">
+            <label class="form-label">Mode of Recruitment</label>
+            <select name="recruitment_mode" class="form-select">
+                <option value="">Select Mode</option>
+                {% for key, value in info.RECRUITMENT_MODE_CHOICES %}
+                    <option value="{{ key }}" {% if info.recruitment_mode == key %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Nature of Duties -->
+        <div class="col-md-4">
+            <label class="form-label">Nature of Duties</label>
+            <select name="nature_of_duties" class="form-select">
+                <option value="">Select Nature</option>
+                {% for key, value in info.DUTIES_CHOICES %}
+                    <option value="{{ key }}" {% if info.nature_of_duties == key %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Confirmation Date -->
+        <div class="col-md-6">
+            <label class="form-label">Confirmation of Service Date</label>
+            <input type="date" name="confirmation_date" class="form-control" value="{{ info.confirmation_date|date:'Y-m-d' }}">
+        </div>
+
+        <!-- Probation Period -->
+        <div class="col-md-3">
+            <label class="form-label">Probation Period (months)</label>
+            <input type="number" name="probation_period_months" class="form-control" value="{{ info.probation_period_months|default:'' }}">
+        </div>
+
+        <!-- Probation Order Reference -->
+        <div class="col-md-3">
+            <label class="form-label">Probation Order Ref</label>
+            <input type="text" name="probation_confirmation_reference" class="form-control" value="{{ info.probation_confirmation_reference|default:'' }}">
+        </div>
+
+        <!-- Probation Confirmation Document -->
+        <div class="col-md-6">
+            <label class="form-label">Probation Confirmation Document (PDF)</label>
+
+            <div class="file-upload-container">
+                {% if info.probation_confirmation_document %}
+                    <div class="file-preview existing-file">
+                        <i class="fas fa-file-pdf"></i>
+                        <div class="file-info">
+                            <div class="file-name">Probation Confirmation Document</div>
+                            <div class="file-size">Uploaded document</div>
+                        </div>
+                        <div class="file-actions">
+                            <a href="{{ info.probation_confirmation_document.url }}" target="_blank" class="file-action-btn">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ info.probation_confirmation_document.url }}" download class="file-action-btn">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="file-upload-area">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <div class="file-upload-text">Upload Probation Document</div>
+                    <div class="file-upload-hint">Click to browse or drag and drop PDF file</div>
+                    <input type="file" name="probation_confirmation_document" class="file-input" accept=".pdf">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+            <div class="section-divider"></div>
+
+            <!-- Pay Details -->
+            <div class="form-section">
+                <h5 class="section-header">
+                    <i class="fas fa-money-check-alt"></i> Pay Details
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Basic Pay</label>
+                        <input type="number" step="0.01" name="basic_pay" class="form-control" value="{{ info.basic_pay|default:'' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">AGP (Academic Grade Pay)</label>
+                        <input type="number" step="0.01" name="agp" class="form-control" value="{{ info.agp|default:'' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Allowances</label>
+                        <input type="number" step="0.01" name="allowances" class="form-control" value="{{ info.allowances|default:'' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Scale of Pay</label>
+                        <input type="text" name="pay_scale_notes" class="form-control" value="{{ info.pay_scale_notes|default:'' }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Document Certificates -->
+            <div class="form-section">
+                <h5 class="section-header">
+                    <i class="fas fa-file-contract"></i> Document Certificates
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">PAN Certificate (PDF)</label>
+                        
+                        <!-- Enhanced File Upload -->
+                        <div class="file-upload-container">
+                            {% if info.PAN_certificate %}
+                                <div class="file-preview existing-file">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <div class="file-info">
+                                        <div class="file-name">PAN Certificate</div>
+                                        <div class="file-size">Uploaded document</div>
+                                    </div>
+                                    <div class="file-actions">
+                                        <a href="{{ info.PAN_certificate.url }}" target="_blank" class="file-action-btn">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ info.PAN_certificate.url }}" download class="file-action-btn">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="file-upload-area">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <div class="file-upload-text">Upload PAN Certificate</div>
+                                <div class="file-upload-hint">Click to browse or drag and drop PDF file</div>
+                                <input type="file" name="PAN_certificate" class="file-input" accept=".pdf">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Aadhar Certificate (PDF)</label>
+                        
+                        <!-- Enhanced File Upload -->
+                        <div class="file-upload-container">
+                            {% if info.Aadhar_certificate %}
+                                <div class="file-preview existing-file">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <div class="file-info">
+                                        <div class="file-name">Aadhar Certificate</div>
+                                        <div class="file-size">Uploaded document</div>
+                                    </div>
+                                    <div class="file-actions">
+                                        <a href="{{ info.Aadhar_certificate.url }}" target="_blank" class="file-action-btn">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ info.Aadhar_certificate.url }}" download class="file-action-btn">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="file-upload-area">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <div class="file-upload-text">Upload Aadhar Certificate</div>
+                                <div class="file-upload-hint">Click to browse or drag and drop PDF file</div>
+                                <input type="file" name="Aadhar_certificate" class="file-input" accept=".pdf">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5 text-center">
+                <button type="submit" class="btn btn-primary px-5">
+                    <i class="fas fa-save me-2"></i> {% if info %}Update Information{% else %}Submit Information{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Enhanced file upload functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInputs = document.querySelectorAll('.file-input');
+            
+            fileInputs.forEach(input => {
+                const uploadArea = input.closest('.file-upload-area');
+                
+                // Highlight area when file is dragged over
+                uploadArea.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.style.borderColor = 'var(--primary)';
+                    this.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
+                });
+                
+                uploadArea.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.style.borderColor = '#d1d9e6';
+                    this.style.backgroundColor = '#fafbfc';
+                });
+                
+                // Handle file drop
+                uploadArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.style.borderColor = '#d1d9e6';
+                    this.style.backgroundColor = '#fafbfc';
+                    
+                    if (e.dataTransfer.files.length) {
+                        input.files = e.dataTransfer.files;
+                        updateFilePreview(input);
+                    }
+                });
+                
+                // Handle file selection via click
+                input.addEventListener('change', function() {
+                    updateFilePreview(this);
+                });
+            });
+            
+            function updateFilePreview(input) {
+                const file = input.files[0];
+                if (!file) return;
+                
+                const uploadArea = input.closest('.file-upload-area');
+                const container = uploadArea.closest('.file-upload-container');
+                
+                // Remove existing preview if any
+                const existingPreview = container.querySelector('.file-preview:not(.existing-file)');
+                if (existingPreview) {
+                    existingPreview.remove();
+                }
+                
+                // Create new preview
+                const preview = document.createElement('div');
+                preview.className = 'file-preview';
+                preview.innerHTML = `
+                    <i class="fas fa-file-pdf"></i>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${formatFileSize(file.size)}</div>
+                    </div>
+                    <div class="file-actions">
+                        <button type="button" class="file-action-btn remove-file">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                // Insert after upload area
+                uploadArea.parentNode.insertBefore(preview, uploadArea.nextSibling);
+                
+                // Add remove functionality
+                const removeBtn = preview.querySelector('.remove-file');
+                removeBtn.addEventListener('click', function() {
+                    input.value = '';
+                    preview.remove();
+                });
+            }
+            
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+        });
+    </script>
+</body>
+</html>

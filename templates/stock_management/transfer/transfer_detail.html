@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+    .transfer-wrap { padding: 1rem 2rem; }
+    .panel {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+    .panel-head {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: #fff;
+        padding: 0.85rem 1.25rem;
+        font-weight: 600;
+    }
+    .panel-body { padding: 1.25rem; }
+    .meta-label { color: #64748b; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
+    .meta-value { color: #1e293b; font-weight: 600; }
+    .panel table { margin-bottom: 0; }
+    .panel thead th { background: #f1f5f9; color: #334155; font-size: 0.85rem; text-align: center; vertical-align: middle; }
+    .panel tbody td { vertical-align: middle; text-align: center; font-size: 0.9rem; }
+    #itemsSelect { min-height: 220px; }
+</style>
+
+<div class="transfer-wrap">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="fw-bold text-primary mb-0">
+            <i class="fas fa-right-left me-2"></i>{{ tr.transfer_number }}
+        </h2>
+        <a href="{% url 'transfer' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Back to list
+        </a>
+    </div>
+
+    <!-- Request info -->
+    <div class="panel">
+        <div class="panel-head"><i class="fas fa-circle-info me-2"></i>Request Details</div>
+        <div class="panel-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="meta-label">Status</div>
+                    <div>
+                        {% if tr.status == "DRAFT" %}<span class="badge bg-secondary">Draft</span>
+                        {% elif tr.status == "SUBMITTED" %}<span class="badge bg-warning text-dark">Submitted</span>
+                        {% elif tr.status == "APPROVED_HOD_SENDER" %}<span class="badge bg-info text-dark">Sender HOD Approved</span>
+                        {% elif tr.status == "APPROVED_HOD_RECEIVER" %}<span class="badge bg-primary">Receiver HOD Approved</span>
+                        {% elif tr.status == "COMPLETED" %}<span class="badge bg-success">Completed</span>
+                        {% elif tr.status == "REJECTED" %}<span class="badge bg-danger">Rejected</span>
+                        {% else %}<span class="badge bg-light text-dark">{{ tr.status }}</span>{% endif %}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="meta-label">Requested By</div>
+                    <div class="meta-value">{{ tr.requested_by.name|default:"-" }}</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="meta-label">From Lab</div>
+                    <div class="meta-value">{{ tr.from_lab.lab_code }} - {{ tr.from_lab.name }}</div>
+                    <small class="text-muted">{{ tr.from_lab.department }}</small>
+                </div>
+                <div class="col-md-3">
+                    <div class="meta-label">To Lab</div>
+                    <div class="meta-value">{{ tr.to_lab.lab_code }} - {{ tr.to_lab.name }}</div>
+                    <small class="text-muted">{{ tr.to_lab.department }}</small>
+                </div>
+                <div class="col-12">
+                    <div class="meta-label">Reason</div>
+                    <div>{{ tr.reason }}</div>
+                </div>
+                {% if tr.sender_hod_approved_by %}
+                <div class="col-md-4">
+                    <div class="meta-label">Sender HOD Approval</div>
+                    <div class="meta-value">{{ tr.sender_hod_approved_by.name }}</div>
+                    <small class="text-muted">{{ tr.sender_hod_approved_at|date:"d M Y, h:i A" }}</small>
+                </div>
+                {% endif %}
+                {% if tr.receiver_hod_approved_by %}
+                <div class="col-md-4">
+                    <div class="meta-label">Receiver HOD Approval</div>
+                    <div class="meta-value">{{ tr.receiver_hod_approved_by.name }}</div>
+                    <small class="text-muted">{{ tr.receiver_hod_approved_at|date:"d M Y, h:i A" }}</small>
+                </div>
+                {% endif %}
+                {% if tr.completed_at %}
+                <div class="col-md-4">
+                    <div class="meta-label">Completed At</div>
+                    <div class="meta-value">{{ tr.completed_at|date:"d M Y, h:i A" }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Items -->
+    <div class="panel">
+        <div class="panel-head"><i class="fas fa-boxes-stacked me-2"></i>Items in this Transfer</div>
+        {% if tr.status == "APPROVED_HOD_RECEIVER" and can_incharge %}
+        <form method="post" action="{% url 'transfer_action' tr.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="complete">
+            <input type="hidden" name="next" value="{% url 'transfer_detail' tr.id %}">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>S.No</th><th>Asset Tag</th><th>Description</th><th>Received Condition</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for it in items %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ it.stock_item.asset_tag }}</td>
+                            <td>{{ it.stock_item.entry.item_description|truncatechars:80 }}</td>
+                            <td>
+                                <select name="received_condition_{{ it.id }}" class="form-select form-select-sm">
+                                    {% for val, label in condition_choices %}
+                                    <option value="{{ val }}" {% if it.received_condition == val %}selected{% elif val == "WORKING" and not it.received_condition %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-muted">No items.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="panel-body text-end">
+                <button type="submit" class="btn btn-success"
+                        onclick="return confirm('Confirm receipt and complete this transfer? Assets will move to the destination lab.');">
+                    <i class="fas fa-check-double me-1"></i>Confirm Receipt &amp; Complete
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>S.No</th><th>Asset Tag</th><th>Description</th><th>Received Condition</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for it in items %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ it.stock_item.asset_tag }}</td>
+                        <td>{{ it.stock_item.entry.item_description|truncatechars:80 }}</td>
+                        <td>
+                            {% if it.received_condition %}
+                                <span class="badge bg-info text-dark">{{ it.get_received_condition_display }}</span>
+                            {% else %}<span class="text-muted">-</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-muted">No items added yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Add items (DRAFT only, for requester / incharge) -->
+    {% if tr.status == "DRAFT" and can_incharge or tr.status == "DRAFT" and is_requester %}
+    <div class="panel">
+        <div class="panel-head"><i class="fas fa-plus me-2"></i>Add Items from {{ tr.from_lab.lab_code }}</div>
+        <div class="panel-body">
+            <form method="post" action="{% url 'transfer_action' tr.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_item">
+                <input type="hidden" name="next" value="{% url 'transfer_detail' tr.id %}">
+                <div class="mb-2">
+                    <input type="text" id="itemSearch" class="form-control"
+                           placeholder="Search eligible items by asset tag or description...">
+                </div>
+                <select id="itemsSelect" name="stock_items" class="form-select" multiple size="10">
+                    <option disabled>Loading eligible items...</option>
+                </select>
+                <small class="text-muted d-block mt-1">
+                    Hold Ctrl (Cmd on Mac) to select multiple items. Only working/idle assets
+                    currently in the source lab and not already in an open transfer are shown.
+                </small>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Add Selected Items
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="panel">
+        <div class="panel-body d-flex justify-content-between align-items-center">
+            <span class="text-muted">Submit the request once all items have been added.</span>
+            <form method="post" action="{% url 'transfer_action' tr.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="submit">
+                <input type="hidden" name="next" value="{% url 'transfer_detail' tr.id %}">
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-paper-plane me-1"></i>Submit for Approval
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Approval / rejection actions -->
+    {% if can_hod and tr.status == "SUBMITTED" or can_hod and tr.status == "APPROVED_HOD_SENDER" %}
+    <div class="panel">
+        <div class="panel-head"><i class="fas fa-gavel me-2"></i>HOD Actions</div>
+        <div class="panel-body">
+            <form method="post" action="{% url 'transfer_action' tr.id %}" class="row g-2 align-items-end">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'transfer_detail' tr.id %}">
+                <div class="col-md-8">
+                    <label class="form-label meta-label">Remarks (required for rejection)</label>
+                    <input type="text" name="reason" class="form-control" placeholder="Optional remarks / rejection reason">
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    {% if tr.status == "SUBMITTED" %}
+                    <button type="submit" name="action" value="approve_sender" class="btn btn-success">
+                        <i class="fas fa-check me-1"></i>Approve (Sender HOD)
+                    </button>
+                    {% elif tr.status == "APPROVED_HOD_SENDER" %}
+                    <button type="submit" name="action" value="approve_receiver" class="btn btn-success">
+                        <i class="fas fa-check me-1"></i>Approve (Receiver HOD)
+                    </button>
+                    {% endif %}
+                    <button type="submit" name="action" value="reject" class="btn btn-danger">
+                        <i class="fas fa-xmark me-1"></i>Reject
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var select = document.getElementById("itemsSelect");
+    if (!select) { return; }
+    var search = document.getElementById("itemSearch");
+    var allItems = [];
+
+    function render(filter) {
+        filter = (filter || "").toLowerCase();
+        select.innerHTML = "";
+        var shown = 0;
+        allItems.forEach(function (it) {
+            var text = it.asset_tag + " - " + it.description + " [" + it.condition + "]";
+            if (filter && text.toLowerCase().indexOf(filter) === -1) { return; }
+            var opt = document.createElement("option");
+            opt.value = it.id;
+            opt.textContent = text;
+            select.appendChild(opt);
+            shown++;
+        });
+        if (shown === 0) {
+            var o = document.createElement("option");
+            o.disabled = true;
+            o.textContent = allItems.length ? "No items match your search." : "No eligible items available.";
+            select.appendChild(o);
+        }
+    }
+
+    fetch("{% url 'get_lab_items' %}?lab_id={{ tr.from_lab.id }}")
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            allItems = data.items || [];
+            render("");
+        })
+        .catch(function () {
+            select.innerHTML = "";
+            var o = document.createElement("option");
+            o.disabled = true;
+            o.textContent = "Unable to load items.";
+            select.appendChild(o);
+        });
+
+    if (search) {
+        search.addEventListener("input", function () { render(this.value); });
+    }
+});
+</script>
+{% endblock content %}

@@ -1,0 +1,661 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Seminar Hall Booking - Ramco Institute of Technology{% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seminar Hall Booking</title>
+    <style>
+        .booking-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(30, 58, 138, 0.3);
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .page-header p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateX(-4px);
+        }
+
+        .booking-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-section {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .form-section h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-section h3 i {
+            font-size: 0.95rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-row.two-col {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .form-row.single {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.35rem;
+            display: block;
+            font-size: 0.85rem;
+        }
+
+        .form-label.required::after {
+            content: ' *';
+            color: #ef4444;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.6rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 70px;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem;
+            background: #f8fafc;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            background: #e0f2fe;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            margin: 0;
+            font-weight: 500;
+            color: #475569;
+            font-size: 0.85rem;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 2rem;
+            margin-top: 0.75rem;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .radio-item input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .radio-item label {
+            cursor: pointer;
+            margin: 0;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .guest-section {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: #f0f9ff;
+            border-radius: 10px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .guest-section.active {
+            display: block;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-box h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1e3a8a;
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-box p {
+            margin: 0;
+            color: #475569;
+            line-height: 1.5;
+            font-size: 0.85rem;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 0.9rem 2.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .faculty-info {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .faculty-info h4 {
+            grid-column: 1 / -1;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+        }
+
+        .faculty-info p {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        .faculty-info p strong {
+            color: #334155;
+            display: block;
+            margin-bottom: 0.15rem;
+        }
+
+        .recent-bookings {
+            margin-top: 1.5rem;
+        }
+
+        .recent-bookings h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e3a8a;
+            margin-bottom: 1rem;
+        }
+
+        .booking-item {
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .booking-item h5 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .booking-item p {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin: 0.25rem 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-approved {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        @media (max-width: 768px) {
+            .booking-container {
+                padding: 1rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="booking-container">
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1><i class="fas fa-door-open me-2"></i>Seminar Hall Booking</h1>
+                    <p>Reserve seminar halls for events, meetings, and academic activities</p>
+                </div>
+                <a href="{% url 'shb_hub' %}" class="btn btn-back">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Hub
+                </a>
+            </div>
+        </div>
+
+        <div class="booking-card">
+            <div class="info-box">
+                <h4><i class="fas fa-info-circle"></i>Booking Guidelines</h4>
+                <p>Submit your booking request for any date and time. All bookings are subject to availability and approval.</p>
+            </div>
+
+            <form method="POST" action="" id="bookingForm">
+                {% csrf_token %}
+                    
+                    <!-- Faculty Information (Auto-filled) -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-user"></i>Faculty Information</h3>
+                        <div class="faculty-info">
+                            <h4>Your Details (Auto-filled)</h4>
+                            <p><strong>Name:</strong> {{ faculty.name }}</p>
+                            <p><strong>Department:</strong> {{ faculty.department.Department }}</p>
+                            <p><strong>Email:</strong> {{ faculty.college_email|default:faculty.personal_email }}</p>
+                            <p><strong>Phone:</strong> {{ faculty.phone|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Event Details -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-calendar-alt"></i>Event Details</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label required">Event Name</label>
+                                <input type="text" name="event_name" class="form-control" required placeholder="e.g., Workshop on AI & ML">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Event Type</label>
+                                <select name="event_type" id="event_type" class="form-control" required>
+                                    <option value="">Select Event Type</option>
+                                    <option value="seminar">Seminar</option>
+                                    <option value="workshop">Workshop</option>
+                                    <option value="conference">Conference</option>
+                                    <option value="meeting">Meeting</option>
+                                    <option value="guest_lecture">Guest Lecture</option>
+                                    <option value="training">Training Program</option>
+                                    <option value="cultural">Cultural Event</option>
+                                    <option value="fdp">FDP</option>
+                                    <option value="sttp">STTP</option>
+                                    <option value="international_conference">International Conference</option>
+                                    <option value="national_conference">National Conference</option>
+                                    <option value="faculty_meeting">Faculty Meeting</option>
+                                    <option value="grievance_cell_meeting">Grievance Cell Meeting</option>
+                                    <option value="class_committee_meeting">Class Committee Meeting</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Other Event Type Input (Hidden by default) -->
+                        <div class="form-row single" id="otherEventTypeSection" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label required">Specify Event Type</label>
+                                <input type="text" name="other_event_type" id="other_event_type" class="form-control" placeholder="Please specify the event type">
+                            </div>
+                        </div>
+
+                        <div class="form-row single">
+                            <div class="form-group">
+                                <label class="form-label required">Event Description/Purpose</label>
+                                <textarea name="event_description" class="form-control" required placeholder="Describe the purpose and objectives of the event..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guest/Speaker Information -->
+                    <!-- Guest/Speaker Information -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-user-tie"></i>Guest Speaker Information</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Guest Speaker?</label>
+                                <div class="radio-group">
+                                    <div class="radio-item">
+                                        <input type="radio" name="has_guest_speaker" value="yes" id="guest_yes">
+                                        <label for="guest_yes">Yes</label>
+                                    </div>
+                                    <div class="radio-item">
+                                        <input type="radio" name="has_guest_speaker" value="no" id="guest_no" checked>
+                                        <label for="guest_no">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="guest-section" id="guestSection">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Guest Name</label>
+                                    <input type="text" name="guest_name" class="form-control" placeholder="Full name">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Guest Designation</label>
+                                    <input type="text" name="guest_designation" class="form-control" placeholder="e.g., Professor, CEO">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Guest Organization</label>
+                                    <input type="text" name="guest_organization" class="form-control" placeholder="Company/Institution name">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Guest Email</label>
+                                    <input type="email" name="guest_email" class="form-control" placeholder="guest@example.com">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Guest Phone</label>
+                                    <input type="tel" name="guest_phone" class="form-control" placeholder="+91 XXXXXXXXXX" maxlength="50">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Booking Schedule & Hall -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-clock"></i>Booking Schedule & Hall Preference</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label required">Start Date & Time</label>
+                                <input type="datetime-local" name="start_datetime" id="start_datetime" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">End Date & Time</label>
+                                <input type="datetime-local" name="end_datetime" id="end_datetime" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Preferred Hall</label>
+                                <select name="preferred_hall" class="form-control" required>
+                                    <option value="">Select Hall</option>
+                                    {% for hall in seminar_halls %}
+                                    <option value="{{ hall.id }}">
+                                        {{ hall.hall_name }} - {{ hall.hall_number }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Technical Requirements & Additional Details -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-tools"></i>Technical Requirements & Additional Details</h3>
+                        
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="needs_projector" id="projector">
+                                <label for="projector">Projector</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="needs_microphone" id="microphone">
+                                <label for="microphone">Microphone</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="needs_sound_system" id="sound">
+                                <label for="sound">Sound System</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="needs_video_conferencing" id="video">
+                                <label for="video">Video Conferencing</label>
+                            </div>
+                        </div>
+
+                        <div class="form-row single" style="margin-top: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Special Requirements</label>
+                                <textarea name="special_requirements" class="form-control" placeholder="Any other specific requirements..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center" style="margin-top: 2rem;">
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-paper-plane"></i>
+                            Submit Booking Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle guest section
+        document.querySelectorAll('input[name="has_guest_speaker"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const guestSection = document.getElementById('guestSection');
+                if (this.value === 'yes') {
+                    guestSection.classList.add('active');
+                } else {
+                    guestSection.classList.remove('active');
+                }
+            });
+        });
+
+        // Toggle "Other Event Type" input field
+        document.getElementById('event_type').addEventListener('change', function() {
+            const otherSection = document.getElementById('otherEventTypeSection');
+            const otherInput = document.getElementById('other_event_type');
+            
+            if (this.value === 'other') {
+                otherSection.style.display = 'block';
+                otherInput.setAttribute('required', 'required');
+            } else {
+                otherSection.style.display = 'none';
+                otherInput.removeAttribute('required');
+                otherInput.value = '';
+            }
+        });
+
+        // Configure datetime validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const startDatetimeInput = document.getElementById('start_datetime');
+            const endDatetimeInput = document.getElementById('end_datetime');
+            
+            // Real-time validation for start datetime
+            startDatetimeInput.addEventListener('change', function() {
+                // Update end datetime minimum to be after start
+                if (this.value) {
+                    endDatetimeInput.setAttribute('min', this.value);
+                }
+                
+                validateDateTimes();
+            });
+            
+            // Real-time validation for end datetime
+            endDatetimeInput.addEventListener('change', validateDateTimes);
+            
+            function validateDateTimes() {
+                const startValue = startDatetimeInput.value;
+                const endValue = endDatetimeInput.value;
+                
+                if (startValue && endValue) {
+                    const start = new Date(startValue);
+                    const end = new Date(endValue);
+                    
+                    if (end <= start) {
+                        alert('End date & time must be after start date & time!');
+                        endDatetimeInput.value = '';
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+
+        // Form validation before submit
+        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            const startDatetime = document.getElementById('start_datetime').value;
+            const endDatetime = document.getElementById('end_datetime').value;
+            
+            if (!startDatetime || !endDatetime) {
+                e.preventDefault();
+                alert('Please fill in both start and end date & time!');
+                return false;
+            }
+            
+            const start = new Date(startDatetime);
+            const end = new Date(endDatetime);
+            
+            // Only validate that end is after start
+            if (end <= start) {
+                e.preventDefault();
+                alert('End date & time must be after start date & time!');
+                return false;
+            }
+            
+            return true;
+        });
+    </script>
+</body>
+</html>
+{% endblock %}

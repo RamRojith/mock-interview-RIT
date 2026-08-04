@@ -1,0 +1,519 @@
+{% load static %}
+{% load sm_tags %}
+{% current_function as permission_data %}
+
+<div class="modal fade" id="addpermissionModal" tabindex="-1" aria-labelledby="addpermissionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow-lg sm-perm-modal">
+
+      <!-- Header -->
+      <div class="modal-header sm-perm-header text-white">
+        <div class="d-flex align-items-center w-100">
+          <div class="sm-perm-icon me-3">
+            <i class="fas fa-shield-alt fa-2x"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h5 class="modal-title fw-bold mb-0" id="addpermissionModalLabel">Permission Management</h5>
+            <small class="opacity-75">Manage role-based access controls</small>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body sm-perm-body p-0">
+        <div class="container-fluid py-3">
+
+          <!-- Search + Controls -->
+          <div class="row mb-4 px-2 px-md-0">
+            <div class="col-md-8">
+              <div class="sm-perm-search">
+                <div class="input-group">
+                  <span class="input-group-text sm-perm-search-icon">
+                    <i class="fas fa-search"></i>
+                  </span>
+                  <input
+                    type="text"
+                    id="permissionSearch"
+                    class="form-control sm-perm-search-input"
+                    placeholder="Search roles..."
+                    autocomplete="off"
+                  >
+                  <button class="btn sm-perm-clear" type="button" id="clearSearch" title="Clear">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="d-flex gap-2 justify-content-md-end mt-3 mt-md-0">
+                <button type="button" class="btn btn-success btn-sm" id="selectAllBtn">
+                  <i class="fas fa-check-double me-1"></i>All
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm" id="deselectAllBtn">
+                  <i class="fas fa-times me-1"></i>None
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Permissions Matrix -->
+          <div class="card border-0 shadow-sm sm-perm-card">
+            <div class="card-body p-0">
+              <form method="POST" action="{% url 'sm_assign_permission' %}" id="permissionForm">
+                {% csrf_token %}
+
+                <div class="table-responsive sm-perm-tablewrap">
+                  <table class="table table-bordered mb-0 sm-perm-table" id="permissionsTable">
+                    <thead>
+                      <tr>
+                        <th class="sm-sticky sm-sticky-corner text-center text-white" style="min-width:220px; width:220px;">
+                          <div class="d-flex align-items-center justify-content-center">
+                            <i class="fas fa-user-tag me-2"></i>
+                            <span>ROLES</span>
+                          </div>
+                        </th>
+
+                        {% for per in permission_data.0 %}
+                          <th class="sm-sticky sm-sticky-top text-center text-white sm-perm-colhead" style="min-width:110px;">
+                            <div class="sm-perm-colhead-inner">
+                              <span class="sm-perm-colhead-text">{{ per|replace_underscore|title }}</span>
+                            </div>
+                          </th>
+                        {% endfor %}
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {% for per in permission_data.1 %}
+                        <tr class="role-row" data-role="{{ per.role|lower }}">
+                          <td class="sm-sticky sm-sticky-left sm-perm-rolecell">
+                            <div class="d-flex align-items-center">
+                              <div class="sm-perm-roleicon me-2">
+                                <i class="fas fa-user-shield"></i>
+                              </div>
+                              <div class="sm-perm-roleinfo">
+                                <div class="sm-perm-roletitle">{{ per.role|title }}</div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {% for field in permission_data.0 %}
+                            {% has_permission per field as has_per %}
+                            <td class="text-center align-middle sm-perm-cell" data-permission="{{ field }}">
+                              <input type="hidden" name="permissions[{{ per.role }}][{{ field }}]" value="false">
+
+                              <div class="sm-perm-checkwrap">
+                                <input
+                                  type="checkbox"
+                                  name="permissions[{{ per.role }}][{{ field }}]"
+                                  class="permission-checkbox visually-hidden sm-perm-check"
+                                  id="perm_{{ per.role|slugify }}_{{ field|slugify }}"
+                                  value="true"
+                                  data-role="{{ per.role }}"
+                                  data-permission="{{ field }}"
+                                  {% if has_per %}checked{% endif %}
+                                >
+                                <label class="permission-checkbox-label sm-perm-checklabel" for="perm_{{ per.role|slugify }}_{{ field|slugify }}">
+                                  <i class="fas fa-check permission-check-icon sm-perm-checkicon"></i>
+                                </label>
+                              </div>
+                            </td>
+                          {% endfor %}
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Footer -->
+                <div class="card-footer sm-perm-footer">
+                  <div class="row align-items-center">
+                    <div class="col-6 col-md-6">
+                      <div class="d-flex align-items-center">
+                        <span class="badge sm-perm-count" id="selectedCount">0</span>
+                        <small class="text-secondary ms-2">permissions selected</small>
+                      </div>
+                    </div>
+                    <div class="col-6 col-md-6 text-end">
+                      <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancel
+                      </button>
+                      <button type="submit" class="btn btn-primary btn-sm" id="saveBtn">
+                        <i class="fas fa-save me-1"></i>Save
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Legend -->
+          <div class="row mt-3">
+            <div class="col-12">
+              <div class="card border-0 sm-perm-legend">
+                <div class="card-body py-2 text-center">
+                  <small class="d-inline-flex align-items-center mx-3">
+                    <span class="sm-perm-dot sm-dot-granted me-1"></span> Granted
+                  </small>
+                  <small class="d-inline-flex align-items-center mx-3">
+                    <span class="sm-perm-dot sm-dot-not me-1"></span> Not Granted
+                  </small>
+                  <small class="d-inline-flex align-items-center mx-3">
+                    <i class="fas fa-search text-info me-1"></i> Search to filter
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<style>
+  /* ================================================
+      SM Permission Management Modal - Scoped Styles
+      All rules scoped under .sm-perm-modal
+     ================================================ */
+
+  .sm-perm-modal {
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .sm-perm-modal .sm-perm-header {
+    background: linear-gradient(135deg, #1d4ed8 0%, #0ea5e9 100%);
+    border-bottom: none;
+  }
+
+  .sm-perm-modal .sm-perm-body {
+    background: #f8fafc;
+  }
+
+  /* Search */
+  .sm-perm-search .input-group {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+
+  .sm-perm-search-icon {
+    background: white;
+    border: none;
+    color: #3b82f6;
+  }
+
+  .sm-perm-search-input {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .sm-perm-clear {
+    background: white;
+    border: none;
+    color: #6b7280;
+  }
+
+  .sm-perm-clear:hover,
+  .sm-perm-clear:focus {
+    color: #1f2937;
+    background: #f1f5f9;
+  }
+
+  /* Table wrapper */
+  .sm-perm-tablewrap {
+    max-height: 60vh;
+    overflow: auto;
+    position: relative;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .sm-perm-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    background: white;
+    table-layout: auto;
+  }
+
+  .sm-perm-table th,
+  .sm-perm-table td {
+    padding: 0.65rem 0.6rem;
+    border: 1px solid #e5e7eb;
+    vertical-align: middle;
+  }
+
+  /* Sticky */
+  .sm-sticky {
+    position: sticky;
+    background: inherit;
+    z-index: 10;
+  }
+
+  .sm-sticky-top {
+    top: 0;
+    z-index: 20;
+  }
+
+  .sm-sticky-left {
+    left: 0;
+    z-index: 15;
+  }
+
+  .sm-sticky-corner {
+    top: 0;
+    left: 0;
+    z-index: 30;
+    background: linear-gradient(135deg, #111827, #1f2937);
+    color: white;
+  }
+
+  /* Column Headers */
+  .sm-perm-colhead {
+    background: linear-gradient(135deg, #111827, #374151);
+    color: white;
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    min-width: 110px;
+  }
+
+  .sm-perm-colhead-inner {
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.25;
+  }
+
+  /* Role Column */
+  .sm-perm-rolecell {
+    background: #f9fafb;
+    min-width: 220px;
+    font-weight: 500;
+    border-right: 2px solid #e5e7eb !important;
+  }
+
+  .sm-perm-roleicon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #dbeafe, #eff6ff);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563eb;
+    font-size: 1.1rem;
+  }
+
+  .sm-perm-roletitle {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  /* Cells & Hover */
+  .sm-perm-cell {
+    transition: background-color 0.14s ease;
+  }
+
+  .sm-perm-cell:hover {
+    background: #f1f5f9;
+  }
+
+  tr:hover .sm-perm-rolecell {
+    background: #e0f2fe;
+  }
+
+  /* Custom Checkbox */
+  .sm-perm-checklabel {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #cbd5e1;
+    border-radius: 6px;
+    background: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+  }
+
+  .sm-perm-checkicon {
+    color: white;
+    font-size: 0.75rem;
+    opacity: 0;
+    transform: scale(0.65);
+    transition: all 0.18s ease;
+  }
+
+  input.permission-checkbox:checked + .sm-perm-checklabel {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: #059669;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.28);
+  }
+
+  input.permission-checkbox:checked + .sm-perm-checklabel .sm-perm-checkicon {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Footer & Badge */
+  .sm-perm-footer {
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 0.9rem 1.25rem;
+  }
+
+  .sm-perm-count {
+    background: #2563eb;
+    color: white;
+    font-weight: 700;
+    min-width: 40px;
+    padding: 0.4rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  /* Legend */
+  .sm-perm-legend {
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .sm-perm-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  .sm-dot-granted { background: #10b981; }
+  .sm-dot-not     { background: #9ca3af; }
+
+  /* Responsive */
+  @media (max-width: 992px) {
+    .sm-perm-tablewrap { max-height: 55vh; }
+    .sm-perm-colhead   { min-width: 100px; font-size: 0.73rem; }
+    .sm-perm-rolecell  { min-width: 200px; }
+  }
+
+  @media (max-width: 576px) {
+    .sm-perm-search .input-group { flex-wrap: nowrap; }
+    .sm-perm-clear { padding: 0.375rem 0.6rem; }
+  }
+</style>
+
+<script>
+// Slightly safer & cleaner version of your original script
+document.addEventListener('DOMContentLoaded', function () {
+
+  function updateStats() {
+    const checked = document.querySelectorAll('#addpermissionModal .permission-checkbox:checked');
+    document.getElementById('selectedCount').textContent = checked.length;
+  }
+
+  function applyCellTint(checkbox) {
+    const cell = checkbox.closest('.sm-perm-cell');
+    if (cell) {
+      cell.style.backgroundColor = checkbox.checked ? '#ecfdf5' : '';
+    }
+  }
+
+  function setupSearch() {
+    const modal = document.getElementById('addpermissionModal');
+    if (!modal) return;
+
+    const searchInput = modal.querySelector('#permissionSearch');
+    const clearBtn = modal.querySelector('#clearSearch');
+
+    if (!searchInput || !clearBtn) return;
+
+    clearBtn.style.visibility = 'hidden';
+
+    searchInput.addEventListener('input', function () {
+      const term = this.value.toLowerCase().trim();
+
+      modal.querySelectorAll('.role-row').forEach(row => {
+        const role = (row.dataset.role || '').toLowerCase();
+        const title = (row.querySelector('.sm-perm-roletitle')?.textContent || '').toLowerCase();
+        row.style.display = (role.includes(term) || title.includes(term)) ? '' : 'none';
+      });
+
+      clearBtn.style.visibility = term ? 'visible' : 'hidden';
+    });
+
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      searchInput.dispatchEvent(new Event('input'));
+      searchInput.focus();
+    });
+  }
+
+  function setupCheckboxes() {
+    const modal = document.getElementById('addpermissionModal');
+    if (!modal) return;
+
+    modal.querySelectorAll('.permission-checkbox').forEach(cb => {
+      applyCellTint(cb);
+      cb.addEventListener('change', () => {
+        applyCellTint(cb);
+        updateStats();
+      });
+    });
+
+    modal.querySelector('#selectAllBtn')?.addEventListener('click', () => {
+      modal.querySelectorAll('.permission-checkbox').forEach(cb => {
+        cb.checked = true;
+        cb.dispatchEvent(new Event('change'));
+      });
+    });
+
+    modal.querySelector('#deselectAllBtn')?.addEventListener('click', () => {
+      modal.querySelectorAll('.permission-checkbox').forEach(cb => {
+        cb.checked = false;
+        cb.dispatchEvent(new Event('change'));
+      });
+    });
+  }
+
+  function setupForm() {
+    const form = document.getElementById('permissionForm');
+    const saveBtn = document.getElementById('saveBtn');
+
+    if (!form || !saveBtn) return;
+
+    form.addEventListener('submit', () => {
+      const originalHTML = saveBtn.innerHTML;
+      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+      saveBtn.disabled = true;
+
+      setTimeout(() => {
+        if (saveBtn.disabled) {
+          saveBtn.innerHTML = originalHTML;
+          saveBtn.disabled = false;
+        }
+      }, 8000);
+    });
+  }
+
+  // Init
+  updateStats();
+  setupSearch();
+  setupCheckboxes();
+  setupForm();
+});
+</script>

@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Status</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden border-2 
+                {% if transaction %}border-green-200{% else %}border-blue-200{% endif %}">
+        <div class="p-6">
+            <div class="text-center mb-6">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full 
+                          {% if transaction %}bg-green-100{% else %}bg-blue-100{% endif %}">
+                    <svg class="h-10 w-10 {% if transaction %}text-green-600{% else %}text-blue-600{% endif %}" 
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {% if transaction %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        {% else %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h0m0 0a4 4 0 01-4 -4a4 4 0 014 -4h0a4 4 0 014 4a4 4 0 01-4 4z"/>
+                        {% endif %}
+                    </svg>
+                </div>
+                <h2 class="mt-4 text-2xl font-bold text-gray-900">
+                    {% if transaction %}Application Complete{% else %}Payment Pending{% endif %}
+                </h2>
+                <p class="mt-2 text-gray-600">
+                    {% if transaction %}
+                    Thank you for your payment
+                    {% else %}
+                    Please complete your payment
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="space-y-4 border-t border-gray-200 pt-6">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Application ID:</span>
+                    <span class="font-medium text-gray-900">#{{ student.id }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Name:</span>
+                    <span class="font-medium text-gray-900">{{ student.first_name }} {{ student.surname }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">NRC Number:</span>
+                    <span class="font-medium text-gray-900">{{ student.nrc_number }}</span>
+                </div>
+                
+                {% if transaction %}
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Transaction ID:</span>
+                    <span class="font-medium text-gray-900">{{ transaction.transaction_uuid }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Amount Paid:</span>
+                    <span class="font-medium text-gray-900">{{ transaction.amount }} {{ transaction.currency }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Payment Date:</span>
+                    <span class="font-medium text-gray-900">{{ transaction.created_at|date:"Y-m-d H:i" }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mt-8">
+                {% if transaction %}
+                <a href="/" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                    Return to Homepage
+                </a>
+                {% else %}
+                <a href="{% url 'pay' 'Application Fee' %}" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+    Complete Payment Now
+</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

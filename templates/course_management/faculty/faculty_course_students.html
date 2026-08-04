@@ -1,0 +1,2330 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+:root {
+  --primary: #1a4b8c;
+  --primary-light: #2a5ba8;
+  --primary-dark: #0d3a7a;
+  --secondary: #f8b739;
+  --secondary-light: #ffd166;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  --light: #f8f9fa;
+  --dark: #1e293b;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --border-radius: 12px;
+  --border-radius-sm: 8px;
+  --border-radius-lg: 16px;
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+  --transition: all 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+  min-height: 100vh;
+}
+
+.students-page {
+  max-width: 1450px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.header-section {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-radius: var(--border-radius-lg);
+  padding: 32px 40px;
+  margin-bottom: 32px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.header-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.08;
+  background-image:
+    radial-gradient(circle at 20% 20%, white 0 2px, transparent 2px),
+    radial-gradient(circle at 80% 30%, white 0 2px, transparent 2px),
+    radial-gradient(circle at 40% 70%, white 0 2px, transparent 2px),
+    radial-gradient(circle at 70% 80%, white 0 2px, transparent 2px);
+  background-size: 120px 120px;
+}
+
+.header-container,
+.header-content,
+.action-bar {
+  position: relative;
+  z-index: 1;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: 800;
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-subtitle {
+  font-size: 15px;
+  margin: 0;
+  opacity: 0.92;
+}
+
+.header-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.stat-card {
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 190px;
+  backdrop-filter: blur(10px);
+}
+
+.stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.stat-info h3 {
+  font-size: 30px;
+  line-height: 1;
+  margin: 0;
+  font-weight: 800;
+}
+
+.stat-info p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  opacity: 0.92;
+}
+
+.action-bar {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: var(--secondary);
+  color: var(--dark);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  background: var(--secondary-light);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-success {
+  background: var(--success);
+  color: #fff;
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background: var(--gray-600);
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background: var(--gray-700);
+}
+
+.btn-outline {
+  background: #fff;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+
+.btn-outline:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-info-action {
+  background: var(--info);
+  color: #fff;
+}
+
+.btn-info-action:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  background: #2563eb;
+}
+
+.search-container {
+  position: relative;
+  flex: 1;
+  min-width: 290px;
+  max-width: 420px;
+}
+
+.search-container i {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.85);
+}
+
+.search-container input {
+  width: 100%;
+  padding: 12px 16px 12px 42px;
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  outline: none;
+  transition: var(--transition);
+}
+
+.search-container input::placeholder {
+  color: rgba(255,255,255,0.8);
+}
+
+.search-container input:focus {
+  border-color: var(--secondary);
+  background: rgba(255,255,255,0.18);
+}
+
+.course-info-section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  margin: 0 0 18px;
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--gray-800);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title i {
+  color: var(--primary);
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 18px;
+}
+
+.info-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 22px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.info-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-light);
+}
+
+.info-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.info-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray-500);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-800);
+  line-height: 1.4;
+}
+
+.table-section {
+  background: #fff;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+
+.table-header {
+  padding: 22px 28px;
+  border-bottom: 1px solid var(--gray-200);
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.table-info .badge {
+  background: var(--primary);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.table-scroll-wrapper {
+  padding: 18px 18px 0;
+}
+
+.table-scroll-top {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 18px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+}
+
+.table-scroll-top-inner {
+  height: 1px;
+}
+
+.table-container {
+  overflow-x: auto;
+  overflow-y: visible;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+}
+
+.table-scroll-top::-webkit-scrollbar,
+.table-container::-webkit-scrollbar {
+  height: 14px;
+}
+
+.table-scroll-top::-webkit-scrollbar-track,
+.table-container::-webkit-scrollbar-track {
+  background: #e5e7eb;
+  border-radius: 999px;
+}
+
+.table-scroll-top::-webkit-scrollbar-thumb,
+.table-container::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 999px;
+  border: 2px solid #e5e7eb;
+}
+
+.table-scroll-top::-webkit-scrollbar-thumb:hover,
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+.students-table {
+  width: 100%;
+  min-width: 1250px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.students-table thead {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid var(--gray-200);
+}
+
+.students-table th {
+  padding: 18px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.students-table td {
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--gray-200);
+  vertical-align: middle;
+}
+
+.students-table tbody tr {
+  transition: var(--transition);
+}
+
+.students-table tbody tr:hover {
+  background: var(--gray-50);
+}
+
+.serial-number {
+  text-align: center;
+  font-weight: 700;
+  color: var(--gray-700);
+}
+
+.reg-badge {
+  display: inline-block;
+  min-width: 120px;
+  text-align: center;
+  padding: 8px 14px;
+  border-radius: 99px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.student-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.student-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.student-details .name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.student-details .reg {
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+.batch-tag,
+.section-tag {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  min-width: 80px;
+  text-align: center;
+}
+
+.batch-tag {
+  background: linear-gradient(135deg, var(--secondary), #f59e0b);
+}
+
+.section-tag {
+  background: linear-gradient(135deg, var(--success), #059669);
+}
+
+.email-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  background: var(--gray-100);
+  color: var(--primary);
+  transition: var(--transition);
+}
+
+.email-link:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.no-email {
+  color: var(--gray-500);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.table-action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-action {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-view {
+  background: var(--primary);
+}
+
+.btn-attendance {
+  background: var(--success);
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.table-footer {
+  padding: 18px 28px 24px;
+  border-top: 1px solid var(--gray-200);
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.visible-count {
+  font-size: 14px;
+  color: var(--gray-600);
+  font-weight: 600;
+}
+
+.visible-count span {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.btn-back {
+  background: var(--primary);
+  color: #fff;
+  border-radius: 10px;
+  padding: 11px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.btn-back:hover {
+  background: var(--primary-light);
+  color: #fff;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+}
+
+.empty-icon {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gray-100), var(--gray-200));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-icon i {
+  font-size: 34px;
+  color: var(--primary);
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  color: var(--gray-800);
+  font-weight: 800;
+}
+
+.empty-state p {
+  margin: 0 0 20px;
+  color: var(--gray-600);
+}
+
+.modal-custom {
+  border-radius: 20px;
+  overflow: hidden;
+  border: none;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.modal-header.modal-gradient {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  padding: 22px 26px;
+  border: none;
+}
+
+.modal-header .header-content {
+  margin-bottom: 0;
+  width: 100%;
+  justify-content: flex-start;
+  gap: 14px;
+}
+
+.modal-header .header-text {
+  flex: 1;
+}
+
+.modal-body {
+  padding: 0;
+  background: var(--gray-50);
+}
+
+#attendanceMsgArea {
+  padding: 14px 20px;
+  background: var(--gray-100);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.form-container {
+  padding: 22px;
+  background: #fff;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gray-700);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.select-custom,
+.input-custom {
+  width: 100%;
+  border: 2px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  background: #fff;
+  outline: none;
+  transition: var(--transition);
+}
+
+.select-custom:focus,
+.input-custom:focus {
+  border-color: var(--info);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
+.note-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--gray-100);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
+.modal-footer {
+  padding: 18px 22px;
+  border-top: 1px solid var(--gray-200);
+  background: #fff;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.alert {
+  padding: 14px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.alert-success {
+  background: #d1fae5;
+  color: #065f46;
+  border-left: 4px solid #10b981;
+}
+
+.alert-info {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-left: 4px solid #3b82f6;
+}
+
+.alert-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border-left: 4px solid #f59e0b;
+}
+
+.alert-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-left: 4px solid #ef4444;
+}
+
+.mapping-modal-dialog {
+  max-width: 1200px;
+}
+
+.mapping-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 22px;
+  padding: 22px;
+}
+
+.mapping-panel {
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.mapping-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--gray-200);
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+}
+
+.mapping-panel-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--gray-800);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mapping-panel-title i {
+  color: var(--primary);
+}
+
+.mapping-panel-body {
+  padding: 18px;
+}
+
+.mapping-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.mapping-section-block {
+  margin-top: 18px;
+}
+
+.mapping-section-heading {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--gray-700);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mapping-items {
+  display: grid;
+  gap: 12px;
+}
+
+.mapping-item {
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  background: var(--gray-50);
+  padding: 14px;
+}
+
+.mapping-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.mapping-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mapping-text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--gray-700);
+  line-height: 1.5;
+}
+
+.mapping-level-box {
+  width: 170px;
+  flex-shrink: 0;
+}
+
+.mapping-level-select {
+  width: 100%;
+  border: 2px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  background: #fff;
+}
+
+.mapping-level-select:focus {
+  outline: none;
+  border-color: var(--info);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
+.mapping-scale-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0 4px;
+  padding: 14px 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+}
+
+.mapping-scale-title {
+  width: 100%;
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--primary-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mapping-scale-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mapping-scale-chip .num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 12px;
+}
+
+.mapping-scale-chip.weak {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.mapping-scale-chip.weak .num {
+  background: #ef4444;
+}
+
+.mapping-scale-chip.moderate {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.mapping-scale-chip.moderate .num {
+  background: #f59e0b;
+}
+
+.mapping-scale-chip.strong {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.mapping-scale-chip.strong .num {
+  background: #10b981;
+}
+
+.mapping-help-box {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.mapping-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mapping-summary-card {
+  background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.mapping-summary-card .count {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.mapping-summary-card .label {
+  font-size: 12px;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.mapping-history-list {
+  display: grid;
+  gap: 14px;
+}
+
+.mapping-history-card {
+  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.mapping-history-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.mapping-history-title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mapping-history-title strong {
+  font-size: 15px;
+  color: var(--gray-800);
+}
+
+.mapping-history-desc {
+  color: var(--gray-600);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.mapping-history-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mapping-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mapping-history-body {
+  padding: 16px 18px 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.mapping-group {
+  display: grid;
+  gap: 8px;
+}
+
+.mapping-group-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mapping-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mapping-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mapping-chip.po {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.mapping-chip.pso {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.mapping-chip-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.7);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.mapping-chip-empty {
+  color: var(--gray-500);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.mapping-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mapping-badge.revised {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.mapping-badge.non-revised {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.mapping-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mapping-mini-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 10px;
+  color: #fff;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.mapping-mini-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.mapping-mini-btn.edit {
+  background: var(--primary);
+}
+
+.mapping-mini-btn.delete {
+  background: var(--danger);
+}
+
+.mapping-empty {
+  text-align: center;
+  color: var(--gray-500);
+  font-style: italic;
+  padding: 16px;
+}
+
+@media (max-width: 1100px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .action-bar {
+    width: 100%;
+  }
+
+  .search-container {
+    max-width: 100%;
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .students-page {
+    padding: 16px;
+  }
+
+  .header-section {
+    padding: 24px;
+  }
+
+  .page-title {
+    font-size: 26px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mapping-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .mapping-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mapping-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mapping-item-head {
+    flex-direction: column;
+  }
+
+  .mapping-level-box {
+    width: 100%;
+  }
+
+  .mapping-history-head {
+    flex-direction: column;
+  }
+}
+</style>
+
+<div class="modal fade" id="attendancePdfModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-custom">
+
+      <div class="modal-header modal-gradient">
+        <div class="header-content">
+          <div class="header-icon">
+            <i class="fas fa-file-export"></i>
+          </div>
+          <div class="header-text">
+            <h5 class="modal-title">Attendance Report</h5>
+            <p class="modal-subtitle">{{ course.course_code }} - {{ course.title }}</p>
+          </div>
+        </div>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="attendanceMsgArea"></div>
+
+        <div class="form-container">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-calendar-day"></i>
+                From Date
+              </label>
+              <input type="date" class="input-custom" id="attendance_from_date">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-calendar-check"></i>
+                To Date
+              </label>
+              <input type="date" class="input-custom" id="attendance_to_date">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label class="form-label">
+                <i class="fas fa-file-alt"></i>
+                Report Type
+              </label>
+              <select class="select-custom" id="attendance_report_type">
+                <option value="view_page" selected>View Attendance Detail</option>
+                <option value="overall_pdf">Overall Summary PDF</option>
+                <option value="datewise_pdf">Date-wise Hour Attendance PDF</option>
+                <option value="datewise_excel">Date-wise Hour Attendance Excel</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="note-box">
+            <i class="fas fa-info-circle"></i>
+            <span>
+              View Attendance Detail opens a page with date-wise and period-wise attendance in Excel-style format.
+              PDF remains in the current printable format.
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times"></i>
+          <span>Cancel</span>
+        </button>
+        <button type="button" class="btn btn-success" id="openAttendanceReportBtn">
+          <i class="fas fa-download"></i>
+          <span>Open</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="coPoMappingModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable mapping-modal-dialog">
+    <div class="modal-content modal-custom">
+      <div class="modal-header modal-gradient">
+        <div class="header-content">
+          <div class="header-icon">
+            <i class="fas fa-project-diagram"></i>
+          </div>
+          <div class="header-text">
+            <h5 class="modal-title">CO-PO Mapping</h5>
+            <p class="modal-subtitle">{{ course.course_code }} - {{ course.title }}</p>
+          </div>
+        </div>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="mappingMsgArea"></div>
+
+        <div class="mapping-layout">
+          <div class="mapping-panel">
+            <div class="mapping-panel-header">
+              <h3 class="mapping-panel-title">
+                <i class="fas fa-pen-ruler"></i>
+                <span id="mappingFormTitle">Create Mapping</span>
+              </h3>
+            </div>
+
+            <div class="mapping-panel-body">
+              <input type="hidden" id="mapping_id">
+
+              <div class="mapping-form-grid">
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fas fa-book-open"></i>
+                    Course Outcome
+                  </label>
+                  <select class="select-custom" id="mapping_co_id"></select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fas fa-graduation-cap"></i>
+                    Program Outcome Type
+                  </label>
+                  <select class="select-custom" id="mapping_po_type">
+                    <option value="0">Non-Revised</option>
+                    <option value="1">Revised</option>
+                  </select>
+                </div>
+
+                <div class="form-group full-width">
+                  <label class="form-label">
+                    <i class="fas fa-align-left"></i>
+                    CO Description
+                  </label>
+                  <textarea class="input-custom" id="mapping_description" rows="3" placeholder="Enter course outcome description"></textarea>
+                </div>
+              </div>
+
+              <div class="mapping-section-block">
+                <div class="mapping-scale-strip">
+                  <p class="mapping-scale-title">
+                    <i class="fas fa-signal"></i>
+                    Mapping Strength Guide
+                  </p>
+                  <span class="mapping-scale-chip weak"><span class="num">1</span><span>Low</span></span>
+                  <span class="mapping-scale-chip moderate"><span class="num">2</span><span>Medium</span></span>
+                  <span class="mapping-scale-chip strong"><span class="num">3</span><span>High</span></span>
+                </div>
+
+                <h4 class="mapping-section-heading">
+                  <i class="fas fa-bullseye"></i>
+                  Program Outcomes
+                </h4>
+                <div class="mapping-items" id="poMappingContainer"></div>
+              </div>
+
+              <div class="mapping-section-block">
+                <h4 class="mapping-section-heading">
+                  <i class="fas fa-sitemap"></i>
+                  Program Specific Outcomes
+                </h4>
+                <div class="mapping-items" id="psoMappingContainer"></div>
+              </div>
+
+              <div class="mapping-help-box">
+                <i class="fas fa-info-circle"></i>
+                <span>Select a CO, choose revised or non-revised PO type, and assign mapping levels using `1 = Low`, `2 = Medium`, and `3 = High`.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mapping-panel">
+            <div class="mapping-panel-header">
+              <h3 class="mapping-panel-title">
+                <i class="fas fa-list-check"></i>
+                Existing Mappings
+              </h3>
+              <span class="badge" id="mappingCountBadge">{{ course.course_code }}</span>
+            </div>
+
+            <div class="mapping-panel-body">
+              <div class="mapping-summary-grid">
+                <div class="mapping-summary-card">
+                  <div class="count" id="totalMappingsCount">0</div>
+                  <div class="label">Saved CO Mappings</div>
+                </div>
+                <div class="mapping-summary-card">
+                  <div class="count" id="totalMappedLinksCount">0</div>
+                  <div class="label">Total PO / PSO Links</div>
+                </div>
+              </div>
+
+              <div class="mapping-history-list" id="mappingRowsBody"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times"></i>
+          <span>Close</span>
+        </button>
+        <button type="button" class="btn btn-success" id="saveMappingBtn">
+          <i class="fas fa-save"></i>
+          <span>Save Mapping</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="students-page">
+  <div class="header-section">
+    <div class="header-container">
+      <div class="header-content">
+        <div class="header-text">
+          <h1 class="page-title">
+            <i class="fas fa-user-graduate"></i>
+            Enrolled Students
+          </h1>
+          <p class="page-subtitle">
+            View and manage students enrolled in {{ course.course_code }} - {{ course.title }}
+          </p>
+        </div>
+
+        <div class="header-stats">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+              <h3>{{ course_enrollments|length }}</h3>
+              <p>Total Students</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button type="button"
+                class="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#attendancePdfModal">
+          <i class="fas fa-file-alt"></i>
+          <span>Attendance Report</span>
+        </button>
+
+        <button type="button"
+                class="btn btn-info-action"
+                data-bs-toggle="modal"
+                data-bs-target="#coPoMappingModal">
+          <i class="fas fa-project-diagram"></i>
+          <span>CO-PO Mapping</span>
+        </button>
+
+        <div class="search-container">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInput" placeholder="Search students..." onkeyup="searchTable()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="course-info-section">
+    <h2 class="section-title">
+      <i class="fas fa-info-circle"></i>
+      Course Information
+    </h2>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-icon"><i class="fas fa-book"></i></div>
+        <div class="info-content">
+          <span class="info-label">Course Title</span>
+          <span class="info-value">{{ course.title }}</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon"><i class="fas fa-hashtag"></i></div>
+        <div class="info-content">
+          <span class="info-label">Course Code</span>
+          <span class="info-value">{{ course.course_code }}</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon"><i class="fas fa-calendar-alt"></i></div>
+        <div class="info-content">
+          <span class="info-label">Regulation</span>
+          <span class="info-value">{{ course.regulation.year }}</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon"><i class="fas fa-clock"></i></div>
+        <div class="info-content">
+          <span class="info-label">Semester</span>
+          <span class="info-value">{{ semester }}</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon"><i class="fas fa-users"></i></div>
+        <div class="info-content">
+          <span class="info-label">Batch</span>
+          <span class="info-value">{{ batch }}</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon"><i class="fas fa-chalkboard"></i></div>
+        <div class="info-content">
+          <span class="info-label">Section</span>
+          <span class="info-value">{{ section }}</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon"><i class="fas fa-building"></i></div>
+        <div class="info-content">
+          <span class="info-label">Department</span>
+          <span class="info-value">{{ course.department.Department }}</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon"><i class="fas fa-user-tie"></i></div>
+        <div class="info-content">
+          <span class="info-label">Faculty</span>
+          <span class="info-value">{{ faculty.name }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-section">
+    <div class="table-header">
+      <h2 class="section-title">
+        <i class="fas fa-list"></i>
+        Student List
+      </h2>
+      <div class="table-info">
+        <span class="badge">{{ course_enrollments|length }} students</span>
+      </div>
+    </div>
+
+    {% if course_enrollments %}
+    <div class="table-scroll-wrapper">
+      <div class="table-scroll-top" id="tableScrollTop">
+        <div class="table-scroll-top-inner" id="tableScrollTopInner"></div>
+      </div>
+
+      <div class="table-container" id="tableContainer">
+        <table class="students-table" id="studentsTable">
+          <thead>
+            <tr>
+              <th>S.No</th>
+              <th>Registration No</th>
+              <th>Student Name</th>
+              <th>Batch</th>
+              <th>Section</th>
+              <th>Email Address</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentsTableBody">
+            {% for enrollment in course_enrollments %}
+            <tr>
+              <td class="serial-number">{{ forloop.counter }}</td>
+              <td>
+                <span class="reg-badge">{{ enrollment.student.reg_no }}</span>
+              </td>
+              <td>
+                <div class="student-profile">
+                  <div class="avatar">
+                    {{ enrollment.student.name|make_list|first|upper }}
+                  </div>
+                  <div class="student-details">
+                    <span class="name">{{ enrollment.student.name }}</span>
+                    <span class="reg">{{ enrollment.student.reg_no }}</span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="batch-tag">{{ enrollment.batch }}</span>
+              </td>
+              <td>
+                <span class="section-tag">{{ enrollment.section }}</span>
+              </td>
+              <td>
+                {% if enrollment.student.email %}
+                <a href="mailto:{{ enrollment.student.email }}" class="email-link">
+                  <i class="fas fa-envelope"></i>
+                  {{ enrollment.student.email }}
+                </a>
+                {% else %}
+                <span class="no-email">No email</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="table-action-buttons">
+                  <button class="btn-action btn-view" type="button" title="View">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn-action btn-attendance" type="button" title="Attendance">
+                    <i class="fas fa-clipboard-check"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="table-footer">
+      <div class="footer-content">
+        <div class="visible-count">
+          Showing <span id="visibleCount">{{ course_enrollments|length }}</span> of {{ course_enrollments|length }} students
+        </div>
+        <div class="footer-actions">
+          <a href="{% url 'faculty_courses' %}" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Back to Courses
+          </a>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">
+        <i class="fas fa-user-graduate"></i>
+      </div>
+      <h3>No Students Enrolled</h3>
+      <p>There are no students enrolled in this course yet.</p>
+    </div>
+    {% endif %}
+  </div>
+</main>
+
+<script>
+const ATTENDANCE_VIEW_URL = "{% url 'faculty_course_students_attendance_view' year semester course.id batch section regulation_id %}";
+const ATTENDANCE_OVERALL_PDF_URL = "{% url 'faculty_course_students_attendance_pdf' year semester course.id batch section regulation_id %}";
+const ATTENDANCE_DATEWISE_PDF_URL = "{% url 'faculty_course_students_attendance_datewise_pdf' year semester course.id batch section regulation_id %}";
+const ATTENDANCE_DATEWISE_EXCEL_URL = "{% url 'faculty_course_students_attendance_datewise_excel' year semester course.id batch section regulation_id %}";
+const CO_PO_MAPPING_URL = "{% url 'co_po_mapping_manage' %}";
+const PROGRAM_OUTCOMES_API_URL = "{% url 'api_program_outcomes' %}";
+const PROGRAM_SPECIFIC_OUTCOMES_API_URL = "{% url 'api_program_specific_outcomes' %}";
+const COURSE_ID = "{{ course.id }}";
+const REGULATION_ID = "{{ regulation_id }}";
+const DEPARTMENT_ID = "{{ department_id }}";
+const BATCH = "{{ batch }}";
+const COURSE_YEAR = "{{ course.year|default:'' }}";
+const CO_LIST = {{ co_list_json|safe }};
+let currentMappings = {{ existing_mappings_json|safe }};
+let poItems = [];
+let psoItems = [];
+
+function showAttendanceMsg(type, text) {
+  const msgArea = document.getElementById("attendanceMsgArea");
+  if (!msgArea) return;
+
+  const alertClass = type === "success" ? "alert-success" :
+                     type === "info" ? "alert-info" :
+                     type === "warning" ? "alert-warning" : "alert-danger";
+
+  msgArea.innerHTML = `<div class="alert ${alertClass}">${text}</div>`;
+}
+
+function clearAttendanceMsg() {
+  const msgArea = document.getElementById("attendanceMsgArea");
+  if (msgArea) msgArea.innerHTML = "";
+}
+
+function resetAttendanceModal() {
+  const fromEl = document.getElementById("attendance_from_date");
+  const toEl = document.getElementById("attendance_to_date");
+  const typeEl = document.getElementById("attendance_report_type");
+
+  if (fromEl) fromEl.value = "";
+  if (toEl) toEl.value = "";
+  if (typeEl) typeEl.value = "view_page";
+
+  clearAttendanceMsg();
+}
+
+function showMappingMsg(type, text) {
+  const msgArea = document.getElementById("mappingMsgArea");
+  if (!msgArea) return;
+
+  const alertClass = type === "success" ? "alert-success" :
+                     type === "info" ? "alert-info" :
+                     type === "warning" ? "alert-warning" : "alert-danger";
+
+  msgArea.innerHTML = `<div class="alert ${alertClass}">${text}</div>`;
+}
+
+function clearMappingMsg() {
+  const msgArea = document.getElementById("mappingMsgArea");
+  if (msgArea) msgArea.innerHTML = "";
+}
+
+function getCsrfToken() {
+  const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : "";
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function getMappingCount(row) {
+  let count = 0;
+  for (let i = 1; i <= 13; i++) {
+    if ((row[`po${i}`] || "").trim()) count++;
+  }
+  for (let i = 1; i <= 5; i++) {
+    if ((row[`pso${i}`] || "").trim()) count++;
+  }
+  return count;
+}
+
+function getCoSortValue(row) {
+  const raw = String(row.co_number || "").trim();
+  const match = raw.match(/(\d+)/);
+  if (match) {
+    return {
+      kind: 0,
+      num: parseInt(match[1], 10),
+      text: raw.toLowerCase(),
+    };
+  }
+  return {
+    kind: 1,
+    num: Number.MAX_SAFE_INTEGER,
+    text: raw.toLowerCase(),
+  };
+}
+
+function sortMappingsByCo(rows) {
+  return [...rows].sort((a, b) => {
+    const aVal = getCoSortValue(a);
+    const bVal = getCoSortValue(b);
+
+    if (aVal.kind !== bVal.kind) return aVal.kind - bVal.kind;
+    if (aVal.num !== bVal.num) return aVal.num - bVal.num;
+    return aVal.text.localeCompare(bVal.text);
+  });
+}
+
+function sortItemsByNum(items) {
+  return [...items].sort((a, b) => {
+    const aNum = Number(a.num || 0);
+    const bNum = Number(b.num || 0);
+    return aNum - bNum;
+  });
+}
+
+function buildMappedItems(row, prefix, max) {
+  const items = [];
+  for (let i = 1; i <= max; i++) {
+    const level = (row[`${prefix}${i}`] || "").trim();
+    if (!level) continue;
+    items.push({
+      label: `${prefix.toUpperCase()}${i}`,
+      level,
+      type: prefix,
+    });
+  }
+  return items;
+}
+
+function renderCoOptions() {
+  const select = document.getElementById("mapping_co_id");
+  if (!select) return;
+
+  const options = ['<option value="">Select Course Outcome</option>'];
+  CO_LIST.forEach(item => {
+    const label = item.co_number || `CO ${item.id}`;
+    options.push(`<option value="${escapeHtml(item.id)}">${escapeHtml(label)}</option>`);
+  });
+  select.innerHTML = options.join("");
+}
+
+function buildLevelOptions(selectedValue) {
+  const selected = selectedValue || "";
+  return `
+    <option value="" ${selected === "" ? "selected" : ""}>-</option>
+    <option value="1" ${selected === "1" ? "selected" : ""}>1 - Low</option>
+    <option value="2" ${selected === "2" ? "selected" : ""}>2 - Medium</option>
+    <option value="3" ${selected === "3" ? "selected" : ""}>3 - High</option>
+  `;
+}
+
+function getLevelLabel(level) {
+  const cleanLevel = String(level || "").trim();
+  if (cleanLevel === "1") return "Low";
+  if (cleanLevel === "2") return "Medium";
+  if (cleanLevel === "3") return "High";
+  return "";
+}
+
+function renderMappingCards(containerId, items, prefix, values = {}) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const sortedItems = sortItemsByNum(items);
+
+  if (!sortedItems.length) {
+    container.innerHTML = `<div class="mapping-empty">No ${prefix.toUpperCase()} statements found.</div>`;
+    return;
+  }
+
+  container.innerHTML = sortedItems.map(item => `
+    <div class="mapping-item">
+      <div class="mapping-item-head">
+        <div class="mapping-text">
+          <div class="mapping-code">${escapeHtml(prefix.toUpperCase())}${escapeHtml(item.num)}</div>
+          <div style="margin-top:10px;">${escapeHtml(item.description || item.statement || item.name || "No description available")}</div>
+        </div>
+        <div class="mapping-level-box">
+          <select class="mapping-level-select" data-level-key="${escapeHtml(prefix)}${escapeHtml(item.num)}">
+            ${buildLevelOptions(values[`${prefix}${item.num}`] || "")}
+          </select>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderMappingRows() {
+  const body = document.getElementById("mappingRowsBody");
+  const totalMappingsEl = document.getElementById("totalMappingsCount");
+  const totalLinksEl = document.getElementById("totalMappedLinksCount");
+  const countBadgeEl = document.getElementById("mappingCountBadge");
+  const sortedMappings = sortMappingsByCo(currentMappings);
+
+  if (totalMappingsEl) totalMappingsEl.textContent = sortedMappings.length;
+  if (totalLinksEl) {
+    totalLinksEl.textContent = sortedMappings.reduce((sum, row) => sum + getMappingCount(row), 0);
+  }
+  if (countBadgeEl) {
+    countBadgeEl.textContent = `${sortedMappings.length} saved`;
+  }
+
+  if (!body) return;
+
+  if (!sortedMappings.length) {
+    body.innerHTML = `<div class="mapping-empty">No mappings created yet.</div>`;
+    return;
+  }
+
+  body.innerHTML = sortedMappings.map(row => {
+    const badgeClass = String(row.po_type) === "1" ? "revised" : "non-revised";
+    const badgeText = String(row.po_type) === "1" ? "Revised" : "Non-Revised";
+    const count = getMappingCount(row);
+    const poItems = buildMappedItems(row, "po", 13);
+    const psoItems = buildMappedItems(row, "pso", 5);
+    const poHtml = poItems.length
+      ? poItems.map(item => `<span class="mapping-chip po">${escapeHtml(item.label)} <span class="mapping-chip-level">${escapeHtml(item.level)} - ${escapeHtml(getLevelLabel(item.level))}</span></span>`).join("")
+      : `<div class="mapping-chip-empty">No PO mapped</div>`;
+    const psoHtml = psoItems.length
+      ? psoItems.map(item => `<span class="mapping-chip pso">${escapeHtml(item.label)} <span class="mapping-chip-level">${escapeHtml(item.level)} - ${escapeHtml(getLevelLabel(item.level))}</span></span>`).join("")
+      : `<div class="mapping-chip-empty">No PSO mapped</div>`;
+
+    return `
+      <div class="mapping-history-card">
+        <div class="mapping-history-head">
+          <div class="mapping-history-title">
+            <strong>${escapeHtml(row.co_number || "-")}</strong>
+            <div class="mapping-history-desc">${escapeHtml(row.description || "No description")}</div>
+          </div>
+          <div class="mapping-history-meta">
+            <span class="mapping-badge ${badgeClass}">${badgeText}</span>
+            <span class="mapping-meta-pill">${count} mapped</span>
+          </div>
+        </div>
+        <div class="mapping-history-body">
+          <div class="mapping-group">
+            <div class="mapping-group-label">Program Outcomes</div>
+            <div class="mapping-chip-list">${poHtml}</div>
+          </div>
+          <div class="mapping-group">
+            <div class="mapping-group-label">Program Specific Outcomes</div>
+            <div class="mapping-chip-list">${psoHtml}</div>
+          </div>
+          <div class="mapping-actions">
+            <button type="button" class="mapping-mini-btn edit" data-edit-id="${escapeHtml(row.id)}" title="Edit">
+              <i class="fas fa-pen"></i>
+            </button>
+            <button type="button" class="mapping-mini-btn delete" data-delete-id="${escapeHtml(row.id)}" title="Delete">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function resetMappingForm() {
+  const titleEl = document.getElementById("mappingFormTitle");
+  const mappingIdEl = document.getElementById("mapping_id");
+  const coEl = document.getElementById("mapping_co_id");
+  const typeEl = document.getElementById("mapping_po_type");
+  const descEl = document.getElementById("mapping_description");
+  const saveBtn = document.getElementById("saveMappingBtn");
+
+  if (titleEl) titleEl.textContent = "Create Mapping";
+  if (mappingIdEl) mappingIdEl.value = "";
+  if (coEl) coEl.value = "";
+  if (typeEl) typeEl.value = "0";
+  if (descEl) descEl.value = "";
+  if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i><span>Save Mapping</span>';
+
+  renderMappingCards("poMappingContainer", poItems, "po");
+  renderMappingCards("psoMappingContainer", psoItems, "pso");
+  clearMappingMsg();
+}
+
+async function fetchJson(url, options = {}) {
+  const response = await fetch(url, {
+    credentials: "same-origin",
+    ...options,
+  });
+
+  const data = await response.json();
+  if (!response.ok || data.success === false) {
+    throw new Error(data.error || data.message || "Request failed");
+  }
+  return data;
+}
+
+async function loadProgramOutcomes() {
+  const typeEl = document.getElementById("mapping_po_type");
+  const poType = typeEl ? typeEl.value : "0";
+  const data = await fetchJson(`${PROGRAM_OUTCOMES_API_URL}?is_revised=${encodeURIComponent(poType)}`);
+  poItems = sortItemsByNum(data.items || []);
+}
+
+async function loadProgramSpecificOutcomes() {
+
+    const params = new URLSearchParams({
+        department_id: DEPARTMENT_ID,
+        batch: BATCH
+    });
+
+    if (COURSE_YEAR) {
+        params.append("year", COURSE_YEAR);
+    }
+
+    const data = await fetchJson(
+        `${PROGRAM_SPECIFIC_OUTCOMES_API_URL}?${params.toString()}`
+    );
+
+    psoItems = data.items || [];
+}
+
+async function loadMappingRowsFromServer() {
+  const data = await fetchJson(CO_PO_MAPPING_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCsrfToken(),
+    },
+    body: JSON.stringify({
+      action: "list",
+      course_id: COURSE_ID,
+      regulation_id: REGULATION_ID,
+    }),
+  });
+  currentMappings = data.rows || [];
+  renderMappingRows();
+}
+
+async function refreshMappingData() {
+  try {
+    clearMappingMsg();
+    showMappingMsg("info", "Loading CO-PO mapping data...");
+    await Promise.all([
+      loadProgramOutcomes(),
+      loadProgramSpecificOutcomes(),
+      loadMappingRowsFromServer(),
+    ]);
+    resetMappingForm();
+    clearMappingMsg();
+  } catch (error) {
+    showMappingMsg("danger", error.message || "Unable to load mapping data.");
+  }
+}
+
+function collectLevelValues() {
+  const payload = {};
+  document.querySelectorAll("[data-level-key]").forEach(select => {
+    payload[select.dataset.levelKey] = select.value || "";
+  });
+  return payload;
+}
+
+async function saveMapping() {
+  const mappingId = document.getElementById("mapping_id")?.value || "";
+  const coId = document.getElementById("mapping_co_id")?.value || "";
+  const poType = document.getElementById("mapping_po_type")?.value || "0";
+  const description = document.getElementById("mapping_description")?.value.trim() || "";
+  const saveBtn = document.getElementById("saveMappingBtn");
+
+  if (!coId) {
+    showMappingMsg("warning", "Please select a Course Outcome.");
+    return;
+  }
+
+  const originalBtnHtml = saveBtn ? saveBtn.innerHTML : "";
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Saving...</span>';
+  }
+
+  try {
+    clearMappingMsg();
+    const payload = {
+      action: "save",
+      mapping_id: mappingId,
+      course_id: COURSE_ID,
+      regulation_id: REGULATION_ID,
+      co_id: coId,
+      po_type: poType,
+      description,
+      ...collectLevelValues(),
+    };
+
+    const data = await fetchJson(CO_PO_MAPPING_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCsrfToken(),
+      },
+      body: JSON.stringify(payload),
+    });
+
+    currentMappings = data.rows || [];
+    renderMappingRows();
+    resetMappingForm();
+    showMappingMsg("success", data.message || "Mapping saved successfully.");
+  } catch (error) {
+    showMappingMsg("danger", error.message || "Unable to save mapping.");
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalBtnHtml;
+    }
+  }
+}
+
+async function editMapping(mappingId) {
+  const row = currentMappings.find(item => String(item.id) === String(mappingId));
+  if (!row) {
+    showMappingMsg("warning", "Mapping not found.");
+    return;
+  }
+
+  const titleEl = document.getElementById("mappingFormTitle");
+  const mappingIdEl = document.getElementById("mapping_id");
+  const coEl = document.getElementById("mapping_co_id");
+  const typeEl = document.getElementById("mapping_po_type");
+  const descEl = document.getElementById("mapping_description");
+  const saveBtn = document.getElementById("saveMappingBtn");
+
+  if (titleEl) titleEl.textContent = "Edit Mapping";
+  if (mappingIdEl) mappingIdEl.value = row.id || "";
+  if (coEl) coEl.value = row.co_id || "";
+  if (typeEl) typeEl.value = String(row.po_type ?? "0");
+  if (descEl) descEl.value = row.description || "";
+  if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i><span>Update Mapping</span>';
+
+  try {
+    await loadProgramOutcomes();
+    renderMappingCards("poMappingContainer", poItems, "po", row);
+    renderMappingCards("psoMappingContainer", psoItems, "pso", row);
+    clearMappingMsg();
+  } catch (error) {
+    showMappingMsg("danger", error.message || "Unable to load mapping details.");
+  }
+}
+
+async function deleteMapping(mappingId) {
+  const confirmed = window.confirm("Delete this CO-PO mapping?");
+  if (!confirmed) return;
+
+  try {
+    clearMappingMsg();
+    const data = await fetchJson(CO_PO_MAPPING_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCsrfToken(),
+      },
+      body: JSON.stringify({
+        action: "delete",
+        mapping_id: mappingId,
+        course_id: COURSE_ID,
+        regulation_id: REGULATION_ID,
+      }),
+    });
+
+    currentMappings = data.rows || [];
+    renderMappingRows();
+
+    if ((document.getElementById("mapping_id")?.value || "") === String(mappingId)) {
+      resetMappingForm();
+    }
+
+    showMappingMsg("success", data.message || "Mapping deleted successfully.");
+  } catch (error) {
+    showMappingMsg("danger", error.message || "Unable to delete mapping.");
+  }
+}
+
+function openAttendanceReport() {
+  const fromEl = document.getElementById("attendance_from_date");
+  const toEl = document.getElementById("attendance_to_date");
+  const typeEl = document.getElementById("attendance_report_type");
+
+  const fromDate = fromEl ? fromEl.value.trim() : "";
+  const toDate = toEl ? toEl.value.trim() : "";
+  const reportType = typeEl ? typeEl.value : "view_page";
+
+  clearAttendanceMsg();
+
+  if (fromDate && toDate && fromDate > toDate) {
+    showAttendanceMsg("warning", "From Date cannot be greater than To Date.");
+    return;
+  }
+
+  const params = new URLSearchParams();
+  if (fromDate) params.append("from", fromDate);
+  if (toDate) params.append("to", toDate);
+
+  let finalUrl = ATTENDANCE_VIEW_URL;
+
+  if (reportType === "overall_pdf") {
+    finalUrl = ATTENDANCE_OVERALL_PDF_URL;
+  } else if (reportType === "datewise_pdf") {
+    finalUrl = ATTENDANCE_DATEWISE_PDF_URL;
+  } else if (reportType === "datewise_excel") {
+    finalUrl = ATTENDANCE_DATEWISE_EXCEL_URL;
+  }
+
+  if (params.toString()) {
+    finalUrl += "?" + params.toString();
+  }
+
+  window.open(finalUrl, "_blank");
+
+  const attendanceModalEl = document.getElementById("attendancePdfModal");
+  const modalInstance = bootstrap.Modal.getInstance(attendanceModalEl);
+  if (modalInstance) {
+    modalInstance.hide();
+  }
+}
+
+function searchTable() {
+  const input = document.getElementById("searchInput");
+  const filter = (input?.value || "").toLowerCase();
+  const rows = document.querySelectorAll("#studentsTableBody tr");
+  let visible = 0;
+
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    const show = text.includes(filter);
+    row.style.display = show ? "" : "none";
+    if (show) visible++;
+  });
+
+  const visibleCount = document.getElementById("visibleCount");
+  if (visibleCount) visibleCount.textContent = visible;
+}
+
+function setupDualHorizontalScroll() {
+  const top = document.getElementById("tableScrollTop");
+  const topInner = document.getElementById("tableScrollTopInner");
+  const container = document.getElementById("tableContainer");
+  const table = document.getElementById("studentsTable");
+
+  if (!top || !topInner || !container || !table) return;
+
+  function syncWidths() {
+    topInner.style.width = table.scrollWidth + "px";
+    top.style.display = table.scrollWidth > container.clientWidth ? "block" : "none";
+  }
+
+  let syncingTop = false;
+  let syncingBottom = false;
+
+  top.addEventListener("scroll", function() {
+    if (syncingBottom) return;
+    syncingTop = true;
+    container.scrollLeft = top.scrollLeft;
+    syncingTop = false;
+  });
+
+  container.addEventListener("scroll", function() {
+    if (syncingTop) return;
+    syncingBottom = true;
+    top.scrollLeft = container.scrollLeft;
+    syncingBottom = false;
+  });
+
+  window.addEventListener("resize", syncWidths);
+  syncWidths();
+
+  const resizeObserver = new ResizeObserver(syncWidths);
+  resizeObserver.observe(table);
+  resizeObserver.observe(container);
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  document.getElementById("openAttendanceReportBtn")?.addEventListener("click", openAttendanceReport);
+  document.getElementById("saveMappingBtn")?.addEventListener("click", saveMapping);
+  document.getElementById("newMappingBtn")?.addEventListener("click", resetMappingForm);
+  document.getElementById("mapping_po_type")?.addEventListener("change", async function() {
+    try {
+      await loadProgramOutcomes();
+      renderMappingCards("poMappingContainer", poItems, "po");
+      clearMappingMsg();
+    } catch (error) {
+      showMappingMsg("danger", error.message || "Unable to load program outcomes.");
+    }
+  });
+
+  document.getElementById("mappingRowsBody")?.addEventListener("click", function(event) {
+    const editBtn = event.target.closest("[data-edit-id]");
+    const deleteBtn = event.target.closest("[data-delete-id]");
+
+    if (editBtn) {
+      editMapping(editBtn.dataset.editId);
+    }
+
+    if (deleteBtn) {
+      deleteMapping(deleteBtn.dataset.deleteId);
+    }
+  });
+
+  const attendanceModal = document.getElementById("attendancePdfModal");
+  if (attendanceModal) {
+    attendanceModal.addEventListener("shown.bs.modal", clearAttendanceMsg);
+    attendanceModal.addEventListener("hidden.bs.modal", resetAttendanceModal);
+  }
+
+  const mappingModal = document.getElementById("coPoMappingModal");
+  if (mappingModal) {
+    renderCoOptions();
+    renderMappingRows();
+    mappingModal.addEventListener("shown.bs.modal", refreshMappingData);
+    mappingModal.addEventListener("hidden.bs.modal", resetMappingForm);
+  }
+
+  setupDualHorizontalScroll();
+});
+</script>
+{% endblock %}

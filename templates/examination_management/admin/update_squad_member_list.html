@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Update Squad Member List</h2>
+
+    {% if messages %}
+    <div class="alert alert-dismissible fade show" role="alert">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Squad Appointment Ref No.</th>
+                    <th>Faculty ID</th>
+                    <th>Name of Squad Member</th>
+                    <th>Designation</th>
+                    <th>Department ID</th> 
+                    <th>Date & Session</th>
+                    <th>IAT (I, II, III)</th>
+                    <th>No. of Hall</th>
+                    <th>Duration (AM/PM)</th>
+                    <th>Hall(s) No.</th>
+                </tr>
+            </thead>
+            <tbody id="squad-table-body">
+                {% for member in squad_members %}
+                <tr>
+                    <td><input type="text" name="appointment_ref[]" class="form-control" value="{{ member.appointment_ref }}" required></td>
+                    <td><input type="text" name="facultyId[]" class="form-control faculty-input" value="{{ member.facultyId }}"></td>
+                    <td><input type="text" name="squad_member_name[]" class="form-control name-input" value="{{ member.faculty_name }}" required></td>
+                    <td><input type="text" name="designation[]" class="form-control" value="{{ member.designation }}"></td>
+                    <td><input type="text" name="department[]" class="form-control dept-input" value="{{ member.faculty_department }}"></td>
+                    <td>
+                        <input type="date" name="date[]" class="form-control" value="{{ member.date }}" required>
+                        <select name="session[]" class="form-select mt-1" required>
+                            <option value="Morning" {% if member.session == "Morning" %}selected{% endif %}>Morning</option>
+                            <option value="Afternoon" {% if member.session == "Afternoon" %}selected{% endif %}>Afternoon</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select name="iat[]" class="form-select" required>
+                            <option value="I" {% if member.iat == "I" %}selected{% endif %}>I</option>
+                            <option value="II" {% if member.iat == "II" %}selected{% endif %}>II</option>
+                            <option value="III" {% if member.iat == "III" %}selected{% endif %}>III</option>
+                        </select>
+                    </td>
+                    <td><input type="number" name="no_of_hall[]" class="form-control" value="{{ member.no_of_hall }}" min="1" required></td>
+                    <td>
+                        <select name="duration[]" class="form-select" required>
+                            <option value="AM" {% if member.duration == "AM" %}selected{% endif %}>AM</option>
+                            <option value="PM" {% if member.duration == "PM" %}selected{% endif %}>PM</option>
+                        </select>
+                    </td>
+                    <td><input type="text" name="hall_numbers[]" class="form-control" value="{{ member.hall_numbers }}" placeholder="Comma separated"></td>
+                </tr>
+                {% endfor %}
+
+                <!-- Empty row for adding new member -->
+                <tr class="new-row">
+                    <td><input type="text" name="appointment_ref[]" class="form-control"></td>
+                    <td><input type="text" name="facultyId[]" class="form-control faculty-input"></td>
+                    <td><input type="text" name="squad_member_name[]" class="form-control name-input"></td>
+                    <td><input type="text" name="designation[]" class="form-control"></td>
+                    <td><input type="text" name="department[]" class="form-control dept-input" placeholder="Enter Department ID"></td>
+                    <td>
+                        <input type="date" name="date[]" class="form-control">
+                        <select name="session[]" class="form-select mt-1">
+                            <option value="Morning">Morning</option>
+                            <option value="Afternoon">Afternoon</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select name="iat[]" class="form-select">
+                            <option value="I">I</option>
+                            <option value="II">II</option>
+                            <option value="III">III</option>
+                        </select>
+                    </td>
+                    <td><input type="number" name="no_of_hall[]" class="form-control" min="1"></td>
+                    <td>
+                        <select name="duration[]" class="form-select">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
+                    </td>
+                    <td><input type="text" name="hall_numbers[]" class="form-control" placeholder="Comma separated"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <button type="button" class="btn btn-secondary mt-3 me-2" id="add-row">Add New Row</button>
+        <button type="submit" class="btn btn-primary mt-3">Update Squad Member List</button>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tableBody = document.getElementById('squad-table-body');
+    const addRowButton = document.getElementById('add-row');
+
+    function fetchFacultyDetails(input) {
+        const row = input.closest('tr');
+        const nameInput = row.querySelector('.name-input');
+        const deptInput = row.querySelector('.dept-input');
+        const facultyId = input.value.trim();
+
+        if (!facultyId) {
+            nameInput.value = '';
+            deptInput.value = '';
+            return;
+        }
+
+        fetch(`{% url 'assign_squad_member_list' %}?facultyId=${facultyId}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Network error');
+                return response.json();
+            })
+            .then(data => {
+                nameInput.value = data.name || '';
+                deptInput.value = data.department || '';
+                if (data.error) {
+                    nameInput.value = '';
+                    deptInput.value = '';
+                    alert(data.error);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error fetching faculty details. Please check the Faculty ID or try again later.');
+            });
+    }
+
+    tableBody.addEventListener('input', function(e) {
+        if (e.target && e.target.classList.contains('faculty-input')) {
+            fetchFacultyDetails(e.target);
+        }
+    });
+
+    addRowButton.addEventListener('click', function() {
+        const newRow = tableBody.querySelector('.new-row').cloneNode(true);
+        newRow.querySelectorAll('input, select').forEach(input => {
+            input.value = '';
+            if (input.tagName === 'SELECT') {
+                input.selectedIndex = 0;
+            }
+        });
+        tableBody.appendChild(newRow);
+    });
+});
+</script>
+{% endblock %}

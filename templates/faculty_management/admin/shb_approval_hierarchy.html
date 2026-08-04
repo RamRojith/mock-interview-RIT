@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        .role-list {
+            min-height: 250px;
+            border: 2px dashed #6c757d;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .role-item {
+            cursor: grab;
+            padding: 10px 15px;
+            margin: 5px 0;
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.3s ease;
+        }
+        .role-item:hover {
+            background-color: #dee2e6;
+        }
+        .role-item.frozen {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #c3e6cb;
+        }
+        .note-container {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            background-color: #fff3cd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            padding: 15px;
+            border-left: 5px solid #ffc107;
+        }
+        .note {
+            color: #856404;
+            font-size: 14px;
+            font-family: 'Arial', sans-serif;
+        }
+        .note strong {
+            color: #d9534f;
+        }
+        .note p {
+            margin: 5px 0;
+        }
+        .clear-hierarchy-btn {
+            margin-left: auto;
+        }
+    </style>
+
+    <div class="container-fluid py-4">
+        <!-- Important Note -->
+        <div class="note-container">
+            <div class="note">
+                <strong><i class="fas fa-exclamation-triangle me-2"></i>Important:</strong> Cross-department approvals (New approvals only)
+                <p>• If the approver is not from the creator's department, enable <strong>Cross Dept</strong> and select the approver's department.</p>
+                <p>• This update is applicable only for <strong>new approvals</strong>.</p>
+            </div>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-sitemap me-2"></i>Seminar Hall Booking Approval Workflow Configuration</h2>
+            <a href="{% url 'admin_management' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Admin
+            </a>
+        </div>
+
+        <!-- Creator Role Selection -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user-tag me-2"></i>Select Creator Role</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <label for="creatorRole" class="form-label fw-bold">Creator Role (Who is applying for seminar hall?):</label>
+                        <select id="creatorRole" class="form-select">
+                            <option value="">-- Select Creator Role --</option>
+                            {% for role in roles %}
+                                <option value="{{ role.id }}">{{ role.role }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Select the role that will be creating/applying for seminar hall bookings. The approval hierarchy will be configured for this role.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drag and Drop Interface -->
+        <div class="card">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-users-cog me-2"></i>Approval Hierarchy</h5>
+                <small>Drag roles from left → right to set hierarchy</small>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Available Roles -->
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5><i class="fas fa-list me-2"></i>Available Roles</h5>
+                            <small class="text-muted">Search + drag</small>
+                        </div>
+                        <input type="text" id="searchAvailable" class="form-control mb-3" placeholder="🔍 Search available roles...">
+                        <div id="availableRoles" class="role-list"></div>
+                    </div>
+
+                    <!-- Approval Hierarchy -->
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5><i class="fas fa-layer-group me-2"></i>Approval Hierarchy</h5>
+                            <button id="clearHierarchy" class="btn btn-sm btn-outline-danger clear-hierarchy-btn">
+                                <i class="fas fa-trash me-1"></i>Clear Hierarchy
+                            </button>
+                        </div>
+                        <input type="text" id="searchHierarchy" class="form-control mb-3" placeholder="🔍 Search hierarchy roles...">
+                        <div id="roleHierarchy" class="role-list"></div>
+                        <small class="text-muted mt-2 d-block">Order matters: Top to bottom = Level 1 to N</small>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="mt-4 text-center">
+                    <button id="submitWorkflow" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save me-2"></i>Save Workflow Configuration
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const availableRolesDiv = document.getElementById('availableRoles');
+        const roleHierarchyDiv = document.getElementById('roleHierarchy');
+        const creatorRoleSelect = document.getElementById('creatorRole');
+        const searchAvailable = document.getElementById('searchAvailable');
+        const searchHierarchy = document.getElementById('searchHierarchy');
+        const clearHierarchyBtn = document.getElementById('clearHierarchy');
+        const submitWorkflowBtn = document.getElementById('submitWorkflow');
+
+        // Initialize roles data
+        const allRoles = [
+            {% for role in roles %}
+            {
+                id: {{ role.id }},
+                name: "{{ role.role|escapejs }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        const allDepartments = [
+            {% for dept in departments %}
+            {
+                id: {{ dept.id }},
+                name: "{{ dept.Department|escapejs }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        console.log('All roles loaded:', allRoles.length);
+        console.log('All departments loaded:', allDepartments.length);
+
+        // Populate roles based on creator role selection
+        function populateRoles(creatorRoleId) {
+            console.log('populateRoles called with:', creatorRoleId);
+            availableRolesDiv.innerHTML = '';
+            roleHierarchyDiv.innerHTML = '';
+
+            if (!creatorRoleId) {
+                // Show frozen roles when no creator role selected
+                allRoles.forEach(role => {
+                    availableRolesDiv.innerHTML += createRoleItem(role, true);
+                });
+                return;
+            }
+
+            // Fetch existing workflow configuration for this creator role
+            const fetchUrl = `/faculty_management/faculty_management_admin/api/shb-workflow-roles/${creatorRoleId}/`;
+            console.log('Fetching from URL:', fetchUrl);
+
+            fetch(fetchUrl)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Received data:', data);
+                    
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                        // Still show available roles
+                        allRoles.filter(r => r.id != creatorRoleId).forEach(role => {
+                            availableRolesDiv.innerHTML += createRoleItem(role, false, false);
+                        });
+                        return;
+                    }
+                    
+                    // Populate hierarchy with matched roles
+                    if (data.matched_roles && data.matched_roles.length > 0) {
+                        console.log('Adding matched roles:', data.matched_roles.length);
+                        data.matched_roles.forEach(role => {
+                            roleHierarchyDiv.innerHTML += createRoleItem(role, false, true);
+                        });
+                    }
+
+                    // Populate available with unmatched roles
+                    if (data.unmatched_roles && data.unmatched_roles.length > 0) {
+                        console.log('Adding unmatched roles:', data.unmatched_roles.length);
+                        data.unmatched_roles.forEach(role => {
+                            availableRolesDiv.innerHTML += createRoleItem(role, false, false);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error("Fetch error:", error);
+                    alert('Error loading workflow configuration: ' + error.message);
+                    // Show all roles except creator as fallback
+                    allRoles.filter(r => r.id != creatorRoleId).forEach(role => {
+                        availableRolesDiv.innerHTML += createRoleItem(role, false, false);
+                    });
+                });
+        }
+
+        // Create role item HTML
+        function createRoleItem(role, frozen = false, withData = false) {
+            const isCrossDept = withData && role.is_cross_department;
+            const deptId = withData ? role.approver_department_id : '';
+
+            return `
+                <div class="role-item ${frozen ? 'frozen' : ''}" data-role-id="${role.id}">
+                    <span><strong>${role.name}</strong></span>
+                    <div class="d-flex align-items-center">
+                        <label class="form-check-label me-2" style="font-size: 12px;">Cross Dept</label>
+                        <input type="checkbox" class="form-check-input cross-department-check" ${isCrossDept ? 'checked' : ''} ${frozen ? 'disabled' : ''} />
+                        <select class="form-select form-select-sm ms-2 department-select" style="${isCrossDept ? 'display: block;' : 'display: none;'} width: 200px;" ${frozen ? 'disabled' : ''}>
+                            <option value="">-- Select Department --</option>
+                            ${allDepartments.map(dept => `
+                                <option value="${dept.id}" ${String(deptId) === String(dept.id) ? 'selected' : ''}>
+                                    ${dept.name}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize Sortable
+        new Sortable(availableRolesDiv, {
+            group: 'roles',
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            filter: '.frozen'
+        });
+
+        new Sortable(roleHierarchyDiv, {
+            group: 'roles',
+            animation: 150,
+            ghostClass: 'sortable-ghost'
+        });
+
+        // Event listeners
+        creatorRoleSelect.addEventListener('change', () => {
+            console.log('Creator role changed to:', creatorRoleSelect.value);
+            populateRoles(creatorRoleSelect.value);
+        });
+
+        // Cross department checkbox toggle
+        document.addEventListener('change', (event) => {
+            if (event.target.classList.contains('cross-department-check')) {
+                const deptSelect = event.target.nextElementSibling;
+                deptSelect.style.display = event.target.checked ? 'block' : 'none';
+            }
+        });
+
+        // Clear hierarchy
+        clearHierarchyBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear the approval hierarchy?')) {
+                const hierarchyItems = Array.from(roleHierarchyDiv.querySelectorAll('.role-item'));
+                hierarchyItems.forEach(item => {
+                    availableRolesDiv.appendChild(item);
+                });
+            }
+        });
+
+        // Search functionality
+        searchAvailable.addEventListener('input', (e) => {
+            filterRoles(availableRolesDiv, e.target.value);
+        });
+
+        searchHierarchy.addEventListener('input', (e) => {
+            filterRoles(roleHierarchyDiv, e.target.value);
+        });
+
+        function filterRoles(container, searchTerm) {
+            const items = container.querySelectorAll('.role-item');
+            items.forEach(item => {
+                const roleName = item.querySelector('strong').textContent.toLowerCase();
+                item.style.display = roleName.includes(searchTerm.toLowerCase()) ? 'flex' : 'none';
+            });
+        }
+
+        // Submit workflow
+        submitWorkflowBtn.addEventListener('click', () => {
+            const creatorRoleId = creatorRoleSelect.value;
+
+            if (!creatorRoleId) {
+                alert('Please select a creator role.');
+                return;
+            }
+
+            const hierarchyItems = Array.from(roleHierarchyDiv.querySelectorAll('.role-item'));
+            
+            if (hierarchyItems.length === 0) {
+                alert('Please add at least one role to the approval hierarchy.');
+                return;
+            }
+
+            const roleHierarchy = hierarchyItems.map((item, index) => {
+                const isCrossDept = item.querySelector('.cross-department-check').checked;
+                const deptId = item.querySelector('.department-select').value || null;
+                
+                return {
+                    id: item.dataset.roleId,
+                    isCrossDepartment: isCrossDept,
+                    departmentId: deptId
+                };
+            });
+
+            console.log('Submitting workflow:', {creatorRoleId, roleHierarchy});
+
+            const submitUrl = "{% url 'save_shb_workflow' %}";
+
+            fetch(submitUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    creatorRole: creatorRoleId,
+                    roleHierarchy: roleHierarchy
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Save response:', data);
+                if (data.message) {
+                    alert('✅ ' + data.message);
+                    populateRoles(creatorRoleId);
+                } else {
+                    alert('❌ Error: ' + (data.error || 'Failed to save workflow'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error saving workflow configuration: ' + error.message);
+            });
+        });
+
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Initialize with frozen roles
+        populateRoles('');
+    </script>
+
+{% endblock content %}

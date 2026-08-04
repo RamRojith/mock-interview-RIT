@@ -1,0 +1,235 @@
+<!-- AI Assistant floating widget -->
+<style>
+  #ai-assistant-trigger {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(102, 126, 234, 0.45);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    z-index: 9999;
+  }
+  #ai-assistant-trigger:hover {
+    transform: scale(1.07);
+    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.55);
+  }
+  #ai-assistant-chat {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 360px;
+    max-height: 520px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 9999;
+  }
+  #ai-assistant-chat.active {
+    display: flex;
+  }
+  .ai-assistant-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ai-assistant-body {
+    flex: 1;
+    padding: 18px;
+    background: #f8fafc;
+    overflow-y: auto;
+  }
+  .ai-assistant-message {
+    margin-bottom: 14px;
+    max-width: 82%;
+    padding: 12px 15px;
+    border-radius: 14px;
+    line-height: 1.5;
+    font-size: 14px;
+  }
+  .ai-assistant-message.bot {
+    background: #ffffff;
+    color: #1f2937;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 6px 18px rgba(148, 163, 184, 0.25);
+  }
+  .ai-assistant-message.user {
+    margin-left: auto;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+  }
+  .ai-assistant-footer {
+    padding: 16px 18px;
+    border-top: 1px solid #e2e8f0;
+    background: #fff;
+    display: flex;
+    gap: 10px;
+  }
+  .ai-assistant-input {
+    flex: 1;
+    border: 1px solid #cbd5f5;
+    border-radius: 22px;
+    padding: 10px 16px;
+    font-size: 14px;
+    outline: none;
+  }
+  .ai-assistant-send {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #38bdf8 0%, #3b82f6 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+  }
+  .ai-assistant-suggestions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .ai-assistant-suggestions button {
+    border: none;
+    background: #e0e7ff;
+    color: #4338ca;
+    padding: 6px 10px;
+    border-radius: 14px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+</style>
+
+<button id="ai-assistant-trigger" aria-label="Open AI Assistant">💬</button>
+<div id="ai-assistant-chat" aria-live="polite">
+  <div class="ai-assistant-header">
+    <div>
+      <strong>AI Academic Assistant</strong>
+      <div style="font-size: 12px; opacity: 0.8;">Online</div>
+    </div>
+    <button id="ai-assistant-close" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">×</button>
+  </div>
+  <div class="ai-assistant-body" id="ai-assistant-messages"></div>
+  <div class="ai-assistant-suggestions" id="ai-assistant-suggestions"></div>
+  <div class="ai-assistant-footer">
+    <input id="ai-assistant-input" class="ai-assistant-input" type="text" placeholder="Type your message..." autocomplete="off">
+    <button id="ai-assistant-send" class="ai-assistant-send" aria-label="Send">➤</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  const trigger = document.getElementById('ai-assistant-trigger');
+  const chatBox = document.getElementById('ai-assistant-chat');
+  const closeBtn = document.getElementById('ai-assistant-close');
+  const input = document.getElementById('ai-assistant-input');
+  const sendBtn = document.getElementById('ai-assistant-send');
+  const messages = document.getElementById('ai-assistant-messages');
+  const suggestions = document.getElementById('ai-assistant-suggestions');
+  const sessionId = 'ai-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+
+  function toggleChat(open) {
+    if (open) {
+      chatBox.classList.add('active');
+      input.focus();
+      if (!messages.dataset.welcome) {
+        addBotMessage("Hello! I'm your academic assistant. Ask me about grades, fees, courses, or attendance.");
+        messages.dataset.welcome = '1';
+      }
+    } else {
+      chatBox.classList.remove('active');
+    }
+  }
+
+  function addMessage(text, author) {
+    const div = document.createElement('div');
+    div.className = `ai-assistant-message ${author}`;
+    div.textContent = text;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function addBotMessage(text) {
+    addMessage(text, 'bot');
+  }
+
+  function addUserMessage(text) {
+    addMessage(text, 'user');
+  }
+
+  function setSuggestions(list) {
+    suggestions.innerHTML = '';
+    list.forEach((s) => {
+      const btn = document.createElement('button');
+      btn.textContent = s;
+      btn.addEventListener('click', () => {
+        input.value = s;
+        sendMessage();
+      });
+      suggestions.appendChild(btn);
+    });
+  }
+
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+    addUserMessage(text);
+    input.value = '';
+
+    try {
+      const response = await fetch('/ai_assistant/chat/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || ''
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ message: text, session_id: sessionId })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server responded with ${response.status}: ${errorText || 'Unknown error'}`);
+      }
+
+      const data = await response.json();
+      addBotMessage(data.response || 'I could not process that.');
+      if (Array.isArray(data.suggestions)) {
+        setSuggestions(data.suggestions.slice(0, 4));
+      }
+    } catch (error) {
+      console.error('AI Assistant error:', error);
+      addBotMessage('Sorry, there was a problem. Please try again.');
+    }
+  }
+
+  trigger.addEventListener('click', () => toggleChat(true));
+  closeBtn.addEventListener('click', () => toggleChat(false));
+  sendBtn.addEventListener('click', sendMessage);
+  input.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      sendMessage();
+    }
+  });
+})();
+</script>

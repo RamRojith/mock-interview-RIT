@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+/* ─── Layout ─── */
+.pd-page { background:#f0f4f8; min-height:100vh; padding:24px; }
+
+/* ─── Page Header ─── */
+.pd-header {
+    background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 60%,#3b6fd4 100%);
+    border-radius:16px; padding:22px 28px;
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:20px;
+    box-shadow:0 6px 24px rgba(26,75,140,.28);
+}
+.pd-header-left h2 { margin:0; color:#fff; font-size:20px; font-weight:800; letter-spacing:.2px; }
+.pd-header-left p  { margin:4px 0 0; color:rgba(255,255,255,.75); font-size:12px; }
+.pd-back-btn {
+    background:rgba(255,255,255,.18); color:#fff;
+    border:1.5px solid rgba(255,255,255,.35);
+    border-radius:9px; padding:8px 18px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    display:flex; align-items:center; gap:7px; transition:all .2s;
+}
+.pd-back-btn:hover { background:rgba(255,255,255,.28); color:#fff; text-decoration:none; }
+
+/* ─── Filter Card ─── */
+.pd-filter { background:#fff; border-radius:14px; padding:20px 24px; margin-bottom:18px; box-shadow:0 2px 12px rgba(0,0,0,.07); }
+.pd-filter-title { font-size:13px; font-weight:700; color:#1a4b8c; margin-bottom:14px; display:flex; align-items:center; gap:7px; }
+.pd-filter .form-label { font-size:11.5px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:.4px; margin-bottom:5px; }
+.pd-filter .form-select {
+    border:1.5px solid #dbe3ef; border-radius:9px; font-size:13px; padding:9px 13px;
+    background:#fafbff; transition:border .2s, box-shadow .2s;
+}
+.pd-filter .form-select:focus { border-color:#1a4b8c; box-shadow:0 0 0 3px rgba(26,75,140,.1); outline:none; }
+.btn-view {
+    width:100%; background:linear-gradient(135deg,#1a4b8c,#2c5aa0);
+    color:#fff; border:none; border-radius:10px; padding:10px;
+    font-weight:700; font-size:13.5px; cursor:pointer; transition:all .2s;
+    display:flex; align-items:center; justify-content:center; gap:7px;
+}
+.btn-view:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(26,75,140,.32); }
+.pd-cycle {
+    display:inline-flex; align-items:center; gap:8px;
+    background:#eef5ff; border:1.5px solid #bdd4f8; border-radius:10px;
+    padding:8px 14px; font-size:12.5px; font-weight:700; color:#1a4b8c; margin-bottom:14px;
+}
+
+/* ─── Employee Info ─── */
+.emp-card {
+    background:linear-gradient(135deg,#eef5ff,#e2edff);
+    border:1.5px solid #bdd4f8; border-radius:14px;
+    padding:16px 20px; margin-bottom:18px; display:flex; align-items:center; gap:16px;
+}
+.emp-avatar {
+    width:50px; height:50px; border-radius:50%;
+    background:linear-gradient(135deg,#1a4b8c,#2c5aa0);
+    color:#fff; font-size:20px; font-weight:900;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; box-shadow:0 3px 12px rgba(26,75,140,.35);
+}
+.emp-name { font-size:15px; font-weight:800; color:#1a4b8c; }
+.emp-meta { font-size:12px; color:#5a7296; margin-top:3px; }
+.emp-period { margin-left:auto; background:#fff; border:1.5px solid #c3d8f8; border-radius:10px; padding:8px 16px; text-align:center; }
+.emp-period .ep-month { font-size:15px; font-weight:800; color:#1a4b8c; }
+.emp-period .ep-year  { font-size:11px; color:#8aa5c8; }
+
+/* ─── Stat Cards ─── */
+.stat-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+.stat-card {
+    flex:1; min-width:140px; background:#fff; border-radius:13px; padding:14px 12px;
+    text-align:center; box-shadow:0 2px 10px rgba(0,0,0,.06);
+    border-top:3px solid var(--sc); transition:transform .2s;
+}
+.stat-card:hover { transform:translateY(-2px); }
+.stat-val { font-size:26px; font-weight:900; color:var(--sc); line-height:1; }
+.stat-lbl { font-size:10.5px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.5px; margin-top:5px; }
+.stat-sub { font-size:11px; color:#94a3b8; font-weight:600; margin-top:3px; }
+
+/* ─── Table Card ─── */
+.tbl-card { background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.06); overflow:hidden; margin-bottom:18px; }
+.tbl-card-header { padding:15px 22px; border-bottom:1px solid #eef2f8; display:flex; align-items:center; gap:9px; }
+.tch-title { font-size:14px; font-weight:700; color:#1a4b8c; }
+.tch-count { margin-left:auto; font-size:11.5px; color:#94a3b8; }
+
+table.ptbl { width:100%; border-collapse:collapse; font-size:12.5px; }
+table.ptbl thead tr { background:#0b1220; }
+table.ptbl thead th {
+    padding:10px 13px; color:#8da2b8; font-size:10.5px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.6px; text-align:center; white-space:nowrap;
+}
+table.ptbl thead th:nth-child(2) { text-align:left; }
+table.ptbl thead th:nth-child(4) { text-align:left; }
+table.ptbl thead th:last-child { text-align:right; padding-right:20px; }
+table.ptbl tbody tr:hover { background:#f5f8ff !important; }
+table.ptbl tbody tr:last-child td { border-bottom:none; }
+table.ptbl tbody td { padding:9px 13px; border-bottom:1px solid #f1f5fb; text-align:center; vertical-align:middle; }
+table.ptbl tbody td:nth-child(2) { text-align:left; font-weight:700; color:#1e293b; }
+table.ptbl tbody td:nth-child(4) { text-align:left; }
+table.ptbl tbody td:last-child { text-align:right; padding-right:20px; }
+
+.meal-chip {
+    display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px;
+    background:#e8f0fe; color:#0d47a1; border:1px solid #c7d9f8;
+    font-size:11.5px; font-weight:700; margin:3px; white-space:nowrap;
+}
+.chip-time { color:#94a3b8; font-weight:600; }
+.chip-amt  { background:#fff; color:#166534; border-radius:20px; padding:1px 7px; font-size:10.5px; font-weight:700; }
+.amt-badge { display:inline-flex; padding:4px 12px; border-radius:20px; background:#dcfce7; color:#166534; font-size:12.5px; font-weight:800; white-space:nowrap; }
+
+/* ─── Prompt / Error ─── */
+.pd-prompt { background:#fff; border-radius:14px; padding:70px 20px; text-align:center; box-shadow:0 2px 12px rgba(0,0,0,.06); }
+.pd-prompt .pi { font-size:52px; color:#e2e8f0; display:block; margin-bottom:14px; }
+.pd-prompt h5 { font-size:16px; font-weight:700; color:#64748b; margin:0 0 6px; }
+.pd-prompt p  { font-size:13px; color:#94a3b8; margin:0; }
+.pd-error { background:#fff5f5; border:1.5px solid #fca5a5; border-radius:12px; padding:12px 18px; display:flex; align-items:center; gap:9px; font-size:13px; color:#991b1b; margin-bottom:16px; }
+
+@media(max-width:768px){
+    .pd-header { flex-direction:column; gap:12px; align-items:flex-start; }
+    .stat-row { gap:8px; }
+    .stat-card { min-width:120px; }
+    .emp-period { display:none; }
+}
+</style>
+
+<div class="pd-page">
+
+    <!-- Header -->
+    <div class="pd-header">
+        <div class="pd-header-left">
+            <h2><i class="fas fa-utensils me-2"></i>Mess Bills</h2>
+            <p>Mess punches matched to meals with the calculated payable amount</p>
+        </div>
+        <a href="/faculty_leave_management/faculty/leave/emp_attandance_report/" class="pd-back-btn">
+            <i class="fas fa-arrow-left"></i> Attendance Report
+        </a>
+    </div>
+
+    <!-- Filter -->
+    <div class="pd-filter">
+        <div class="pd-filter-title">
+            <i class="fas fa-filter"></i> Select Employee &amp; Month
+        </div>
+        {% if selected_employee and cycle_start and cycle_end %}
+        <div class="pd-cycle">
+            <i class="fas fa-calendar-week"></i>
+            Cycle: {{ cycle_start|date:"d M Y" }} &ndash; {{ cycle_end|date:"d M Y" }}
+        </div>
+        {% endif %}
+        <form method="get" id="mbForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-5 col-md-5">
+                    <label class="form-label">Employee</label>
+                    <select name="faculty_id" class="form-select"
+                            onchange="document.getElementById('mbForm').submit()">
+                        <option value="">— Choose employee —</option>
+                        {% for emp in employees %}
+                        <option value="{{ emp.faculty_id }}"
+                            {% if emp.faculty_id|stringformat:"s" == selected_faculty_id %}selected{% endif %}>
+                            {{ emp.faculty_id }} – {{ emp.name }}
+                            {% if emp.designation %} / {{ emp.designation.designation_name }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-3 col-6">
+                    <label class="form-label">Year</label>
+                    <select name="year" class="form-select">
+                        {% for y in year_options %}
+                        <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-4 col-6">
+                    <label class="form-label">Month (ends 25th)</label>
+                    <select name="month" class="form-select">
+                        {% for m_num, m_name in month_options %}
+                        <option value="{{ m_num }}" {% if m_num == selected_month %}selected{% endif %}>{{ m_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-12 col-12">
+                    <button type="submit" class="btn-view">
+                        <i class="fas fa-search"></i> View Bill
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if error_message %}
+    <div class="pd-error">
+        <i class="fas fa-exclamation-circle"></i>{{ error_message }}
+    </div>
+    {% endif %}
+
+    {% if selected_employee %}
+
+    <!-- Employee Info -->
+    <div class="emp-card">
+        <div class="emp-avatar">{{ selected_employee.name|first|upper }}</div>
+        <div>
+            <div class="emp-name">{{ selected_employee.name }}</div>
+            <div class="emp-meta">
+                <strong>ID:</strong> {{ selected_employee.faculty_id }}
+                {% if selected_employee.designation %}&nbsp;&bull;&nbsp;{{ selected_employee.designation.designation_name }}{% endif %}
+                {% if selected_employee.department %}&nbsp;&bull;&nbsp;{{ selected_employee.department.Department }}{% endif %}
+            </div>
+        </div>
+        <div class="emp-period">
+            <div class="ep-month">{{ cycle_end|date:"M" }}</div>
+            <div class="ep-year">{{ academic_year }}</div>
+        </div>
+    </div>
+
+    <!-- Stats: per-meal counts + grand total -->
+    <div class="stat-row">
+        {% for s in meal_summary %}
+        <div class="stat-card" style="--sc:#1a4b8c;">
+            <div class="stat-val">{{ s.count }}</div>
+            <div class="stat-lbl">{{ s.meal.name }}</div>
+            <div class="stat-sub">&#8377; {{ s.amount }}</div>
+        </div>
+        {% endfor %}
+        <div class="stat-card" style="--sc:#16a34a;">
+            <div class="stat-val">{{ total_meal_count }}</div>
+            <div class="stat-lbl">Total Meals</div>
+            <div class="stat-sub">across the cycle</div>
+        </div>
+        <div class="stat-card" style="--sc:#0d47a1;">
+            <div class="stat-val">&#8377;{{ grand_total }}</div>
+            <div class="stat-lbl">Payable</div>
+            <div class="stat-sub">grand total</div>
+        </div>
+    </div>
+
+    <!-- Daily Table -->
+    {% if bill_rows %}
+    <div class="tbl-card">
+        <div class="tbl-card-header">
+            <i class="fas fa-table" style="color:#1a4b8c;"></i>
+            <span class="tch-title">Daily Mess Usage</span>
+            <span class="tch-count">{{ bill_rows|length }} day(s)</span>
+        </div>
+        <div style="overflow-x:auto;">
+        <table class="ptbl">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>Meals Taken</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in bill_rows %}
+                <tr>
+                    <td style="color:#94a3b8;font-weight:600;">{{ forloop.counter }}</td>
+                    <td>{{ row.date|date:"d M Y" }}</td>
+                    <td style="color:#64748b;">{{ row.day_name }}</td>
+                    <td>
+                        {% for item in row.items %}
+                            <span class="meal-chip">
+                                <i class="fas fa-utensils"></i>{{ item.name }}
+                                <span class="chip-time">{{ item.time|date:"H:i" }}</span>
+                                <span class="chip-amt">&#8377;{{ item.rupees }}</span>
+                            </span>
+                        {% empty %}
+                            <span style="color:#cbd5e1;font-size:12px;">—</span>
+                        {% endfor %}
+                    </td>
+                    <td><span class="amt-badge">&#8377; {{ row.amount }}</span></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="pd-prompt">
+        <i class="fas fa-utensils pi"></i>
+        <h5>No Mess Records Found</h5>
+        <p>No mess punches available for {{ selected_employee.name }} in the selected cycle.</p>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="pd-prompt">
+        <i class="fas fa-users pi"></i>
+        <h5>Select an Employee</h5>
+        <p>Choose an employee from the dropdown above to view their mess bill.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

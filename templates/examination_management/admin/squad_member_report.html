@@ -1,0 +1,521 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.attendance-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.attendance-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.attendance-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.attendance-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.attendance-portal .page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.attendance-portal .card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.attendance-portal .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.attendance-portal .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+}
+
+.attendance-portal .card-header h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.attendance-portal .card-body {
+  padding: 2rem;
+}
+
+.attendance-portal .alert {
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-left: 4px solid;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.attendance-portal .alert-danger {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  color: #dc2626;
+}
+
+.attendance-portal .alert i {
+  font-size: 1.25rem;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.detail-item {
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+  padding: 1rem 1.2rem;
+  border-radius: 14px;
+  border-left: 4px solid #1a4b8c;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-item .label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.detail-item .value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.attendance-portal .table-responsive {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+}
+
+.attendance-portal .table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+}
+
+.attendance-portal .table th {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.attendance-portal .table td {
+  padding: 1rem 0.75rem;
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+  color: #374151;
+  font-weight: 500;
+}
+
+.attendance-portal .table tbody tr {
+  transition: all 0.3s ease;
+}
+
+.attendance-portal .table tbody tr:hover {
+  background: rgba(26, 75, 140, 0.03);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.course-code {
+  background: rgba(26, 75, 140, 0.1);
+  color: #1a4b8c;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.course-name {
+  text-align: left !important;
+  font-weight: 500;
+}
+
+.attendance-portal .btn-primary {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.attendance-portal .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(26, 75, 140, 0.3);
+}
+
+.comments-card {
+  border: 2px solid #10b981;
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 2rem 0;
+}
+
+.comments-card .card-header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+}
+
+.comments-card textarea {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.comments-card textarea:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  outline: none;
+}
+
+.attendance-portal .section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  margin: 2rem 0 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.attendance-portal .form-control {
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.attendance-portal .form-control:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+  outline: none;
+}
+
+.attendance-portal .form-check-input {
+  width: 1.2rem;
+  height: 1.2rem;
+  cursor: pointer;
+}
+
+.attendance-portal .form-check-input:checked {
+  background-color: #1a4b8c;
+  border-color: #1a4b8c;
+}
+
+@media (max-width: 1024px) {
+  .attendance-portal .page-header {
+    padding: 1rem;
+  }
+  
+  .attendance-portal .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .attendance-portal .card-body {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .attendance-portal {
+    padding: 1rem;
+  }
+  
+  .attendance-portal .page-header {
+    padding: 0.75rem;
+  }
+  
+  .attendance-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .attendance-portal .card-body {
+    padding: 1.25rem;
+  }
+  
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.attendance-portal .card {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+</style>
+
+<div class="attendance-portal">
+  <div class="page-container">
+    <!-- Header -->
+    <div class="page-header">
+      <h1><i class="bi bi-person-badge-fill"></i> Squad Member Report</h1>
+      <div class="header-subtitle">Examination Duty Assignment & Reporting Portal</div>
+    </div>
+
+    <!-- Pending Squad -->
+    {% if pending_squad %}
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="bi bi-clipboard-check"></i> Squad Member Details</h5>
+      </div>
+      <div class="card-body">
+        <!-- Compact Details Grid -->
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="label">Appointment Ref</span>
+            <span class="value">{{ pending_squad.appointment_ref }}</span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">Name</span>
+            <span class="value">{{ pending_squad.faculty_id.name }}</span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">Designation</span>
+            <span class="value">{{ pending_squad.faculty_id.designation }}</span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">Department</span>
+            <span class="value">{{ pending_squad.faculty_id.department }}</span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">Date</span>
+            <span class="value">{{ pending_squad.date }}</span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">Semester</span>
+            <span class="value">{{ pending_squad.semester }}</span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">IAT</span>
+            <span class="value">{{ pending_squad.iat }}</span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">No. of Halls</span>
+            <span class="value">{{ pending_squad.no_of_hall }}</span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">Hall No(s)</span>
+            <span class="value">{{ pending_squad.hall_numbers }}</span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">Duration</span>
+            <span class="value">{{ pending_squad.duration }}</span>
+          </div>
+        </div>
+
+        <!-- Observations Form -->
+        <form method="POST">
+          {% csrf_token %}
+
+          <div class="section-title">
+            <i class="bi bi-check-circle-fill"></i> Examination Observations
+          </div>
+
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Observation</th>
+                  <th>Yes</th>
+                  <th>No</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="course-name">Was the Seating arrangement appropriate and conductive to an examination environment?</td>
+                  <td><input type="radio" name="seating_appropriate" value="Yes" class="form-check-input" required></td>
+                  <td><input type="radio" name="seating_appropriate" value="No" class="form-check-input" required></td>
+                  <td><input type="text" name="seating_remarks" class="form-control" placeholder="Add remarks..."></td>
+                </tr>
+                <tr>
+                  <td class="course-name">Were the Classrooms neat and Clean?</td>
+                  <td><input type="radio" name="classrooms_clean" value="Yes" class="form-check-input" required></td>
+                  <td><input type="radio" name="classrooms_clean" value="No" class="form-check-input" required></td>
+                  <td><input type="text" name="clean_remarks" class="form-control" placeholder="Add remarks..."></td>
+                </tr>
+                <tr>
+                  <td class="course-name">Were the contents on the classroom boards neat and properly erased?</td>
+                  <td><input type="radio" name="boards_clean" value="Yes" class="form-check-input" required></td>
+                  <td><input type="radio" name="boards_clean" value="No" class="form-check-input" required></td>
+                  <td><input type="text" name="boards_remarks" class="form-control" placeholder="Add remarks..."></td>
+                </tr>
+                <tr>
+                  <td class="course-name">Were the students seated as per the seating Arrangement?</td>
+                  <td><input type="radio" name="seating_arrangement" value="Yes" class="form-check-input" required></td>
+                  <td><input type="radio" name="seating_arrangement" value="No" class="form-check-input" required></td>
+                  <td><input type="text" name="seating_arrangement_remarks" class="form-control" placeholder="Add remarks..."></td>
+                </tr>
+                <tr>
+                  <td class="course-name">Were the exam materials distributed/collected properly?</td>
+                  <td><input type="radio" name="materials_distributed" value="Yes" class="form-check-input" required></td>
+                  <td><input type="radio" name="materials_distributed" value="No" class="form-check-input" required></td>
+                  <td><input type="text" name="materials_remarks" class="form-control" placeholder="Add remarks..."></td>
+                </tr>
+                <tr>
+                  <td class="course-name">Have the students used only the permitted materials?</td>
+                  <td><input type="radio" name="permitted_materials" value="Yes" class="form-check-input" required></td>
+                  <td><input type="radio" name="permitted_materials" value="No" class="form-check-input" required></td>
+                  <td><input type="text" name="permitted_remarks" class="form-control" placeholder="Add remarks..."></td>
+                </tr>
+                <tr>
+                  <td class="course-name">Have the students written their register number on the question paper?</td>
+                  <td><input type="radio" name="register_number" value="Yes" class="form-check-input" required></td>
+                  <td><input type="radio" name="register_number" value="No" class="form-check-input" required></td>
+                  <td><input type="text" name="register_remarks" class="form-control" placeholder="Add remarks..."></td>
+                </tr>
+                <tr>
+                  <td class="course-name">Were there any intentional markings or writings on the question paper?</td>
+                  <td><input type="radio" name="markings" value="Yes" class="form-check-input" required></td>
+                  <td><input type="radio" name="markings" value="No" class="form-check-input" required></td>
+                  <td><input type="text" name="markings_remarks" class="form-control" placeholder="Add remarks..."></td>
+                </tr>
+                <tr>
+                  <td class="course-name">Have any students failed to wear their ID cards?</td>
+                  <td><input type="radio" name="id_cards" value="Yes" class="form-check-input" required></td>
+                  <td><input type="radio" name="id_cards" value="No" class="form-check-input" required></td>
+                  <td><input type="text" name="id_remarks" class="form-control" placeholder="Add remarks..."></td>
+                </tr>
+                <tr>
+                  <td class="course-name">Were there any instances of unruly behaviour exhibited by the students?</td>
+                  <td><input type="radio" name="unruly_behaviour" value="Yes" class="form-check-input" required></td>
+                  <td><input type="radio" name="unruly_behaviour" value="No" class="form-check-input" required></td>
+                  <td><input type="text" name="unruly_remarks" class="form-control" placeholder="Add remarks..."></td>
+                </tr>
+                <tr>
+                  <td class="course-name">Did the students follow all the examination rules and regulations?</td>
+                  <td><input type="radio" name="followed_rules" value="Yes" class="form-check-input" required></td>
+                  <td><input type="radio" name="followed_rules" value="No" class="form-check-input" required></td>
+                  <td><input type="text" name="rules_remarks" class="form-control" placeholder="Add remarks..."></td>
+                </tr>
+                <tr>
+                  <td class="course-name">Were the faculty members present and actively monitoring the exam?</td>
+                  <td><input type="radio" name="faculty_present" value="Yes" class="form-check-input" required></td>
+                  <td><input type="radio" name="faculty_present" value="No" class="form-check-input" required></td>
+                  <td><input type="text" name="faculty_remarks" class="form-control" placeholder="Add remarks..."></td>
+                </tr>
+                <tr>
+                  <td class="course-name">Any instances of faculty members engaging in activities other than invigilation?</td>
+                  <td><input type="radio" name="faculty_misconduct" value="Yes" class="form-check-input" required></td>
+                  <td><input type="radio" name="faculty_misconduct" value="No" class="form-check-input" required></td>
+                  <td><input type="text" name="misconduct_remarks" class="form-control" placeholder="Add remarks..."></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Comments Section -->
+          <div class="comments-card">
+            <div class="card-header">
+              <i class="bi bi-chat-dots-fill"></i> General Comments
+            </div>
+            <div class="card-body">
+              <textarea name="feedback" rows="4" class="form-control" placeholder="Enter any additional comments or observations..."></textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-send-fill"></i> Submit Report
+          </button>
+        </form>
+      </div>
+    </div>
+    {% else %}
+    <div class="card">
+      <div class="card-body text-center py-5">
+        <i class="bi bi-inbox-fill" style="font-size: 3rem; color: #1a4b8c; opacity: 0.5;"></i>
+        <h4 class="mt-3" style="color: #64748b;">No Pending Squad Assignments</h4>
+        <p class="text-muted">You don't have any pending squad member reports to submit.</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+{% endblock %}

@@ -1,0 +1,851 @@
+{% extends 'base.html' %}
+{% load cm_tags %}
+
+{% block content %}
+
+<style>
+.class-advisor {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.class-advisor .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.class-advisor .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.class-advisor .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.class-advisor .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.class-advisor .stats-bar {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.class-advisor .stats-bar .department-info h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a4b8c;
+  margin: 0 0 0.25rem 0;
+}
+
+.class-advisor .stats-bar .department-info p {
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+.class-advisor .stats-numbers {
+  display: flex;
+  gap: 2rem;
+  text-align: center;
+}
+
+.class-advisor .stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.class-advisor .stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a4b8c;
+  line-height: 1;
+}
+
+.class-advisor .stat-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.class-advisor .filters-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.class-advisor .filters-card .card-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #374151;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.class-advisor .filters-card .card-header h6 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.class-advisor .filters-card .card-header i {
+  margin-right: 0.75rem;
+  color: #1a4b8c;
+}
+
+.class-advisor .filters-card .card-body {
+  padding: 1.5rem;
+}
+
+.class-advisor .form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.class-advisor .form-control,
+.class-advisor .form-select {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.class-advisor .form-control:focus,
+.class-advisor .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.1);
+}
+
+.class-advisor .btn-outline-primary {
+  border: 1px solid #1a4b8c;
+  color: #1a4b8c;
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.class-advisor .btn-outline-primary:hover {
+  background: #1a4b8c;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 75, 140, 0.2);
+}
+
+.class-advisor .btn-outline-secondary {
+  border: 1px solid #6b7280;
+  color: #6b7280;
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.class-advisor .btn-outline-secondary:hover {
+  background: #6b7280;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.class-advisor .filter-summary {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin-top: 1rem;
+}
+
+.class-advisor .filter-summary .small {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.class-advisor .assignment-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.class-advisor .assignment-card .card-header {
+  background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.class-advisor .assignment-card .card-header h6 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.class-advisor .assignment-card .card-header i {
+  margin-right: 0.75rem;
+}
+
+.class-advisor .ca-selector {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: #1a4b8c;
+  min-width: 300px;
+}
+
+.class-advisor .ca-selector:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+.class-advisor .table-container {
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+}
+
+.class-advisor .table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.class-advisor .table thead {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.class-advisor .table th {
+  color: black;
+  font-weight: 700;
+  padding: 1rem;
+  text-align: left;
+  border: none;
+}
+
+.class-advisor .table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #4b5563;
+  vertical-align: middle;
+}
+
+.class-advisor .table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.class-advisor .table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.class-advisor .table-success {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+.class-advisor .table-success:hover {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+
+.class-advisor .table-light:hover {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+.class-advisor .form-check-input {
+  width: 1.2em;
+  height: 1.2em;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.class-advisor .form-check-input:checked {
+  background-color: #10b981;
+  border-color: #10b981;
+}
+
+.class-advisor .form-check-input:focus {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.class-advisor .badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.class-advisor .badge.bg-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: white;
+}
+
+.class-advisor .badge.bg-secondary {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+  color: white;
+}
+
+.class-advisor .badge.bg-info {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  color: white;
+  font-size: 0.7em;
+  padding: 0.3em 0.6em;
+}
+
+.class-advisor .btn-outline-danger {
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+}
+
+.class-advisor .btn-outline-danger:hover {
+  background: #ef4444;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.class-advisor .card-footer {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  border-top: 1px solid #e2e8f0;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.class-advisor .btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.class-advisor .btn-success:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+}
+
+.class-advisor .btn-success:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.class-advisor .action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.class-advisor .selection-info {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.class-advisor .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.class-advisor .empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.class-advisor .alert {
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border: none;
+  font-weight: 500;
+}
+
+.class-advisor .alert-success {
+  background-color: #d1fae5;
+  color: #065f46;
+  border-left: 4px solid #10b981;
+}
+
+.class-advisor .alert-error,
+.class-advisor .alert-danger {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-left: 4px solid #ef4444;
+}
+
+.class-advisor .alert-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+  border-left: 4px solid #f59e0b;
+}
+
+.class-advisor .alert-info {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-left: 4px solid #3b82f6;
+}
+
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .class-advisor .page-header {
+    padding: 1rem;
+  }
+  
+  .class-advisor .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .class-advisor .stats-bar {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .class-advisor .stats-numbers {
+    gap: 1.5rem;
+  }
+  
+  .class-advisor .assignment-card .card-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .class-advisor .ca-selector {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .class-advisor {
+    padding: 1rem;
+  }
+  
+  .class-advisor .page-header {
+    padding: 0.75rem;
+  }
+  
+  .class-advisor .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .class-advisor .header-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .class-advisor .stats-numbers {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  .class-advisor .card-footer {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .class-advisor .action-buttons {
+    justify-content: center;
+  }
+  
+  .class-advisor .table {
+    font-size: 0.8rem;
+  }
+  
+  .class-advisor .table th,
+  .class-advisor .table td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .class-advisor .assignment-card .card-header h6 {
+    font-size: 1.1rem;
+  }
+  
+  .class-advisor .stats-bar .department-info h2 {
+    font-size: 1.25rem;
+  }
+  
+  .class-advisor .stat-value {
+    font-size: 1.25rem;
+  }
+}
+</style>
+
+<div class="class-advisor">
+  <div class="page-header">
+    <h1><i class="fas fa-user-tie me-2"></i>Class Advisor Assignment</h1>
+    <p class="header-subtitle">Manage class advisor assignments for students in your department</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-3">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">
+        <i class="fas fa-info-circle me-2"></i>{{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="department-info">
+        <h2>Class Advisor Assignment</h2>
+        <p>{{ department_obj.degree.degree_code }} - {{ department_obj.Department }} </p>
+      </div>
+      <div class="stats-numbers">
+        <div class="stat-item">
+          <span class="stat-value">{{ total_students }}</span>
+          <span class="stat-label">Total Students</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value text-success">{{ assigned_count }}</span>
+          <span class="stat-label">Assigned</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value text-primary">{{ available_count }}</span>
+          <span class="stat-label">Available</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-card">
+      <div class="card-header">
+        <h6><i class="fas fa-filter me-2"></i>Filter Students</h6>
+      </div>
+      <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label for="batch" class="form-label">Batch</label>
+            <select name="batch" id="batch" class="form-select">
+              <option value="">All Batches</option>
+              {% for batch in batches %}
+                <option value="{{ batch }}" {% if batch == selected_batch %}selected{% endif %}>
+                  {{ batch }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="section" class="form-label">Section</label>
+            <select name="section" id="section" class="form-select">
+              <option value="">All Sections</option>
+              {% for sec in sections %}
+                <option value="{{ sec }}" {% if sec == selected_section %}selected{% endif %}>
+                  {{ sec }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-outline-primary">
+                <i class="fas fa-search me-2"></i>Filter
+              </button>
+              {% if selected_batch or selected_section %}
+              <a href="{% url 'assign_class_advisor' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-times me-2"></i>Clear
+              </a>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="filter-summary">
+              <small class="form-label">Active Filter:</small>
+              <div class="small">
+                {% if selected_batch and selected_section %}
+                  Batch {{ selected_batch }} - Section {{ selected_section }}
+                {% elif selected_batch %}
+                  Batch {{ selected_batch }}
+                {% elif selected_section %}
+                  Section {{ selected_section }}
+                {% else %}
+                  All Students
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Assignment Form -->
+    <form method="POST" id="caAssignmentForm">
+      {% csrf_token %}
+
+      <!-- CA Selection -->
+      <div class="assignment-card">
+        <div class="card-header">
+          <h6><i class="fas fa-user-tie me-2"></i>Class Advisor Selection</h6>
+          <select name="ca" id="caSelect" class="ca-selector" required>
+            <option value="">Select Class Advisor</option>
+            {% for faculty in faculty_list %}
+              <option value="{{ faculty.id }}">
+                {{ faculty.name }} ({{ faculty.faculty_id }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Students Table -->
+        {% if students %}
+        <div class="table-container">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="selectAllCA">
+                      <label class="form-check-label" for="selectAllCA">&nbsp;</label>
+                    </div>
+                  </th>
+                  <th style="width: 120px;">Reg No</th>
+                  <th style="width: 200px;">Student Name</th>
+                  <th style="width: 80px;">Batch</th>
+                  <th style="width: 80px;">Section</th>
+                  <th style="width: 250px;">Current CA</th>
+                  <th style="width: 80px;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for student in students %}
+                  {% with assigned_dict|get_item:student.reg_no as ca_id %}
+                  <tr class="{% if ca_id %}table-success{% else %}table-light{% endif %}">
+                    <td>
+                      <div class="form-check">
+                        <input class="form-check-input student-ca-checkbox" 
+                               type="checkbox" 
+                               name="students" 
+                               value="{{ student.reg_no }}"
+                               {% if ca_id %}checked{% endif %}>
+                        <label class="form-check-label">&nbsp;</label>
+                      </div>
+                    </td>
+                    <td><strong>{{ student.reg_no }}</strong></td>
+                    <td>{{ student.name|title }}</td>
+                    <td><span class="badge bg-primary">{{ student.batch }}</span></td>
+                    <td><span class="badge bg-secondary">{{ student.section }}</span></td>
+                    <td>
+                      {% with ca=ca_details|dict_get:ca_id %}
+                        {% if ca %}
+                          <div class="d-flex flex-column">
+                            <small class="fw-semibold text-dark">{{ ca.username }}</small>
+                            <small class="text-muted">ID: {{ ca.employee_id }}</small>
+                            {% if ca.role == 'Faculty' %}
+                              <small class="badge bg-info mt-1">{{ ca.role.name }}</small>
+                            {% endif %}
+                          </div>
+                        {% else %}
+                          <span class="text-muted small">Not Assigned</span>
+                        {% endif %}
+                      {% endwith %}
+                    </td>
+                    <td>
+                      {% if ca_id %}
+                        <button type="button" 
+                                class="btn btn-outline-danger remove-ca"
+                                data-regno="{{ student.reg_no }}"
+                                title="Remove Current CA">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      {% else %}
+                        <span class="text-muted small">—</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endwith %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card-footer">
+          <div class="action-buttons">
+            <button type="button" class="btn btn-outline-primary" onclick="selectAllStudentsCA()">
+              <i class="fas fa-check-square me-2"></i>Select All ({{ total_students }})
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="clearAllStudentsCA()">
+              <i class="fas fa-square me-2"></i>Clear All
+            </button>
+            <div class="selection-info" id="caSelectedCount">
+              {{ assigned_count }} of {{ total_students }} students selected
+            </div>
+          </div>
+          <button type="submit" class="btn btn-success" id="assignCABtn">
+            <i class="fas fa-user-plus me-2"></i>
+            {% if assigned_count %}
+              Reassign CA to {{ assigned_count }} Student{{ assigned_count|pluralize }}
+            {% else %}
+              Assign CA to All {{ total_students }} Students
+            {% endif %}
+          </button>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <i class="fas fa-users"></i>
+          <h4>No Students Found</h4>
+          <p class="text-muted">Try adjusting the filters above to see students in your department</p>
+        </div>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.student-ca-checkbox');
+    const selectAll = document.getElementById('selectAllCA');
+    const assignBtn = document.getElementById('assignCABtn');
+    const selectedCount = document.getElementById('caSelectedCount');
+
+    function updateSelection() {
+        const checkedBoxes = document.querySelectorAll('.student-ca-checkbox:checked');
+        const total = checkboxes.length;
+        const count = checkedBoxes.length;
+        
+        // Update counter
+        selectedCount.textContent = `${count} of ${total} students selected`;
+        
+        // Update select all checkbox state
+        if (count === 0) {
+            selectAll.indeterminate = false;
+            selectAll.checked = false;
+        } else if (count === total) {
+            selectAll.indeterminate = false;
+            selectAll.checked = true;
+        } else {
+            selectAll.indeterminate = true;
+        }
+        
+        // Update button text and state
+        if (count > 0) {
+            assignBtn.innerHTML = `<i class="fas fa-user-plus me-2"></i>Assign CA to ${count} Student${count !== 1 ? 's' : ''}`;
+            assignBtn.disabled = false;
+        } else {
+            const totalText = total > 0 ? `All ${total} Students` : 'No Students';
+            assignBtn.innerHTML = `<i class="fas fa-user-plus me-2"></i>Assign CA to ${totalText}`;
+            assignBtn.disabled = total === 0;
+        }
+    }
+
+    // Select All functionality
+    selectAll.addEventListener('change', function() {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateSelection();
+    });
+
+    // Individual checkbox changes
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelection);
+    });
+
+    // Remove CA functionality
+    document.querySelectorAll('.remove-ca').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const regNo = this.getAttribute('data-regno');
+            const studentName = this.closest('tr').querySelector('td:nth-child(3)').textContent.trim();
+            
+            if (confirm(`Remove CA assignment for ${studentName} (${regNo})?`)) {
+                const form = document.getElementById('caAssignmentForm');
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'remove_ca';
+                input.value = regNo;
+                form.appendChild(input);
+                form.submit();
+            }
+        });
+    });
+
+    // Initialize selection
+    updateSelection();
+});
+
+function selectAllStudentsCA() {
+    document.getElementById('selectAllCA').checked = true;
+    document.querySelectorAll('.student-ca-checkbox').forEach(cb => cb.checked = true);
+    updateSelection();
+}
+
+function clearAllStudentsCA() {
+    document.getElementById('selectAllCA').checked = false;
+    document.querySelectorAll('.student-ca-checkbox').forEach(cb => cb.checked = false);
+    updateSelection();
+}
+</script>
+{% endblock content %}

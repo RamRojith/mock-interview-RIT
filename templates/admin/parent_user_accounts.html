@@ -1,0 +1,552 @@
+{# templates/admin/parent_user_accounts.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- ✅ DO NOT re-include bootstrap/base/admin css or jquery/datatables here (it breaks base.html).
+     Keep only FontAwesome if base.html doesn't include it already. -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+/* ✅ Fully scoped to avoid leaking into base.html */
+.parent-accounts-page{
+  --border:#e5e7eb;
+  --ink:#111827;
+  --muted:#6b7280;
+  --shadow: 0 6px 18px rgba(17,24,39,.06);
+}
+
+.parent-accounts-page .profile-img{
+  width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+}
+
+@media (max-width: 375px){
+  .parent-accounts-page .btn-group.btn-group-sm{ flex-direction: column; }
+  .parent-accounts-page .btn-group.btn-group-sm > *{ width: 100%; margin-bottom: .25rem; }
+}
+
+.parent-accounts-page #loginPreviewModal .modal-content{
+  border-radius: .75rem;
+  box-shadow: 0 0 20px rgba(0,0,0,.25);
+}
+.parent-accounts-page #loginPreviewModal .modal-body{ background: #f8f9fc; }
+.parent-accounts-page #loginPreviewModal .profile-preview{ text-align:center; }
+.parent-accounts-page #loginPreviewModal .profile-preview img{
+  width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem;
+}
+.parent-accounts-page #loginPreviewModal .user-info p{ margin-bottom: .25rem; color:#333; }
+
+.parent-accounts-page .stat-card{
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+.parent-accounts-page .stat-card .label{ color: var(--muted); font-weight: 600; font-size: .9rem; }
+.parent-accounts-page .stat-card .value{ font-weight: 800; font-size: 1.35rem; color: var(--ink); }
+</style>
+
+<div class="parent-accounts-page">
+
+  <div class="mt-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+      <h2 class="mb-0 text-secondary fw-bold">Parent Accounts</h2>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-primary" id="resultCount">0</span>
+        <span class="text-muted">Parents (Filtered)</span>
+      </div>
+    </div>
+
+    <!-- ✅ Statistics -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="stat-card">
+          <div class="label"><i class="fa-solid fa-users me-2"></i>Total</div>
+          <div class="value" id="statTotal">0</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card">
+          <div class="label"><i class="fa-solid fa-circle-check me-2 text-success"></i>Active</div>
+          <div class="value" id="statActive">0</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card">
+          <div class="label"><i class="fa-solid fa-circle-xmark me-2 text-danger"></i>Inactive</div>
+          <div class="value" id="statInactive">0</div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="stat-card">
+          <div class="label mb-2"><i class="fa-solid fa-chart-pie me-2"></i>Role-wise Count</div>
+          <div class="d-flex flex-wrap gap-2" id="roleStatBadges">
+            <span class="text-muted">Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ Filters -->
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Search (Any Field)</label>
+            <input type="text" id="globalSearch" class="form-control"
+                   placeholder="username / parent id / email / dept / role...">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Department</label>
+            <select id="departmentFilter" class="form-select">
+              <option value="">All Departments</option>
+              {% for dept in departments %}
+                <option value="{{ dept.Department }}">{{ dept.Department }} - {{ dept.Department_code }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Role</label>
+            <select id="roleFilter" class="form-select">
+              <option value="">All Roles</option>
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label fw-bold">Page Size</label>
+            <select id="pageSize" class="form-select">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+
+          <div class="col-12 d-flex gap-2">
+            <button class="btn btn-outline-secondary" id="clearAll" type="button">
+              <i class="fa-solid fa-eraser me-1"></i>Clear
+            </button>
+            <button class="btn btn-outline-primary" id="refreshBtn" type="button">
+              <i class="fa-solid fa-rotate me-1"></i>Refresh
+            </button>
+
+            <div class="ms-auto text-muted small" id="showingText">Showing 0–0 of 0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ Table -->
+    <div class="table-responsive shadow-sm rounded">
+      <table class="table table-hover table-striped align-middle w-100 mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th style="width:55px">#</th>
+            <th style="width:85px">Profile</th>
+            <th>Username</th>
+            <th>Parent ID</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Role</th>
+            <th style="width:90px">Active</th>
+            <th style="width:160px">Last Login</th>
+            <th class="text-center" style="width:260px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="usersTbody">
+          <tr>
+            <td colspan="10" class="text-center text-muted py-4">
+              <i class="fa-solid fa-spinner fa-spin me-2"></i>Loading...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ✅ Pagination -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+      <div class="text-muted small" id="pageInfo">Page 1 of 1</div>
+      <nav>
+        <ul class="pagination pagination-sm mb-0" id="paginationUl"></ul>
+      </nav>
+    </div>
+
+  </div>
+
+  <!-- ✅ Login Preview Modal -->
+  <div class="modal fade" id="loginPreviewModal" tabindex="-1" aria-labelledby="loginPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold" id="loginPreviewModalLabel">
+            <i class="fas fa-user-check me-2"></i> Confirm Login
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="profile-preview">
+            <img id="previewProfile" src="" alt="User Profile"
+                 onerror="this.onerror=null;this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';">
+          </div>
+          <div class="user-info text-center mt-2">
+            <p class="fw-bold mb-1" id="previewUsername"></p>
+            <p id="previewEmail"></p>
+            <p id="previewParentId" class="text-muted"></p>
+            <p id="previewDepartment"></p>
+            <p><span class="badge bg-info" id="previewRole"></span></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <form id="confirmLoginForm" method="post" class="w-100 text-end">
+            {% csrf_token %}
+            <input type="hidden" name="login_as" id="confirmLoginId">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-success">
+              <i class="fas fa-sign-in-alt me-1"></i> Confirm Login
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/*
+  ✅ No DataTables / jQuery included here (they were affecting base.html).
+  ✅ Uses fetch + DOM APIs.
+  ✅ Uses Bootstrap Modal only if base.html already includes Bootstrap JS.
+*/
+(function(){
+  const DEFAULT_PROFILE = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+  const dataUrl = "{% url 'parent_user_accounts_data' %}";
+
+  const editUrlDummy = "{% url 'edit_parent_user_accounts' 0 %}";
+  function buildEditUrl(id){ return editUrlDummy.replace("/0/", "/" + id + "/"); }
+  const resetUrlDummy = "{% url 'reset_parent_user_password' 0 %}";
+  function buildResetUrl(id){ return resetUrlDummy.replace("/0/", "/" + id + "/"); }
+  const csrfToken = "{{ csrf_token }}";
+
+  let currentPage = 1;
+  let lastMeta = null;
+  let searchTimer = null;
+
+  const $ = (sel, root=document) => root.querySelector(sel);
+
+  function escapeHtml(text){
+    if(text === null || text === undefined) return "";
+    return String(text)
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+
+  function setLoading(){
+    $("#usersTbody").innerHTML = `
+      <tr><td colspan="10" class="text-center text-muted py-4">
+        <i class="fa-solid fa-spinner fa-spin me-2"></i>Loading...
+      </td></tr>
+    `;
+  }
+
+  function renderStats(stats){
+    $("#statTotal").textContent = (stats?.total ?? 0);
+    $("#statActive").textContent = (stats?.active ?? 0);
+    $("#statInactive").textContent = (stats?.inactive ?? 0);
+
+    const roleCounts = stats?.role_counts || [];
+    if(roleCounts.length === 0){
+      $("#roleStatBadges").innerHTML = `<span class="text-muted">No data</span>`;
+      return;
+    }
+    $("#roleStatBadges").innerHTML = roleCounts
+      .map(r => `<span class="badge bg-secondary">${escapeHtml(r.role)}: ${r.count ?? 0}</span>`)
+      .join("");
+  }
+
+  function renderRoleOptions(options){
+    const roleSel = $("#roleFilter");
+    const selected = roleSel.value || "";
+    let html = `<option value="">All Roles</option>`;
+    (options || []).forEach(r => {
+      const rr = escapeHtml(r);
+      html += `<option value="${rr}">${rr}</option>`;
+    });
+    roleSel.innerHTML = html;
+
+    if(selected){
+      roleSel.value = selected;
+      if(roleSel.value !== selected) roleSel.value = "";
+    }
+  }
+
+  function renderRows(rows){
+    const tbody = $("#usersTbody");
+
+    if(!rows || rows.length === 0){
+      tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted py-4">No parent users found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r => {
+      const profile = r.profile ? escapeHtml(r.profile) : DEFAULT_PROFILE;
+
+      const deptText = r.department
+        ? `${escapeHtml(r.department)}${r.department_code ? " - " + escapeHtml(r.department_code) : ""}`
+        : "-";
+
+      const activeBadge = r.is_active
+        ? `<span class="badge bg-success">Active</span>`
+        : `<span class="badge bg-danger">Inactive</span>`;
+
+      return `
+        <tr>
+          <td>${r.sno}</td>
+          <td class="text-center">
+            <img src="${profile}" class="profile-img" alt="Profile"
+                 onerror="this.onerror=null;this.src='${DEFAULT_PROFILE}';">
+          </td>
+          <td>${escapeHtml(r.username)}</td>
+          <td>${escapeHtml(r.parent_id)}</td>
+          <td>${escapeHtml(r.email)}</td>
+          <td>${deptText}</td>
+          <td>${escapeHtml(r.role || "-")}</td>
+          <td>${activeBadge}</td>
+          <td>${escapeHtml(r.last_login || "-")}</td>
+          <td class="text-center">
+            <div class="btn-group btn-group-sm" role="group">
+              <a href="${buildEditUrl(r.id)}"
+                 class="btn btn-outline-primary d-flex align-items-center justify-content-center">
+                <i class="fas fa-edit me-1"></i><span class="d-none d-sm-inline">Edit</span>
+              </a>
+              <button type="button"
+                      class="btn btn-outline-warning d-flex align-items-center justify-content-center reset-password-btn"
+                      data-id="${r.id}"
+                      data-username="${escapeHtml(r.username)}">
+                <i class="fas fa-key me-1"></i><span class="d-none d-sm-inline">Reset</span>
+              </button>
+              <button type="button"
+                      class="btn btn-outline-success d-flex align-items-center justify-content-center preview-login-btn"
+                      data-id="${r.id}"
+                      data-username="${escapeHtml(r.username)}"
+                      data-email="${escapeHtml(r.email)}"
+                      data-parentid="${escapeHtml(r.parent_id)}"
+                      data-department="${escapeHtml(r.department || '')}"
+                      data-role="${escapeHtml(r.role || '')}"
+                      data-profile="${profile}">
+                <i class="fas fa-sign-in-alt me-1"></i><span class="d-none d-sm-inline">Log</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  function renderPagination(meta){
+    const ul = $("#paginationUl");
+
+    if(!meta){
+      ul.innerHTML = "";
+      $("#pageInfo").textContent = "Page 1 of 1";
+      $("#showingText").textContent = "Showing 0–0 of 0";
+      $("#resultCount").textContent = "0";
+      return;
+    }
+
+    const page = meta.page;
+    const totalPages = meta.total_pages || 1;
+
+    $("#pageInfo").textContent = `Page ${page} of ${totalPages}`;
+
+    const total = meta.total || 0;
+    const pageSize = meta.page_size || 25;
+    const start = total === 0 ? 0 : ((page - 1) * pageSize) + 1;
+    const end = Math.min(page * pageSize, total);
+
+    $("#showingText").textContent = `Showing ${start}–${end} of ${total}`;
+    $("#resultCount").textContent = String(total);
+
+    function li(disabled, label, targetPage, active=false){
+      const d = disabled ? "disabled" : "";
+      const a = active ? "active" : "";
+      const aria = active ? 'aria-current="page"' : "";
+      return `
+        <li class="page-item ${d} ${a}">
+          <a class="page-link" href="#" data-page="${targetPage}" ${aria}>${label}</a>
+        </li>
+      `;
+    }
+
+    let html = "";
+    html += li(page <= 1, "&laquo;", 1);
+    html += li(!meta.has_prev, "&lsaquo;", page - 1);
+
+    const windowSize = 2;
+    const startP = Math.max(1, page - windowSize);
+    const endP = Math.min(totalPages, page + windowSize);
+
+    if(startP > 1){
+      html += li(false, "1", 1, page === 1);
+      if(startP > 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+    }
+
+    for(let p = startP; p <= endP; p++){
+      html += li(false, String(p), p, p === page);
+    }
+
+    if(endP < totalPages){
+      if(endP < totalPages - 1) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+      html += li(false, String(totalPages), totalPages, page === totalPages);
+    }
+
+    html += li(!meta.has_next, "&rsaquo;", page + 1);
+    html += li(page >= totalPages, "&raquo;", totalPages);
+
+    ul.innerHTML = html;
+  }
+
+  async function loadParents(){
+    const q = $("#globalSearch").value.trim();
+    const dept = $("#departmentFilter").value.trim();
+    const role = $("#roleFilter").value.trim();
+    const pageSize = $("#pageSize").value;
+
+    setLoading();
+
+    const params = new URLSearchParams({
+      q, dept, role,
+      page: String(currentPage),
+      page_size: String(pageSize),
+    });
+
+    try{
+      const resp = await fetch(`${dataUrl}?${params.toString()}`, {
+        method: "GET",
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      });
+      if(!resp.ok) throw new Error("Network error");
+      const data = await resp.json();
+
+      renderRoleOptions(data.role_options || []);
+      renderStats(data.stats || {});
+      renderRows(data.results || []);
+      lastMeta = data.pagination || null;
+      renderPagination(lastMeta);
+
+    }catch(e){
+      $("#usersTbody").innerHTML = `
+        <tr><td colspan="10" class="text-center text-danger py-4">
+          Failed to load parents. Please refresh.
+        </td></tr>
+      `;
+      $("#paginationUl").innerHTML = "";
+    }
+  }
+
+  // events
+  $("#globalSearch").addEventListener("keyup", function(){
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function(){
+      currentPage = 1;
+      loadParents();
+    }, 250);
+  });
+
+  ["departmentFilter","roleFilter","pageSize"].forEach(id=>{
+    $("#"+id).addEventListener("change", function(){
+      currentPage = 1;
+      loadParents();
+    });
+  });
+
+  $("#clearAll").addEventListener("click", function(){
+    $("#globalSearch").value = "";
+    $("#departmentFilter").value = "";
+    $("#roleFilter").value = "";
+    $("#pageSize").value = "25";
+    currentPage = 1;
+    loadParents();
+  });
+
+  $("#refreshBtn").addEventListener("click", function(){
+    loadParents();
+  });
+
+  $("#paginationUl").addEventListener("click", function(e){
+    const a = e.target.closest("a.page-link");
+    if(!a) return;
+    e.preventDefault();
+
+    const p = parseInt(a.dataset.page, 10);
+    if(!p || p < 1) return;
+    if(lastMeta && p > (lastMeta.total_pages || 1)) return;
+
+    currentPage = p;
+    loadParents();
+  });
+
+  // modal preview + login submit
+  document.addEventListener("click", function(e){
+    const resetBtn = e.target.closest(".reset-password-btn");
+    if(resetBtn){
+      const id = resetBtn.dataset.id;
+      const username = resetBtn.dataset.username || "this user";
+      if(!confirm(`Reset password to 123 for ${username}?`)) return;
+
+      const originalHtml = resetBtn.innerHTML;
+      resetBtn.disabled = true;
+      resetBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i><span class="d-none d-sm-inline">Reset</span>`;
+
+      fetch(buildResetUrl(id), {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrfToken,
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      })
+        .then(async resp => {
+          const data = await resp.json().catch(() => ({}));
+          if(!resp.ok) throw new Error(data.message || "Unable to reset password. Please try again.");
+          alert(data.message || "Password reset to 123.");
+        })
+        .catch(err => {
+          alert(err.message || "Unable to reset password. Please try again.");
+        })
+        .finally(() => {
+          resetBtn.disabled = false;
+          resetBtn.innerHTML = originalHtml;
+        });
+      return;
+    }
+
+    const btn = e.target.closest(".preview-login-btn");
+    if(!btn) return;
+
+    $("#confirmLoginId").value = btn.dataset.id || "";
+    $("#previewUsername").textContent = btn.dataset.username || "";
+    $("#previewEmail").textContent = btn.dataset.email || "";
+    $("#previewParentId").textContent = "Parent ID: " + (btn.dataset.parentid || "-");
+    $("#previewDepartment").textContent = "Department: " + (btn.dataset.department || "-");
+    $("#previewRole").textContent = btn.dataset.role || "-";
+    $("#previewProfile").setAttribute("src", btn.dataset.profile || DEFAULT_PROFILE);
+
+    if(window.bootstrap && window.bootstrap.Modal){
+      const modal = new bootstrap.Modal(document.getElementById("loginPreviewModal"));
+      modal.show();
+    }else{
+      alert("Bootstrap JS is not loaded in base.html. Add bootstrap.bundle.min.js once in base.html to enable modal.");
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", function(){
+    loadParents();
+  });
+})();
+</script>
+
+{% endblock %}

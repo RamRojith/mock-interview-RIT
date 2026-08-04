@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+.role-page{
+  --card:#ffffff;
+  --ink:#0f172a;
+  --muted:#64748b;
+  --border:#e5e7eb;
+  --pri:#0d6efd;
+  --shadow: 0 10px 30px rgba(2,6,23,.08);
+}
+.role-page .wrap{
+  background: linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%);
+  min-height: calc(100vh - 40px);
+  padding: 22px 12px;
+}
+.role-page .container-max{
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.role-page .header{
+  background: linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%);
+  border-radius: 20px;
+  padding: 20px;
+  color:#fff;
+  box-shadow: 0 12px 30px rgba(2,6,23,.18);
+}
+.role-page .header h3{
+  margin:0;
+  font-weight: 900;
+}
+.role-page .header .sub{
+  color: rgba(255,255,255,.85);
+  margin-top: 6px;
+}
+.role-page .chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.22);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+}
+.role-page .cardx{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+}
+.role-page .table-wrap{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.role-page .table thead th{
+  background: #0b1220;
+  color:#fff;
+  border-bottom: 0;
+  font-weight: 800;
+}
+.role-page .table tbody td{
+  vertical-align: middle;
+}
+.role-page .pagination .page-link{
+  border-radius: 10px;
+  margin: 0 3px;
+  font-weight: 700;
+}
+.role-page .pagination .page-item.active .page-link{
+  background: var(--pri);
+  border-color: var(--pri);
+}
+.role-page .btn-icon{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+</style>
+
+<div class="role-page">
+  <div class="wrap">
+    <div class="container-max">
+
+      <!-- Header -->
+      <div class="header mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div>
+            <h3><i class="fa-solid fa-user-tag me-2"></i>Role List</h3>
+            <div class="sub">View and export roles</div>
+          </div>
+          <div class="chip">
+            <span class="badge bg-light text-dark" id="resultCount">0</span>
+            <span>Roles</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="cardx mb-3">
+        <div class="p-3">
+          <div class="row g-3 align-items-end">
+
+            <div class="col-md-8">
+              <label class="form-label fw-bold">Search Role</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fa fa-search"></i></span>
+                <input type="text" id="globalSearch" class="form-control" placeholder="Search role...">
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Page Size</label>
+              <select id="pageSize" class="form-select">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+              </select>
+            </div>
+
+            <div class="col-12 d-flex gap-2 mt-2">
+              <button class="btn btn-success btn-icon" id="exportExcelBtn">
+                <i class="fa-solid fa-file-excel"></i> Export Excel
+              </button>
+
+              <button class="btn btn-secondary btn-icon" id="clearAll">
+                <i class="fa fa-eraser"></i> Clear
+              </button>
+
+              <button class="btn btn-primary btn-icon" id="refreshBtn">
+                <i class="fa fa-rotate"></i> Refresh
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <div class="table-responsive">
+          <table class="table table-striped mb-0">
+            <thead>
+              <tr>
+                <th style="width:80px">#</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody id="roleTbody">
+              <tr>
+                <td colspan="2" class="text-center py-4">
+                  <i class="fa fa-spinner fa-spin"></i> Loading...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="d-flex justify-content-between mt-3">
+        <div id="pageInfo" class="text-muted small"></div>
+        <ul class="pagination pagination-sm" id="paginationUl"></ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const dataUrl = "{% url 'role_view_data' %}";
+  const exportUrl = "{% url 'export_role_excel' %}";
+
+  let currentPage = 1;
+  let lastMeta = null;
+
+  const $ = (s)=>document.querySelector(s);
+
+  function loadRoles(){
+    const q = $("#globalSearch").value;
+    const pageSize = $("#pageSize").value;
+
+    $("#roleTbody").innerHTML = `<tr><td colspan="2" class="text-center py-4">Loading...</td></tr>`;
+
+    fetch(`${dataUrl}?q=${q}&page=${currentPage}&page_size=${pageSize}`)
+    .then(res=>res.json())
+    .then(data=>{
+        lastMeta = data.pagination;
+
+        if(!data.results.length){
+            $("#roleTbody").innerHTML = `<tr><td colspan="2" class="text-center">No roles</td></tr>`;
+            return;
+        }
+
+        $("#roleTbody").innerHTML = data.results.map(r=>`
+            <tr>
+              <td>${r.sno}</td>
+              <td>${r.role}</td>
+            </tr>
+        `).join("");
+
+        $("#resultCount").textContent = data.pagination.total;
+        $("#pageInfo").textContent = `Page ${data.pagination.page} of ${data.pagination.total_pages}`;
+
+        renderPagination();
+    });
+  }
+
+  function renderPagination(){
+    const ul = $("#paginationUl");
+    ul.innerHTML = "";
+
+    for(let i=1;i<=lastMeta.total_pages;i++){
+        ul.innerHTML += `
+          <li class="page-item ${i===lastMeta.page?'active':''}">
+            <a class="page-link" href="#" data-page="${i}">${i}</a>
+          </li>`;
+    }
+  }
+
+  $("#paginationUl").addEventListener("click",e=>{
+    if(e.target.dataset.page){
+        currentPage = parseInt(e.target.dataset.page);
+        loadRoles();
+    }
+  });
+
+  $("#globalSearch").addEventListener("keyup", ()=>{
+    currentPage=1;
+    loadRoles();
+  });
+
+  $("#pageSize").addEventListener("change", ()=>{
+    currentPage=1;
+    loadRoles();
+  });
+
+  $("#clearAll").onclick = ()=>{
+    $("#globalSearch").value="";
+    currentPage=1;
+    loadRoles();
+  };
+
+  $("#refreshBtn").onclick = loadRoles;
+
+  $("#exportExcelBtn").onclick = ()=>{
+    const q = $("#globalSearch").value;
+    window.location.href = `${exportUrl}?q=${q}`;
+  };
+
+  document.addEventListener("DOMContentLoaded", loadRoles);
+})();
+</script>
+
+{% endblock %}

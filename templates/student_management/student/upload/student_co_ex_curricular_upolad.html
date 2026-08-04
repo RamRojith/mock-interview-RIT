@@ -1,0 +1,381 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+.certificate-upload {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.certificate-upload .page-container { max-width: 800px; margin: 0 auto; width: 100%; }
+
+.certificate-upload .upload-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    border: 1px solid #e2e8f0;
+    padding: 0;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.certificate-upload .upload-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.certificate-upload .card-header {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+    border-bottom: none;
+}
+
+.certificate-upload .card-header h4 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.certificate-upload .card-header i { font-size: 2rem; }
+
+.certificate-upload .card-body { padding: 3rem; }
+
+.certificate-upload .form-group { margin-bottom: 2rem; }
+
+.certificate-upload .form-group label {
+    font-weight: 700;
+    color: #1a4b8c;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.certificate-upload .form-group label i { color: #64748b; font-size: 1rem; width: 20px; }
+
+.certificate-upload .form-group input,
+.certificate-upload .form-group select {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+    background: white;
+    color: #1e293b;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    width: 100%;
+}
+
+.certificate-upload .form-group input:focus,
+.certificate-upload .form-group select:focus {
+    border-color: #1a4b8c;
+    box-shadow: 0 0 0 4px rgba(26, 75, 140, 0.15);
+    transform: translateY(-2px);
+    outline: none;
+}
+
+.certificate-upload .form-group input[readonly] {
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+.certificate-upload .date-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.certificate-upload .submit-btn {
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color: white;
+    border: none;
+    padding: 1.25rem 3rem;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    justify-content: center;
+    margin-top: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.certificate-upload .submit-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.certificate-upload .submit-btn:hover::before { left: 100%; }
+
+.certificate-upload .submit-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(26, 75, 140, 0.4);
+    background: linear-gradient(135deg, #153e75 0%, #1e4a8e 100%);
+}
+
+.certificate-upload .file-upload-area {
+    border: 2px dashed #e2e8f0;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: #f8fafc;
+    cursor: pointer;
+    margin-bottom: 2rem;
+}
+
+.certificate-upload .file-upload-area:hover {
+    border-color: #1a4b8c;
+    background: #f0f9ff;
+    transform: translateY(-2px);
+}
+
+.certificate-upload .file-upload-area.dragover {
+    border-color: #1a4b8c;
+    background: #e0f2fe;
+    transform: scale(1.02);
+}
+
+.certificate-upload .file-upload-area i {
+    font-size: 2.5rem;
+    color: #64748b;
+    margin-bottom: 1rem;
+}
+
+.certificate-upload .file-upload-area p { color: #64748b; margin: 0; font-weight: 500; }
+
+.certificate-upload .file-input { display: none; }
+
+.certificate-upload .file-info {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #d1fae5;
+    border-radius: 8px;
+    color: #065f46;
+    font-weight: 600;
+    display: none;
+}
+</style>
+
+<div class="certificate-upload">
+    <div class="page-container">
+        <div class="upload-card">
+            <div class="card-header">
+                <h4><i class="fa-solid fa-award"></i>Upload Co / Extra-Curricular Certificate</h4>
+            </div>
+
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="certificateForm">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-user"></i>Student Name</label>
+                        <input type="text" value="{{ student_name }}" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-calendar-days"></i>Academic Year</label>
+                        <select name="academic_year" id="academic_year" required>
+                            <option value="" hidden selected>Select Academic Year</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-list-ul"></i>Activity Type</label>
+                        <select name="activity_type" required>
+                            <option value="" hidden selected>Select Type</option>
+                            <option value="Co-curricular">Co-curricular</option>
+                            <option value="Extra-curricular">Extra-curricular</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-star"></i>Event Name</label>
+                        <input type="text" name="event_name" required placeholder="Enter the event name">
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-globe"></i>Level</label>
+                        <select name="level" required>
+                            <option value="" hidden selected>Select Level</option>
+                            <option value="College">College</option>
+                            <option value="State">State</option>
+                            <option value="National">National</option>
+                            <option value="International">International</option>
+                        </select>
+                    </div>
+
+                    <div class="date-row">
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-calendar"></i>From Date</label>
+                            <input type="date" name="from_date" required onchange="calculateDays()">
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fa-regular fa-calendar"></i>To Date</label>
+                            <input type="date" name="to_date" required onchange="calculateDays()">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-clock"></i>Number of Days</label>
+                        <input type="number" id="total_days" name="total_days" readonly placeholder="Auto-calculated">
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-file-arrow-up"></i>Upload Certificate</label>
+
+                        <!-- ✅ Keep input always (do NOT remove via innerHTML) -->
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <input type="file" name="certificate" class="file-input" accept=".pdf,.jpg,.jpeg,.png" required id="fileInput">
+
+                            <i class="fa-solid fa-cloud-upload-alt" id="uploadIcon"></i>
+                            <p id="uploadText1">Click to browse or drag & drop your certificate</p>
+                            <p class="small text-muted" id="uploadText2">Supported formats: PDF, JPG, JPEG, PNG</p>
+                        </div>
+
+                        <div class="file-info" id="fileInfo"></div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        <i class="fa-solid fa-upload"></i>Submit Certificate
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Calculate Days (same logic)
+function calculateDays() {
+    const fromDate = document.getElementsByName('from_date')[0].value;
+    const toDate = document.getElementsByName('to_date')[0].value;
+
+    if (fromDate && toDate) {
+        const f = new Date(fromDate);
+        const t = new Date(toDate);
+
+        if (t >= f) {
+            const days = Math.ceil((t - f) / (1000 * 60 * 60 * 24)) + 1;
+            document.getElementById('total_days').value = days;
+        } else {
+            document.getElementById('total_days').value = '';
+        }
+    }
+}
+
+// Generate Academic Year options dynamically
+(function generateAcademicYears() {
+    const select = document.getElementById("academic_year");
+
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+
+    let currentStartYear = month >= 7 ? year : year - 1;
+    let start = currentStartYear - 2;
+    let end = currentStartYear + 3;
+
+    for (let y = start; y <= end; y++) {
+        let optionText = `${y}-${y + 1}`;
+        let opt = document.createElement("option");
+        opt.value = optionText;
+        opt.textContent = optionText;
+        select.appendChild(opt);
+    }
+})();
+
+// ✅ Fixed file upload (NO innerHTML replacement)
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('fileInput');
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInfo = document.getElementById('fileInfo');
+    const form = document.getElementById('certificateForm');
+
+    const uploadIcon = document.getElementById('uploadIcon');
+    const uploadText1 = document.getElementById('uploadText1');
+    const uploadText2 = document.getElementById('uploadText2');
+
+    // Click to browse
+    fileUploadArea.addEventListener('click', () => fileInput.click());
+
+    // File selection
+    fileInput.addEventListener('change', function() {
+        if (this.files && this.files.length > 0) {
+            const file = this.files[0];
+            const fileName = file.name;
+            const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+
+            fileInfo.innerHTML = `
+                <i class="fa-solid fa-file me-2"></i>
+                <strong>${fileName}</strong> (${fileSize} MB)
+            `;
+            fileInfo.style.display = 'block';
+
+            uploadIcon.className = 'fa-solid fa-file-check text-success';
+            uploadText1.textContent = `File selected: ${fileName}`;
+            uploadText2.textContent = 'Click to change file';
+        }
+    });
+
+    // Drag and drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        fileUploadArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        fileUploadArea.addEventListener(eventName, () => fileUploadArea.classList.add('dragover'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        fileUploadArea.addEventListener(eventName, () => fileUploadArea.classList.remove('dragover'), false);
+    });
+
+    fileUploadArea.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            fileInput.files = files;
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    });
+
+    // Loading state
+    form.addEventListener('submit', function() {
+        const submitBtn = this.querySelector('.submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Uploading...';
+    });
+});
+</script>
+
+{% endblock content %}

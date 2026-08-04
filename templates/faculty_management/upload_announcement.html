@@ -1,0 +1,1169 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+  :root{
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --border:#e5e7eb;
+    --pri:#0d6efd;
+    --pri2:#2c5aa0;
+    --good:#16a34a;
+    --warn:#f59e0b;
+    --danger:#dc3545;
+    --shadow: 0 10px 30px rgba(2,6,23,.08);
+    --radius: 18px;
+  }
+
+  .page-wrap{
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: calc(100vh - 40px);
+    padding: 24px 12px;
+  }
+  .page-container{
+    max-width: 1250px;
+    margin: 0 auto;
+  }
+
+  .page-header{
+    background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+    color:#fff;
+    border-radius: var(--radius);
+    padding: 22px 18px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header:before{
+    content:"";
+    position:absolute;
+    inset:-40px -80px auto auto;
+    width:240px;height:240px;
+    background: rgba(255,255,255,.12);
+    border-radius: 50%;
+  }
+  .page-header h1{
+    margin:0;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing:.2px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .page-header .subtitle{
+    margin: 8px 0 0 0;
+    opacity: .92;
+    font-size: 14px;
+  }
+
+  .card{
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+    margin-bottom: 18px;
+    background: var(--card);
+  }
+  .card-header{
+    background:#fff;
+    border-bottom: 1px solid var(--border);
+    font-weight: 800;
+    padding: 14px 16px;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .card-title-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color: var(--ink);
+  }
+  .card-title-left i{ color: var(--pri); }
+  .card-body{ padding: 16px; }
+
+  .form-label{
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+  .form-control, .form-select{
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: .6rem .75rem;
+  }
+  .form-control:focus, .form-select:focus{
+    border-color: rgba(13,110,253,.55);
+    box-shadow: 0 0 0 .2rem rgba(13,110,253,.12);
+  }
+
+  .file-upload-area{
+    border: 1px dashed #cbd5e1;
+    border-radius: 14px;
+    padding: 14px;
+    background: #fff;
+    cursor: pointer;
+    transition: .15s ease;
+  }
+  .file-upload-area.dragover{
+    background: #eef6ff;
+    border-color: var(--pri);
+    box-shadow: 0 0 0 .2rem rgba(13,110,253,.10);
+  }
+
+  .visibility-card .card-header{
+    background: linear-gradient(135deg, rgba(13,110,253,.12), rgba(13,110,253,.03));
+  }
+
+  .selection-section .card-header{
+    background: #f8fafc;
+  }
+  .selection-box{
+    max-height: 240px;
+    overflow: auto;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px;
+  }
+
+  .table thead th{
+    background:#f8fafc;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .35px;
+    vertical-align: middle;
+    color: #0f172a;
+    border-bottom: 1px solid var(--border);
+  }
+  .table td{
+    vertical-align: middle;
+    border-color: var(--border);
+  }
+  .table-hover tbody tr:hover{
+    background: rgba(13,110,253,.04);
+  }
+
+  .vdt-head,
+  .vdt-cell{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    min-width: 150px;
+  }
+  .vdt-head div{ font-weight: 800; }
+  .vdt-cell div{
+    white-space: nowrap;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .vdt-cell div:nth-child(2),
+  .vdt-cell div:nth-child(3),
+  .vdt-cell div:nth-child(4),
+  .vdt-cell div:nth-child(5){
+    color: var(--muted);
+  }
+
+  .btn{ border-radius: 12px; }
+  .btn-group .btn{ border-radius: 12px !important; }
+  .badge{ border-radius: 999px; font-weight: 700; }
+
+  /* File preview modal */
+  .file-frame{
+    width:100%;
+    height:70vh;
+    border:0;
+    border-radius: 12px;
+    background:#fff;
+  }
+  .file-meta{
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 991.98px){
+    .mobile-visibility-panel{
+      position: static !important;
+      padding: 0 !important;
+      background: transparent !important;
+    }
+    .file-frame{ height: 60vh; }
+  }
+</style>
+
+<div class="page-wrap">
+  <div class="page-container">
+        <!-- Form Card -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title-left">
+          <i class="fas {% if edit_instance %}fa-edit{% else %}fa-bullhorn{% endif %}"></i>
+          <span>{% if edit_instance %}Edit Announcement{% else %}Create New Announcement{% endif %}</span>
+        </div>
+        <span class="badge bg-light text-primary">
+          {% if edit_instance %}Editing{% else %}New{% endif %}
+        </span>
+      </div>
+
+      <div class="card-body">
+        <form method="POST" enctype="multipart/form-data" id="announcementForm">
+          {% csrf_token %}
+          {% if edit_instance %}
+            <input type="hidden" name="edit_id" value="{{ edit_instance.id }}">
+          {% endif %}
+
+          <div class="row g-3">
+            <div class="col-lg-8">
+              <div class="mb-3">
+                <label class="form-label">
+                  <i class="fas fa-heading me-1 text-muted"></i>
+                  Title <span class="text-danger">*</span>
+                </label>
+                <input type="text"
+                       name="title"
+                       class="form-control"
+                       value="{{ edit_instance.title|default:'' }}"
+                       placeholder="Enter announcement title"
+                       required>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">
+                  <i class="fas fa-comment-alt me-1 text-muted"></i>
+                  Message <span class="text-danger">*</span>
+                </label>
+                <textarea name="message"
+                          rows="5"
+                          class="form-control"
+                          placeholder="Enter announcement content"
+                          required>{{ edit_instance.message|default:'' }}</textarea>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">
+                  <i class="fas fa-calendar-alt me-1 text-muted"></i>
+                  Academic Year <span class="text-danger">*</span>
+                </label>
+                <input type="text"
+                       name="academic_year"
+                       class="form-control"
+                       value="{{ academic_year|default:'' }}"
+                       required readonly>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">
+                  <i class="fas fa-paperclip me-1 text-muted"></i>
+                  Circular (optional)
+                </label>
+
+                <div class="file-upload-area" id="uploadArea">
+                  <input type="file" name="attachment" class="d-none" id="fileInput">
+                  <div id="fileLabel" class="text-center">
+                    <i class="fas fa-cloud-upload-alt text-muted fa-2x mb-2"></i>
+                    <p class="mb-2">Drag & drop files here or click to browse</p>
+                    <button type="button" class="btn btn-primary btn-sm" id="browseBtn">
+                      <i class="fas fa-folder-open me-1"></i>Browse Files
+                    </button>
+                  </div>
+                </div>
+
+                {% if edit_instance and edit_instance.attachment %}
+                  <div class="mt-2">
+                    <small class="text-muted">
+                      Current File:
+                      <a href="{{ edit_instance.attachment.url }}" target="_blank" class="text-decoration-none">
+                        <i class="fas fa-file me-1"></i>{{ edit_instance.attachment.name|slice:"20:" }}
+                      </a>
+                      <button type="button"
+                              class="btn btn-sm btn-outline-primary ms-2 open-file-modal"
+                              data-file-url="{{ edit_instance.attachment.url }}"
+                              data-file-name="{{ edit_instance.attachment.name|default:'Attachment' }}">
+                        <i class="fas fa-eye me-1"></i>Preview
+                      </button>
+                    </small>
+                  </div>
+                {% endif %}
+              </div>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">
+                    <i class="fas fa-map-marker-alt me-1 text-muted"></i>
+                    Venue
+                  </label>
+                  <input type="text"
+                         name="venue"
+                         class="form-control"
+                         value="{{ edit_instance.venue|default:'' }}"
+                         placeholder="Enter venue">
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">
+                    <i class="fas fa-calendar-day me-1 text-muted"></i>
+                    Date
+                  </label>
+                  <input type="date"
+                         name="date"
+                         class="form-control"
+                         value="{{ edit_instance.date|date:'Y-m-d' }}">
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">
+                    <i class="fas fa-clock me-1 text-muted"></i>
+                    Event Starting Time
+                  </label>
+                  <input type="time"
+                         name="time"
+                         class="form-control"
+                         value="{{ edit_instance.time|time:'H:i' }}">
+                </div>
+
+                <div class="col-md-6">
+  <label class="form-label">
+    <i class="fas fa-hourglass-start me-1 text-muted"></i>
+    Notification Open Date & Time
+  </label>
+  <input type="datetime-local"
+         name="notify_from"
+         class="form-control"
+         value="{{ edit_instance.notify_from|date:'Y-m-d\\TH:i' }}">
+</div>
+
+<div class="col-md-6">
+  <label class="form-label">
+    <i class="fas fa-hourglass-end me-1 text-muted"></i>
+    Notification Close Date & Time
+  </label>
+  <input type="datetime-local"
+         name="notify_to"
+         class="form-control"
+         value="{{ edit_instance.notify_to|date:'Y-m-d\\TH:i' }}">
+</div>
+              </div>
+            </div>
+
+            <!-- Visibility Settings -->
+            <div class="col-lg-4">
+              <div class="mobile-visibility-panel">
+                <div class="card visibility-card">
+                  <div class="card-header">
+                    <div class="card-title-left">
+                      <i class="fas fa-eye"></i>
+                      <span>Visibility Settings</span>
+                    </div>
+                  </div>
+
+                  <div class="card-body">
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input toggle-section" type="checkbox" id="toggleRoles" data-target="roleSelection">
+                      <label class="form-check-label" for="toggleRoles">By Role</label>
+                    </div>
+
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input toggle-section" type="checkbox" id="toggleDepartments" data-target="departmentSelection">
+                      <label class="form-check-label" for="toggleDepartments">By Department</label>
+                    </div>
+
+                    <div class="form-check form-switch mb-3">
+                      <input class="form-check-input toggle-section" type="checkbox" id="toggleUsers" data-target="userSelection">
+                      <label class="form-check-label" for="toggleUsers">By User</label>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                      <button type="submit" class="btn btn-primary">
+                        <i class="fas {% if edit_instance %}fa-save{% else %}fa-upload{% endif %} me-1"></i>
+                        {% if edit_instance %}Update Announcement{% else %}Publish Announcement{% endif %}
+                      </button>
+
+                      {% if edit_instance %}
+                        <button type="submit" name="cancel" value="1" class="btn btn-outline-secondary">
+                          <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selection Sections -->
+          <div class="row mt-3">
+
+            <!-- Roles -->
+            <div id="roleSelection" class="selection-section col-12 mb-3" style="display:none;">
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title-left">
+                    <i class="fas fa-user-tag"></i>
+                    <span>Select Roles</span>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="mb-2">
+                    <input type="text" class="form-control" id="searchRoles" placeholder="Search roles...">
+                  </div>
+                  <div class="selection-box">
+                    <div class="row">
+                      {% for role in roles %}
+                      <div class="col-md-6 col-lg-4 role-item">
+                        <div class="form-check mb-2">
+                          <input class="form-check-input"
+                                 type="checkbox"
+                                 name="roles"
+                                 value="{{ role.id }}"
+                                 id="role_{{ role.id }}"
+                                 {% if edit_instance and role.id in edit_roles %}checked{% endif %}>
+                          <label class="form-check-label" for="role_{{ role.id }}">{{ role.role }}</label>
+                        </div>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Departments -->
+            <div id="departmentSelection" class="selection-section col-12 mb-3" style="display:none;">
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title-left">
+                    <i class="fas fa-building"></i>
+                    <span>Select Departments</span>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="mb-2">
+                    <input type="text" class="form-control" id="searchDepartments" placeholder="Search departments...">
+                  </div>
+                  <div class="selection-box">
+                    <div class="row">
+                      {% for dept in departments %}
+                      <div class="col-md-6 col-lg-4 dept-item">
+                        <div class="form-check mb-2">
+                          <input class="form-check-input"
+                                 type="checkbox"
+                                 name="departments"
+                                 value="{{ dept.id }}"
+                                 id="dept_{{ dept.id }}"
+                                 {% if edit_instance and dept in edit_instance.departments.all %}checked{% endif %}>
+                          <label class="form-check-label" for="dept_{{ dept.id }}">
+                            {{ dept.Department }} - {{ dept.degree.degree_code|default:"N/A" }}
+                          </label>
+                        </div>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Users -->
+            <div id="userSelection" class="selection-section col-12 mb-3" style="display:none;">
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title-left">
+                    <i class="fas fa-users"></i>
+                    <span>Select Users</span>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="mb-2">
+                    <input type="text" class="form-control" id="searchUsers" placeholder="Search users...">
+                  </div>
+                  <div class="selection-box" style="max-height:260px;">
+                    <div class="row">
+                      {% for u in users %}
+                      <div class="col-md-6 col-lg-4 user-item">
+                        <div class="form-check mb-2">
+                          <input class="form-check-input"
+                                 type="checkbox"
+                                 name="users"
+                                 value="{{ u.id }}"
+                                 id="user_{{ u.id }}"
+                                 {% if edit_instance and u in edit_instance.users.all %}checked{% endif %}>
+                          <label class="form-check-label" for="user_{{ u.id }}">
+                            <span class="fw-medium">{{ u.faculty_id }} - {{ u.name }}</span>
+                            {% if u.department %}
+                              <small class="d-block text-muted">{{ u.department.Department }} - {{ u.department.degree.degree_code|default:"N/A" }}</small>
+                            {% endif %}
+                          </label>
+                        </div>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- Announcements Table -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title-left">
+          <i class="fas fa-list"></i>
+          <span>All Announcements</span>
+        </div>
+        <div class="input-group input-group-sm" style="max-width:260px;">
+          <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+          <input id="tableSearch" type="text" class="form-control" placeholder="Search announcements...">
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="announcementsTable" class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th class="ps-4">#</th>
+                <th>Title</th>
+                <th class="text-center">Academic Year</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Roles</th>
+                <th class="text-center">Departments</th>
+                <th class="text-center">Users</th>
+                <th class="text-center">
+                  <div class="vdt-head">
+                    <div>Venue</div>
+                    <div>Date</div>
+                    <div>Event Time</div>
+                    <div>Notify From</div>
+                    <div>Notify To</div>
+                  </div>
+                </th>
+                <th class="text-center">Created By</th>
+                <th class="text-center">Created At</th>
+                <th class="text-center pe-4">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for meta in announcement_meta %}
+                {% with ann=meta.announcement %}
+                <tr>
+                  <td class="ps-4 fw-medium">{{ forloop.counter }}</td>
+
+                  <td>
+                    <div>
+                      <div class="fw-semibold">{{ ann.title|default:"-" }}</div>
+                      <small class="text-muted">{{ ann.message|default:""|truncatewords:10 }}</small>
+                    </div>
+                  </td>
+
+                  <td class="text-center">{{ ann.academic_year|default:"-" }}</td>
+
+                  <td class="text-center">
+                    {% if ann.is_active %}
+                      <span class="badge bg-success">Active</span>
+                    {% else %}
+                      <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                  </td>
+
+                  <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-primary"
+                            data-bs-toggle="modal" data-bs-target="#rolesModal{{ ann.id }}">View</button>
+                  </td>
+
+                  <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-primary"
+                            data-bs-toggle="modal" data-bs-target="#deptModal{{ ann.id }}">View</button>
+                  </td>
+
+                  <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-primary"
+                            data-bs-toggle="modal" data-bs-target="#userModal{{ ann.id }}">View</button>
+                  </td>
+
+                  <td class="text-center">
+  <div class="vdt-cell">
+
+    <!-- Venue -->
+    <div>
+      <strong>Venue:</strong>
+      {{ ann.venue|default:"-" }}
+    </div>
+
+    <!-- Event Date -->
+    <div>
+      <strong>Date:</strong>
+      {% if ann.date %}
+        {{ ann.date|date:"d-m-Y" }}
+      {% else %}
+        -
+      {% endif %}
+    </div>
+
+    <!-- Event Time -->
+    <div>
+      <strong>Time:</strong>
+      {% if ann.time %}
+        {{ ann.time|time:"H:i" }}
+      {% else %}
+        -
+      {% endif %}
+    </div>
+
+    <!-- Notification Window -->
+    <div>
+      <strong>Notify From:</strong>
+      {% if ann.notify_from %}
+        {{ ann.notify_from|date:"d-m-Y H:i" }}
+      {% else %}
+        -
+      {% endif %}
+    </div>
+
+    <div>
+      <strong>Notify To:</strong>
+      {% if ann.notify_to %}
+        {{ ann.notify_to|date:"d-m-Y H:i" }}
+      {% else %}
+        -
+      {% endif %}
+    </div>
+
+  </div>
+</td>
+
+                  <td class="text-center">{{ ann.created_by.name|default:"-" }}</td>
+                  <td class="text-center">{{ ann.created_at|date:"d-m-Y H:i" }}</td>
+
+                  <td class="text-center pe-4">
+                    <div class="d-flex flex-column gap-2 align-items-center">
+
+                      <!-- Row Upload Form -->
+                      <form method="POST" enctype="multipart/form-data" class="w-100" style="max-width:260px;">
+                        {% csrf_token %}
+                        <input type="hidden" name="row_upload_id" value="{{ ann.id }}">
+
+                        <div class="d-grid gap-2">
+
+                          <div class="text-start">
+                            <label class="form-label small mb-1">Circular</label>
+                            <input type="file" name="attachment" class="form-control form-control-sm">
+                            {% if ann.attachment %}
+                              <div class="d-flex align-items-center gap-2 mt-1">
+                                <a href="{{ ann.attachment.url }}" target="_blank" class="small text-decoration-none">
+                                  <i class="fas fa-paperclip me-1"></i>Open
+                                </a>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-dark open-file-modal"
+                                        data-file-url="{{ ann.attachment.url }}"
+                                        data-file-name="{{ ann.attachment.name|default:'Circular' }}">
+                                  <i class="fas fa-eye me-1"></i>Preview
+                                </button>
+                              </div>
+                            {% endif %}
+                          </div>
+
+                          <div class="text-start">
+                            <label class="form-label small mb-1">Upload Meeting Minutes</label>
+                            <input type="file" name="file" class="form-control form-control-sm">
+                            {% if ann.file %}
+                              <div class="d-flex align-items-center gap-2 mt-1">
+                                <a href="{{ ann.file.url }}" target="_blank" class="small text-decoration-none">
+                                  <i class="fas fa-file me-1"></i>Open
+                                </a>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-dark open-file-modal"
+                                        data-file-url="{{ ann.file.url }}"
+                                        data-file-name="{{ ann.file.name|default:'Meeting Minutes' }}">
+                                  <i class="fas fa-eye me-1"></i>Preview
+                                </button>
+                              </div>
+                            {% endif %}
+                          </div>
+
+                          <button type="submit" class="btn btn-sm btn-success">
+                            <i class="fas fa-upload me-1"></i>Upload
+                          </button>
+                        </div>
+                      </form>
+
+                      <!-- Action buttons -> open confirm modals -->
+                      <div class="btn-group btn-group-sm" role="group">
+
+                        <a href="?edit={{ ann.id }}" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="Edit">
+                          <i class="fas fa-edit"></i> Edit
+                        </a>
+
+                        <!-- Activate/Deactivate confirm modal button -->
+                        <button type="button"
+                                class="btn btn-outline-{% if ann.is_active %}warning{% else %}success{% endif %}"
+                                data-bs-toggle="modal"
+                                data-bs-target="#toggleModal{{ ann.id }}">
+                          <i class="fas fa-{% if ann.is_active %}pause{% else %}play{% endif %}"></i>
+                          {% if ann.is_active %}Deactivate{% else %}Activate{% endif %}
+                        </button>
+
+                        <!-- Delete confirm modal button -->
+                        <button type="button"
+                                class="btn btn-outline-danger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#deleteModal{{ ann.id }}">
+                          <i class="fas fa-trash"></i> Delete
+                        </button>
+
+                      </div>
+
+                    </div>
+                  </td>
+                </tr>
+                {% endwith %}
+              {% empty %}
+                <tr>
+                  <td colspan="11" class="text-center py-5">
+                    <div class="py-4">
+                      <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                      <h5 class="text-muted">No circular found</h5>
+                      <p class="text-muted">Create your first circular to get started</p>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ====== Detail Modals (existing) + NEW Confirm Modals + NEW File Preview Modal ====== -->
+
+<!-- Existing detail modals (roles/dept/users) -->
+{% for meta in announcement_meta %}
+{% with ann=meta.announcement %}
+
+<div class="modal fade" id="rolesModal{{ ann.id }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header">
+        <h5 class="modal-title">Roles for: {{ ann.title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        {% if meta.role_names %}
+          <ul class="list-group list-group-flush">
+            {% for rn in meta.role_names %}
+              <li class="list-group-item">{{ rn }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="text-center py-4">
+            <i class="fas fa-user-tag fa-2x text-muted mb-2"></i>
+            <p class="text-muted mb-0">No roles linked.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="deptModal{{ ann.id }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header">
+        <h5 class="modal-title">Departments for: {{ ann.title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        {% if meta.departments %}
+          <ul class="list-group list-group-flush">
+            {% for d in meta.departments %}
+              <li class="list-group-item">{{ d.Department }} - {{ d.degree.degree_code }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="text-center py-4">
+            <i class="fas fa-building fa-2x text-muted mb-2"></i>
+            <p class="text-muted mb-0">No departments linked.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="userModal{{ ann.id }}" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header">
+        <h5 class="modal-title">Users for: {{ ann.title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        {% if meta.users %}
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Employee ID</th>
+                  <th>Name</th>
+                  <th>Department</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for u in meta.users %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ u.faculty_id }}</td>
+                  <td>{{ u.name }}</td>
+                  <td>
+                    {% if u.department %}
+                      {{ u.department.Department }} - {{ u.department.degree.degree_code }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-4">
+            <i class="fas fa-users fa-2x text-muted mb-2"></i>
+            <p class="text-muted mb-0">No users linked.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW: Toggle confirm modal -->
+<div class="modal fade" id="toggleModal{{ ann.id }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          {% if ann.is_active %}Deactivate{% else %}Activate{% endif %} Announcement
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">
+          Are you sure you want to
+          <strong>{% if ann.is_active %}deactivate{% else %}activate{% endif %}</strong>
+          this announcement?
+        </p>
+        <div class="p-3 rounded-3 bg-light border">
+          <div class="fw-semibold">{{ ann.title|default:"-" }}</div>
+          <div class="small text-muted">{{ ann.message|default:""|truncatewords:18 }}</div>
+        </div>
+        <div class="mt-3 small text-muted">
+          Current status:
+          {% if ann.is_active %}
+            <span class="badge bg-success">Active</span>
+          {% else %}
+            <span class="badge bg-secondary">Inactive</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i>Cancel
+        </button>
+        <a href="?toggle={{ ann.id }}"
+           class="btn btn-{% if ann.is_active %}warning{% else %}success{% endif %}">
+          <i class="fas fa-{% if ann.is_active %}pause{% else %}play{% endif %} me-1"></i>
+          {% if ann.is_active %}Deactivate{% else %}Activate{% endif %}
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW: Delete confirm modal -->
+<div class="modal fade" id="deleteModal{{ ann.id }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">Delete Announcement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">This action cannot be undone. Do you want to delete this announcement?</p>
+        <div class="p-3 rounded-3 bg-light border">
+          <div class="fw-semibold">{{ ann.title|default:"-" }}</div>
+          <div class="small text-muted">{{ ann.message|default:""|truncatewords:18 }}</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i>Cancel
+        </button>
+        <a href="?delete={{ ann.id }}" class="btn btn-danger">
+          <i class="fas fa-trash me-1"></i>Delete
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endwith %}
+{% endfor %}
+
+<!-- NEW: Single reusable File Preview Modal -->
+<div class="modal fade" id="filePreviewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title mb-0" id="filePreviewTitle">File Preview</h5>
+          <div class="file-meta" id="filePreviewMeta"></div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <a class="btn btn-sm btn-outline-primary" id="fileOpenNewTab" href="#" target="_blank" rel="noopener">
+            <i class="fas fa-external-link-alt me-1"></i>Open New Tab
+          </a>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <iframe id="filePreviewFrame" class="file-frame" src=""></iframe>
+        <div class="mt-2 small text-muted">
+          If preview not supported, click <span class="fw-semibold">Open New Tab</span>.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+
+    // === File upload (top form) ===
+    const fileInput = document.getElementById('fileInput');
+    const browseBtn = document.getElementById('browseBtn');
+    const uploadArea = document.getElementById('uploadArea');
+    const fileLabel = document.getElementById('fileLabel');
+
+    if (browseBtn && fileInput) browseBtn.addEventListener('click', () => fileInput.click());
+
+    if (fileInput) {
+      fileInput.addEventListener('change', function () {
+        if (this.files.length > 0) {
+          const fileName = this.files[0].name;
+          if (fileLabel) {
+            fileLabel.innerHTML = `
+              <div class="d-flex align-items-center">
+                <i class="fas fa-file text-primary me-2"></i>
+                <div class="flex-grow-1 text-start">
+                  <p class="mb-0 fw-medium">${fileName}</p>
+                  <small class="text-muted">Click to change file</small>
+                </div>
+              </div>
+            `;
+          }
+        }
+      });
+    }
+
+    // Drag & drop
+    if (uploadArea && fileInput && fileLabel) {
+      ['dragenter','dragover','dragleave','drop'].forEach(evt => {
+        uploadArea.addEventListener(evt, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        });
+      });
+
+      uploadArea.addEventListener('dragover', function(){ uploadArea.classList.add('dragover'); });
+      uploadArea.addEventListener('dragleave', function(){ uploadArea.classList.remove('dragover'); });
+
+      uploadArea.addEventListener('drop', function (e) {
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        fileInput.files = files;
+
+        if (files.length > 0) {
+          const fileName = files[0].name;
+          fileLabel.innerHTML = `
+            <div class="d-flex align-items-center">
+              <i class="fas fa-file text-primary me-2"></i>
+              <div class="flex-grow-1 text-start">
+                <p class="mb-0 fw-medium">${fileName}</p>
+                <small class="text-muted">Click to change file</small>
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      uploadArea.addEventListener('click', function(e){
+        if (e.target && (e.target.id === 'browseBtn' || e.target.closest('#browseBtn'))) return;
+        fileInput.click();
+      });
+    }
+
+    // === Search filter for selection lists ===
+    const searchFilter = (inputId, itemClass) => {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      input.addEventListener("input", function() {
+        const val = this.value.toLowerCase();
+        document.querySelectorAll("." + itemClass).forEach(i => {
+          i.style.display = i.textContent.toLowerCase().includes(val) ? "" : "none";
+        });
+      });
+    };
+    searchFilter("searchRoles", "role-item");
+    searchFilter("searchDepartments", "dept-item");
+    searchFilter("searchUsers", "user-item");
+
+    // === Debounce helper ===
+    function debounce(fn, wait) {
+      let t = null;
+      return function(...args) {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, args), wait);
+      };
+    }
+
+    // === Live table search ===
+    const tableSearch = document.getElementById('tableSearch');
+    const announcementsTable = document.getElementById('announcementsTable');
+    if (tableSearch && announcementsTable) {
+      const handler = function() {
+        const q = this.value.trim().toLowerCase();
+        const rows = announcementsTable.querySelectorAll('tbody tr');
+        rows.forEach(r => {
+          const text = (r.textContent || '').toLowerCase();
+          r.style.display = text.includes(q) ? '' : 'none';
+        });
+      };
+      tableSearch.addEventListener('input', debounce(handler, 120));
+    }
+
+    // === Toggle sections ===
+    document.querySelectorAll(".toggle-section").forEach(cb => {
+      cb.addEventListener("change", function() {
+        const target = document.getElementById(this.dataset.target);
+        if (!target) return;
+
+        if (this.checked) {
+          target.style.display = "block";
+        } else {
+          target.style.display = "none";
+          target.querySelectorAll("input[type='checkbox']").forEach(c => c.checked = false);
+        }
+      });
+    });
+
+    // === Bootstrap tooltips (if Bootstrap JS loaded in base.html) ===
+    if (window.bootstrap) {
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    }
+
+    // === If editing: show sections already selected ===
+    {% if edit_instance %}
+      {% if edit_roles %}
+        (function(){
+          const s = document.getElementById('roleSelection');
+          const t = document.getElementById('toggleRoles');
+          if (s) s.style.display = 'block';
+          if (t) t.checked = true;
+        })();
+      {% endif %}
+
+      {% if edit_instance.departments.all %}
+        (function(){
+          const s = document.getElementById('departmentSelection');
+          const t = document.getElementById('toggleDepartments');
+          if (s) s.style.display = 'block';
+          if (t) t.checked = true;
+        })();
+      {% endif %}
+
+      {% if edit_instance.users.all %}
+        (function(){
+          const s = document.getElementById('userSelection');
+          const t = document.getElementById('toggleUsers');
+          if (s) s.style.display = 'block';
+          if (t) t.checked = true;
+        })();
+      {% endif %}
+    {% endif %}
+
+    // === File Preview Modal (single reusable) ===
+    const previewModalEl = document.getElementById('filePreviewModal');
+    const previewFrame = document.getElementById('filePreviewFrame');
+    const previewTitle = document.getElementById('filePreviewTitle');
+    const previewMeta = document.getElementById('filePreviewMeta');
+    const openNewTab = document.getElementById('fileOpenNewTab');
+
+    function getExtension(url){
+      try{
+        const clean = (url || '').split('?')[0].split('#')[0];
+        const parts = clean.split('.');
+        return parts.length > 1 ? parts.pop().toLowerCase() : '';
+      }catch(e){ return ''; }
+    }
+
+    function setPreview(url){
+      // Many browsers can preview: pdf/images/text.
+      // For office docs, preview may fail unless you use online viewer.
+      previewFrame.src = url || '';
+    }
+
+    document.querySelectorAll('.open-file-modal').forEach(btn => {
+      btn.addEventListener('click', function(){
+        const url = this.dataset.fileUrl;
+        const name = this.dataset.fileName || 'File';
+        const ext = getExtension(url);
+
+        if (previewTitle) previewTitle.textContent = name;
+        if (previewMeta) previewMeta.textContent = ext ? `Type: .${ext}` : '';
+        if (openNewTab) openNewTab.href = url || '#';
+
+        setPreview(url);
+
+        if (window.bootstrap && previewModalEl){
+          const m = new bootstrap.Modal(previewModalEl);
+          m.show();
+        } else {
+          // fallback: open new tab if bootstrap not available
+          window.open(url, '_blank');
+        }
+      });
+    });
+
+    // Clean iframe when closing modal
+    if (previewModalEl){
+      previewModalEl.addEventListener('hidden.bs.modal', function(){
+        if (previewFrame) previewFrame.src = '';
+      });
+    }
+
+  });
+</script>
+
+{% endblock %}

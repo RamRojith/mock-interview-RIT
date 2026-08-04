@@ -1,0 +1,715 @@
+{% load static %}
+{% load em_tags %}
+
+<!-- Add Grade Entry Modal -->
+<div class="modal fade" id="AddAssessmentModal" tabindex="-1" aria-labelledby="AddAssessmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl"> <!-- Changed to modal-xl for more width -->
+    <div class="modal-content modal-slide-top shadow-lg rounded-3 border-0">
+
+      <!-- Header -->
+      <div class="modal-header bg-gradient-primary text-white rounded-top-3">
+        <div class="d-flex align-items-center w-100">
+          <i class="fas fa-clipboard-list fa-lg me-3"></i>
+          <div class="flex-grow-1">
+            <h5 class="modal-title fw-bold mb-0" id="AddAssessmentModalLabel">Manage Assessments</h5>
+            <small class="opacity-75">Add new assessments and manage existing ones</small>
+          </div>
+          <button type="button" class="btn btn-close btn-close-white p-2" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body bg-light">
+        <form id="assessmentForm" method="POST" action="{% url 'assessments' %}">
+          {% csrf_token %}
+
+          <!-- Programme Selection Card -->
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+              <h6 class="card-title mb-0 fw-semibold text-primary">
+                <i class="fas fa-graduation-cap me-2"></i>Select Degree Programme
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row g-3 align-items-end">
+                <div class="col-md-8">
+                  <label for="degree" class="form-label fw-medium">Degree Programme <span class="text-danger">*</span></label>
+                  <select name="degree_id" id="degree" class="form-select form-select-lg border-primary" required>
+                    <option value="" disabled selected>Choose a degree programme...</option>
+                    {% em_degrees as degrees %}
+                    {% for d in degrees %}
+                      <option value="{{ d.id }}">{{ d.degree_code }} - {{ d.degree }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <button type="button" id="filterBtn" class="btn btn-primary w-100 py-2">
+                    <i class="fas fa-filter me-2"></i>Apply Filter
+                  </button>
+                </div>
+              </div>
+
+              <!-- Live Preview -->
+              <div id="degreePreview" class="alert alert-info border-0 mt-3 d-none shadow-sm" role="alert">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-info-circle me-2"></i>
+                  <span class="preview-text"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Details Section -->
+          <div id="detailsSection" class="d-none">
+            <!-- New Assessment Creation Card -->
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-white py-3">
+                <h6 class="card-title mb-0 fw-semibold text-success">
+                  <i class="fas fa-plus-circle me-2"></i>Create New Assessment
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <!-- Assessment Name -->
+                  <div class="col-md-6">
+                    <label for="assessment_name" class="form-label fw-medium">
+                      Assessment Name <span class="text-muted small">(optional)</span>
+                    </label>
+                    <div class="input-group">
+                      <span class="input-group-text bg-light border-end-0">
+                        <i class="fas fa-tag text-muted"></i>
+                      </span>
+                      <input
+                        type="text"
+                        name="assessment_name"
+                        id="assessment_name"
+                        class="form-control border-start-0"
+                        placeholder="e.g., Mid-term Exam"
+                      >
+                    </div>
+                  </div>
+
+                  <!-- Question Paper Required -->
+                  <div class="col-md-6">
+                    <label for="question_paper_required" class="form-label fw-medium">
+                      Question Paper Required <span class="text-muted small">(new assessments only)</span>
+                    </label>
+                    <select name="question_paper_required" id="question_paper_required" class="form-select">
+                      <option value="" selected>Select requirement...</option>
+                      <option value="yes">Yes - Question paper needed</option>
+                      <option value="no">No - Question paper not needed</option>
+                    </select>
+                  </div>
+
+                  <!-- Number Inputs -->
+                  <div class="col-md-6">
+                    <label for="no_of_model_labs" class="form-label fw-medium">
+                      <i class="fas fa-flask me-1"></i>Model Labs Count
+                      <span class="text-muted small">(optional)</span>
+                    </label>
+                    <div class="input-group">
+                      <span class="input-group-text bg-light border-end-0">
+                        <i class="fas fa-hashtag text-muted"></i>
+                      </span>
+                      <input 
+                        type="number" 
+                        name="no_of_model_labs" 
+                        id="no_of_model_labs" 
+                        class="form-control border-start-0" 
+                        placeholder="e.g., 2" 
+                        min="1"
+                      >
+                    </div>
+                    <div class="form-text text-muted small">
+                      Will create Model Lab 1..N entries automatically
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="no_of_internal_assessments" class="form-label fw-medium">
+                      <i class="fas fa-chart-bar me-1"></i>Internal Assessments Count
+                      <span class="text-muted small">(optional)</span>
+                    </label>
+                    <div class="input-group">
+                      <span class="input-group-text bg-light border-end-0">
+                        <i class="fas fa-hashtag text-muted"></i>
+                      </span>
+                      <input
+                        type="number"
+                        name="no_of_internal_assessments"
+                        id="no_of_internal_assessments"
+                        class="form-control border-start-0"
+                        placeholder="e.g., 3"
+                        min="1"
+                      >
+                    </div>
+                    <div class="form-text text-muted small">
+                      Will create IAT1..IATN entries automatically
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Save Button -->
+                <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                  <button type="submit" class="btn btn-success px-4 py-2 fw-semibold">
+                    <i class="fas fa-save me-2"></i>Create Assessment
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Existing Data Section - MODIFIED LAYOUT -->
+            <div class="card border-0 shadow-sm">
+              <div class="card-header bg-white py-3">
+                <h6 class="card-title mb-0 fw-semibold text-primary">
+                  <i class="fas fa-database me-2"></i>Existing Assessments & Mappings
+                </h6>
+              </div>
+              <div class="card-body p-0">
+                <div id="existingData" class="p-3"> <!-- Reduced padding from p-4 to p-3 -->
+                  <!-- Content populated by JavaScript -->
+                  <div class="text-center text-muted py-5">
+                    <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                    <p>Loading existing assessments...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer bg-light rounded-bottom-3">
+        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+          <i class="fas fa-times me-2"></i>Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Enhanced Styling -->
+<style>
+.modal-slide-top {
+  transform: translateY(-80px);
+  opacity: 0;
+  transition: all 0.4s ease-in-out;
+}
+.modal.show .modal-slide-top {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+}
+
+.card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.form-control, .form-select {
+  border-radius: 0.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+  box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+  border-color: #4e73df;
+}
+
+.btn {
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+.table-sm td, .table-sm th { 
+  padding: .5rem .3rem; /* Reduced padding for more compact tables */
+  vertical-align: middle;
+  font-size: 0.875rem; /* Slightly smaller font for tables */
+}
+
+.alert {
+  border-radius: 0.5rem;
+  border: none;
+}
+
+.input-group-text {
+  border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.form-control.border-start-0 {
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+/* Professional table styling */
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 0; /* Remove bottom margin to save space */
+}
+
+.table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+  font-size: 0.875rem; /* Consistent font size with table cells */
+}
+
+/* Compact form controls for existing records */
+.form-control-sm, .form-select-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* More compact buttons */
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 1rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .table-responsive {
+    max-height: none; /* Remove any max-height restrictions */
+  }
+}
+
+/* Ensure existing data section doesn't scroll */
+#existingData {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Make tables more compact in existing records section */
+.existing-records-table {
+  font-size: 0.85rem;
+}
+
+.existing-records-table .table th,
+.existing-records-table .table td {
+  padding: 0.4rem 0.3rem;
+}
+</style>
+
+<!-- JavaScript with updated renderExisting function for more compact layout -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const modal = document.getElementById('AddAssessmentModal');
+
+  function withinModal(selector) {
+    return modal ? modal.querySelector(selector) : document.querySelector(selector);
+  }
+
+  function showPreview(message, kind = 'info') {
+    const previewBox = withinModal('#degreePreview');
+    if (!previewBox) return;
+    previewBox.textContent = message;
+    previewBox.classList.remove('d-none', 'alert-info', 'alert-warning', 'alert-danger', 'alert-success');
+    previewBox.classList.add(`alert-${kind}`);
+  }
+
+  function getCsrfToken() {
+    const form = withinModal('#assessmentForm');
+    const input = form ? form.querySelector('input[name="csrfmiddlewaretoken"]') : null;
+    return input ? input.value : '';
+  }
+
+  let currentController = null;
+
+  async function previewDegree(degreeId) {
+    const previewBox = withinModal('#degreePreview');
+    if (!degreeId) {
+      if (previewBox) {
+        previewBox.classList.add('d-none');
+        previewBox.textContent = '';
+      }
+      return;
+    }
+
+    if (currentController) currentController.abort();
+    currentController = new AbortController();
+
+    const fd = new FormData();
+    fd.append('csrfmiddlewaretoken', getCsrfToken());
+    fd.append('ajax', 'degree_preview');
+    fd.append('degree_id', degreeId);
+
+    try {
+      const resp = await fetch("{% url 'assessments' %}", {
+        method: 'POST',
+        body: fd,
+        credentials: 'same-origin',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        signal: currentController.signal
+      });
+
+      let data = null;
+      try { data = await resp.json(); } catch (_) {}
+
+      if (resp.ok && data && data.ok) {
+        showPreview(`Selected Degree: ${data.degree_code} — ${data.degree_name}`, 'info');
+      } else {
+        const msg = (data && data.error) ? data.error : 'Could not preview degree.';
+        showPreview(msg, 'warning');
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        showPreview('Network error while previewing degree.', 'danger');
+      }
+    }
+  }
+
+  function showDetails() {
+    const detailsSection = withinModal('#detailsSection');
+    if (!detailsSection) return;
+    detailsSection.classList.remove('d-none');
+    detailsSection.removeAttribute('hidden');
+    detailsSection.style.removeProperty('display');
+    if (getComputedStyle(detailsSection).display === 'none') {
+      detailsSection.style.display = 'block';
+    }
+  }
+
+  function hideDetails() {
+    const detailsSection = withinModal('#detailsSection');
+    if (!detailsSection) return;
+    detailsSection.classList.add('d-none');
+    detailsSection.style.removeProperty('display');
+    const existing = withinModal('#existingData');
+    if (existing) existing.innerHTML = '';
+  }
+
+  // Helper: fetch & render existing for degree
+  async function fetchExisting(degreeId) {
+    const fd2 = new FormData();
+    fd2.append('csrfmiddlewaretoken', getCsrfToken());
+    fd2.append('ajax', 'existing_for_degree');
+    fd2.append('degree_id', degreeId);
+
+    try {
+      const resp2 = await fetch("{% url 'assessments' %}", {
+        method: 'POST',
+        body: fd2,
+        credentials: 'same-origin',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data2 = await resp2.json().catch(() => null);
+      renderExisting(data2);
+    } catch (err) {
+      const mount = withinModal('#existingData');
+      if (mount) mount.innerHTML = '<div class="alert alert-danger">Failed to load existing records.</div>';
+    }
+  }
+
+  // Render existing data with more compact layout
+  function renderExisting(payload) {
+    const mount = withinModal('#existingData');
+    if (!mount) return;
+
+    if (!payload || payload.ok !== true) {
+      mount.innerHTML = '<div class="alert alert-warning">No data available.</div>';
+      return;
+    }
+
+    const cachedIATs = payload.iats_detail || [];
+    function iatOptions(selectedId) {
+      const base = `<option value="">-- No mapping --</option>`;
+      const list = (cachedIATs || []).map(i => {
+        const sel = String(selectedId || '') === String(i.id) ? 'selected' : '';
+        return `<option value="${i.id}" ${sel}>${i.iat}</option>`;
+      }).join('');
+      return base + list;
+    }
+
+    // More compact table rows
+    const aRows = (payload.assessments || []).map(a => `
+      <tr data-assessment-id="${a.id}">
+        <td>
+          <input type="text" class="form-control form-control-sm js-assessment-name" value="${a.assessment_name || ''}">
+        </td>
+        <td>
+          <select class="form-select form-select-sm js-assessment-qpr">
+            <option value="yes" ${a.question_paper_required ? 'selected' : ''}>Yes</option>
+            <option value="no" ${!a.question_paper_required ? 'selected' : ''}>No</option>
+          </select>
+        </td>
+        <td>
+          <select class="form-select form-select-sm js-map-assessment-iat">
+            ${iatOptions(a.internal_assessment_id)}
+          </select>
+        </td>
+        <td class="text-end">
+          <button type="button" class="btn btn-sm btn-primary js-save-assessment">Save</button>
+          <button type="button" class="btn btn-sm btn-outline-danger js-del-assessment">Delete</button>
+        </td>
+      </tr>
+    `).join('') || `<tr><td colspan="4" class="text-muted text-center py-2">No assessments found</td></tr>`;
+
+    const iRows = (payload.iats_detail || []).map(i => `
+      <tr><td>${i.iat}</td></tr>
+    `).join('') || `<tr><td class="text-muted text-center py-2">No internal assessments</td></tr>`;
+
+    const mRows = (payload.model_labs || []).map(m => `
+      <tr data-modellab-id="${m.id}">
+        <td>${m.model_lab_name}</td>
+        <td>
+          <select class="form-select form-select-sm js-map-modellab-iat">
+            ${iatOptions(m.internal_assessment_id)}
+          </select>
+        </td>
+      </tr>
+    `).join('') || `<tr><td colspan="2" class="text-muted text-center py-2">No model labs</td></tr>`;
+
+    mount.innerHTML = `
+      <div class="existing-records-table">
+        <div class="row g-2"> <!-- Reduced gap between columns -->
+          <div class="col-12 col-lg-7">
+            <div class="border rounded p-2">
+              <div class="fw-semibold mb-2">Assessments</div>
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered mb-0 align-middle">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Q.Paper?</th>
+                      <th>IAT</th>
+                      <th class="text-end">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>${aRows}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-5"> <!-- Changed to 5-column layout for better use of space -->
+            <div class="row g-2 h-100">
+              <div class="col-12 col-md-6">
+                <div class="border rounded p-2 h-100">
+                  <div class="fw-semibold mb-2">Internal Assessments</div>
+                  <div class="table-responsive">
+                    <table class="table table-sm table-bordered mb-0">
+                      <thead><tr><th>IAT</th></tr></thead>
+                      <tbody>${iRows}</tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="border rounded p-2 h-100">
+                  <div class="fw-semibold mb-2">Model Labs</div>
+                  <div class="table-responsive">
+                    <table class="table table-sm table-bordered mb-0 align-middle">
+                      <thead><tr><th>Lab</th><th>IAT</th></tr></thead>
+                      <tbody>${mRows}</tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Rest of the JavaScript remains the same...
+  // Degree change -> re-preview & hide details
+  document.addEventListener('change', function (e) {
+    const degreeSelect = e.target.closest('#degree');
+    if (!degreeSelect) return;
+    hideDetails();
+    previewDegree(degreeSelect.value);
+  });
+
+  // Filter click -> show details + lock + fetch existing
+  document.addEventListener('click', async function (e) {
+    const filterBtn = e.target.closest('#filterBtn');
+    if (!filterBtn) return;
+
+    const degreeSelect = withinModal('#degree');
+    if (!degreeSelect || !degreeSelect.value) {
+      showPreview('Please select a degree first.', 'warning');
+      return;
+    }
+
+    showDetails();
+
+    // 1) Lock filter in session
+    const fd1 = new FormData();
+    fd1.append('csrfmiddlewaretoken', getCsrfToken());
+    fd1.append('ajax', 'apply_filter');
+    fd1.append('degree_id', degreeSelect.value);
+
+    try {
+      const resp1 = await fetch("{% url 'assessments' %}", {
+        method: 'POST',
+        body: fd1,
+        credentials: 'same-origin',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data1 = await resp1.json().catch(() => null);
+      if (!(resp1.ok && data1 && data1.ok)) {
+        showPreview((data1 && data1.error) || 'Could not lock filter on server.', 'warning');
+      }
+    } catch (err) {
+      showPreview('Network error while applying filter.', 'danger');
+    }
+
+    // 2) Fetch existing records
+    await fetchExisting(degreeSelect.value);
+  });
+
+  // Inline mapping updates for existing rows (auto-save)
+  document.addEventListener('change', async function (e) {
+    // Assessment -> IAT map
+    const mapAssess = e.target.closest('.js-map-assessment-iat');
+    if (mapAssess) {
+      const tr = mapAssess.closest('tr[data-assessment-id]');
+      const id = tr ? tr.getAttribute('data-assessment-id') : null;
+      const iatId = mapAssess.value || '';
+      if (!id) return;
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', getCsrfToken());
+      fd.append('ajax', 'map_assessment_iat');
+      fd.append('assessment_id', id);
+      fd.append('internal_id', iatId);
+      try {
+        await fetch("{% url 'assessments' %}", {
+          method: 'POST',
+          body: fd,
+          credentials: 'same-origin',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+      } catch (_) {}
+      return;
+    }
+
+    // ModelLab -> IAT map
+    const mapLab = e.target.closest('.js-map-modellab-iat');
+    if (mapLab) {
+      const tr = mapLab.closest('tr[data-modellab-id]');
+      const id = tr ? tr.getAttribute('data-modellab-id') : null;
+      const iatId = mapLab.value || '';
+      if (!id) return;
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', getCsrfToken());
+      fd.append('ajax', 'map_modellab_iat');
+      fd.append('modellab_id', id);
+      fd.append('internal_id', iatId);
+      try {
+        await fetch("{% url 'assessments' %}", {
+          method: 'POST',
+          body: fd,
+          credentials: 'same-origin',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+      } catch (_) {}
+      return;
+    }
+  });
+
+  // Inline UPDATE / DELETE for existing assessments
+  document.addEventListener('click', async function (e) {
+    // Save/update existing assessment (name + qpr)
+    const saveBtn = e.target.closest('.js-save-assessment');
+    if (saveBtn) {
+      const tr = saveBtn.closest('tr[data-assessment-id]');
+      const id = tr ? tr.getAttribute('data-assessment-id') : null;
+      if (!id) return;
+
+      const nameEl = tr.querySelector('.js-assessment-name');
+      const qprEl  = tr.querySelector('.js-assessment-qpr');
+      const newName = nameEl ? nameEl.value.trim() : '';
+      const qprVal  = qprEl ? qprEl.value : '';
+
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', getCsrfToken());
+      fd.append('ajax', 'update_assessment');
+      fd.append('assessment_id', id);
+      fd.append('assessment_name', newName);  // empty allowed (will ignore)
+      fd.append('question_paper_required', qprVal); // yes/no
+
+      try {
+        const resp = await fetch("{% url 'assessments' %}", {
+          method: 'POST',
+          body: fd,
+          credentials: 'same-origin',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await resp.json().catch(() => null);
+        if (!(resp.ok && data && data.ok)) {
+          alert((data && data.error) || 'Failed to update assessment.');
+        } else {
+          // Refresh table to reflect changes (and any dedupe performed server-side)
+          const degreeId = withinModal('#degree').value;
+          if (degreeId) fetchExisting(degreeId);
+        }
+      } catch (_) {
+        alert('Network error while updating assessment.');
+      }
+      return;
+    }
+
+    // Delete existing assessment
+    const delBtn = e.target.closest('.js-del-assessment');
+    if (delBtn) {
+      if (!confirm('Delete this assessment? This cannot be undone.')) return;
+
+      const tr = delBtn.closest('tr[data-assessment-id]');
+      const id = tr ? tr.getAttribute('data-assessment-id') : null;
+      if (!id) return;
+
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', getCsrfToken());
+      fd.append('ajax', 'delete_assessment');
+      fd.append('assessment_id', id);
+
+      try {
+        const resp = await fetch("{% url 'assessments' %}", {
+          method: 'POST',
+          body: fd,
+          credentials: 'same-origin',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await resp.json().catch(() => null);
+        if (!(resp.ok && data && data.ok)) {
+          alert((data && data.error) || 'Failed to delete assessment.');
+        } else {
+          const degreeId = withinModal('#degree').value;
+          if (degreeId) fetchExisting(degreeId);
+        }
+      } catch (_) {
+        alert('Network error while deleting assessment.');
+      }
+      return;
+    }
+  });
+
+  // Prevent pointless submits
+  document.getElementById('assessmentForm').addEventListener('submit', function (e) {
+    const name = document.getElementById('assessment_name').value.trim();
+    const labs = document.getElementById('no_of_model_labs').value.trim();
+    const iats = document.getElementById('no_of_internal_assessments').value.trim();
+    if (!name && !labs && !iats) {
+      e.preventDefault();
+      alert('Nothing to save. Mapping and inline edits are saved automatically.');
+    }
+  });
+});
+</script>

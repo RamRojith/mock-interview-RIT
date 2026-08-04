@@ -1,0 +1,198 @@
+{% load static %}
+{% load fee_tags %}
+
+{% comment %} <!-- Trigger Button -->
+<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addScholarshipModal">
+    Manage Scholarship Types
+</button> {% endcomment %}
+
+<!-- Scholarship Modal -->
+<div class="modal fade" id="addScholarshipModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+
+            <!-- Header -->
+            <div class="modal-header bg-gradient-primary text-white py-3">
+                <div class="d-flex align-items-center w-100">
+                    <div class="modal-icon me-3">
+                        <i class="fas fa-user-graduate fa-lg"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="modal-title fw-bold mb-0">Scholarship Types Management</h5>
+                        <small class="opacity-75">Add and manage scholarship categories</small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body p-0">
+
+                <!-- Messages -->
+                {% if messages %}
+                <div class="alert-container px-4 pt-4">
+                    {% for message in messages %}
+                    <div class="alert alert-dismissible alert-{{ message.tags }} fade show mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-triangle{% endif %} me-2"></i>
+                            <span>{{ message }}</span>
+                            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="container-fluid py-4">
+                    <div class="row">
+
+                        <!-- Form Section -->
+                        <div class="col-md-5 border-end">
+                            <div class="pe-3">
+                                <h6 class="section-title mb-3">
+                                    <i class="fas fa-plus-circle me-2 text-primary"></i>
+                                    Add Scholarship Type
+                                </h6>
+
+                                <form method="POST" action="{% url 'add_scholarship_type' %}" id="scholarshipTypeForm">
+                                    {% csrf_token %}
+                                    <input type="hidden" id="scholarshipTypeId" name="scholarship_type_id">
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold text-muted mb-2">
+                                            SCHOLARSHIP TYPE NAME
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0">
+                                                <i class="fas fa-award text-primary"></i>
+                                            </span>
+                                            <input type="text"
+                                                   class="form-control border-start-0"
+                                                   id="scholarshipType"
+                                                   name="scholarship_type"
+                                                   placeholder="Enter scholarship type name"
+                                                   required>
+                                        </div>
+                                        <div class="form-text">Enter a descriptive scholarship category name</div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" id="submitBtn">
+                                        <i class="fas fa-plus me-2"></i>
+                                        <span>Add Scholarship Type</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- List Section -->
+                        <div class="col-md-7">
+                            <div class="ps-3">
+                                <h6 class="section-title mb-3">
+                                    <i class="fas fa-list me-2 text-primary"></i>
+                                    Existing Scholarship Types
+                                </h6>
+
+                                {% if scholarship_types %}
+                                <div>
+                                    {% for scholarship in scholarship_types %}
+                                    <div class="fee-type-card mb-2">
+                                        <div class="card border-0 shadow-sm">
+                                            <div class="card-body py-2 px-3">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="fee-icon me-3">
+                                                            <i class="fas fa-user-graduate"></i>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0 fw-semibold">{{ scholarship.name }}</h6>
+                                                            <small class="text-muted">
+                                                                Created on {{ scholarship.created_at|date:"M d, Y" }}
+                                                            </small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="action-buttons">
+                                                        <button class="btn btn-sm btn-outline-warning me-1"
+                                                            onclick="editScholarshipType('{{ scholarship.id }}','{{ scholarship.name }}')"
+                                                            data-bs-toggle="tooltip"
+                                                            title="Edit scholarship">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+
+                                                        <form method="POST"
+                                                              action="{% url 'delete_scholarship_type' scholarship.id %}"
+                                                              class="d-inline"
+                                                              onsubmit="return confirm('Delete this?')">
+                                                            {% csrf_token %}
+                                                            <button class="btn btn-sm btn-outline-danger"
+                                                                    data-bs-toggle="tooltip"
+                                                                    title="Delete scholarship">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="text-center py-5">
+                                    <div class="empty-state-icon mb-3">
+                                        <i class="fas fa-user-graduate fa-3x text-muted"></i>
+                                    </div>
+                                    <h6 class="text-muted mb-2">No Scholarship Types Found</h6>
+                                    <p class="text-muted small">Start by adding your first scholarship type</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer bg-light py-3">
+                <div class="w-100 d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Total {{ scholarship_types|length }} scholarship type{{ scholarship_types|length|pluralize }}
+                    </small>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>
+                        Close
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Same JS Logic (unchanged, only button label styling improved) -->
+<script>
+function editScholarshipType(id, name) {
+    document.getElementById('scholarshipType').value = name;
+    document.getElementById('scholarshipTypeId').value = id;
+
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = '<i class="fas fa-save me-2"></i><span>Update Scholarship Type</span>';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-warning');
+}
+
+// Auto open modal if redirected with open_modal flag
+document.addEventListener('DOMContentLoaded', function(){
+    const openModal = "{{ open_modal }}";
+    if(openModal === "add_scholarship"){
+        new bootstrap.Modal(document.getElementById('addScholarshipModal')).show();
+    }
+
+    // Enable tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
+});
+</script>

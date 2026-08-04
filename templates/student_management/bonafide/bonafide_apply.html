@@ -1,0 +1,651 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+
+<style>
+.bonafide-application {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #f8f9fa;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.bonafide-application .page-header {
+  max-width: 1200px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 2rem;
+  background: #1a4b8c;
+  border-radius: 12px;
+  color: white;
+}
+
+.bonafide-application .page-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.bonafide-application .header-subtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.bonafide-application .page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.bonafide-application .stats-bar {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bonafide-application .stats-bar .title-info h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a4b8c;
+  margin: 0 0 0.25rem 0;
+}
+
+.bonafide-application .stats-bar .title-info p {
+  color: #6c757d;
+  margin: 0;
+}
+
+.bonafide-application .stats-numbers {
+  display: flex;
+  gap: 2rem;
+}
+
+.bonafide-application .stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a4b8c;
+}
+
+.bonafide-application .stat-label {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.bonafide-application .form-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+.bonafide-application .form-card .card-header {
+  background: #1a4b8c;
+  color: white;
+  padding: 1.25rem 1.5rem;
+  border-bottom: none;
+}
+
+.bonafide-application .form-card .card-header h5 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.bonafide-application .form-card .card-body {
+  padding: 1.5rem;
+}
+
+.bonafide-application .form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.bonafide-application .form-control,
+.bonafide-application .form-select {
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 1rem;
+}
+
+.bonafide-application .form-control:focus,
+.bonafide-application .form-select:focus {
+  border-color: #1a4b8c;
+  box-shadow: 0 0 0 2px rgba(26, 75, 140, 0.25);
+}
+
+.bonafide-application .btn-primary {
+  background: #1a4b8c;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.bonafide-application .btn-primary:hover {
+  background: #153e75;
+}
+
+.bonafide-application .btn-info {
+  background: #0dcaf0;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.bonafide-application .table-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+.bonafide-application .table-card .card-header {
+  background: #1a4b8c;
+  color: white;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: none;
+}
+
+.bonafide-application .table-card .card-header h5 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.bonafide-application .applications-count-badge {
+  background: #ffc107;
+  color: #000;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.bonafide-application .table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.bonafide-application .table th {
+  background: #e9ecef;
+  color: #495057;
+  font-weight: 600;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.bonafide-application .table td {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  vertical-align: middle;
+}
+
+.bonafide-application .table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.bonafide-application .badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.bonafide-application .badge.bg-success {
+  background: #198754 !important;
+}
+
+.bonafide-application .badge.bg-danger {
+  background: #dc3545 !important;
+}
+
+.bonafide-application .badge.bg-warning {
+  background: #ffc107 !important;
+  color: #000 !important;
+}
+
+.bonafide-application .alert {
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border: none;
+  font-weight: 500;
+}
+
+.bonafide-application .alert-success {
+  background: #d1e7dd;
+  color: #0f5132;
+}
+
+.bonafide-application .alert-error {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.bonafide-application .student-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.bonafide-application .info-item {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+}
+
+.bonafide-application .info-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.bonafide-application .info-value {
+  font-size: 1rem;
+  color: #495057;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .bonafide-application {
+    padding: 1rem;
+  }
+  
+  .bonafide-application .page-header {
+    padding: 1.5rem;
+  }
+  
+  .bonafide-application .page-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .bonafide-application .stats-bar {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .bonafide-application .table-card .card-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .bonafide-application .student-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<div class="bonafide-application">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <h1><i class="bi bi-file-earmark-text me-2"></i>Bonafide Certificate Application</h1>
+        <div class="header-subtitle">Apply for official bonafide certificates and track your applications</div>
+    </div>
+
+    <div class="page-container">
+
+        <div id="resultMessage" class="mt-4"></div>
+
+        <!-- EDIT MODAL -->
+        <div class="modal fade" id="editModal" tabindex="-1">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+              <div class="modal-header bg-warning">
+                <h5 class="modal-title">
+                    <i class="bi bi-pencil-square me-2"></i>Edit Application
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+
+              <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="edit_app_id">
+
+                    <div class="mb-3">
+                        <label class="form-label">Certificate Type</label>
+                        <select id="edit_subject" class="form-select" onchange="toggleEditReason()" required>
+                            <option value="">Select</option>
+                            {% for certificate_type in certificate_types %}
+                            <option value="{{ certificate_type }}">{{ certificate_type }}</option>
+                            {% endfor %}
+                            <option value="Other">Other Purpose</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3 d-none" id="edit_reason_div">
+                        <label class="form-label">Reason</label>
+                        <input type="text" id="edit_other_reason" class="form-control" maxlength="200">
+                    </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-warning" onclick="saveEdit()">Save Changes</button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <!-- END EDIT MODAL -->
+
+
+        <!-- STUDENT INFO CARD -->
+        <div class="form-card">
+            <div class="card-header">
+                <h5><i class="bi bi-person-badge me-2"></i>Student Information</h5>
+            </div>
+
+            <div class="card-body">
+                <div class="student-info-grid">
+
+                    <div class="info-item">
+                        <div class="info-label">Full Name</div>
+                        <div class="info-value">{{ student_name }}</div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">Father's Name</div>
+                        <div class="info-value">{{ father_name }}</div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">Department</div>
+                        <div class="info-value">{{ department_name }}</div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">Year of Study</div>
+                        <div class="info-value">{{ year_display }}</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- NEW APPLICATION FORM -->
+        <div class="form-card">
+            <div class="card-header">
+                <h5><i class="bi bi-pencil-square me-2"></i>New Application</h5>
+            </div>
+
+            <div class="card-body">
+                <form id="bonafideForm" method="post" class="row g-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="reg_no" value="{{ reg_no }}"/>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Certificate Type</label>
+                        <select id="subject" name="subject" class="form-select" onchange="onSubjectChange()" required>
+                            <option value="">Select Certificate Type</option>
+                            {% for certificate_type in certificate_types %}
+                            <option value="{{ certificate_type }}">{{ certificate_type }}</option>
+                            {% endfor %}
+                            <option value="Other">Other Purpose</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 d-none" id="otherReasonDiv">
+                        <label class="form-label">Specify Your Requirement</label>
+                        <input id="other_reason" name="other_reason" type="text" 
+                               class="form-control"
+                               placeholder="Enter purpose..."
+                               maxlength="200">
+                    </div>
+
+                    <div class="col-12 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send-check-fill me-2"></i>Submit Application
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+
+        <!-- APPLICATION HISTORY TABLE -->
+        {% if applied_bonafides %}
+        <div class="table-card">
+
+            <div class="card-header">
+                <h5><i class="bi bi-clock-history me-2"></i>Application History</h5>
+                <div class="applications-count-badge">
+                    <i class="bi bi-files me-1"></i>{{ applied_bonafides|length }} Applications
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="applicationsTable" class="table">
+                    <thead>
+                        <tr>
+                            <th>Applied Date</th>
+                            <th>Certificate Type</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                            {% comment %} <th>Download</th> {% endcomment %}
+                            <th>Edit</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for app in applied_bonafides %}
+                        <tr>
+
+                            <td>{{ app.applied_on|date:"M d, Y" }}</td>
+
+                            <td>{{ app.subject }}</td>
+
+                            <td>
+                                {% if app.subject == "Other" %}
+                                    {{ app.other_reason|default:"-" }}
+                                {% else %}
+                                    {{ app.other_reason|default:app.subject }}
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if app.status == "Approved" %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% elif app.status == "Rejected" %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if app.status == "Rejected" %}
+                                    {{ app.approval_flow.last.remarks|default:"-" }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            {% comment %} <td>
+                                {% if app.status == "Approved" %}
+                                    <button class="btn btn-info btn-sm"
+                                            onclick="window.open('{% url 'bonafide_view_pdf' app.id %}', '_blank')">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i>Download
+                                    </button>
+                                {% else %}
+                                    <span class="text-muted">Not available</span>
+                                {% endif %}
+                            </td> {% endcomment %}
+
+                            <td>
+                                {% if app.status == "Pending" %}
+                                    <button class="btn btn-warning btn-sm"
+                                            onclick="editApplication({{ app.id }},
+                                                                      '{{ app.subject }}',
+                                                                      '{{ app.other_reason|escapejs }}')">
+                                        <i class="bi bi-pencil-square me-1"></i>Edit
+                                    </button>
+                                {% else %}
+                                    <span class="text-muted">Locked</span>
+                                {% endif %}
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<!-- JAVASCRIPT -->
+<script>
+function onSubjectChange(){
+    const s = document.getElementById("subject").value;
+    const div = document.getElementById("otherReasonDiv");
+
+    if (s === "Other"){
+        div.classList.remove("d-none");
+        document.getElementById("other_reason").required = true;
+    }
+    else {
+        div.classList.add("d-none");
+        document.getElementById("other_reason").required = false;
+        document.getElementById("other_reason").value = "";
+    }
+}
+
+
+// OPEN EDIT MODAL
+function editApplication(id, subject, reason){
+    document.getElementById("edit_app_id").value = id;
+    document.getElementById("edit_subject").value = subject;
+
+    if(subject === "Other"){
+        document.getElementById("edit_reason_div").classList.remove("d-none");
+        document.getElementById("edit_other_reason").value = reason;
+    } else {
+        document.getElementById("edit_reason_div").classList.add("d-none");
+        document.getElementById("edit_other_reason").value = "";
+    }
+
+    new bootstrap.Modal(document.getElementById("editModal")).show();
+}
+
+
+// TOGGLE REASON FIELD IN EDIT MODAL
+function toggleEditReason(){
+    const s = document.getElementById("edit_subject").value;
+    const div = document.getElementById("edit_reason_div");
+
+    if(s === "Other"){
+        div.classList.remove("d-none");
+    } else {
+        div.classList.add("d-none");
+        document.getElementById("edit_other_reason").value = "";
+    }
+}
+
+
+// SAVE EDIT
+function saveEdit(){
+    const appId = document.getElementById("edit_app_id").value;
+    const subject = document.getElementById("edit_subject").value;
+    const reason = document.getElementById("edit_other_reason").value;
+
+    fetch("{% url 'bonafide_edit' %}", {
+
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            application_id: appId,
+            subject: subject,
+            other_reason: reason
+        })
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        alert(data.message);
+        if(data.status === "success"){
+            location.reload();
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Update failed.");
+    });
+}
+
+
+// SUBMIT APPLICATION FORM
+document.getElementById("bonafideForm").addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const form = e.target;
+    const btn = form.querySelector("button");
+    btn.disabled = true;
+
+    fetch("", {
+        method: "POST",
+        body: new FormData(form),
+        headers: {"X-Requested-With":"XMLHttpRequest"}
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.status === "success"){
+            location.reload();
+        } else {
+            alert("Submission failed.");
+        }
+    })
+    .finally(() => btn.disabled = false);
+});
+
+
+// DATATABLE INIT
+$(document).ready(function() {
+    $('#applicationsTable').DataTable({
+        pageLength: 10,
+        order: [[0,'desc']]
+    });
+});
+</script>
+
+
+{% endblock %}

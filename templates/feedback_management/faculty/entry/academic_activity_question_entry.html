@@ -1,0 +1,930 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Academic Activity Questions Management{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+  :root{
+    --fq-primary:#1a4b8c;
+    --fq-primary-light:#eaf2fb;
+    --fq-success:#059669;
+    --fq-danger:#dc2626;
+    --fq-text:#475569;
+    --fq-muted:#64748b;
+    --fq-border:#e2e8f0;
+    --fq-card:#ffffff;
+    --fq-shadow:0 10px 28px rgba(15, 23, 42, 0.06);
+    --fq-shadow-hover:0 14px 34px rgba(15, 23, 42, 0.09);
+    --fq-radius:20px;
+  }
+
+  .fq-page{
+    min-height:100vh;
+    padding:24px 16px 32px;
+    background:#f5f7fb;
+    font-family:'Inter','Segoe UI',system-ui,sans-serif;
+    color:var(--fq-text);
+  }
+
+  .fq-container{ max-width:1450px; margin:0 auto; }
+
+  .fq-topbar{
+    background:#fff;
+    border:1px solid var(--fq-border);
+    border-radius:24px;
+    padding:24px;
+    box-shadow:var(--fq-shadow);
+    margin-bottom:22px;
+  }
+
+  .fq-topbar-inner{
+    display:grid;
+    grid-template-columns:1.3fr .9fr;
+    gap:24px;
+    align-items:center;
+  }
+
+  .fq-title-wrap h1{
+    margin:0;
+    font-size:1.8rem;
+    font-weight:600;
+    color:var(--fq-primary);
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+
+  .fq-title-wrap p{
+    margin:10px 0 0;
+    font-size:.96rem;
+    color:var(--fq-muted);
+    line-height:1.6;
+  }
+
+  .fq-meta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-top:16px;
+  }
+
+  .fq-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 14px;
+    border-radius:999px;
+    background:#f8fafc;
+    border:1px solid var(--fq-border);
+    color:#475569;
+    font-size:.88rem;
+    font-weight:500;
+  }
+
+  .fq-window-panel{
+    background:#f8fafc;
+    border:1px solid var(--fq-border);
+    border-radius:20px;
+    padding:18px;
+  }
+
+  .fq-window-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:14px;
+  }
+
+  .fq-window-head h3{
+    margin:0;
+    font-size:1rem;
+    font-weight:600;
+    color:var(--fq-primary);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .fq-window-status{
+    font-size:.84rem;
+    font-weight:500;
+    padding:8px 12px;
+    border-radius:999px;
+    background:#ecfdf5;
+    color:#065f46;
+    border:1px solid #d1fae5;
+  }
+
+  .fq-window-form{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr auto;
+    gap:12px;
+    align-items:end;
+  }
+
+  .fq-label,
+  .fq-floating-group label{
+    display:block;
+    font-size:.9rem;
+    font-weight:500;
+    margin-bottom:7px;
+    color:#475569;
+  }
+
+  .fq-window-input,
+  .fq-input,
+  .fq-select,
+  .fq-textarea{
+    width:100%;
+    border:1px solid var(--fq-border);
+    border-radius:16px;
+    padding:14px 15px;
+    font-size:.94rem;
+    color:#334155;
+    background:#fff;
+  }
+
+  .fq-window-input{
+    padding:12px 14px;
+    border-radius:14px;
+  }
+
+  .fq-textarea{
+    min-height:112px;
+    resize:vertical;
+  }
+
+  .fq-btn{
+    border:none;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font-weight:500;
+  }
+
+  .fq-btn-window{
+    padding:12px 18px;
+    border-radius:14px;
+    background:var(--fq-success);
+    color:#fff;
+    min-height:46px;
+  }
+
+  .fq-main-grid{
+    display:grid;
+    grid-template-columns:420px 1fr;
+    gap:22px;
+    align-items:start;
+  }
+
+  .fq-card{
+    background:var(--fq-card);
+    border:1px solid var(--fq-border);
+    border-radius:var(--fq-radius);
+    box-shadow:var(--fq-shadow);
+  }
+
+  .fq-card-header{
+    padding:22px 22px 16px;
+    border-bottom:1px solid var(--fq-border);
+  }
+
+  .fq-card-header h3{
+    margin:0;
+    font-size:1.08rem;
+    color:var(--fq-primary);
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .fq-card-header p{
+    margin:7px 0 0;
+    color:var(--fq-muted);
+    font-size:.91rem;
+  }
+
+  .fq-card-body{ padding:22px; }
+
+  .fq-form-group{ margin-bottom:18px; }
+
+  .fq-note{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:14px 15px;
+    background:#f8fafc;
+    border:1px solid var(--fq-border);
+    border-radius:16px;
+    color:#475569;
+    font-size:.9rem;
+    line-height:1.55;
+  }
+
+  .po-checkbox-wrapper{
+    border:1px solid var(--fq-border);
+    border-radius:16px;
+    background:#fff;
+    padding:15px;
+    max-height:300px;
+    overflow-y:auto;
+  }
+
+  .po-item{
+    display:none;
+    padding:9px 0;
+    border-bottom:1px solid #f1f5f9;
+  }
+
+  .po-item:last-child{
+    border-bottom:none;
+  }
+
+  .po-label{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    cursor:pointer;
+    margin:0;
+    font-size:.92rem;
+    color:#334155;
+    line-height:1.45;
+  }
+
+  .po-label input[type="checkbox"]{
+    margin-top:4px;
+    width:18px;
+    height:18px;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+
+  .po-empty{
+    display:none;
+    padding:16px;
+    text-align:center;
+    color:var(--fq-muted);
+    background:#f8fafc;
+    border:1px dashed #cbd5e1;
+    border-radius:14px;
+  }
+
+  .fq-form-actions{
+    display:flex;
+    gap:12px;
+    margin-top:22px;
+  }
+
+  .fq-btn-primary{
+    flex:1;
+    padding:13px 18px;
+    border-radius:14px;
+    color:#fff;
+    background:var(--fq-primary);
+  }
+
+  .fq-btn-secondary{
+    padding:13px 18px;
+    border-radius:14px;
+    background:#e2e8f0;
+    color:#334155;
+  }
+
+  .fq-list-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+
+  .fq-stat-box{
+    min-width:150px;
+    padding:14px 16px;
+    border-radius:16px;
+    background:#f8fafc;
+    border:1px solid var(--fq-border);
+  }
+
+  .fq-stat-label{
+    font-size:.78rem;
+    color:var(--fq-muted);
+    text-transform:uppercase;
+  }
+
+  .fq-stat-value{
+    font-size:1.25rem;
+    color:var(--fq-primary);
+    margin-top:4px;
+  }
+
+  .fq-list-shell{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+
+  .fq-question-item{
+    position:relative;
+    border:1px solid var(--fq-border);
+    border-radius:20px;
+    background:#fff;
+    padding:18px 18px 16px 22px;
+    overflow:hidden;
+  }
+
+  .fq-question-item::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    width:4px;
+    height:100%;
+    background:var(--fq-primary);
+  }
+
+  .fq-question-item:hover{
+    box-shadow:var(--fq-shadow-hover);
+  }
+
+  .fq-question-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+  }
+
+  .fq-question-left{
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+  }
+
+  .fq-serial{
+    width:42px;
+    height:42px;
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--fq-primary);
+    background:var(--fq-primary-light);
+    border:1px solid #dbeafe;
+    flex-shrink:0;
+  }
+
+  .fq-question-text{
+    font-size:.98rem;
+    color:#334155;
+    line-height:1.6;
+    word-break:break-word;
+  }
+
+  .fq-question-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:12px;
+  }
+
+  .fq-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:7px 12px;
+    border-radius:999px;
+    font-size:.82rem;
+    font-weight:500;
+  }
+
+  .fq-badge-category{
+    background:#eef2ff;
+    color:#4c1d95;
+    border:1px solid #e0e7ff;
+  }
+
+  .fq-badge-window{
+    background:#ecfeff;
+    color:#0f766e;
+    border:1px solid #cffafe;
+  }
+
+  .fq-action-group{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .fq-btn-sm{
+    padding:10px 14px;
+    border-radius:12px;
+    font-size:.85rem;
+  }
+
+  .fq-btn-edit{
+    background:#e0e7ff;
+    color:#3730a3;
+  }
+
+  .fq-btn-delete{
+    background:#fee2e2;
+    color:#dc2626;
+  }
+
+  .fq-empty{
+    text-align:center;
+    padding:55px 20px;
+    color:var(--fq-muted);
+    border:1px dashed #cbd5e1;
+    border-radius:20px;
+    background:#fff;
+  }
+
+  @media (max-width:1200px){
+    .fq-topbar-inner,
+    .fq-main-grid{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width:768px){
+    .fq-window-form{
+      grid-template-columns:1fr;
+    }
+
+    .fq-question-top{
+      flex-direction:column;
+    }
+
+    .fq-form-actions{
+      flex-direction:column;
+    }
+  }
+</style>
+
+<div class="fq-page">
+  <div class="fq-container">
+
+    <div class="fq-topbar">
+      <div class="fq-topbar-inner">
+
+        <div class="fq-title-wrap">
+          <h1>
+            <i class="fas fa-list-check"></i>
+            Academic Activity Questions Management
+          </h1>
+          <p>
+            Create academic activity survey questions. Questions are common to all students under the selected regulation.
+          </p>
+
+          <div class="fq-meta-row">
+            <span class="fq-chip">
+              <i class="fas fa-user-tie"></i>
+              Faculty: {{ faculty }}
+            </span>
+
+            <span class="fq-chip">
+              <i class="fas fa-list-check"></i>
+              {{ academic_activity_questions|length }} Question{{ academic_activity_questions|length|pluralize }}
+            </span>
+
+            <span class="fq-chip">
+              <i class="fas fa-calendar-days"></i>
+              {% if common_start_date %}{{ common_start_date|date:"d M Y" }}{% else %}Start not set{% endif %}
+              -
+              {% if common_end_date %}{{ common_end_date|date:"d M Y" }}{% else %}End not set{% endif %}
+            </span>
+          </div>
+        </div>
+
+        <div class="fq-window-panel">
+          <div class="fq-window-head">
+            <h3><i class="fas fa-clock"></i>Survey Window</h3>
+            <span class="fq-window-status">
+              {% if common_start_date and common_end_date %}Window Set{% else %}Window Pending{% endif %}
+            </span>
+          </div>
+
+          <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="set_window">
+
+            <div class="fq-window-form">
+              <div class="fq-floating-group">
+                <label>Regulation</label>
+                <select name="window_regulation" class="fq-select" required>
+                  <option value="">Select</option>
+                  {% for regulation in regulations %}
+                    <option value="{{ regulation.id }}">{{ regulation }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="fq-floating-group">
+                <label>Start Date</label>
+                <input type="date"
+                       name="common_start_date"
+                       class="fq-window-input"
+                       value="{% if common_start_date %}{{ common_start_date|date:'Y-m-d' }}{% endif %}">
+              </div>
+
+              <div class="fq-floating-group">
+                <label>End Date</label>
+                <input type="date"
+                       name="common_end_date"
+                       class="fq-window-input"
+                       value="{% if common_end_date %}{{ common_end_date|date:'Y-m-d' }}{% endif %}">
+              </div>
+
+              <button type="submit" class="fq-btn fq-btn-window">
+                <i class="fas fa-save"></i>
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="fq-main-grid">
+
+      <div class="fq-card">
+        <div class="fq-card-header">
+          <h3>
+            <i class="fas fa-{% if question %}pen-to-square{% else %}circle-plus{% endif %}"></i>
+            {% if question %}Edit Question{% else %}Create Question{% endif %}
+          </h3>
+          <p>Select regulation, PO type, Program Outcomes, and enter academic activity question.</p>
+        </div>
+
+        <div class="fq-card-body">
+          <form method="POST" id="question-form">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="save_question">
+
+            <div class="fq-form-group">
+              <label class="fq-label">Regulation</label>
+              <select name="regulation" class="fq-select" required>
+                <option value="">Select Regulation</option>
+                {% for regulation in regulations %}
+                  <option value="{{ regulation.id }}"
+                    {% if question and question.regulation_id == regulation.id %}selected{% endif %}>
+                    {{ regulation }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            
+
+            
+
+            <div class="fq-form-group">
+              <label class="fq-label">
+                <i class="fas fa-question-circle me-1"></i>Question Text
+              </label>
+              <textarea name="question_text"
+                        id="question_text"
+                        class="fq-textarea"
+                        required
+                        placeholder="Enter academic activity question...">{% if question %}{{ question.question_text }}{% endif %}</textarea>
+            </div>
+
+            <div class="fq-form-group">
+              <label class="fq-label">
+                <i class="fas fa-tag me-1"></i>Category
+              </label>
+              <input type="text"
+                     name="category"
+                     class="fq-input"
+                     placeholder="Example: Learning, Participation, Activities"
+                     value="{% if question %}{{ question.category }}{% endif %}">
+            </div>
+
+
+            <div class="fq-form-group">
+              <label class="fq-label">
+                <i class="fas fa-toggle-on me-1"></i>PO Type
+              </label>
+
+              <select name="po_type" id="po_type" class="fq-select" onchange="filterPOOptions()" required>
+                <option value="">Select PO Type</option>
+                <option value="revised" {% if question and question.is_revised %}selected{% endif %}>
+                  Revised PO
+                </option>
+                <option value="non_revised" {% if question and not question.is_revised %}selected{% endif %}>
+                  Non-Revised PO
+                </option>
+              </select>
+            </div>
+
+            <div class="fq-form-group" id="poContainer" style="display:none;">
+              <label class="fq-label">
+                <i class="fas fa-bullseye me-1"></i>Program Outcomes
+              </label>
+
+              <div class="po-checkbox-wrapper">
+
+                <div class="po-empty" id="poEmpty">
+                  Select PO Type to view Program Outcomes.
+                </div>
+
+                {% for po in revised_pos %}
+                  <div class="po-item" data-type="revised">
+                    <label class="po-label">
+                      <input
+                        type="checkbox"
+                        name="program_outcomes[]"
+                        value="{{ po.id }}"
+                        {% if question and po.program_number == "PO1" and question.po1 %}checked{% endif %}
+                        {% if question and po.program_number == "PO2" and question.po2 %}checked{% endif %}
+                        {% if question and po.program_number == "PO3" and question.po3 %}checked{% endif %}
+                        {% if question and po.program_number == "PO4" and question.po4 %}checked{% endif %}
+                        {% if question and po.program_number == "PO5" and question.po5 %}checked{% endif %}
+                        {% if question and po.program_number == "PO6" and question.po6 %}checked{% endif %}
+                        {% if question and po.program_number == "PO7" and question.po7 %}checked{% endif %}
+                        {% if question and po.program_number == "PO8" and question.po8 %}checked{% endif %}
+                        {% if question and po.program_number == "PO9" and question.po9 %}checked{% endif %}
+                        {% if question and po.program_number == "PO10" and question.po10 %}checked{% endif %}
+                        {% if question and po.program_number == "PO11" and question.po11 %}checked{% endif %}
+                        {% if question and po.program_number == "PO12" and question.po12 %}checked{% endif %}
+                      >
+                      <span>
+                        <strong>{{ po.program_number }}</strong>
+                        - {{ po.program_name }}
+                      </span>
+                    </label>
+                  </div>
+                {% endfor %}
+
+                {% for po in non_revised_pos %}
+                  <div class="po-item" data-type="non_revised">
+                    <label class="po-label">
+                      <input
+                        type="checkbox"
+                        name="program_outcomes[]"
+                        value="{{ po.id }}"
+                        {% if question and po.program_number == "PO1" and question.po1 %}checked{% endif %}
+                        {% if question and po.program_number == "PO2" and question.po2 %}checked{% endif %}
+                        {% if question and po.program_number == "PO3" and question.po3 %}checked{% endif %}
+                        {% if question and po.program_number == "PO4" and question.po4 %}checked{% endif %}
+                        {% if question and po.program_number == "PO5" and question.po5 %}checked{% endif %}
+                        {% if question and po.program_number == "PO6" and question.po6 %}checked{% endif %}
+                        {% if question and po.program_number == "PO7" and question.po7 %}checked{% endif %}
+                        {% if question and po.program_number == "PO8" and question.po8 %}checked{% endif %}
+                        {% if question and po.program_number == "PO9" and question.po9 %}checked{% endif %}
+                        {% if question and po.program_number == "PO10" and question.po10 %}checked{% endif %}
+                        {% if question and po.program_number == "PO11" and question.po11 %}checked{% endif %}
+                        {% if question and po.program_number == "PO12" and question.po12 %}checked{% endif %}
+                      >
+                      <span>
+                        <strong>{{ po.program_number }}</strong>
+                        - {{ po.program_name }}
+                      </span>
+                    </label>
+                  </div>
+                {% endfor %}
+
+              </div>
+
+              <div class="fq-note" style="margin-top:10px;">
+                <i class="fas fa-circle-info"></i>
+                <div>
+                  Select one or more Program Outcomes. Selected values will be saved into PO1 to PO12 boolean fields.
+                </div>
+              </div>
+            </div>
+
+
+            <div class="fq-note">
+              <i class="fas fa-circle-info"></i>
+              <div>
+                This question is not subject/course based. It will be shown to all students under the selected regulation.
+              </div>
+            </div>
+
+            <div class="fq-form-actions">
+              {% if question %}
+                <a href="{% url 'academic_activity_question_entry' %}" class="fq-btn fq-btn-secondary">
+                  <i class="fas fa-xmark"></i>
+                  Cancel
+                </a>
+                <button type="submit" class="fq-btn fq-btn-primary">
+                  <i class="fas fa-floppy-disk"></i>
+                  Update Question
+                </button>
+              {% else %}
+                <button type="submit" class="fq-btn fq-btn-primary">
+                  <i class="fas fa-plus-circle"></i>
+                  Add Question
+                </button>
+              {% endif %}
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="fq-card">
+        <div class="fq-card-header">
+          <div class="fq-list-top">
+            <div>
+              <h3><i class="fas fa-list-ul"></i>Academic Activity Question Bank</h3>
+              <p>Manage all academic activity questions.</p>
+            </div>
+
+            <div class="fq-stat-box">
+              <div class="fq-stat-label">Total Questions</div>
+              <div class="fq-stat-value">{{ academic_activity_questions|length }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fq-card-body">
+          {% if academic_activity_questions %}
+            <div class="fq-list-shell">
+              {% for question_item in academic_activity_questions %}
+                <div class="fq-question-item">
+                  <div class="fq-question-top">
+                    <div class="fq-question-left">
+                      <div class="fq-serial">{{ forloop.counter }}</div>
+
+                      <div>
+                        <div class="fq-question-text">
+                          {{ question_item.question_text }}
+                        </div>
+
+                        <div class="fq-question-meta">
+                          <span class="fq-badge fq-badge-category">
+                            <i class="fas fa-book"></i>
+                            {{ question_item.regulation }}
+                          </span>
+
+                          {% if question_item.category %}
+                            <span class="fq-badge fq-badge-category">
+                              <i class="fas fa-tag"></i>
+                              {{ question_item.category }}
+                            </span>
+                          {% endif %}
+
+                          <span class="fq-badge fq-badge-window">
+                            <i class="fas fa-toggle-on"></i>
+                            {% if question_item.is_revised %}
+                              Revised
+                            {% else %}
+                              Non-Revised
+                            {% endif %}
+                          </span>
+
+                          <span class="fq-badge fq-badge-category">
+                            <i class="fas fa-bullseye"></i>
+                            PO:
+                            {% if question_item.po1 %}PO1{% endif %}
+                            {% if question_item.po2 %} PO2{% endif %}
+                            {% if question_item.po3 %} PO3{% endif %}
+                            {% if question_item.po4 %} PO4{% endif %}
+                            {% if question_item.po5 %} PO5{% endif %}
+                            {% if question_item.po6 %} PO6{% endif %}
+                            {% if question_item.po7 %} PO7{% endif %}
+                            {% if question_item.po8 %} PO8{% endif %}
+                            {% if question_item.po9 %} PO9{% endif %}
+                            {% if question_item.po10 %} PO10{% endif %}
+                            {% if question_item.po11 %} PO11{% endif %}
+                            {% if question_item.po12 %} PO12{% endif %}
+                          </span>
+
+                          <span class="fq-badge fq-badge-window">
+                            <i class="fas fa-user-tie"></i>
+                            {{ question_item.created_by|default:"-" }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="fq-action-group">
+                      <a href="{% url 'academic_activity_question_entry' %}?edit={{ question_item.pk }}"
+                         class="fq-btn fq-btn-sm fq-btn-edit">
+                        <i class="fas fa-pen"></i>
+                        Edit
+                      </a>
+
+                      <a href="{% url 'delete_academic_activity_question' question_item.pk %}"
+                         class="fq-btn fq-btn-sm fq-btn-delete"
+                         onclick="return confirm('Are you sure you want to delete this question?');">
+                        <i class="fas fa-trash"></i>
+                        Delete
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="fq-empty">
+              <i class="fas fa-folder-open"></i>
+              <h4>No Academic Activity Questions Added</h4>
+              <p>Start by creating your first question.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function filterPOOptions() {
+  const poType = document.getElementById("po_type").value;
+  const container = document.getElementById("poContainer");
+  const poItems = document.querySelectorAll(".po-item");
+  const poEmpty = document.getElementById("poEmpty");
+
+  if (!poType) {
+    container.style.display = "none";
+
+    poItems.forEach(function(item) {
+      item.style.display = "none";
+
+      const checkbox = item.querySelector("input[type='checkbox']");
+      if (checkbox) {
+        checkbox.checked = false;
+      }
+    });
+
+    if (poEmpty) {
+      poEmpty.style.display = "block";
+    }
+
+    return;
+  }
+
+  container.style.display = "block";
+
+  let visibleCount = 0;
+
+  poItems.forEach(function(item) {
+    const type = item.getAttribute("data-type");
+    const checkbox = item.querySelector("input[type='checkbox']");
+
+    if (type === poType) {
+      item.style.display = "block";
+      visibleCount++;
+    } else {
+      item.style.display = "none";
+
+      if (checkbox) {
+        checkbox.checked = false;
+      }
+    }
+  });
+
+  if (poEmpty) {
+    poEmpty.style.display = visibleCount === 0 ? "block" : "none";
+    poEmpty.textContent = visibleCount === 0
+      ? "No Program Outcomes found for selected type."
+      : "";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  filterPOOptions();
+
+  const form = document.getElementById("question-form");
+
+  if (form) {
+    form.addEventListener("submit", function (e) {
+      const poType = document.getElementById("po_type").value;
+
+      if (!poType) {
+        e.preventDefault();
+        alert("Please select PO Type.");
+        return false;
+      }
+
+      const checkedPOs = document.querySelectorAll(
+        "#poContainer input[type='checkbox']:checked"
+      );
+
+      if (checkedPOs.length === 0) {
+        e.preventDefault();
+        alert("Please select at least one Program Outcome.");
+        return false;
+      }
+    });
+  }
+});
+</script>
+
+{% endblock content %}

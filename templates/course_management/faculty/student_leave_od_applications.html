@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.lod-dash { font-family:'Inter','Segoe UI',system-ui,sans-serif; background:linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%); min-height:100vh; padding:2rem 1rem; }
+.lod-dash .wrap { max-width:1500px; margin:0 auto; }
+.lod-dash .page-header { text-align:center; padding:1.4rem; background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%); border-radius:16px; color:#fff; box-shadow:0 4px 20px rgba(0,0,0,.1); margin-bottom:1.5rem; }
+.lod-dash .page-header h1 { font-size:1.7rem; font-weight:800; margin:0; }
+.lod-dash .page-header p { margin:.4rem 0 0; opacity:.9; font-size:.95rem; }
+.lod-dash .dept-chip { display:inline-block; margin-top:.6rem; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.35); border-radius:40px; padding:.25rem .9rem; font-weight:600; font-size:.85rem; }
+
+.lod-dash .stat-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:1.4rem; }
+.lod-dash .stat-card { background:#fff; border-radius:14px; padding:1rem 1.2rem; box-shadow:0 2px 10px rgba(0,0,0,.05); border-left:5px solid #94a3b8; }
+.lod-dash .stat-card .num { font-size:1.6rem; font-weight:800; color:#0f172a; }
+.lod-dash .stat-card .lbl { font-size:.8rem; color:#64748b; font-weight:600; text-transform:uppercase; letter-spacing:.03em; }
+.lod-dash .stat-card.total { border-left-color:#1a4b8c; }
+.lod-dash .stat-card.pending { border-left-color:#d97706; }
+.lod-dash .stat-card.mentor { border-left-color:#0ea5e9; }
+.lod-dash .stat-card.approved { border-left-color:#16a34a; }
+.lod-dash .stat-card.rejected { border-left-color:#dc2626; }
+
+.lod-dash .toolbar { background:#fff; border-radius:14px; padding:1rem 1.2rem; box-shadow:0 2px 10px rgba(0,0,0,.05); margin-bottom:1.4rem; }
+.lod-dash .toolbar form { display:flex; flex-wrap:wrap; gap:.8rem; align-items:end; }
+.lod-dash .toolbar .fld { display:flex; flex-direction:column; gap:.25rem; }
+.lod-dash .toolbar label { font-size:.72rem; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.03em; }
+.lod-dash .toolbar input, .lod-dash .toolbar select { border:1px solid #e2e8f0; border-radius:10px; padding:.5rem .7rem; font-size:.85rem; min-width:150px; }
+.lod-dash .toolbar .btn-apply { background:#1a4b8c; color:#fff; border:none; border-radius:40px; padding:.55rem 1.3rem; font-weight:600; cursor:pointer; }
+.lod-dash .toolbar .btn-reset { background:#fff; color:#475569; border:1px solid #e2e8f0; border-radius:40px; padding:.55rem 1.1rem; font-weight:600; text-decoration:none; }
+
+.lod-dash .table-card { background:#fff; border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,.05); overflow:hidden; }
+.lod-dash .table-responsive { overflow:visible; }
+.lod-dash table.tbl { width:100%; border-collapse:collapse; font-size:.83rem; }
+.lod-dash table.tbl thead th { background:linear-gradient(135deg,#1a4b8c 0%,#2c5aa0 100%); color:#fff; text-align:center; padding:.85rem .75rem; font-weight:800; white-space:nowrap; border-bottom:0; border-right:1px solid rgba(255,255,255,.12); text-transform:uppercase; font-size:.74rem; }
+.lod-dash table.tbl thead th:first-child { background:linear-gradient(135deg,#0d2d56 0%,#1a4b8c 100%); }
+.lod-dash table.tbl tbody td { padding:.75rem .8rem; border-bottom:1px solid #eef2f7; border-right:1px solid #f1f5f9; vertical-align:top; }
+.lod-dash table.tbl tbody tr:hover { background:#f8fafc; }
+.lod-dash .stu-name { font-weight:700; color:#0f172a; }
+.lod-dash .stu-reg { color:#64748b; font-size:.78rem; }
+
+.lod-dash .date-stack,
+.lod-dash .applied-stack { display:inline-flex; flex-direction:column; gap:.15rem; color:#0f172a; font-weight:700; line-height:1.25; }
+.lod-dash .date-stack small,
+.lod-dash .applied-stack small { color:#64748b; font-size:.76rem; font-weight:700; }
+.lod-dash .duration-pill { display:inline-flex; align-items:center; justify-content:center; padding:.35rem .65rem; border-radius:999px; background:#eff6ff; color:#1e3a8a; font-size:.78rem; font-weight:800; line-height:1.25; }
+
+.lod-dash .type-pill { display:inline-flex; align-items:center; border-radius:40px; padding:.2rem .7rem; font-size:.72rem; font-weight:700; }
+.lod-dash .type-pill.od { background:#e0f2fe; color:#0369a1; }
+.lod-dash .type-pill.leave { background:#fef3c7; color:#92400e; }
+
+.lod-dash .badge-s { display:inline-flex; align-items:center; gap:.25rem; border-radius:40px; padding:.2rem .6rem; font-size:.72rem; font-weight:700; }
+.lod-dash .badge-pending { background:#fef3c7; color:#92400e; }
+.lod-dash .badge-mentor { background:#e0f2fe; color:#0369a1; }
+.lod-dash .badge-approved { background:#dcfce7; color:#166534; }
+.lod-dash .badge-rejected { background:#fee2e2; color:#991b1b; }
+
+.lod-dash .flow { display:flex; flex-direction:column; gap:.35rem; min-width:240px; }
+.lod-dash .flow-step { display:flex; align-items:flex-start; gap:.4rem; font-size:.76rem; }
+.lod-dash .flow-dot { width:9px; height:9px; border-radius:50%; flex:0 0 auto; margin-top:.35rem; background:#cbd5e1; }
+.lod-dash .flow-dot.approved { background:#16a34a; }
+.lod-dash .flow-dot.rejected { background:#dc2626; }
+.lod-dash .flow-dot.pending { background:#d97706; }
+.lod-dash .flow-step .who { font-weight:600; color:#0f172a; }
+.lod-dash .flow-step .meta { color:#64748b; }
+.lod-dash .flow-none { color:#9ca3af; font-style:italic; font-size:.78rem; }
+
+.lod-dash .btn-view-proof { border:1px solid #1a4b8c; color:#1a4b8c; background:#fff; border-radius:40px; padding:4px 12px; font-size:.76rem; cursor:pointer; white-space:nowrap; }
+
+.lod-dash .empty-state { text-align:center; padding:3rem 1rem; color:#94a3b8; }
+.lod-dash .empty-state i { font-size:2.4rem; margin-bottom:.6rem; }
+
+.lod-dash .pag-wrap { display:flex; justify-content:space-between; align-items:center; padding:1rem 1.2rem; flex-wrap:wrap; gap:.6rem; }
+.lod-dash .pag-info { color:#64748b; font-size:.82rem; }
+.lod-dash .pag-btns { display:flex; gap:.35rem; }
+.lod-dash .pag-btn { border:1px solid #e2e8f0; background:#fff; color:#334155; border-radius:8px; padding:.35rem .7rem; text-decoration:none; font-size:.82rem; }
+.lod-dash .pag-btn.active { background:#1a4b8c; color:#fff; border-color:#1a4b8c; }
+
+@media (max-width: 1024px) {
+  .lod-dash { padding:1rem; }
+  .lod-dash .toolbar form { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); align-items:end; }
+  .lod-dash .toolbar .fld,
+  .lod-dash .toolbar input,
+  .lod-dash .toolbar select { min-width:0; width:100%; }
+  .lod-dash table.tbl,
+  .lod-dash table.tbl thead,
+  .lod-dash table.tbl tbody,
+  .lod-dash table.tbl tr,
+  .lod-dash table.tbl td { display:block; width:100%; }
+  .lod-dash table.tbl thead { display:none; }
+  .lod-dash table.tbl tr { margin-bottom:1rem; border:1px solid #dbeafe; border-radius:14px; background:#fff; box-shadow:0 4px 14px rgba(15,23,42,.08); overflow:hidden; }
+  .lod-dash table.tbl tbody td { display:grid; grid-template-columns:126px minmax(0,1fr); gap:.75rem; align-items:center; min-height:50px; padding:.85rem 1rem; text-align:left!important; border-right:0; border-bottom:1px solid #eef2f7; }
+  .lod-dash table.tbl tbody td:last-child { border-bottom:0; }
+  .lod-dash table.tbl tbody td::before { content:attr(data-label); color:#1a4b8c; font-size:.75rem; font-weight:900; text-transform:uppercase; }
+  .lod-dash table.tbl tbody td:first-child { background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%); color:#1a4b8c; font-weight:800; }
+  .lod-dash .flow { min-width:0; width:100%; }
+  .lod-dash .pag-wrap { flex-direction:column; align-items:flex-start; }
+}
+
+@media (max-width: 640px) {
+  .lod-dash .page-header h1 { font-size:1.35rem; }
+  .lod-dash table.tbl tbody td { grid-template-columns:100px minmax(0,1fr); padding:.8rem; }
+  .lod-dash .stat-row { grid-template-columns:1fr; }
+}
+</style>
+
+<div class="lod-dash">
+  <div class="wrap">
+
+    <div class="page-header">
+      <h1><i class="fas fa-clipboard-list me-2"></i>Student Leave / OD Applications</h1>
+      <p>Department-wide view of all student Leave &amp; On-Duty applications and their approval progress</p>
+      {% if viewer_department %}
+        <span class="dept-chip"><i class="fas fa-building me-1"></i>{{ viewer_department.Department|default:viewer_department }}</span>
+      {% endif %}
+    </div>
+
+    <!-- Summary -->
+    <div class="stat-row">
+      <div class="stat-card total"><div class="num">{{ total_count }}</div><div class="lbl">Total</div></div>
+      <div class="stat-card pending"><div class="num">{{ pending_count }}</div><div class="lbl">Pending</div></div>
+      <div class="stat-card mentor"><div class="num">{{ mentor_approved_count }}</div><div class="lbl">Mentor Approved</div></div>
+      <div class="stat-card approved"><div class="num">{{ approved_count }}</div><div class="lbl">Approved</div></div>
+      <div class="stat-card rejected"><div class="num">{{ rejected_count }}</div><div class="lbl">Rejected</div></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="toolbar">
+      <form method="get">
+        <div class="fld">
+          <label>Search Student</label>
+          <input type="text" name="q" value="{{ q }}" placeholder="Name or Reg No">
+        </div>
+        <div class="fld">
+          <label>Type</label>
+          <select name="application_type">
+            <option value="">All</option>
+            <option value="LEAVE" {% if application_type_filter == "LEAVE" %}selected{% endif %}>Leave</option>
+            <option value="OD" {% if application_type_filter == "OD" %}selected{% endif %}>OD</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>Status</label>
+          <select name="status">
+            <option value="">All</option>
+            <option value="PENDING" {% if status_filter == "PENDING" %}selected{% endif %}>Pending</option>
+            <option value="MENTOR_APPROVED" {% if status_filter == "MENTOR_APPROVED" %}selected{% endif %}>Mentor Approved</option>
+            <option value="APPROVED" {% if status_filter == "APPROVED" %}selected{% endif %}>Approved</option>
+            <option value="REJECTED" {% if status_filter == "REJECTED" %}selected{% endif %}>Rejected</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>Study Year</label>
+          <select name="study_year">
+            <option value="">All</option>
+            {% for yr in available_study_years %}
+              <option value="{{ yr }}" {% if study_year_filter == yr %}selected{% endif %}>{{ yr }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="fld">
+          <label>Academic Year</label>
+          <select name="academic_year">
+            <option value="">All</option>
+            {% for ay in available_academic_years %}
+              <option value="{{ ay }}" {% if academic_year_filter == ay %}selected{% endif %}>{{ ay }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn-apply"><i class="fas fa-filter me-1"></i>Apply</button>
+        <a href="{% url 'leave_od_applications' %}" class="btn-reset"><i class="fas fa-undo me-1"></i>Reset</a>
+      </form>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      {% if applications %}
+        <div class="table-responsive">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Student</th>
+                <th>Academic Year</th>
+                <th>Study Year</th>
+                <th>Section / Batch</th>
+                <th>Type</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Days</th>
+                <th>Reason</th>
+                <th>Proof</th>
+                <th>Applied On</th>
+                <th>Approval Flow (Who Approved)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for app in applications %}
+                <tr>
+                  <td data-label="#">{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                  <td data-label="Student">
+                    <div class="stu-name">{{ app.student_name }}</div>
+                    <div class="stu-reg">{{ app.student_reg_no }}</div>
+                  </td>
+                  <td data-label="Academic Year">{{ app.academic_year|default:"-" }}</td>
+                  <td data-label="Study Year">{{ app.study_year|default:"-" }}</td>
+                  <td data-label="Section / Batch">{{ app.section|default:"-" }}{% if app.batch and app.batch != "-" %} / {{ app.batch }}{% endif %}</td>
+                  <td data-label="Type">
+                    {% if app.application_type == "OD" %}
+                      <span class="type-pill od"><i class="fas fa-briefcase me-1"></i>OD</span>
+                    {% else %}
+                      <span class="type-pill leave"><i class="fas fa-calendar-minus me-1"></i>Leave</span>
+                    {% endif %}
+                  </td>
+                  <td data-label="From">
+                    <span class="date-stack">
+                      <span>{{ app.from_date|date:"d M Y"|default:"-" }}</span>
+                      <small>{{ app.from_date|date:"h:i A"|default:"" }}</small>
+                    </span>
+                  </td>
+                  <td data-label="To">
+                    <span class="date-stack">
+                      <span>{{ app.to_date|date:"d M Y"|default:"-" }}</span>
+                      <small>{{ app.to_date|date:"h:i A"|default:"" }}</small>
+                    </span>
+                  </td>
+                  <td data-label="Days"><span class="duration-pill">{% if app.display_duration %}{{ app.display_duration }}{% else %}-{% endif %}</span></td>
+                  <td data-label="Reason" style="max-width:220px;word-break:break-word;">{{ app.reason|default:"-" }}</td>
+                  <td data-label="Proof">
+                    {% if app.proof_file %}
+                      <button type="button" class="btn-view-proof"
+                              data-proof-url="{{ app.proof_file.url }}"
+                              data-proof-title="{{ app.application_type|default:'Proof' }} — {{ app.student_name }}">
+                        <i class="fas fa-file-pdf me-1"></i>View
+                      </button>
+                    {% else %}
+                      <span style="color:#9ca3af;">—</span>
+                    {% endif %}
+                  </td>
+                  <td data-label="Applied On">
+                    {% if app.created_at %}
+                      <span class="applied-stack">
+                        <span>{{ app.created_at|date:"d M Y" }}</span>
+                        <small>{{ app.created_at|date:"h:i A" }}</small>
+                      </span>
+                    {% else %}-{% endif %}
+                  </td>
+                  <td data-label="Approval Flow">
+                    {% if app.approval_rows %}
+                      <div class="flow">
+                        {% for step in app.approval_rows %}
+                          <div class="flow-step">
+                            <span class="flow-dot {% if step.status == 'APPROVED' %}approved{% elif step.status == 'REJECTED' %}rejected{% else %}pending{% endif %}"></span>
+                            <span>
+                              <span class="who">L{{ step.level }} · {{ step.name }}</span>
+                              <span class="meta">({{ step.employee_id }}{% if step.role and step.role != '-' %} · {{ step.role }}{% endif %})</span>
+                              —
+                              {% if step.status == 'APPROVED' %}
+                                <span style="color:#16a34a;font-weight:600;">Approved{% if step.approved_date %} · {{ step.approved_date|date:"d M Y H:i" }}{% endif %}</span>
+                              {% elif step.status == 'REJECTED' %}
+                                <span style="color:#dc2626;font-weight:600;">Rejected{% if step.approved_date %} · {{ step.approved_date|date:"d M Y H:i" }}{% endif %}</span>
+                              {% else %}
+                                <span style="color:#d97706;font-weight:600;">Pending</span>
+                              {% endif %}
+                            </span>
+                          </div>
+                        {% endfor %}
+                      </div>
+                    {% else %}
+                      <span class="flow-none">No approver chain created</span>
+                    {% endif %}
+                  </td>
+                  <td data-label="Status">
+                    {% if app.status == "APPROVED" %}
+                      <span class="badge-s badge-approved"><i class="fas fa-check"></i>Approved</span>
+                    {% elif app.status == "REJECTED" %}
+                      <span class="badge-s badge-rejected"><i class="fas fa-times"></i>Rejected</span>
+                    {% elif app.status == "MENTOR_APPROVED" %}
+                      <span class="badge-s badge-mentor"><i class="fas fa-user-check"></i>Mentor Approved</span>
+                    {% else %}
+                      <span class="badge-s badge-pending"><i class="fas fa-clock"></i>Pending</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+          <div class="pag-wrap">
+            <div class="pag-info">
+              <i class="fas fa-table me-1"></i>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+              ({{ page_obj.paginator.count }} record{{ page_obj.paginator.count|pluralize }})
+            </div>
+            <div class="pag-btns">
+              {% if page_obj.has_previous %}
+                <a class="pag-btn" href="?q={{ q|urlencode }}&application_type={{ application_type_filter|urlencode }}&status={{ status_filter|urlencode }}&study_year={{ study_year_filter|urlencode }}&academic_year={{ academic_year_filter|urlencode }}&page={{ page_obj.previous_page_number }}"><i class="fas fa-angle-left"></i></a>
+              {% endif %}
+              <span class="pag-btn active">{{ page_obj.number }}</span>
+              {% if page_obj.has_next %}
+                <a class="pag-btn" href="?q={{ q|urlencode }}&application_type={{ application_type_filter|urlencode }}&status={{ status_filter|urlencode }}&study_year={{ study_year_filter|urlencode }}&academic_year={{ academic_year_filter|urlencode }}&page={{ page_obj.next_page_number }}"><i class="fas fa-angle-right"></i></a>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+      {% else %}
+        <div class="empty-state">
+          <i class="fas fa-folder-open"></i>
+          <p style="font-weight:600;margin:0;">No student Leave / OD applications found</p>
+          <p style="font-size:.85rem;">Nothing matches your current filters for this department.</p>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<!-- Proof Viewer Modal -->
+<div class="modal fade" id="proof-modal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header" style="background:linear-gradient(135deg,#1a4b8c,#123a70);padding:14px 20px;">
+        <h5 class="modal-title text-white fw-bold" id="proof-modal-title">
+          <i class="fas fa-file-pdf me-2"></i>Proof Document
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0" style="height:78vh;background:#525659;">
+        <iframe id="proof-frame" src="" title="Proof" style="width:100%;height:100%;border:0;"></iframe>
+      </div>
+      <div class="modal-footer border-0 py-2">
+        <a id="proof-open-tab" href="#" target="_blank" rel="noopener" class="btn btn-outline-primary" style="border-radius:40px;padding:.4rem 1.2rem;">
+          <i class="fas fa-external-link-alt me-1"></i>Open in new tab
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius:40px;padding:.4rem 1.2rem;">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var proofModalEl = document.getElementById('proof-modal');
+  var proofFrame = document.getElementById('proof-frame');
+  var proofTitle = document.getElementById('proof-modal-title');
+  var proofOpenTab = document.getElementById('proof-open-tab');
+
+  document.querySelectorAll('.btn-view-proof').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var url = btn.getAttribute('data-proof-url');
+      var title = btn.getAttribute('data-proof-title') || 'Proof Document';
+      if (!url) return;
+      proofFrame.src = url;
+      proofOpenTab.href = url;
+      proofTitle.innerHTML = '<i class="fas fa-file-pdf me-2"></i>' + title;
+      new bootstrap.Modal(proofModalEl).show();
+    });
+  });
+
+  if (proofModalEl) {
+    proofModalEl.addEventListener('hidden.bs.modal', function() { proofFrame.src = ''; });
+  }
+})();
+</script>
+
+{% endblock content %}

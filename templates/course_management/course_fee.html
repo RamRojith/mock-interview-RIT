@@ -1,0 +1,113 @@
+{% load static %}
+ 
+<!-- Add Exam Fee Modal -->
+<div class="modal fade" id="addCourseFeeModal" tabindex="-1" role="dialog" aria-labelledby="addCourseFeeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="addExamFeeModalLabel">Add Course Fee</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addCourseFeeForm">
+          {% csrf_token %}
+
+          <!-- Program of Study -->
+          <div class="form-group">
+            <label for="department" class="control-label">Department</label>
+            <select class="form-control" id="department" name="department" required>
+              <option selected disabled value="">Choose Department...</option>
+              {% dept_data as depts %}
+              {% for dept in depts %}
+              <option value="{{ dept.id }}">{{ dept.Department }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="Program" class="control-label">Program</label>
+            <select class="form-control" id="Program" name="Program" required>
+                <option  value="" disabled hidden selected>Select Program</option>
+            {% Program_data as program %}
+              {% for dept in program %}
+              <option value="{{ dept.program_code }}">{{ dept.program_name }}</option>
+              {% endfor %}   
+              
+            </select>
+        </div>
+
+        <div class="form-group">
+          <label for="mode_of_study" class="control-label">Department</label>
+          <select class="form-control" id="mode_of_study" name="mode_of_study" required>
+            <option value="" disabled selected>Select Mode of Study</option>
+            <option value="Regular">Regular</option>
+            <option value="Evening">Evening</option>
+            <option value="Weekend">Weekend</option>
+            <option value="Term">Term</option>
+            <option value="Blended/E-Learning">Blended/E-Learning</option>
+            <option value="ODeL">ODeL</option>
+        </select>
+        </div>
+
+        <div class="form-group">
+          <label for="year" class="control-label">Department</label>
+          <select class="form-control" id="year" name="year" required>
+            <option value="" disabled selected>Select Year</option>
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+        </select>
+        </div>
+
+          <!-- Exam Fee -->
+          <div class="form-group mt-3">
+            <label for="Course_fee" class="control-label">Course Fee</label>
+            <input type="number" class="form-control" id="Course_fee" name="Course_fee" placeholder="Enter course fee" required>
+          </div>
+
+
+          <button type="button" class="btn btn-primary mt-3" id="addCourseFeeBtn">Add Course Fee</button>
+
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('addCourseFeeBtn').addEventListener('click', function() {
+      const formData = new FormData();
+      formData.append("department", document.getElementById('department').value);
+      formData.append("Program", document.getElementById('Program').value);
+      formData.append("mode_of_study", document.getElementById('mode_of_study').value);
+      formData.append("year", document.getElementById('year').value);
+      formData.append("Course_fee", document.getElementById('Course_fee').value);  // <-- FIXED ID
+      formData.append("csrfmiddlewaretoken", document.querySelector('[name=csrfmiddlewaretoken]').value);
+  
+      fetch("{% url 'add_course_fee' %}", {  // Make sure URL name matches your urls.py
+          method: "POST",
+          body: formData
+      })
+      .then(response => {
+          if (!response.ok) {
+              return response.json().then(err => { throw err });
+          }
+          return response.json();
+      })
+      .then(data => {
+          alert(data.message);
+          document.getElementById("addCourseFeeForm").reset();
+          const modal = bootstrap.Modal.getInstance(document.getElementById('addCourseFeeModal'));
+          modal.hide();
+      })
+      .catch(error => {
+          console.error("Error:", error);
+          alert("Failed to add course fee: " + JSON.stringify(error));
+      });
+  });
+  </script>
+  

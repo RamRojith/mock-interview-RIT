@@ -1,0 +1,373 @@
+{% load static %}
+{% load fee_tags %}
+
+<div class="modal fade" id="addFeeModal" tabindex="-1" aria-labelledby="addFeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <!-- Modal Header -->
+            <div class="modal-header bg-gradient-primary text-white py-3">
+                <div class="d-flex align-items-center w-100">
+                    <div class="modal-icon me-3">
+                        <i class="fas fa-money-bill-wave fa-lg"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="modal-title fw-bold mb-0" id="addFeeModalLabel">Fee Types Management</h5>
+                        <small class="opacity-75">Add and manage fee categories</small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body p-0">
+                <!-- Messages Section -->
+                {% if messages %}
+                <div class="alert-container px-4 pt-4">
+                    {% for message in messages %}
+                    <div class="alert alert-dismissible alert-{{ message.tags }} fade show mb-3" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-triangle{% endif %} me-2"></i>
+                            <span>{{ message }}</span>
+                            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="container-fluid py-4">
+                    <div class="row">
+                        <!-- Form Section -->
+                        <div class="col-md-5 border-end">
+                            <div class="pe-3">
+                                <h6 class="section-title mb-3">
+                                    <i class="fas fa-plus-circle me-2 text-primary"></i>
+                                    Add New Fee Type
+                                </h6>
+                                <form method="POST" id="feeTypeForm" action="{% url 'add_fee_type' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" id="feeTypeId" name="fee_category_id">
+                                    
+                                    <div class="mb-3">
+                                        <label for="feeType" class="form-label small fw-semibold text-muted mb-2">
+                                            FEE TYPE NAME
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0">
+                                                <i class="fas fa-tag text-primary"></i>
+                                            </span>
+                                            <input type="text" 
+                                                   class="form-control border-start-0" 
+                                                   id="feeType" 
+                                                   name="fee_type" 
+                                                   placeholder="Enter fee type name"
+                                                   required>
+                                        </div>
+                                        <div class="form-text">Enter a descriptive name for the fee category</div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" id="submitBtn">
+                                        <i class="fas fa-plus me-2"></i>
+                                        <span>Add Fee Type</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Existing Fee Types Section -->
+                        <div class="col-md-7">
+                            <div class="ps-3">
+                                <h6 class="section-title mb-3">
+                                    <i class="fas fa-list me-2 text-primary"></i>
+                                    Existing Fee Types
+                                </h6>
+                                
+                                {% if fee_types %}
+                                <div class="fee-types-list">
+                                    {% for fee in fee_types %}
+                                    <div class="fee-type-card mb-2">
+                                        <div class="card border-0 shadow-sm">
+                                            <div class="card-body py-2 px-3">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="fee-icon me-3">
+                                                            <i class="fas fa-money-bill text-success"></i>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0 fw-semibold">{{ fee.name }}</h6>
+                                                            <small class="text-muted">Created on {{ fee.created_at|date:"M d, Y" }}</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="action-buttons">
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-outline-warning me-1 edit-btn"
+                                                                onclick="editFeeType('{{ fee.id }}', '{{ fee.name }}')"
+                                                                data-bs-toggle="tooltip"
+                                                                title="Edit fee type">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <form method="POST" 
+                                                              action="{% url 'delete_fee_type' fee.id %}" 
+                                                              class="d-inline"
+                                                              onsubmit="return confirmDelete()">
+                                                            {% csrf_token %}
+                                                            <button type="submit" 
+                                                                    class="btn btn-sm btn-outline-danger"
+                                                                    data-bs-toggle="tooltip"
+                                                                    title="Delete fee type">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="text-center py-5">
+                                    <div class="empty-state-icon mb-3">
+                                        <i class="fas fa-money-bill-wave fa-3x text-muted"></i>
+                                    </div>
+                                    <h6 class="text-muted mb-2">No Fee Types Found</h6>
+                                    <p class="text-muted small">Start by adding your first fee type using the form</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer bg-light py-3">
+                <div class="w-100 d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Total {{ fee_types|length }} fee type{{ fee_types|length|pluralize }}
+                    </small>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Modal Styles */
+.modal-header.bg-gradient-primary {
+    background: linear-gradient(135deg, #1a56db, #0ea5e9);
+    border-bottom: none;
+}
+
+.modal-icon {
+    opacity: 0.9;
+}
+
+/* Section Titles */
+.section-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Form Styles */
+.input-group-text {
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus + .input-group-text {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+}
+
+/* Fee Type Cards */
+.fee-type-card {
+    transition: all 0.2s ease;
+}
+
+.fee-type-card:hover {
+    transform: translateY(-1px);
+}
+
+.fee-type-card .card {
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.fee-type-card:hover .card {
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.fee-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.9rem;
+}
+
+/* Action Buttons */
+.action-buttons .btn {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.action-buttons .btn:hover {
+    transform: scale(1.05);
+}
+
+/* Empty State */
+.empty-state-icon {
+    opacity: 0.5;
+}
+
+/* Alert Styles */
+.alert-container .alert {
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d1fae5, #ecfdf5);
+    color: #065f46;
+    border-left: 4px solid #10b981;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #fee2e2, #fef2f2);
+    color: #991b1b;
+    border-left: 4px solid #ef4444;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    .col-md-5 {
+        border-right: none !important;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .col-md-7 {
+        padding-left: 0 !important;
+    }
+    
+    .modal-header .d-flex {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .modal-icon {
+        margin-bottom: 0.5rem;
+        margin-right: 0 !important;
+    }
+}
+
+/* Animation for form submission */
+@keyframes submitAnimation {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.98); }
+    100% { transform: scale(1); }
+}
+
+.submitting {
+    animation: submitAnimation 0.3s ease;
+}
+</style>
+
+<script>
+function editFeeType(id, name) {
+    document.getElementById('feeType').value = name;
+    document.getElementById('feeTypeId').value = id;
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerHTML = '<i class="fas fa-save me-2"></i><span>Update Fee Type</span>';
+    submitBtn.classList.add('btn-warning');
+    submitBtn.classList.remove('btn-primary');
+    
+    // Scroll to form and focus input
+    document.getElementById('feeType').focus();
+    document.getElementById('feeType').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function resetFeeForm() {
+    document.getElementById('feeTypeForm').reset();
+    document.getElementById('feeTypeId').value = '';
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerHTML = '<i class="fas fa-plus me-2"></i><span>Add Fee Type</span>';
+    submitBtn.classList.remove('btn-warning');
+    submitBtn.classList.add('btn-primary');
+}
+
+function confirmDelete() {
+    return confirm('Are you sure you want to delete this fee type? This action cannot be undone.');
+}
+
+// Auto-open the modal only if THIS form is what redirected back here
+document.addEventListener('DOMContentLoaded', function () {
+    const openModal = "{{ open_modal }}";
+    if (openModal === "add_fee_type") {
+        const modalElement = document.getElementById('addFeeModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
+    }
+
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Form submission animation
+    const feeTypeForm = document.getElementById('feeTypeForm');
+    if (feeTypeForm) {
+        feeTypeForm.addEventListener('submit', function() {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.classList.add('submitting');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i><span>Processing...</span>';
+            
+            setTimeout(() => {
+                submitBtn.classList.remove('submitting');
+            }, 300);
+        });
+    }
+    
+    // Auto-focus on input when modal opens
+    const addFeeModal = document.getElementById('addFeeModal');
+    if (addFeeModal) {
+        addFeeModal.addEventListener('shown.bs.modal', function () {
+            document.getElementById('feeType').focus();
+        });
+        
+        addFeeModal.addEventListener('hidden.bs.modal', function () {
+            resetFeeForm();
+        });
+    }
+});
+</script>

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid py-4" style="max-width:1500px;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="fw-bold text-primary mb-0"><i class="fa-solid fa-clipboard-list me-2"></i>Verification Report</h2>
+    <a href="{% url 'my_verifications' %}" class="btn btn-sm btn-outline-secondary">Back</a>
+  </div>
+
+  {% if messages %}{% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}{% endif %}
+
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-body row g-2">
+      <div class="col-md-4"><small class="text-muted">Lab</small><div>{{ assignment.lab.lab_code }} — {{ assignment.lab.name }}</div></div>
+      <div class="col-md-4"><small class="text-muted">Cycle</small><div>{{ assignment.cycle.cycle_name }} ({{ assignment.cycle.financial_year }})</div></div>
+      <div class="col-md-4"><small class="text-muted">Due Date</small><div>{{ assignment.due_date }}</div></div>
+    </div>
+  </div>
+
+  <form method="post" action="{% url 'verification_report' assignment.id %}">{% csrf_token %}
+    <div class="card shadow-sm border-0">
+      <div class="table-responsive">
+        <table class="table table-bordered mb-0 align-middle" style="min-width:1300px;">
+          <thead class="table-light text-center">
+            <tr>
+              <th>SL</th><th>Asset Tag</th><th>Item</th><th>Qty</th><th>Within Warranty</th>
+              <th>Physical Condition</th><th>Qty Idle</th><th>Defect (Repair)</th>
+              <th>Condemnation Reason</th><th>Missing Details</th><th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in lines %}
+            <tr>
+              <td class="text-center">{{ line.sl_no }}</td>
+              <td>{{ line.stock_item.asset_tag }}</td>
+              <td>{{ line.stock_item.entry.item_description|truncatechars:36 }}</td>
+              <td class="text-center">{{ line.qty_as_per_register }}</td>
+              <td class="text-center">{% if line.within_warranty %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
+              <td style="min-width:140px;">
+                <select name="physical_condition_{{ line.id }}" class="form-select form-select-sm">
+                  {% for val, label in condition_choices %}
+                    <option value="{{ val }}" {% if line.physical_condition == val %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td style="width:80px;"><input type="number" min="0" name="qty_idle_{{ line.id }}" class="form-control form-control-sm" value="{{ line.qty_idle|default:0 }}"></td>
+              <td style="min-width:150px;"><textarea name="defect_details_{{ line.id }}" class="form-control form-control-sm" rows="1">{{ line.defect_details|default:'' }}</textarea></td>
+              <td style="min-width:150px;"><textarea name="condemnation_reason_{{ line.id }}" class="form-control form-control-sm" rows="1">{{ line.condemnation_reason|default:'' }}</textarea></td>
+              <td style="min-width:150px;"><textarea name="missing_details_{{ line.id }}" class="form-control form-control-sm" rows="1">{{ line.missing_details|default:'' }}</textarea></td>
+              <td style="min-width:150px;"><textarea name="faculty_remarks_{{ line.id }}" class="form-control form-control-sm" rows="1">{{ line.faculty_remarks|default:'' }}</textarea></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="11" class="text-center text-muted py-3">No stock items are currently located in this lab.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <label class="form-label fw-semibold">Overall Remarks</label>
+      <textarea name="overall_remarks" class="form-control" rows="2">{{ report.overall_remarks|default:'' }}</textarea>
+    </div>
+
+    {% if report.status != "APPROVED" %}
+    <div class="mt-3 d-flex gap-2">
+      <button type="submit" name="action" value="save" class="btn btn-outline-primary"><i class="fas fa-save me-1"></i>Save Draft</button>
+      <button type="submit" name="action" value="submit" class="btn btn-success"><i class="fas fa-paper-plane me-1"></i>Submit Report</button>
+    </div>
+    {% else %}
+    <div class="alert alert-success mt-3">This report has been approved.</div>
+    {% endif %}
+  </form>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  document.querySelectorAll('select[name^="physical_condition_"]').forEach(function(sel){
+    function tint(){ sel.closest('tr').style.background = (sel.value==='CONDEMNED'||sel.value==='MISSING')?'#fff5f5':(sel.value==='UNDER_REPAIR'?'#fffbeb':''); }
+    sel.addEventListener('change', tint); tint();
+  });
+});
+</script>
+{% endblock content %}

@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.edu {
+  --navy:#1a4b8c;
+  --ink:#0f172a;
+  --muted:#64748b;
+  --line:#e2e8f0;
+  --soft:#f8fafc;
+  --ok:#15803d;
+  --bad:#b91c1c;
+}
+.edu .wrap { min-height:calc(100vh - 40px); padding:22px 12px; }
+.edu .container-max { max-width:1180px; margin:0 auto; }
+.edu .hero { background:#1a4b8c; color:#fff; border-radius:8px; padding:20px; box-shadow:0 12px 28px rgba(15,23,42,.18); }
+.edu .hero h3 { margin:0; font-weight:800; letter-spacing:0; }
+.edu .hero .sub { color:rgba(255,255,255,.86); margin-top:6px; }
+.edu .panel { background:#fff; border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 22px rgba(15,23,42,.08); }
+.edu .drop { border:2px dashed #bfdbfe; background:#eff6ff; border-radius:8px; padding:22px; text-align:center; }
+.edu .drop input { max-width:360px; margin:12px auto 0; }
+.edu .req { display:flex; flex-wrap:wrap; gap:8px; margin:0; padding:0; list-style:none; }
+.edu .req li { border:1px solid var(--line); background:var(--soft); border-radius:999px; padding:7px 11px; font-size:13px; color:var(--ink); }
+.edu .metric { border:1px solid var(--line); border-radius:8px; padding:14px; background:#fff; min-height:86px; }
+.edu .metric .num { font-size:24px; font-weight:800; color:var(--navy); line-height:1; }
+.edu .metric .lbl { color:var(--muted); font-size:13px; margin-top:7px; }
+.edu .status-saved { color:var(--ok); font-weight:700; }
+.edu .status-skipped { color:var(--bad); font-weight:700; }
+.edu .table td, .edu .table th { vertical-align:middle; }
+</style>
+
+<div class="edu">
+  <div class="wrap">
+    <div class="container-max">
+
+      <div class="hero mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+          <div>
+            <h3><i class="fa-solid fa-file-excel me-2"></i>Employee Data Upload</h3>
+            <div class="sub">Upload faculty data into general information and control-room users</div>
+          </div>
+          <a href="{% url 'employee_details' %}" class="btn btn-light btn-sm fw-bold">
+            <i class="fa-solid fa-arrow-left me-1"></i>Employee Directory
+          </a>
+        </div>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 mb-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="panel p-4 mb-4">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="row g-4 align-items-stretch">
+            <div class="col-lg-5">
+              <div class="drop h-100 d-flex flex-column justify-content-center">
+                <div class="fw-bold text-dark">
+                  <i class="fa-solid fa-cloud-arrow-up me-2"></i>Choose Excel File
+                </div>
+                <input type="file" name="excel_file" class="form-control" accept=".xlsx" required>
+                <small class="text-muted mt-2">Only .xlsx files are supported.</small>
+              </div>
+            </div>
+            <div class="col-lg-7">
+              <div class="mb-3">
+                <div class="fw-bold mb-2">Required columns</div>
+                <ul class="req">
+                  {% for column in required_columns %}
+                    <li>{{ column }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% if optional_columns %}
+              <div class="mb-3">
+                <div class="fw-bold mb-2">Optional columns</div>
+                <ul class="req">
+                  {% for column in optional_columns %}
+                    <li>{{ column }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% endif %}
+              <div class="alert alert-info mb-3">
+                New employee-role-department combinations are added for leave access. Existing combinations are left unchanged.
+              </div>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary fw-bold px-4">
+                  <i class="fa-solid fa-upload me-2"></i>Upload and Save
+                </button>
+                <a href="{% url 'employee_data_upload_template' %}" class="btn btn-outline-primary fw-bold px-4">
+                  <i class="fa-solid fa-file-arrow-down me-2"></i>Download Template
+                </a>
+              </div>
+            </div>
+          </div>
+        </form>
+        <form method="post" class="mt-3">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="sync_departments">
+          <button type="submit" class="btn btn-outline-secondary fw-bold px-4">
+            <i class="fa-solid fa-rotate me-2"></i>Sync Departments
+          </button>
+          <small class="text-muted ms-2">Matches by department name and adds only missing records.</small>
+        </form>
+        <form method="post" class="mt-3">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="export_missing_users">
+          <button type="submit" class="btn btn-outline-success fw-bold px-4">
+            <i class="fa-solid fa-file-excel me-2"></i>Missing Users (Excel)
+          </button>
+          <small class="text-muted ms-2">Downloads an Excel of Employee IDs present in General Information but missing from the control-room user table, with the reason for each.</small>
+        </form>
+      </div>
+
+      {% if department_sync_summary %}
+      <div class="panel p-3 mb-4">
+        <h5 class="mb-3 fw-bold">Department Sync Result</h5>
+        <div class="row g-3">
+          <div class="col-sm-6 col-lg-3">
+            <div class="metric">
+              <div class="num">{{ department_sync_summary.created_academic }}</div>
+              <div class="lbl">Added to academic</div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="metric">
+              <div class="num">{{ department_sync_summary.created_control }}</div>
+              <div class="lbl">Added to control-room</div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="metric">
+              <div class="num">{{ department_sync_summary.existing_academic }}</div>
+              <div class="lbl">Already in academic</div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="metric">
+              <div class="num">{{ department_sync_summary.skipped }}</div>
+              <div class="lbl">Skipped</div>
+            </div>
+          </div>
+        </div>
+        {% if department_sync_summary.messages %}
+          <div class="alert alert-warning mt-3 mb-0">
+            {% for item in department_sync_summary.messages %}
+              <div>{{ item }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if summary %}
+      <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-2">
+          <div class="metric">
+            <div class="num">{{ summary.created_general }}</div>
+            <div class="lbl">General info created</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+          <div class="metric">
+            <div class="num">{{ summary.updated_general }}</div>
+            <div class="lbl">General info updated</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+          <div class="metric">
+            <div class="num">{{ summary.created_users }}</div>
+            <div class="lbl">Users created</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+          <div class="metric">
+            <div class="num">{{ summary.updated_users }}</div>
+            <div class="lbl">Users existing</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+          <div class="metric">
+            <div class="num">{{ summary.skipped }}</div>
+            <div class="lbl">Rows skipped</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+          <div class="metric">
+            <div class="num">{{ summary.total }}</div>
+            <div class="lbl">Rows processed</div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if results %}
+      <div class="panel p-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <div>
+            <h5 class="mb-0 fw-bold">Upload Result</h5>
+            <small class="text-muted">Review skipped rows before uploading again.</small>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Row</th>
+                <th>Employee ID</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Message</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for result in results %}
+              <tr>
+                <td>{{ result.row }}</td>
+                <td>{{ result.employee_id }}</td>
+                <td>{{ result.name }}</td>
+                <td>
+                  {% if result.status == "Saved" %}
+                    <span class="status-saved">{{ result.status }}</span>
+                  {% else %}
+                    <span class="status-skipped">{{ result.status }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ result.message }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

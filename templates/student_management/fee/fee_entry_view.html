@@ -1,0 +1,60 @@
+<div class="p-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <div class="fw-bold fs-5">{{ student.reg_no }} - {{ student.name }}</div>
+      <div class="text-muted small">
+        Department: <b>{% if department %}{{ department.Department }}{% else %}-{% endif %}</b>
+        {% if quota %} • Quota: <b>{{ quota }}</b>{% endif %}
+        {% if mode %} • Mode: <b>{{ mode }}</b>{% endif %}
+      </div>
+    </div>
+    <span class="badge bg-primary p-2">
+      <i class="fa-solid fa-layer-group me-1"></i> Fee Entry (Year 1–4)
+    </span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Fee Category</th>
+          <th>Year 1</th>
+          <th>Year 2</th>
+          <th>Year 3</th>
+          <th>Year 4</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in fee_rows %}
+        <tr>
+          <td class="fw-bold">{{ r.name }}</td>
+          <td>{{ r.y1 }}</td>
+          <td>{{ r.y2 }}</td>
+          <td>{{ r.y3 }}</td>
+          <td>{{ r.y4 }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center text-muted py-4">No fee entries found.</td>
+        </tr>
+        {% endfor %}
+
+        {% if transport_amt and transport_amt != 0 %}
+        <tr>
+          <td class="fw-bold text-success">{{ transport_label|default:"Transport Fee" }}</td>
+          <td colspan="4" class="text-success fw-bold">{{ transport_amt }}</td>
+        </tr>
+        {% endif %}
+      </tbody>
+      <tfoot class="table-light">
+        <tr>
+          <th class="text-end">Totals</th>
+          <th>{{ year_totals.0 }}</th>
+          <th>{{ year_totals.1 }}</th>
+          <th>{{ year_totals.2 }}</th>
+          <th>{{ year_totals.3 }}</th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>

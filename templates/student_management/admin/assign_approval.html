@@ -1,0 +1,1706 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+  #assignApprovalScope{
+    --page-bg:#f4f7fb;
+    --card-bg:#ffffff;
+    --primary:#2563eb;
+    --primary-dark:#1d4ed8;
+    --primary-soft:#eff6ff;
+    --success:#16a34a;
+    --success-dark:#15803d;
+    --warning-bg:#fffbeb;
+    --warning-border:#fde68a;
+    --warning-text:#92400e;
+    --text-main:#0f172a;
+    --text-muted:#64748b;
+    --border:#e2e8f0;
+    --border-dark:#cbd5e1;
+    --soft-bg:#f8fafc;
+    --danger:#dc2626;
+    --radius-xl:22px;
+    --radius-lg:16px;
+    --radius-md:12px;
+    --shadow:0 14px 38px rgba(15, 23, 42, 0.08);
+    --shadow-sm:0 5px 16px rgba(15, 23, 42, 0.06);
+  }
+
+  #assignApprovalScope *,
+  #assignApprovalScope *::before,
+  #assignApprovalScope *::after{
+    box-sizing:border-box;
+  }
+
+  #assignApprovalScope{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+    background:var(--page-bg);
+    color:var(--text-main);
+  }
+
+  #assignApprovalScope .approver-page{
+    width:100%;
+    max-width:1600px;
+    margin:0 auto;
+    padding:24px 18px 40px;
+  }
+
+  /* =========================================================
+     PAGE HEADER
+     ========================================================= */
+
+  #assignApprovalScope .page-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    margin-bottom:22px;
+    padding:22px 24px;
+    background:linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+    border:1px solid var(--border);
+    border-radius:var(--radius-xl);
+    box-shadow:var(--shadow-sm);
+  }
+
+  #assignApprovalScope .page-title-wrap{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    min-width:0;
+  }
+
+  #assignApprovalScope .page-title-icon{
+    width:54px;
+    height:54px;
+    min-width:54px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:16px;
+    background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color:#ffffff;
+    font-size:23px;
+    box-shadow:0 8px 20px rgba(37, 99, 235, 0.25);
+  }
+
+  #assignApprovalScope .page-title{
+    margin:0;
+    font-size:clamp(1.35rem, 2vw, 1.85rem);
+    line-height:1.2;
+    font-weight:800;
+    color:var(--text-main);
+  }
+
+  #assignApprovalScope .page-subtitle{
+    margin:5px 0 0;
+    color:var(--text-muted);
+    font-size:.95rem;
+    line-height:1.5;
+  }
+
+  #assignApprovalScope .help-button{
+    min-width:105px;
+    border-radius:12px;
+    padding:10px 16px;
+    font-weight:600;
+    white-space:nowrap;
+  }
+
+  /* =========================================================
+     INFORMATION ALERT
+     ========================================================= */
+
+  #assignApprovalScope .information-panel{
+    display:flex;
+    align-items:flex-start;
+    gap:16px;
+    margin-bottom:22px;
+    padding:18px 20px;
+    background:var(--warning-bg);
+    border:1px solid var(--warning-border);
+    border-left:5px solid #f59e0b;
+    border-radius:var(--radius-lg);
+    color:var(--warning-text);
+  }
+
+  #assignApprovalScope .information-icon{
+    width:42px;
+    height:42px;
+    min-width:42px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    background:#fef3c7;
+    color:#d97706;
+    font-size:19px;
+  }
+
+  #assignApprovalScope .information-content{
+    flex:1;
+    min-width:0;
+  }
+
+  #assignApprovalScope .information-title{
+    margin:0 0 8px;
+    font-size:1rem;
+    font-weight:800;
+  }
+
+  #assignApprovalScope .information-list{
+    margin:0;
+    padding-left:20px;
+    line-height:1.65;
+    font-size:.93rem;
+  }
+
+  /* =========================================================
+     MAIN CARD
+     ========================================================= */
+
+  #assignApprovalScope .approver-card{
+    overflow:hidden;
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:var(--radius-xl);
+    box-shadow:var(--shadow);
+  }
+
+  #assignApprovalScope .approver-card-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    padding:19px 24px;
+    background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color:#ffffff;
+  }
+
+  #assignApprovalScope .card-heading-wrap{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+
+  #assignApprovalScope .card-heading-icon{
+    width:42px;
+    height:42px;
+    min-width:42px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    background:rgba(255, 255, 255, .16);
+    font-size:18px;
+  }
+
+  #assignApprovalScope .card-heading{
+    margin:0;
+    font-size:1.2rem;
+    font-weight:750;
+  }
+
+  #assignApprovalScope .card-heading-subtitle{
+    margin:3px 0 0;
+    color:rgba(255,255,255,.82);
+    font-size:.85rem;
+  }
+
+  #assignApprovalScope .approver-card-body{
+    padding:24px;
+  }
+
+  /* =========================================================
+     CREATOR ROLE SECTION
+     ========================================================= */
+
+  #assignApprovalScope .creator-role-panel{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) auto;
+    gap:18px;
+    align-items:end;
+    margin-bottom:24px;
+    padding:18px;
+    background:var(--soft-bg);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+  }
+
+  #assignApprovalScope .creator-role-field{
+    max-width:650px;
+  }
+
+  #assignApprovalScope .form-label-custom{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:9px;
+    color:#334155;
+    font-size:.92rem;
+    font-weight:750;
+  }
+
+  #assignApprovalScope .creator-role-select{
+    min-height:46px;
+    border:1px solid var(--border-dark);
+    border-radius:12px;
+    background-color:#ffffff;
+    font-size:.95rem;
+  }
+
+  #assignApprovalScope .creator-role-select:focus,
+  #assignApprovalScope .department-select:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 .22rem rgba(37, 99, 235, .13);
+  }
+
+  #assignApprovalScope .reset-button{
+    min-width:105px;
+    min-height:44px;
+    border-radius:11px;
+    font-weight:650;
+  }
+
+  /* =========================================================
+     ROLE WORKSPACE
+     ========================================================= */
+
+  #assignApprovalScope .role-workspace{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) 90px minmax(0, 1fr);
+    gap:18px;
+    align-items:stretch;
+  }
+
+  #assignApprovalScope .role-column{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+  }
+
+  #assignApprovalScope .role-column-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+    padding:0 2px;
+  }
+
+  #assignApprovalScope .role-column-title{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    min-width:0;
+    margin:0;
+    color:#1e293b;
+    font-size:1.02rem;
+    font-weight:750;
+  }
+
+  #assignApprovalScope .role-column-title i{
+    color:var(--primary);
+  }
+
+  #assignApprovalScope .role-count{
+    min-width:32px;
+    padding:5px 10px;
+    border-radius:999px;
+    background:#e2e8f0;
+    color:#334155;
+    text-align:center;
+    font-size:.78rem;
+    font-weight:800;
+  }
+
+  #assignApprovalScope .role-count.primary{
+    background:var(--primary);
+    color:#ffffff;
+  }
+
+  #assignApprovalScope .role-list{
+    position:relative;
+    flex:1;
+    min-height:430px;
+    max-height:650px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:13px;
+    background:#f8fafc;
+    border:2px dashed var(--border-dark);
+    border-radius:var(--radius-lg);
+    transition:border-color .2s ease, background-color .2s ease;
+    scrollbar-width:thin;
+    scrollbar-color:#cbd5e1 transparent;
+  }
+
+  #assignApprovalScope .role-list::-webkit-scrollbar{
+    width:8px;
+  }
+
+  #assignApprovalScope .role-list::-webkit-scrollbar-track{
+    background:transparent;
+  }
+
+  #assignApprovalScope .role-list::-webkit-scrollbar-thumb{
+    background:#cbd5e1;
+    border-radius:20px;
+  }
+
+  #assignApprovalScope .role-list.drag-over{
+    border-color:var(--primary);
+    background:var(--primary-soft);
+  }
+
+  #assignApprovalScope .empty-state{
+    min-height:180px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:24px 16px;
+    color:var(--text-muted);
+    text-align:center;
+  }
+
+  #assignApprovalScope .empty-state i{
+    font-size:28px;
+    color:#94a3b8;
+  }
+
+  #assignApprovalScope .empty-state.error{
+    color:var(--danger);
+  }
+
+  #assignApprovalScope .empty-state.error i{
+    color:var(--danger);
+  }
+
+  /* =========================================================
+     ROLE ITEM
+     ========================================================= */
+
+  #assignApprovalScope .role-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    width:100%;
+    margin:0 0 11px;
+    padding:14px;
+    background:#ffffff;
+    border:1px solid var(--border);
+    border-radius:14px;
+    box-shadow:0 3px 10px rgba(15, 23, 42, .05);
+    cursor:grab;
+    transition:
+      transform .16s ease,
+      box-shadow .16s ease,
+      border-color .16s ease;
+  }
+
+  #assignApprovalScope .role-item:last-child{
+    margin-bottom:0;
+  }
+
+  #assignApprovalScope .role-item:hover{
+    transform:translateY(-1px);
+    border-color:#bfdbfe;
+    box-shadow:0 7px 18px rgba(15, 23, 42, .08);
+  }
+
+  #assignApprovalScope .role-item:active{
+    cursor:grabbing;
+  }
+
+  #assignApprovalScope .role-item-left{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    flex:1 1 190px;
+    min-width:0;
+  }
+
+  #assignApprovalScope .drag-handle{
+    min-width:18px;
+    color:#94a3b8;
+    cursor:grab;
+    text-align:center;
+  }
+
+  #assignApprovalScope .role-name{
+    overflow-wrap:anywhere;
+    color:#1e293b;
+    font-size:.92rem;
+    font-weight:700;
+    line-height:1.4;
+  }
+
+  #assignApprovalScope .role-item-right{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    flex:0 1 auto;
+    min-width:0;
+  }
+
+  #assignApprovalScope .cross-dept-wrap{
+    display:flex;
+    align-items:center;
+    min-width:max-content;
+    margin:0;
+  }
+
+  #assignApprovalScope .cross-dept-wrap .form-check-input{
+    margin-top:0;
+    cursor:pointer;
+  }
+
+  #assignApprovalScope .cross-dept-wrap .form-check-label{
+    margin-left:5px;
+    color:#475569;
+    font-size:.78rem;
+    font-weight:650;
+    cursor:pointer;
+  }
+
+  #assignApprovalScope .department-select{
+    display:none;
+    width:240px;
+    max-width:100%;
+    min-height:39px;
+    border:1px solid var(--border-dark);
+    border-radius:10px;
+    background-color:#ffffff;
+    font-size:.78rem;
+  }
+
+  #assignApprovalScope .sortable-ghost{
+    opacity:.4;
+    background:#dbeafe;
+    border-color:var(--primary);
+  }
+
+  #assignApprovalScope .sortable-chosen{
+    box-shadow:0 15px 30px rgba(37, 99, 235, .18);
+  }
+
+  /* =========================================================
+     CENTER TRANSFER AREA
+     ========================================================= */
+
+  #assignApprovalScope .transfer-column{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  #assignApprovalScope .transfer-guide{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    width:100%;
+    min-height:430px;
+    color:var(--text-muted);
+    text-align:center;
+  }
+
+  #assignApprovalScope .transfer-icon{
+    width:54px;
+    height:54px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    background:var(--primary-soft);
+    color:var(--primary);
+    font-size:21px;
+    border:1px solid #bfdbfe;
+  }
+
+  #assignApprovalScope .transfer-text{
+    margin:0;
+    font-size:.78rem;
+    font-weight:650;
+    line-height:1.45;
+  }
+
+  /* =========================================================
+     SAVE SECTION
+     ========================================================= */
+
+  #assignApprovalScope .save-section{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin-top:24px;
+    padding-top:20px;
+    border-top:1px solid var(--border);
+  }
+
+  #assignApprovalScope .save-note{
+    display:flex;
+    align-items:flex-start;
+    gap:9px;
+    max-width:780px;
+    margin:0;
+    color:var(--text-muted);
+    font-size:.84rem;
+    line-height:1.5;
+  }
+
+  #assignApprovalScope .save-note i{
+    margin-top:3px;
+    color:var(--primary);
+  }
+
+  #assignApprovalScope .save-button{
+    min-width:175px;
+    min-height:47px;
+    padding:10px 22px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(135deg, var(--success), var(--success-dark));
+    font-weight:750;
+    box-shadow:0 8px 18px rgba(22, 163, 74, .2);
+  }
+
+  #assignApprovalScope .save-button:hover{
+    background:linear-gradient(135deg, #15803d, #166534);
+  }
+
+  #assignApprovalScope .save-button:disabled{
+    opacity:.65;
+    cursor:not-allowed;
+  }
+
+  /* =========================================================
+     MODAL
+     ========================================================= */
+
+  #assignApprovalScope .help-modal-content{
+    overflow:hidden;
+    border:0;
+    border-radius:18px;
+    box-shadow:0 24px 70px rgba(15, 23, 42, .2);
+  }
+
+  #assignApprovalScope .help-modal-header{
+    background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color:#ffffff;
+    border:0;
+  }
+
+  #assignApprovalScope .help-step-list{
+    list-style:none;
+    margin:0;
+    padding:0;
+    counter-reset:help-step;
+  }
+
+  #assignApprovalScope .help-step-list li{
+    position:relative;
+    min-height:46px;
+    margin-bottom:13px;
+    padding:12px 14px 12px 55px;
+    background:var(--soft-bg);
+    border:1px solid var(--border);
+    border-radius:12px;
+    color:#334155;
+    line-height:1.5;
+    counter-increment:help-step;
+  }
+
+  #assignApprovalScope .help-step-list li:last-child{
+    margin-bottom:0;
+  }
+
+  #assignApprovalScope .help-step-list li::before{
+    content:counter(help-step);
+    position:absolute;
+    top:10px;
+    left:13px;
+    width:30px;
+    height:30px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    background:var(--primary);
+    color:#ffffff;
+    font-size:.82rem;
+    font-weight:800;
+  }
+
+  /* =========================================================
+     RESPONSIVE DESIGN
+     ========================================================= */
+
+  @media (max-width:1200px){
+    #assignApprovalScope .role-workspace{
+      grid-template-columns:minmax(0, 1fr) 65px minmax(0, 1fr);
+      gap:13px;
+    }
+
+    #assignApprovalScope .role-item{
+      align-items:flex-start;
+      flex-direction:column;
+    }
+
+    #assignApprovalScope .role-item-left,
+    #assignApprovalScope .role-item-right{
+      width:100%;
+      flex-basis:auto;
+    }
+
+    #assignApprovalScope .role-item-right{
+      justify-content:space-between;
+    }
+
+    #assignApprovalScope .department-select{
+      flex:1;
+      width:auto;
+      min-width:180px;
+    }
+  }
+
+  @media (max-width:991.98px){
+    #assignApprovalScope .approver-page{
+      padding:18px 13px 32px;
+    }
+
+    #assignApprovalScope .page-header{
+      padding:18px;
+    }
+
+    #assignApprovalScope .approver-card-body{
+      padding:18px;
+    }
+
+    #assignApprovalScope .creator-role-panel{
+      grid-template-columns:1fr auto;
+    }
+
+    #assignApprovalScope .role-workspace{
+      grid-template-columns:1fr;
+    }
+
+    #assignApprovalScope .transfer-column{
+      min-height:auto;
+    }
+
+    #assignApprovalScope .transfer-guide{
+      min-height:auto;
+      flex-direction:row;
+      padding:3px 0;
+    }
+
+    #assignApprovalScope .transfer-icon{
+      width:46px;
+      height:46px;
+      transform:rotate(90deg);
+    }
+
+    #assignApprovalScope .transfer-text{
+      text-align:left;
+    }
+
+    #assignApprovalScope .role-list{
+      min-height:320px;
+      max-height:500px;
+    }
+
+    #assignApprovalScope .save-section{
+      align-items:flex-end;
+    }
+  }
+
+  @media (max-width:767.98px){
+    #assignApprovalScope .page-header{
+      align-items:flex-start;
+      flex-direction:column;
+    }
+
+    #assignApprovalScope .help-button{
+      width:100%;
+    }
+
+    #assignApprovalScope .information-panel{
+      padding:16px;
+    }
+
+    #assignApprovalScope .approver-card-header{
+      padding:17px 18px;
+    }
+
+    #assignApprovalScope .creator-role-panel{
+      grid-template-columns:1fr;
+      align-items:stretch;
+    }
+
+    #assignApprovalScope .creator-role-field{
+      max-width:none;
+    }
+
+    #assignApprovalScope .reset-button{
+      width:100%;
+    }
+
+    #assignApprovalScope .role-item{
+      padding:13px;
+    }
+
+    #assignApprovalScope .role-item-right{
+      align-items:stretch;
+      flex-direction:column;
+    }
+
+    #assignApprovalScope .cross-dept-wrap{
+      align-self:flex-start;
+    }
+
+    #assignApprovalScope .department-select{
+      width:100%;
+      min-width:0;
+    }
+
+    #assignApprovalScope .save-section{
+      align-items:stretch;
+      flex-direction:column;
+    }
+
+    #assignApprovalScope .save-button{
+      width:100%;
+    }
+  }
+
+  @media (max-width:575.98px){
+    #assignApprovalScope .approver-page{
+      padding:12px 9px 25px;
+    }
+
+    #assignApprovalScope .page-header{
+      gap:14px;
+      margin-bottom:15px;
+      padding:15px;
+      border-radius:17px;
+    }
+
+    #assignApprovalScope .page-title-wrap{
+      align-items:flex-start;
+    }
+
+    #assignApprovalScope .page-title-icon{
+      width:46px;
+      height:46px;
+      min-width:46px;
+      border-radius:13px;
+      font-size:19px;
+    }
+
+    #assignApprovalScope .page-subtitle{
+      font-size:.83rem;
+    }
+
+    #assignApprovalScope .information-panel{
+      gap:12px;
+      margin-bottom:15px;
+      border-radius:14px;
+    }
+
+    #assignApprovalScope .information-icon{
+      width:36px;
+      height:36px;
+      min-width:36px;
+      font-size:16px;
+    }
+
+    #assignApprovalScope .information-list{
+      padding-left:17px;
+      font-size:.84rem;
+    }
+
+    #assignApprovalScope .approver-card{
+      border-radius:17px;
+    }
+
+    #assignApprovalScope .approver-card-header{
+      align-items:flex-start;
+    }
+
+    #assignApprovalScope .card-heading-icon{
+      width:37px;
+      height:37px;
+      min-width:37px;
+    }
+
+    #assignApprovalScope .card-heading{
+      font-size:1.03rem;
+    }
+
+    #assignApprovalScope .approver-card-body{
+      padding:14px;
+    }
+
+    #assignApprovalScope .creator-role-panel{
+      margin-bottom:18px;
+      padding:14px;
+    }
+
+    #assignApprovalScope .role-column-header{
+      align-items:flex-start;
+    }
+
+    #assignApprovalScope .role-column-title{
+      font-size:.94rem;
+    }
+
+    #assignApprovalScope .role-list{
+      min-height:290px;
+      padding:10px;
+      border-radius:14px;
+    }
+
+    #assignApprovalScope .role-name{
+      font-size:.86rem;
+    }
+
+    #assignApprovalScope .save-note{
+      font-size:.78rem;
+    }
+  }
+</style>
+
+<div id="assignApprovalScope">
+<div class="approver-page">
+
+  <!-- ======================================================
+       PAGE HEADER
+       ====================================================== -->
+  <div class="page-header">
+    <div class="page-title-wrap">
+      <div class="page-title-icon">
+        <i class="fas fa-user-check"></i>
+      </div>
+
+      <div>
+        <h1 class="page-title">Assign Approvers</h1>
+        <p class="page-subtitle">
+          Configure and arrange the approval hierarchy for each creator role.
+        </p>
+      </div>
+    </div>
+
+    <button
+      class="btn btn-outline-primary help-button"
+      id="helpBtn"
+      type="button"
+    >
+      <i class="fas fa-question-circle me-1"></i>
+      Help
+    </button>
+  </div>
+
+  <div class="approver-card-body">
+
+      <!-- Creator Role Selection -->
+      <div class="creator-role-panel">
+        <div class="creator-role-field">
+          <label for="creatorRole" class="form-label-custom">
+            <i class="fas fa-user-tag"></i>
+            Select Creator Role
+          </label>
+
+          <select
+            id="creatorRole"
+            class="form-select creator-role-select"
+          >
+            <option value="">-- Select a Role --</option>
+
+            {% for role in roles %}
+              <option value="{{ role.id }}">
+                {{ role.role }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <button
+            class="btn btn-outline-secondary reset-button"
+            id="resetBtn"
+            type="button"
+          >
+            <i class="fas fa-redo me-1"></i>
+            Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Role Assignment Workspace -->
+      <div class="role-workspace">
+
+        <!-- Available Roles -->
+        <section class="role-column">
+          <div class="role-column-header">
+            <h3 class="role-column-title">
+              <i class="fas fa-list"></i>
+              Available Roles
+            </h3>
+
+            <span
+              class="role-count"
+              id="availableCount"
+              aria-label="Available role count"
+            >
+              0
+            </span>
+          </div>
+
+          <div
+            id="availableRoles"
+            class="role-list"
+            aria-label="Available roles"
+          >
+            <div class="empty-state">
+              <i class="fas fa-user-tag"></i>
+              <span>Select a creator role to load available roles.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Transfer Indicator -->
+        <div class="transfer-column">
+          <div class="transfer-guide">
+            <div class="transfer-icon">
+              <i class="fas fa-arrow-right"></i>
+            </div>
+
+            <p class="transfer-text">
+              Drag roles between the lists and reorder the hierarchy.
+            </p>
+          </div>
+        </div>
+
+        <!-- Approval Hierarchy -->
+        <section class="role-column">
+          <div class="role-column-header">
+            <h3 class="role-column-title">
+              <i class="fas fa-sort-amount-down"></i>
+              Approval Hierarchy
+            </h3>
+
+            <span
+              class="role-count primary"
+              id="hierarchyCount"
+              aria-label="Approval hierarchy count"
+            >
+              0
+            </span>
+          </div>
+
+          <div
+            id="roleHierarchy"
+            class="role-list"
+            aria-label="Approval hierarchy"
+          >
+            <div class="empty-state">
+              <i class="fas fa-layer-group"></i>
+              <span>No approval hierarchy configured.</span>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Save Section -->
+      <div class="save-section">
+        <p class="save-note">
+          <i class="fas fa-info-circle"></i>
+          <span>
+            The hierarchy is saved in the displayed order. The first role
+            becomes the first-level approver.
+          </span>
+        </p>
+
+        <button
+          id="submitRoles"
+          class="btn btn-success save-button"
+          type="button"
+        >
+          <i class="fas fa-save me-1"></i>
+          Save Approvers
+        </button>
+      </div>
+
+    </div>
+</div>
+
+<!-- ========================================================
+     HELP MODAL
+     ======================================================== -->
+<div
+  class="modal fade"
+  id="helpModal"
+  tabindex="-1"
+  aria-labelledby="helpModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content help-modal-content">
+
+      <div class="modal-header help-modal-header">
+        <h5 class="modal-title" id="helpModalLabel">
+          <i class="fas fa-question-circle me-2"></i>
+          Approvers Assignment Help
+        </h5>
+
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <ol class="help-step-list">
+          <li>
+            Select a creator role from the creator role dropdown.
+          </li>
+
+          <li>
+            Drag the required roles from
+            <strong>Available Roles</strong> to
+            <strong>Approval Hierarchy</strong>.
+          </li>
+
+          <li>
+            Reorder the roles inside the hierarchy by dragging them up or down.
+          </li>
+
+          <li>
+            When an approver belongs to another department, select
+            <strong>Cross Dept</strong> and choose the appropriate department.
+          </li>
+
+          <li>
+            Click <strong>Save Approvers</strong> to store the hierarchy.
+          </li>
+        </ol>
+      </div>
+
+      <div class="modal-footer border-0 px-4 pb-4">
+        <button
+          type="button"
+          class="btn btn-secondary px-4"
+          data-bs-dismiss="modal"
+        >
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function(){
+
+    const pageScope = document.getElementById("assignApprovalScope");
+    const availableRoles = document.getElementById("availableRoles");
+    const roleHierarchy = document.getElementById("roleHierarchy");
+    const creatorRoleSel = document.getElementById("creatorRole");
+
+    const availableCount = document.getElementById("availableCount");
+    const hierarchyCount = document.getElementById("hierarchyCount");
+
+    const submitButton = document.getElementById("submitRoles");
+    const resetButton = document.getElementById("resetBtn");
+    const helpButton = document.getElementById("helpBtn");
+
+    /**
+     * Get Django CSRF cookie value.
+     */
+    function getCookie(name){
+      let cookieValue = null;
+
+      if(document.cookie && document.cookie !== ""){
+        const cookies = document.cookie.split(";");
+
+        for(let i = 0; i < cookies.length; i++){
+          const cookie = cookies[i].trim();
+
+          if(cookie.substring(0, name.length + 1) === (name + "=")){
+            cookieValue = decodeURIComponent(
+              cookie.substring(name.length + 1)
+            );
+            break;
+          }
+        }
+      }
+
+      return cookieValue;
+    }
+
+    /**
+     * Escape values inserted into HTML.
+     */
+    function escapeHtml(value){
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    /**
+     * Update available and hierarchy counts.
+     */
+    function updateCounts(){
+      availableCount.textContent =
+        availableRoles.querySelectorAll(".role-item").length;
+
+      hierarchyCount.textContent =
+        roleHierarchy.querySelectorAll(".role-item").length;
+    }
+
+    /**
+     * Display an empty or error state.
+     */
+    function emptyState(icon, message, isError = false){
+      return `
+        <div class="empty-state ${isError ? "error" : ""}">
+          <i class="${escapeHtml(icon)}"></i>
+          <span>${escapeHtml(message)}</span>
+        </div>
+      `;
+    }
+
+    /**
+     * Generate a role item.
+     */
+    function roleItemHtml(
+      roleId,
+      roleName,
+      checked = false,
+      deptId = null
+    ){
+      const safeRoleId = escapeHtml(roleId);
+      const safeRoleName = escapeHtml(roleName);
+      const safeDeptId = escapeHtml(deptId || "");
+
+      return `
+        <div
+          class="role-item"
+          data-role-id="${safeRoleId}"
+          data-dept-id="${safeDeptId}"
+        >
+          <div class="role-item-left">
+            <i
+              class="fas fa-grip-lines drag-handle"
+              aria-hidden="true"
+            ></i>
+
+            <span class="role-name">
+              ${safeRoleName}
+            </span>
+          </div>
+
+          <div class="role-item-right">
+
+            <div class="form-check cross-dept-wrap">
+              <input
+                type="checkbox"
+                class="form-check-input cross-department-check"
+                id="cross-dept-${safeRoleId}"
+                ${checked ? "checked" : ""}
+              >
+
+              <label
+                class="form-check-label"
+                for="cross-dept-${safeRoleId}"
+              >
+                Cross Dept
+              </label>
+            </div>
+
+            <select
+              class="form-select department-select"
+              style="${checked ? "display:block;" : "display:none;"}"
+              aria-label="Select approver department"
+            >
+              <option value="">
+                -- Select Department --
+              </option>
+
+              {% for department in departments %}
+                <option value="{{ department.id }}">
+                  {{ department.degree.degree }} -
+                  {{ department.Department }} -
+                  {{ department.Department_code }}
+                </option>
+              {% endfor %}
+            </select>
+
+          </div>
+        </div>
+      `;
+    }
+
+    /**
+     * Restore department values returned by the API.
+     */
+    function setDeptSelections(container){
+      container.querySelectorAll(".role-item").forEach(function(item){
+        const departmentSelect =
+          item.querySelector(".department-select");
+
+        const departmentId =
+          item.getAttribute("data-dept-id");
+
+        if(departmentId && departmentSelect){
+          departmentSelect.value = String(departmentId);
+        }
+      });
+    }
+
+    /**
+     * Remove placeholder states before an item is dragged.
+     */
+    function removePlaceholder(container){
+      const emptyElement = container.querySelector(".empty-state");
+
+      if(emptyElement){
+        emptyElement.remove();
+      }
+    }
+
+    /**
+     * Restore empty states after dragging when required.
+     */
+    function restoreEmptyStates(){
+      if(!availableRoles.querySelector(".role-item")){
+        availableRoles.innerHTML = emptyState(
+          "fas fa-inbox",
+          "No available roles."
+        );
+      }
+
+      if(!roleHierarchy.querySelector(".role-item")){
+        roleHierarchy.innerHTML = emptyState(
+          "fas fa-layer-group",
+          "No roles in the approval hierarchy."
+        );
+      }
+
+      updateCounts();
+    }
+
+    /**
+     * Check API response and throw a readable error.
+     */
+    async function parseJsonResponse(response){
+      let data = {};
+
+      try{
+        data = await response.json();
+      }catch(error){
+        throw new Error("Invalid server response.");
+      }
+
+      if(!response.ok){
+        throw new Error(
+          data.message ||
+          data.error ||
+          "The request could not be completed."
+        );
+      }
+
+      return data;
+    }
+
+    /**
+     * Load available roles and configured hierarchy.
+     */
+    async function fetchRoles(creatorRoleId){
+      availableRoles.innerHTML = emptyState(
+        "fas fa-spinner fa-spin",
+        "Loading available roles..."
+      );
+
+      roleHierarchy.innerHTML = emptyState(
+        "fas fa-spinner fa-spin",
+        "Loading approval hierarchy..."
+      );
+
+      updateCounts();
+
+      if(!creatorRoleId){
+        availableRoles.innerHTML = emptyState(
+          "fas fa-user-tag",
+          "Select a creator role to load available roles."
+        );
+
+        roleHierarchy.innerHTML = emptyState(
+          "fas fa-layer-group",
+          "No approval hierarchy configured."
+        );
+
+        updateCounts();
+        return;
+      }
+
+      const apiUrl = "{% url 'api_assign_role_to_employees' 1 %}"
+        .replace("/1/", "/__ID__/")
+        .replace("__ID__", encodeURIComponent(creatorRoleId));
+
+      try{
+        const response = await fetch(apiUrl, {
+          method:"GET",
+          headers:{
+            "X-Requested-With":"XMLHttpRequest"
+          }
+        });
+
+        const data = await parseJsonResponse(response);
+
+        /*
+         * Configured roles are displayed on the right side.
+         */
+        if(
+          Array.isArray(data.matched_roles) &&
+          data.matched_roles.length
+        ){
+          roleHierarchy.innerHTML = data.matched_roles.map(function(role){
+
+            const departmentId =
+              role.approver_department_id ??
+              role.approver_department ??
+              "";
+
+            const isCrossDepartment =
+              role.is_cross_department === true ||
+              role.is_cross_department === "true" ||
+              role.is_cross_department === 1 ||
+              role.is_cross_department === "1" ||
+              String(role.is_cross_department).toUpperCase() === "YES";
+
+            return roleItemHtml(
+              role.id,
+              role.role,
+              isCrossDepartment,
+              departmentId
+            );
+          }).join("");
+
+          setDeptSelections(roleHierarchy);
+        }else{
+          roleHierarchy.innerHTML = emptyState(
+            "fas fa-layer-group",
+            "No roles in the approval hierarchy."
+          );
+        }
+
+        /*
+         * Roles not configured are displayed on the left side.
+         */
+        if(
+          Array.isArray(data.unmatched_roles) &&
+          data.unmatched_roles.length
+        ){
+          availableRoles.innerHTML = data.unmatched_roles.map(function(role){
+            return roleItemHtml(
+              role.id,
+              role.role,
+              false,
+              null
+            );
+          }).join("");
+        }else{
+          availableRoles.innerHTML = emptyState(
+            "fas fa-inbox",
+            "No available roles."
+          );
+        }
+
+        updateCounts();
+
+      }catch(error){
+        console.error("Role loading error:", error);
+
+        availableRoles.innerHTML = emptyState(
+          "fas fa-exclamation-circle",
+          error.message || "Error loading available roles.",
+          true
+        );
+
+        roleHierarchy.innerHTML = emptyState(
+          "fas fa-exclamation-circle",
+          error.message || "Error loading approval hierarchy.",
+          true
+        );
+
+        updateCounts();
+      }
+    }
+
+    /**
+     * Validate and submit the hierarchy.
+     */
+    async function submitRoles(){
+      const creatorRole = creatorRoleSel.value;
+
+      if(!creatorRole){
+        alert("Please select a creator role.");
+        creatorRoleSel.focus();
+        return;
+      }
+
+      const hierarchyItems =
+        Array.from(
+          roleHierarchy.querySelectorAll(".role-item")
+        );
+
+      const payload = [];
+
+      for(const item of hierarchyItems){
+        const checkbox =
+          item.querySelector(".cross-department-check");
+
+        const departmentSelect =
+          item.querySelector(".department-select");
+
+        const isCrossDepartment =
+          checkbox ? checkbox.checked : false;
+
+        const departmentValue =
+          departmentSelect
+            ? departmentSelect.value || null
+            : null;
+
+        if(isCrossDepartment && !departmentValue){
+          alert(
+            "Please select a department for every cross-department approver."
+          );
+
+          if(departmentSelect){
+            departmentSelect.focus();
+          }
+
+          return;
+        }
+
+        payload.push({
+          id:item.dataset.roleId,
+          isCrossDepartment:isCrossDepartment,
+          departmentId:isCrossDepartment
+            ? departmentValue
+            : null
+        });
+      }
+
+      const originalButtonHtml = submitButton.innerHTML;
+
+      submitButton.disabled = true;
+      submitButton.innerHTML = `
+        <i class="fas fa-spinner fa-spin me-1"></i>
+        Saving...
+      `;
+
+      try{
+        const response = await fetch(
+          "{% url 'assign_approval_management' %}",
+          {
+            method:"POST",
+            headers:{
+              "Content-Type":"application/json",
+              "X-CSRFToken":getCookie("csrftoken"),
+              "X-Requested-With":"XMLHttpRequest"
+            },
+            body:JSON.stringify({
+              creatorRole:creatorRole,
+              roleHierarchy:payload
+            })
+          }
+        );
+
+        const data = await parseJsonResponse(response);
+
+        alert(data.message || "Approvers saved successfully.");
+
+        /*
+         * Reload after saving so the latest database hierarchy is shown.
+         */
+        await fetchRoles(creatorRole);
+
+      }catch(error){
+        console.error("Approver save error:", error);
+
+        alert(
+          "Error: " +
+          (error.message || "Unable to save approvers.")
+        );
+      }finally{
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalButtonHtml;
+      }
+    }
+
+    /**
+     * Show or hide department selection.
+     */
+    pageScope.addEventListener("change", function(event){
+      if(
+        event.target.classList.contains(
+          "cross-department-check"
+        )
+      ){
+        const roleItem =
+          event.target.closest(".role-item");
+
+        if(!roleItem){
+          return;
+        }
+
+        const departmentSelect =
+          roleItem.querySelector(".department-select");
+
+        if(!departmentSelect){
+          return;
+        }
+
+        if(event.target.checked){
+          departmentSelect.style.display = "block";
+        }else{
+          departmentSelect.style.display = "none";
+          departmentSelect.value = "";
+          roleItem.dataset.deptId = "";
+        }
+      }
+
+      if(
+        event.target.classList.contains(
+          "department-select"
+        )
+      ){
+        const roleItem =
+          event.target.closest(".role-item");
+
+        if(roleItem){
+          roleItem.dataset.deptId =
+            event.target.value || "";
+        }
+      }
+    });
+
+    /**
+     * Sortable configuration.
+     */
+    const sortableOptions = {
+      group:"roles",
+      animation:180,
+      ghostClass:"sortable-ghost",
+      chosenClass:"sortable-chosen",
+      handle:".drag-handle",
+
+      onStart:function(event){
+        removePlaceholder(event.from);
+        removePlaceholder(event.to);
+      },
+
+      onAdd:function(event){
+        removePlaceholder(event.to);
+        restoreEmptyStates();
+      },
+
+      onRemove:function(){
+        restoreEmptyStates();
+      },
+
+      onUpdate:function(){
+        restoreEmptyStates();
+      },
+
+      onEnd:function(){
+        restoreEmptyStates();
+      }
+    };
+
+    new Sortable(availableRoles, sortableOptions);
+    new Sortable(roleHierarchy, sortableOptions);
+
+    /**
+     * Drag-over visual feedback.
+     */
+    [availableRoles, roleHierarchy].forEach(function(element){
+
+      element.addEventListener("dragover", function(){
+        element.classList.add("drag-over");
+      });
+
+      element.addEventListener("dragleave", function(event){
+        if(!element.contains(event.relatedTarget)){
+          element.classList.remove("drag-over");
+        }
+      });
+
+      element.addEventListener("drop", function(){
+        element.classList.remove("drag-over");
+      });
+    });
+
+    /**
+     * Creator role change.
+     */
+    creatorRoleSel.addEventListener("change", function(){
+      fetchRoles(creatorRoleSel.value);
+    });
+
+    /**
+     * Save hierarchy.
+     */
+    submitButton.addEventListener("click", submitRoles);
+
+    /**
+     * Reload hierarchy from the database.
+     */
+    resetButton.addEventListener("click", function(){
+      fetchRoles(creatorRoleSel.value);
+    });
+
+    /**
+     * Open help modal.
+     */
+    helpButton.addEventListener("click", function(){
+      const modalElement =
+        document.getElementById("helpModal");
+
+      const helpModal =
+        bootstrap.Modal.getOrCreateInstance(modalElement);
+
+      helpModal.show();
+    });
+
+    /**
+     * Initial page state.
+     */
+    fetchRoles(creatorRoleSel.value);
+
+  });
+</script>
+
+{% endblock content %}

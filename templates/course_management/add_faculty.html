@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+
+{% comment %} <head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Main Container Styling */
+        form {
+            max-width: 1100px;
+            margin: 20px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Section Headings */
+        form h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #333;
+            text-decoration: underline;
+        }
+        
+        /* Form Rows */
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -15px;
+        }
+        
+        .col-md-3, .col-md-4 {
+            padding: 15px;
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        /* Form Groups */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color:rgb(51, 91, 132);
+        }
+        
+        .form-control, .form-select, .form-control-file {
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 14px;
+            color: #495057;
+        }
+        
+        textarea.form-control {
+            resize: none;
+        }
+        
+        /* Table Styling */
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+        }
+        
+        table th, table td {
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+        }
+        
+        thead th {
+            background-color: #f1f1f1;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        /* Add/Remove Buttons */
+        #add-education, #add-experience, .remove-education-row, .remove-experience-row {
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .remove-education-row, .remove-experience-row {
+            padding: 5px 10px;
+            background-color: #e74c3c;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        #add-education, #add-experience {
+            background-color: #ffb84d;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        /* Submit Button */
+        #submit-button {
+            font-size: 16px;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head> {% endcomment %}
+<link rel="stylesheet" href="{% static 'admin_dashboard_css.css' %}" />
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="dashboard-header text-right ">
+    <h2 class="display-5 fw-bold">Add Subject Allocations</h2>
+    <form method="post" action="{% url 'add_faculty' %}" enctype="multipart/form-data" onsubmit="hideButton()">
+        {% csrf_token %}
+
+            <!-- Programme Details -->
+    <h3 class="mt-4">Programme Details</h3>
+    <div class="row">
+        <!-- Department Selection -->
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="department" class="form-label fw-semibold">Department</label>
+                <input type="text" class="form-control" value="{{ department.0.Department }}" readonly>
+                <input type="hidden" name="department_id" value="{{ department.0.id }}">
+            </div>
+        </div>
+
+        <!-- Program Selection -->
+        <div class="col-md-4">
+            <div class="form-group" id="program_group" style="display:none;">
+                <label for="program" class="form-label fw-semibold">Program</label>
+                <select class="form-control" id="program" name="program" required>
+                    <option selected disabled value="">Choose Program...</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Regulation Year -->
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="regulation_year" class="form-label fw-semibold">Regulation</label>
+                <input type="text" name="regulation_year" id="regulation_year" class="form-control" placeholder="Enter Regulation" required>
+            </div>
+        </div>
+
+        <!-- Year Selection -->
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="year" class="form-label fw-semibold">Year</label>
+                <select name="year" id="year" class="form-select" required>
+                                <option value="" disabled selected>Select Year</option>
+                                <option value="1">Year I</option>
+                                <option value="2">Year II</option>
+                                <option value="3">Year III</option>
+                                <option value="4">Year IV</option>
+                                
+                            </select>
+            </div>
+        </div>
+
+        <!-- Semester Selection -->
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="semester" class="form-label fw-semibold">Semester</label>
+                <select name="semester" id="semester" class="form-select" required>
+                    <option value="" disabled selected>Select Semester</option>
+                    <option value="1">Semester I</option>
+                    <option value="2">Semester II</option>
+                    <option value="3">Semester III</option>
+                    <option value="4">Semester IV</option>
+                    <option value="5">Semester V</option>
+                    <option value="6">Semester VI</option>
+                    <option value="7">Semester VII</option>
+                    <option value="8">Semester VIII</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="intake_batch" class="form-label fw-semibold">Intake & Batch:</label>
+                <select id="intake_batch" name="intake_batch" class="form-control" required>
+                    <option selected disabled value="">Select Intake Batch</option>
+                </select>
+            </div>  
+        </div>      
+    </div>
+
+            <div class="container-fluid py-4">
+                <div class="table-responsive" style="max-height: 900px; overflow-y: auto;">
+                    <table class="table table-bordered text-center align-middle">
+                        <thead>
+                            <tr>
+                                <th >ID</th>
+                                <th >Course Code</th>
+                                <th >Course Name</th>
+                                <th >Faculty ID</th>
+                            </tr>
+                                 </thead>
+                                 <tbody id="courseTableBody">
+                                    <tr>
+                                        <td colspan="4" class="text-center">Select program, year, and semester to load courses.</td>
+                                    </tr>
+                                </tbody>
+                        
+                    </table>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Submit</button>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        function fetchCourses() {
+            let departmentId = $("input[name='department_id']").val();
+            let programId = $("#program").val();
+            let year = $("#year").val();
+            let semester = $("#semester").val();
+            let regulationYear = $("#regulation_year").val();
+    
+            if (departmentId && programId && year && semester && regulationYear) {
+                $.ajax({
+                    url: '{% url "get_courses_for_faculty" %}',
+                    method: 'GET',
+                    data: {
+                        'department_id': departmentId,
+                        'program_id': programId,
+                        'year': year,
+                        'semester': semester,
+                        'regulation_year': regulationYear
+                    },
+                    success: function(response) {
+                        let courseTableBody = $("#courseTableBody");
+                        let intakeDropdown = $("#intake_batch"); // Intake dropdown
+    
+                        console.log("Received Intake Batches:", response.intake_batches);
+    
+                        intakeDropdown.empty().append('<option selected disabled value="">Select Intake Batch</option>');
+    
+                        if (response.intake_batches.length > 0) {
+                            response.intake_batches.forEach(batch => {
+                                let batchValue = `${batch.Intake} - ${batch.year}`;
+                                intakeDropdown.append(`<option value="${batchValue}">${batchValue}</option>`);
+                            });
+                        } else {
+                            intakeDropdown.append('<option disabled>No Intake Batches Available</option>');
+                        }
+    
+                        courseTableBody.empty();
+                        if (response.courses.length > 0) {
+                            response.courses.forEach((course, index) => {
+                                let facultyDropdown = `<select class="form-control faculty-dropdown" name="faculty_id[]" required>
+                                                        <option selected disabled value="">Select Faculty</option>`;
+                                response.faculty.forEach(faculty => {
+                                    facultyDropdown += `<option value="${faculty.employee_id}">${faculty.employee_id}</option>`;
+                                });
+                                facultyDropdown += `</select>`;
+    
+                                let row = `
+                                    <tr>
+                                        <td>${index + 1}</td>
+                                        <td><input type="hidden" name="course_code[]" value="${course.course_code}">${course.course_code}</td>
+                                        <td><input type="hidden" name="course_title[]" value="${course.title}">${course.title}</td>
+                                        <td>${facultyDropdown}</td>
+                                    </tr>
+                                `;
+                                courseTableBody.append(row);
+                            });
+                        } else {
+                            courseTableBody.append("<tr><td colspan='4' class='text-center'>No courses found.</td></tr>");
+                        }
+                    },
+                    error: function(error) {
+                        console.error('Error fetching courses:', error);
+                    }
+                });
+            } else {
+                console.log('Please fill out all the fields.');
+            }
+        }
+    
+        $("#program, #year, #semester, #regulation_year").on("change", fetchCourses);
+
+    
+    
+        // Fetch programs when the page loads
+        let departmentId = $("input[name='department_id']").val();
+        if (departmentId) {
+            $.ajax({
+                url: '{% url "get_programs" %}',
+                data: { 'department_id': departmentId },
+                success: function(data) {
+                    $('#program').empty().append('<option selected disabled value="">Choose Program...</option>');
+                    data.forEach(function(program) {
+                        $('#program').append('<option value="' + program.id + '">' + program.program_name + '</option>');
+                    });
+                    if (data.length > 0) $('#program_group').show();
+                }
+            });
+        }
+    });
+    
+</script>
+
+
+
+{% endblock content %}

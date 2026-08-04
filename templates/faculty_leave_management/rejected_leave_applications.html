@@ -1,0 +1,592 @@
+{% extends "base.html" %}
+{% load flm_tags %}
+{% load static %}
+{% block content %}
+
+<!-- FontAwesome CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+<!-- jQuery & DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<style>
+/* ========================================
+   REJECTED LEAVE APPROVALS PORTAL STYLES
+   ======================================== */
+.rejected-approvals-portal {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.rejected-approvals-portal .page-header {
+  max-width: 1400px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.rejected-approvals-portal .page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.rejected-approvals-portal .header-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+.rejected-approvals-portal .page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Stats Cards */
+.rejected-approvals-portal .stats-grid {
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.rejected-approvals-portal .stat-card {
+  flex: 1;
+  min-width: 160px;
+  background: white;
+  border-radius: 16px;
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0,0,0,0.03);
+  transition: all 0.3s ease;
+}
+
+.rejected-approvals-portal .stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.rejected-approvals-portal .stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.rejected-approvals-portal .stat-icon.total { background: #fee2e2; color: #dc2626; }
+.rejected-approvals-portal .stat-icon.levels { background: #e0e7ff; color: #4f46e5; }
+.rejected-approvals-portal .stat-icon.this-month { background: #fef3c7; color: #d97706; }
+
+.rejected-approvals-portal .stat-info .stat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+.rejected-approvals-portal .stat-info .stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+/* Level Cards */
+.rejected-approvals-portal .level-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 1.8rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.5s ease forwards;
+  opacity: 0;
+}
+
+.rejected-approvals-portal .level-card:nth-child(1) { animation-delay: 0.1s; }
+.rejected-approvals-portal .level-card:nth-child(2) { animation-delay: 0.2s; }
+.rejected-approvals-portal .level-card:nth-child(3) { animation-delay: 0.3s; }
+
+.rejected-approvals-portal .level-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.rejected-approvals-portal .card-header-custom {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #fecaca;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.rejected-approvals-portal .level-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rejected-approvals-portal .level-badge {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 40px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.rejected-approvals-portal .count-badge {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.3rem 0.8rem;
+  border-radius: 40px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.rejected-approvals-portal .status-rejected {
+  background: #dc2626;
+  color: white;
+  padding: 0.3rem 1rem;
+  border-radius: 40px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Table Styling */
+.rejected-approvals-portal .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.rejected-approvals-portal .data-table th {
+  background: #f8fafc;
+  color: #1a4b8c;
+  font-weight: 700;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.rejected-approvals-portal .data-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
+  font-size: 0.8rem;
+}
+
+.rejected-approvals-portal .data-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.rejected-approvals-portal .data-table tbody tr:hover {
+  background: rgba(220, 38, 38, 0.03);
+  transform: translateY(-1px);
+}
+
+.rejected-approvals-portal .applicant-name {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.rejected-approvals-portal .applicant-dept {
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.rejected-approvals-portal .leave-type-pill {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.rejected-approvals-portal .leave-type-casual {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.rejected-approvals-portal .leave-type-sick {
+  background: #fed7aa;
+  color: #9a3412;
+}
+
+.rejected-approvals-portal .leave-type-earned {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.rejected-approvals-portal .leave-type-default {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.rejected-approvals-portal .date-display {
+  white-space: nowrap;
+}
+
+.rejected-approvals-portal .date-display i {
+  color: #94a3b8;
+  margin-right: 0.25rem;
+}
+
+.rejected-approvals-portal .reason-text {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rejected-approvals-portal .rejection-note {
+  max-width: 220px;
+  background: #fef2f2;
+  padding: 0.4rem 0.6rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  color: #991b1b;
+  border-left: 3px solid #dc2626;
+}
+
+.rejected-approvals-portal .rejection-note i {
+  color: #dc2626;
+  margin-right: 0.3rem;
+}
+
+.rejected-approvals-portal .badge-rejected-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #dc2626;
+  color: white;
+}
+
+/* Empty State */
+.rejected-approvals-portal .empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.rejected-approvals-portal .empty-state i {
+  font-size: 4rem;
+  color: #cbd5e1;
+  margin-bottom: 1rem;
+}
+
+.rejected-approvals-portal .empty-state h4 {
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+.rejected-approvals-portal .empty-state p {
+  color: #94a3b8;
+}
+
+/* DataTables Customization */
+.rejected-approvals-portal .dataTables_wrapper {
+  padding: 1rem;
+}
+
+.rejected-approvals-portal .dataTables_filter input {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  margin-left: 0.5rem;
+}
+
+.rejected-approvals-portal .dataTables_length select {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.4rem 2rem 0.4rem 0.75rem;
+}
+
+.rejected-approvals-portal .dataTables_info {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.rejected-approvals-portal .dataTables_paginate .paginate_button {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  margin: 0 0.2rem;
+  padding: 0.4rem 0.7rem !important;
+}
+
+.rejected-approvals-portal .dataTables_paginate .paginate_button.current {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: white !important;
+  border: none !important;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .rejected-approvals-portal {
+    padding: 1rem;
+  }
+  .rejected-approvals-portal .page-header {
+    padding: 1rem;
+  }
+  .rejected-approvals-portal .page-header h1 {
+    font-size: 1.5rem;
+  }
+  .rejected-approvals-portal .stats-grid {
+    gap: 0.8rem;
+  }
+  .rejected-approvals-portal .stat-card {
+    min-width: calc(50% - 0.8rem);
+  }
+  .rejected-approvals-portal .card-header-custom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .rejected-approvals-portal .data-table th,
+  .rejected-approvals-portal .data-table td {
+    white-space: nowrap;
+  }
+  .rejected-approvals-portal .table-responsive {
+    overflow-x: auto;
+  }
+}
+</style>
+
+<div class="rejected-approvals-portal">
+  <div class="page-header">
+    <h1><i class="fas fa-times-circle me-2"></i> Rejected Leave Applications</h1>
+    <p class="header-subtitle">View leave applications that were rejected and review rejection reasons</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Stats Summary -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon total"><i class="fas fa-ban"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Total Rejected</div>
+          <div class="stat-value">{{ total_rejected|default:0 }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon levels"><i class="fas fa-layer-group"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Levels with Rejections</div>
+          <div class="stat-value">{{ level_count|default:0 }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon this-month"><i class="fas fa-calendar-month"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Rejected This Month</div>
+          <div class="stat-value">{{ this_month_rejected|default:0 }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grouped Rejected Approvals -->
+    {% if grouped_rejected %}
+      {% for level, approvals in grouped_rejected.items %}
+        <div class="level-card">
+          <div class="card-header-custom">
+            <div class="level-title">
+              <span class="level-badge"><i class="fas fa-layer-group me-1"></i> Level {{ level }}</span>
+              <span class="count-badge"><i class="fas fa-times-circle me-1"></i> {{ approvals|length }} rejected</span>
+            </div>
+            <span class="status-rejected">
+              <i class="fas fa-ban"></i> Rejected
+            </span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table table w-100" id="rejected-table-{{ level }}">
+              <thead>
+                <tr>
+                  <th style="width:50px;">#</th>
+                  <th>Applicant</th>
+                  <th>Designation</th>
+                  <th>Leave Type</th>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Reason</th>
+                  <th>Rejected On</th>
+                  <th>Rejection Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for lad in approvals %}
+                  {% with creator=lad.creator_id %}
+                  {% with ext=user_map|dict_get:creator.faculty_id %}
+                  <tr>
+                    <td class="text-center fw-semibold text-muted">{{ forloop.counter }}</td>
+                    <td>
+                      {% if creator %}
+                        <div class="applicant-name">
+                          <i class="fas fa-user-circle me-1"></i>{{ creator.faculty_id }} — {{ creator.name }}
+                        </div>
+                        {% if creator.department %}
+                          <div class="applicant-dept">
+                            <i class="fas fa-building me-1"></i>{{ creator.department.Department }}
+                          </div>
+                        {% endif %}
+                      {% else %}
+                        <span class="text-muted">Unknown</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if ext %}
+                        {% with role=role_map|dict_get:ext.role_id %}
+                          <span class="badge bg-light text-dark">
+                            <i class="fas fa-briefcase me-1"></i>{{ role.role_name|default:"N/A" }}
+                          </span>
+                        {% endwith %}
+                      {% else %}
+                        <span class="text-muted">—</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% with leave_type=lad.leave_application.leave_type.name %}
+                      <span class="leave-type-pill 
+                        {% if 'Casual' in leave_type %}leave-type-casual
+                        {% elif 'Sick' in leave_type %}leave-type-sick
+                        {% elif 'Earned' in leave_type %}leave-type-earned
+                        {% else %}leave-type-default{% endif %}">
+                        <i class="fas fa-{% if 'Casual' in leave_type %}umbrella-beach{% elif 'Sick' in leave_type %}medkit{% elif 'Earned' in leave_type %}star{% else %}calendar-alt{% endif %} me-1"></i>
+                        {{ lad.leave_application.leave_type.name }}
+                      </span>
+                      {% endwith %}
+                    </td>
+                    <td class="date-display">
+                      <i class="far fa-calendar-alt"></i> {{ lad.leave_application.from_date|date:"d M Y" }}
+                    </td>
+                    <td class="date-display">
+                      <i class="far fa-calendar-alt"></i> {{ lad.leave_application.to_date|date:"d M Y" }}
+                    </td>
+                    <td class="reason-text" title="{{ lad.leave_application.reason|default:lad.reason }}">
+                      <i class="fas fa-comment-dots me-1 text-muted"></i>
+                      {{ lad.leave_application.reason|default:lad.reason|truncatechars:50 }}
+                    </td>
+                    <td class="date-display">
+                      <i class="fas fa-calendar-check"></i> {{ lad.approved_date|date:"d M Y H:i" }}
+                    </td>
+                    <td>
+                      {% if lad.reason %}
+                        <div class="rejection-note" title="{{ lad.reason }}">
+                          <i class="fas fa-exclamation-triangle"></i>
+                          {{ lad.reason|truncatechars:60 }}
+                        </div>
+                      {% else %}
+                        <span class="text-muted">—</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endwith %}
+                  {% endwith %}
+                {% empty %}
+                  <tr>
+                    <td colspan="9" class="text-center py-4 text-muted">
+                      <i class="fas fa-inbox me-2"></i>No rejected applications at this level.
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <i class="fas fa-check-circle"></i>
+        <h4>No Rejected Applications</h4>
+        <p>There are no rejected leave applications for your role at this time.</p>
+        <a href="{% url 'leave_approvals' %}" class="btn btn-sm" style="background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%); color: white; border: none; border-radius: 12px; padding: 0.5rem 1.2rem; margin-top: 0.5rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+          <i class="fas fa-arrow-left me-1"></i> Back to Approvals
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Initialize DataTables for each level's table
+  if (typeof $.fn.DataTable !== 'undefined') {
+    {% for level, approvals in grouped_rejected.items %}
+      var tableId = '#rejected-table-{{ level }}';
+      if ($(tableId).length && $(tableId + ' tbody tr').length > 1) {
+        $(tableId).DataTable({
+          paging: true,
+          searching: true,
+          ordering: true,
+          pageLength: 10,
+          lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+          order: [[7, 'desc']], // Sort by rejected date descending
+          language: {
+            search: "<i class='fas fa-search'></i> Search:",
+            searchPlaceholder: "Search...",
+            lengthMenu: "Show _MENU_ entries",
+            info: "Showing _START_ to _END_ of _TOTAL_ rejections",
+            infoEmpty: "No rejections found",
+            paginate: {
+              previous: "<i class='fas fa-chevron-left'></i>",
+              next: "<i class='fas fa-chevron-right'></i>"
+            }
+          },
+          columnDefs: [
+            { orderable: false, targets: [0, 6, 8] }, // Disable sorting on #, reason, rejection note
+            { orderable: true, targets: [1, 2, 3, 4, 5, 7] }
+          ]
+        });
+      }
+    {% endfor %}
+  }
+});
+</script>
+
+{% endblock %}

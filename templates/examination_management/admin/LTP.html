@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <div class="card shadow">
+    <div class="card-header">
+      <h5 class="mb-0">LTP Configuration (Lecture / Tutorial / Laboratory)</h5>
+    </div>
+
+    <div class="card-body">
+
+      <!-- ================= FILTER ================= -->
+      <form method="get" class="row g-3 mb-4">
+        <div class="col-md-5">
+          <label class="form-label fw-semibold">Degree</label>
+          <select name="degree" class="form-select" required>
+            <option value="">-- Select Degree --</option>
+            {% for d in degrees %}
+              <option value="{{ d.id }}"
+                {% if d.id|stringformat:"s" == selected_degree_id %}selected{% endif %}>
+                {{ d.degree_code }} — {{ d.degree }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-5">
+          <label class="form-label fw-semibold">Regulation</label>
+          <select name="regulation" class="form-select" required>
+            <option value="">-- Select Regulation --</option>
+            {% for r in regulations %}
+              <option value="{{ r.id }}"
+                {% if r.id|stringformat:"s" == selected_regulation_id %}selected{% endif %}>
+                {{ r }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="submit" class="btn btn-secondary w-100">
+            Filter
+          </button>
+        </div>
+      </form>
+
+      {% if selected_degree_id and selected_regulation_id %}
+
+      <!-- ================= ADD NEW LTP ================= -->
+      <div class="card border mb-4">
+        <div class="card-header bg-light fw-semibold">
+          Add New LTP
+        </div>
+        {% if selected_degree_id and selected_regulation_id %}
+<a href="{% url 'export_ltp_excel' %}?degree={{ selected_degree_id }}&regulation={{ selected_regulation_id }}"
+   class="btn btn-success mb-3">
+  Export Excel
+</a>
+{% endif %}
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="degree_id" value="{{ selected_degree_id }}">
+            <input type="hidden" name="regulation_id" value="{{ selected_regulation_id }}">
+            <input type="hidden" name="action" value="create">
+
+            <div class="row">
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Lecture</label>
+                <input type="number" name="lecture_hours" class="form-control" min="0" required>
+              </div>
+
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Tutorial</label>
+                <input type="number" name="tutorial_hours" class="form-control" min="0" required>
+              </div>
+
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Laboratory</label>
+                <input type="number" name="laboratory_hours" class="form-control" min="0" required>
+              </div>
+
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Theory (%)</label>
+                <input type="number" name="theory_percentage" class="form-control" min="0" max="100" required>
+              </div>
+
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Practical (%)</label>
+                <input type="number" name="practical_percentage" class="form-control" min="0" max="100" required>
+              </div>
+
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Activity (%)</label>
+                <input type="number" name="activity_percentage" class="form-control" min="0" max="100" required>
+              </div>
+            </div>
+
+            <div class="text-end">
+              <button class="btn btn-primary">Add LTP</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ================= EXISTING LTP LIST ================= -->
+      <div class="card border">
+        <div class="card-header bg-light fw-semibold">
+          Existing LTP Entries
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-bordered table-striped mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Lecture</th>
+                <th>Tutorial</th>
+                <th>Laboratory</th>
+                <th>Theory (%)</th>
+                <th>Practical (%)</th>
+                <th>Activity (%)</th>
+                <th style="width:180px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cfg in configs %}
+              <tr>
+                <td>
+                  <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="config_id" value="{{ cfg.id }}">
+                    <input type="hidden" name="action" value="update">
+                    <input type="number" name="lecture_hours"
+                           value="{{ cfg.lecture_hours }}" class="form-control form-control-sm" min="0">
+                </td>
+                <td>
+                    <input type="number" name="tutorial_hours"
+                           value="{{ cfg.tutorial_hours }}" class="form-control form-control-sm" min="0">
+                </td>
+                <td>
+                    <input type="number" name="laboratory_hours"
+                           value="{{ cfg.laboratory_hours }}" class="form-control form-control-sm" min="0">
+                </td>
+                <td>
+                    <input type="number" name="theory_percentage"
+                           value="{{ cfg.theory_percentage }}" class="form-control form-control-sm" min="0" max="100">
+                </td>
+                <td>
+                    <input type="number" name="practical_percentage"
+                           value="{{ cfg.practical_percentage }}" class="form-control form-control-sm" min="0" max="100">
+                </td>
+                <td>
+                    <input type="number" name="activity_percentage"
+                           value="{{ cfg.activity_percentage }}" class="form-control form-control-sm" min="0" max="100">
+                  </form>
+                </td>
+                <td>
+                  <div class="d-flex gap-2">
+                    <form method="post" class="m-0">
+                      {% csrf_token %}
+                      <input type="hidden" name="config_id" value="{{ cfg.id }}">
+                      <input type="hidden" name="action" value="update">
+                      <input type="hidden" name="lecture_hours" value="{{ cfg.lecture_hours }}">
+                      <input type="hidden" name="tutorial_hours" value="{{ cfg.tutorial_hours }}">
+                      <input type="hidden" name="laboratory_hours" value="{{ cfg.laboratory_hours }}">
+                      <input type="hidden" name="theory_percentage" value="{{ cfg.theory_percentage }}">
+                      <input type="hidden" name="practical_percentage" value="{{ cfg.practical_percentage }}">
+                      <input type="hidden" name="activity_percentage" value="{{ cfg.activity_percentage }}">
+                      <button class="btn btn-sm btn-success">Update</button>
+                    </form>
+
+                    <form method="post" class="m-0" onsubmit="return confirm('Delete this LTP entry?')">
+                      {% csrf_token %}
+                      <input type="hidden" name="config_id" value="{{ cfg.id }}">
+                      <input type="hidden" name="action" value="delete">
+                      <button class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="7" class="text-center text-muted py-3">
+                  No LTP entries yet
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ================= THEORY COURSE ================= -->
+      <div class="card border mt-4">
+        <div class="card-header bg-light fw-semibold">
+          Theory Course
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="degree_id" value="{{ selected_degree_id }}">
+            <input type="hidden" name="regulation_id" value="{{ selected_regulation_id }}">
+            <input type="hidden" name="action" value="save_theory_course_master">
+
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle text-center mb-3 master-table">
+                <tbody>
+                  <tr>
+                    <th colspan="2">Assessment I (100 Marks)</th>
+                    <th colspan="2">Assessment II (100 Marks)</th>
+                    <th rowspan="3" style="width:150px;">
+                      Total<br>
+                      <span class="fw-normal">Internal Assessment</span>
+                    </th>
+                  </tr>
+                  <tr>
+                    <td style="width:29%;">Individual Assignment / Case Study / Seminar / Mini Project</td>
+                    <td style="width:11%;">Written Test</td>
+                    <td style="width:29%;">Individual Assignment / Case Study / Seminar / Mini Project</td>
+                    <td style="width:11%;">Written Test</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <input type="number" id="theory_assessment1_assignment" name="theory_assessment1_assignment" class="form-control text-center theory-input" min="0" value="{{ theory_assessment1_assignment|default:'40' }}">
+                    </td>
+                    <td>
+                      <input type="number" id="theory_assessment1_test" name="theory_assessment1_test" class="form-control text-center theory-input" min="0" value="{{ theory_assessment1_test|default:'60' }}">
+                    </td>
+                    <td>
+                      <input type="number" id="theory_assessment2_assignment" name="theory_assessment2_assignment" class="form-control text-center theory-input" min="0" value="{{ theory_assessment2_assignment|default:'40' }}">
+                    </td>
+                    <td>
+                      <input type="number" id="theory_assessment2_test" name="theory_assessment2_test" class="form-control text-center theory-input" min="0" value="{{ theory_assessment2_test|default:'60' }}">
+                    </td>
+                    <td>
+                      <input type="number" id="theory_total_internal" name="theory_total_internal" class="form-control text-center total-field" min="0" value="{{ theory_total_internal|default:'200' }}" readonly>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="text-end">
+              <button type="submit" class="btn btn-primary">Save Theory Course</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ================= PRACTICAL COURSE ================= -->
+      <div class="card border mt-4">
+        <div class="card-header bg-light fw-semibold">
+          Practical Course
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="degree_id" value="{{ selected_degree_id }}">
+            <input type="hidden" name="regulation_id" value="{{ selected_regulation_id }}">
+            <input type="hidden" name="action" value="save_practical_course_master">
+
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle text-center mb-3 master-table practical-master-table">
+                <tbody>
+                  <tr>
+                    <th colspan="2">Internal Assessment<br>(100 Marks)*</th>
+                  </tr>
+                  <tr>
+                    <td>Evaluation of Laboratory Observation, Record</td>
+                    <td style="width:140px;">Test</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <input type="number" id="practical_observation_record" name="practical_observation_record" class="form-control text-center practical-input" min="0" value="{{ practical_observation_record|default:'75' }}">
+                    </td>
+                    <td>
+                      <input type="number" id="practical_test" name="practical_test" class="form-control text-center practical-input" min="0" value="{{ practical_test|default:'25' }}">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" class="text-end">
+                      <div class="d-inline-flex align-items-center gap-2">
+                        <label for="practical_total_internal" class="fw-semibold mb-0">Total</label>
+                        <input type="number" id="practical_total_internal" class="form-control text-center total-field" style="width:120px;" value="100" readonly>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="text-end">
+              <button type="submit" class="btn btn-primary">Save Practical Course</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ================= THEORY WITH LABORATORY COURSE ================= -->
+      <div class="card border mt-4">
+        <div class="card-header bg-light fw-semibold">
+          Theory with Laboratory Course
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="degree_id" value="{{ selected_degree_id }}">
+            <input type="hidden" name="regulation_id" value="{{ selected_regulation_id }}">
+            <input type="hidden" name="action" value="save_theory_lab_course_master">
+
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle text-center mb-3 master-table">
+                <tbody>
+                  <tr>
+                    <th colspan="2">Assessment I (40% weightage)</th>
+                    <th colspan="2">Assessment II (60% weightage)</th>
+                    <th rowspan="3" style="width:150px;">
+                      Total<br>
+                      <span class="fw-normal">Internal Assessment</span>
+                    </th>
+                  </tr>
+                  <tr>
+                    <td style="width:29%;">Individual Assignment / Case Study / Seminar / Mini Project</td>
+                    <td style="width:11%;">Written Test</td>
+                    <td style="width:29%;">Evaluation of Laboratory Observation, Record</td>
+                    <td style="width:11%;">Test</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <input type="number" id="theory_lab_assessment1_assignment" name="theory_lab_assessment1_assignment" class="form-control text-center theory-lab-input" min="0" value="{{ theory_lab_assessment1_assignment|default:'40' }}">
+                    </td>
+                    <td>
+                      <input type="number" id="theory_lab_assessment1_test" name="theory_lab_assessment1_test" class="form-control text-center theory-lab-input" min="0" value="{{ theory_lab_assessment1_test|default:'60' }}">
+                    </td>
+                    <td>
+                      <input type="number" id="theory_lab_assessment2_record" name="theory_lab_assessment2_record" class="form-control text-center theory-lab-input" min="0" value="{{ theory_lab_assessment2_record|default:'75' }}">
+                    </td>
+                    <td>
+                      <input type="number" id="theory_lab_assessment2_test" name="theory_lab_assessment2_test" class="form-control text-center theory-lab-input" min="0" value="{{ theory_lab_assessment2_test|default:'25' }}">
+                    </td>
+                    <td>
+                      <input type="number" id="theory_lab_total_internal" name="theory_lab_total_internal" class="form-control text-center total-field" min="0" value="{{ theory_lab_total_internal|default:'200' }}" readonly>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="text-end">
+              <button type="submit" class="btn btn-primary">Save Theory with Laboratory Course</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {% else %}
+      <div class="alert alert-info">
+        Please select <b>Degree</b> and <b>Regulation</b>, then click <b>Filter</b>.
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+
+<style>
+  .master-table th,
+  .master-table td {
+    vertical-align: middle !important;
+  }
+
+  .master-table input.form-control {
+    min-width: 70px;
+    height: 36px;
+    padding: 4px 8px;
+  }
+
+  .practical-master-table {
+    max-width: 720px;
+  }
+
+  .total-field {
+    background-color: #f8f9fa;
+    font-weight: 600;
+  }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  function toNum(value) {
+    const n = parseInt(value || 0, 10);
+    return isNaN(n) ? 0 : n;
+  }
+
+  function calcTheoryTotal() {
+    const a1 = toNum(document.getElementById("theory_assessment1_assignment")?.value);
+    const a2 = toNum(document.getElementById("theory_assessment1_test")?.value);
+    const a3 = toNum(document.getElementById("theory_assessment2_assignment")?.value);
+    const a4 = toNum(document.getElementById("theory_assessment2_test")?.value);
+    const totalField = document.getElementById("theory_total_internal");
+    if (totalField) totalField.value = a1 + a2 + a3 + a4;
+  }
+
+  function calcPracticalTotal() {
+    const p1 = toNum(document.getElementById("practical_observation_record")?.value);
+    const p2 = toNum(document.getElementById("practical_test")?.value);
+    const totalField = document.getElementById("practical_total_internal");
+    if (totalField) totalField.value = p1 + p2;
+  }
+
+  function calcTheoryLabTotal() {
+    const t1 = toNum(document.getElementById("theory_lab_assessment1_assignment")?.value);
+    const t2 = toNum(document.getElementById("theory_lab_assessment1_test")?.value);
+    const t3 = toNum(document.getElementById("theory_lab_assessment2_record")?.value);
+    const t4 = toNum(document.getElementById("theory_lab_assessment2_test")?.value);
+    const totalField = document.getElementById("theory_lab_total_internal");
+    if (totalField) totalField.value = t1 + t2 + t3 + t4;
+  }
+
+  document.querySelectorAll(".theory-input").forEach(function (el) {
+    el.addEventListener("input", calcTheoryTotal);
+  });
+
+  document.querySelectorAll(".practical-input").forEach(function (el) {
+    el.addEventListener("input", calcPracticalTotal);
+  });
+
+  document.querySelectorAll(".theory-lab-input").forEach(function (el) {
+    el.addEventListener("input", calcTheoryLabTotal);
+  });
+
+  calcTheoryTotal();
+  calcPracticalTotal();
+  calcTheoryLabTotal();
+});
+</script>
+{% endblock %}

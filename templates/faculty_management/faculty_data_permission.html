@@ -1,0 +1,511 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  :root{
+    --ink:#111827;
+    --muted:#6b7280;
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --border:#e5e7eb;
+    --pri:#0d6efd;
+    --good:#16a34a;
+    --bad:#6b7280;
+    --warn:#f59e0b;
+  }
+
+  .page-wrap{
+    background: var(--bg);
+    border-radius: 18px;
+    padding: 18px;
+  }
+
+  .page-head{
+    background: linear-gradient(135deg, rgba(13,110,253,.14), rgba(13,110,253,.03));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+
+  .page-title{
+    margin:0;
+    color:var(--ink);
+    font-weight:800;
+    letter-spacing:.2px;
+  }
+  .page-sub{
+    margin:2px 0 0 0;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 10px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background: rgba(255,255,255,.7);
+    color:var(--muted);
+    font-size:12px;
+    font-weight:600;
+    white-space:nowrap;
+  }
+
+  .cardx{
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(17,24,39,.06);
+    overflow:hidden;
+  }
+  .cardx .cardx-head{
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    background: linear-gradient(180deg, #fff, #fbfcff);
+  }
+  .cardx .cardx-body{ padding: 14px; }
+
+  .label{
+    font-weight:700;
+    color:var(--ink);
+    font-size:13px;
+  }
+
+  .hint{
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  .form-select[multiple]{
+    border-radius: 12px;
+  }
+
+  .btn-soft{
+    background: rgba(13,110,253,.08);
+    border: 1px solid rgba(13,110,253,.18);
+    color: var(--pri);
+    font-weight:700;
+  }
+  .btn-soft:hover{ background: rgba(13,110,253,.12); }
+
+  .table thead th{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--muted);
+    border-bottom:1px solid var(--border) !important;
+  }
+  .table tbody td{
+    vertical-align: middle;
+    border-top: 1px solid rgba(229,231,235,.7);
+  }
+
+  .badge-pill{
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-weight:800;
+    font-size:12px;
+  }
+  .b-yes{ background: rgba(22,163,74,.12) !important; color: var(--good) !important; }
+  .b-no{ background: rgba(107,114,128,.12) !important; color: var(--bad) !important; }
+
+  .action-btns .btn{
+    border-radius: 10px;
+    font-weight:700;
+  }
+
+  .searchbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .mini{
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .ops-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap:12px;
+  }
+  .ops-link{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px 14px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:#fff;
+    color:var(--ink);
+    text-decoration:none;
+  }
+  .ops-link:hover{
+    border-color:rgba(13,110,253,.35);
+    box-shadow:0 8px 24px rgba(17,24,39,.08);
+    color:var(--ink);
+  }
+  .ops-icon{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(13,110,253,.09);
+    color:var(--pri);
+    flex:0 0 auto;
+  }
+
+  .toast-area{
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1080;
+    width: min(420px, calc(100% - 32px));
+  }
+</style>
+
+<div class="container mt-4">
+  <div class="page-wrap">
+
+    <!-- HEADER -->
+    <div class="page-head mb-3">
+      <div>
+        <h4 class="page-title">Faculty Data Permissions</h4>
+        <p class="page-sub">Assign who can view all faculty data or only department-wise data.</p>
+      </div>
+      <div class="chip">
+        <i class="fa-solid fa-shield-halved"></i>
+        Role-based access control
+      </div>
+    </div>
+
+    
+    <!-- OPERATIONS -->
+    <div class="cardx mb-4">
+      <div class="cardx-head">
+        <div class="fw-bold" style="color:var(--ink);">
+          <i class="fa-solid fa-table-cells-large me-1"></i>
+          Operations
+        </div>
+        <span class="hint">Pages that use these faculty data permissions</span>
+      </div>
+      <div class="cardx-body">
+        <div class="ops-grid">
+          <a href="{% url 'employee_leave_dashboard' %}" class="ops-link">
+            <span class="d-flex align-items-center gap-3">
+              <span class="ops-icon"><i class="fa-solid fa-calendar-check"></i></span>
+              <span>
+                <span class="fw-bold d-block">Employee Leave Dashboard</span>
+                <span class="hint">View all academic years with leave filters</span>
+              </span>
+            </span>
+            <i class="fa-solid fa-chevron-right text-muted"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM CARD -->
+    <div class="cardx mb-4">
+      <div class="cardx-head">
+        <div class="d-flex align-items-center gap-2">
+          <div class="fw-bold" style="color:var(--ink);">
+            <i class="fa-solid fa-pen-to-square me-1"></i>
+            <span id="formTitle">{% if edit_permission %}Edit Permission{% else %}Create / Update Permission{% endif %}</span>
+          </div>
+          <span class="hint">Same form supports create + edit</span>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-soft" onclick="resetForm()">
+            <i class="fa-solid fa-rotate-left me-1"></i> Reset
+          </button>
+        </div>
+      </div>
+
+      <div class="cardx-body">
+        <form method="post" class="row g-3" id="permForm">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="save">
+          <input type="hidden" name="perm_id" id="permId" value="{% if edit_permission %}{{ edit_permission.id }}{% endif %}">
+
+          <!-- ROLE SEARCH -->
+          <div class="col-md-6">
+            <label class="label mb-2">Roles</label>
+
+            <input type="text"
+                   id="roleSearch"
+                   class="form-control form-control-sm mb-2"
+                   placeholder="Search roles..."
+                   onkeyup="filterRoles()">
+
+            <select name="roles[]" id="roleSelect"
+                    class="form-select" multiple required size="7"
+                    {% if edit_permission %}disabled{% endif %}>
+              {% for role in roles %}
+                <option value="{{ role.id }}"
+                  {% if edit_permission and edit_permission.role_id == role.id %}selected{% endif %}>
+                  {{ role.role }}
+                </option>
+              {% endfor %}
+            </select>
+
+            <div class="hint mt-2">
+              {% if edit_permission %}
+                Editing a permission is for a <b>single role</b>. Role selection is locked.
+              {% else %}
+                Hold <kbd>Ctrl</kbd> / <kbd>Cmd</kbd> to select multiple roles.
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- PERMISSIONS -->
+          <div class="col-md-6">
+            <label class="label d-block mb-2">Permissions</label>
+
+            <div class="card p-3" style="border-radius:14px;border:1px solid var(--border);">
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox"
+                       name="can_view_all_faculty_data" id="viewAll"
+                       {% if edit_permission and edit_permission.can_view_all_faculty_data %}checked{% endif %}>
+                <label class="form-check-label fw-semibold" for="viewAll">
+                  View All Faculty Data
+                </label>
+                <div class="hint">Can see faculty data across all departments.</div>
+              </div>
+
+              <hr class="my-2">
+
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox"
+                       name="can_view_department_faculty_data" id="viewDept"
+                       {% if edit_permission and edit_permission.can_view_department_faculty_data %}checked{% endif %}>
+                <label class="form-check-label fw-semibold" for="viewDept">
+                  View Department Faculty Data
+                </label>
+                <div class="hint">Restricted to their department scope.</div>
+              </div>
+            </div>
+
+            <div class="hint mt-2">
+              Tip: If both are off, role will have no access.
+            </div>
+          </div>
+
+          <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="fa-solid fa-floppy-disk me-1"></i>
+              {% if edit_permission %}Update{% else %}Save{% endif %}
+            </button>
+
+            {% if edit_permission %}
+              <a href="{% url 'assign_faculty_data_permission' %}" class="btn btn-outline-secondary">
+                Cancel Edit
+              </a>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SEARCH PERMISSIONS -->
+    <div class="cardx mb-3">
+      <div class="cardx-body">
+        <div class="searchbar">
+          <div style="min-width:260px; flex:1;">
+            <label class="label mb-2">Search existing permissions</label>
+            <input type="text" id="searchInput" class="form-control"
+                   placeholder="Search permission by role name...">
+            <div class="hint mt-1">Example: HOD, Principal, Staff</div>
+          </div>
+          <div class="d-flex gap-2 mt-4 mt-md-0">
+            <button class="btn btn-primary" onclick="loadPermissions(1)">
+              <i class="fa-solid fa-magnifying-glass me-1"></i> Search
+            </button>
+            <button class="btn btn-outline-secondary" onclick="clearSearch()">
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="cardx">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width:70px;">#</th>
+              <th>Role</th>
+              <th style="width:140px;">All</th>
+              <th style="width:140px;">Dept</th>
+              <th style="width:220px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="permissionBody">
+            <tr><td colspan="5" class="text-center py-4 text-muted">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="pagination" class="mt-3"></div>
+
+  </div>
+</div>
+
+<script>
+/* ---------------- ROLE SEARCH (JS ONLY) ---------------- */
+let allRoleOptions = [];
+
+document.addEventListener("DOMContentLoaded", () => {
+  const select = document.getElementById("roleSelect");
+  if (select) {
+    allRoleOptions = Array.from(select.options).map(o => ({
+      value: o.value,
+      text: o.text
+    }));
+  }
+  loadPermissions();
+});
+
+function filterRoles() {
+  const search = document.getElementById("roleSearch").value.toLowerCase();
+  const select = document.getElementById("roleSelect");
+  if (!select || select.disabled) return;
+
+  const selected = Array.from(select.selectedOptions).map(o => o.value);
+  select.innerHTML = "";
+
+  allRoleOptions.forEach(role => {
+    if (role.text.toLowerCase().includes(search)) {
+      const opt = document.createElement("option");
+      opt.value = role.value;
+      opt.text = role.text;
+      if (selected.includes(role.value)) opt.selected = true;
+      select.appendChild(opt);
+    }
+  });
+}
+
+/* ---------------- FORM RESET ---------------- */
+function resetForm(){
+  // go to create mode (server fresh)
+  window.location.href = "{% url 'assign_faculty_data_permission' %}";
+}
+
+/* ---------------- PERMISSION LIST (AJAX) ---------------- */
+function loadPermissions(page = 1) {
+  const search = document.getElementById("searchInput").value || "";
+
+  fetch(`{% url 'faculty_data_permission_api' %}?page=${page}&search=${encodeURIComponent(search)}`)
+    .then(res => res.json())
+    .then(data => {
+      const body = document.getElementById("permissionBody");
+      body.innerHTML = "";
+
+      if (!data.results.length) {
+        body.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No results</td></tr>`;
+        renderPagination(data);
+        return;
+      }
+
+      data.results.forEach((p, i) => {
+        body.innerHTML += `
+          <tr>
+            <td class="text-muted fw-semibold">${((data.page - 1) * data.page_size) + (i + 1)}</td>
+            <td class="fw-semibold" style="color:var(--ink);">${escapeHtml(p.role)}</td>
+            <td>
+              <span class="badge badge-pill ${p.can_view_all ? 'b-yes':'b-no'}">
+                ${p.can_view_all ? 'YES' : 'NO'}
+              </span>
+            </td>
+            <td>
+              <span class="badge badge-pill ${p.can_view_dept ? 'b-yes':'b-no'}">
+                ${p.can_view_dept ? 'YES' : 'NO'}
+              </span>
+            </td>
+            <td class="action-btns">
+              <a class="btn btn-sm btn-outline-primary me-2"
+                 href="{% url 'assign_faculty_data_permission' %}?edit=${p.id}">
+                 <i class="fa-solid fa-pen me-1"></i> Edit
+              </a>
+
+              <form method="post" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="perm_id" value="${p.id}">
+                <button class="btn btn-sm btn-outline-danger"
+                        onclick="return confirm('Delete this permission?')">
+                  <i class="fa-solid fa-trash me-1"></i> Delete
+                </button>
+              </form>
+            </td>
+          </tr>`;
+      });
+
+      renderPagination(data);
+    });
+}
+
+function renderPagination(data) {
+  const p = document.getElementById("pagination");
+  p.innerHTML = "";
+
+  const wrap = document.createElement("div");
+  wrap.className = "d-flex align-items-center justify-content-between flex-wrap gap-2";
+
+  const left = document.createElement("div");
+  left.className = "d-flex gap-2";
+
+  if (data.has_prev) {
+    left.innerHTML += `<button class="btn btn-outline-secondary" onclick="loadPermissions(${data.page - 1})">Prev</button>`;
+  } else {
+    left.innerHTML += `<button class="btn btn-outline-secondary" disabled>Prev</button>`;
+  }
+
+  if (data.has_next) {
+    left.innerHTML += `<button class="btn btn-outline-secondary" onclick="loadPermissions(${data.page + 1})">Next</button>`;
+  } else {
+    left.innerHTML += `<button class="btn btn-outline-secondary" disabled>Next</button>`;
+  }
+
+  const right = document.createElement("div");
+  right.className = "mini";
+  right.innerHTML = `Page <b>${data.page}</b> of <b>${data.total_pages}</b> · Total <b>${data.total_count}</b>`;
+
+  wrap.appendChild(left);
+  wrap.appendChild(right);
+  p.appendChild(wrap);
+}
+
+function clearSearch() {
+  document.getElementById("searchInput").value = "";
+  loadPermissions(1);
+}
+
+/* small helper to prevent role name injection */
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, function (m) {
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]);
+  });
+}
+</script>
+
+{% endblock %}

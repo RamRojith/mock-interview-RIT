@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h3 class="mb-1">Practical Entry — {{ course_code }} {{ course_title }}</h3>
+      <div class="text-muted">
+        {% if selected_degree_code or selected_degree_name %}
+          <span class="me-3">
+            <i class="bi bi-mortarboard me-1"></i>
+            {{ selected_degree_code }}{% if selected_degree_code and selected_degree_name %} — {% endif %}{{ selected_degree_name }}
+          </span>
+        {% endif %}
+        {% if selected_batch %}<span class="me-3"><i class="bi bi-people me-1"></i>Batch {{ selected_batch }}</span>{% endif %}
+        {% if selected_section %}<span class="me-3"><i class="bi bi-layout-split me-1"></i>Section {{ selected_section }}</span>{% endif %}
+        {% if selected_department %}<span class="me-3"><i class="bi bi-building me-1"></i>{{ selected_department }}</span>{% endif %}
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      {% if assessment_iat %}
+        <span class="badge bg-info text-dark fs-6">IAT: {{ assessment_iat }}</span>
+      {% endif %}
+      {% if experiment_no %}
+        <span class="badge bg-dark fs-6">Experiment #{{ experiment_no }}</span>
+      {% else %}
+        <span class="badge bg-warning text-dark fs-6">No experiment number provided</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <input type="hidden" name="course_id" value="{{ course_id }}">
+    <input type="hidden" name="course_code" value="{{ course_code }}">
+    <input type="hidden" name="course_title" value="{{ course_title }}">
+    <input type="hidden" name="selected_department" value="{{ selected_department }}">
+    <input type="hidden" name="selected_department_id" value="{{ selected_department_id }}">
+    <input type="hidden" name="selected_batch" value="{{ selected_batch }}">
+    <input type="hidden" name="selected_section" value="{{ selected_section }}">
+    <input type="hidden" name="selected_degree_code" value="{{ selected_degree_code }}">
+    <input type="hidden" name="selected_degree_name" value="{{ selected_degree_name }}">
+    <input type="hidden" name="experiment_no" value="{{ experiment_no }}">
+    <input type="hidden" name="assessment_iat" value="{{ assessment_iat }}">
+
+    {% if students %}
+      <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <div><strong>{{ students|length }}</strong> students</div>
+          <div class="text-muted small">
+            Work_program: if entered &lt; 25 it is converted to /40. Observation: if entered ≤ 10 it is converted to /20. Record ≤ 15. Totals auto-update.
+          </div>
+        </div>
+
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-4">Reg No</th>
+                  <th>Name</th>
+                  <th class="text-center" style="width:160px;">
+                    Work_program<br>
+                    <small class="text-muted">for (25 or 40)</small>
+                  </th>
+                  <th class="text-center" style="width:160px;">
+                    Observation<br>
+                    <small class="text-muted">for (10 or 20)</small>
+                  </th>
+                  <th class="text-center" style="width:140px;">
+                    Record<br>
+                    <small class="text-muted">/15</small>
+                  </th>
+                  <th class="text-center" style="width:140px;">
+                    Total<br>
+                    <small class="text-muted">/75</small>
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for s in students %}
+                  <tr>
+                    <td class="ps-4">
+                      {{ s.reg_no }}
+                      <input type="hidden" name="reg_nos[]" value="{{ s.reg_no }}">
+                    </td>
+                    <td>{{ s.name }}</td>
+
+                    <td class="text-center">
+                      <input
+                        type="number"
+                        name="performance[{{ s.reg_no }}]"
+                        class="form-control form-control-sm mark-input performance-input"
+                        data-target="total_{{ s.reg_no }}"
+                        data-max="40"
+                        min="0"
+                        max="40"
+                        step="1"
+                        value="{{ s.pref_wp|default:'40' }}">
+                      <small class="text-muted wp-converted-text"></small>
+                    </td>
+
+                    <td class="text-center">
+                      <input
+                        type="number"
+                        name="record[{{ s.reg_no }}]"
+                        class="form-control form-control-sm mark-input observation-input"
+                        data-target="total_{{ s.reg_no }}"
+                        data-max="20"
+                        min="0"
+                        max="20"
+                        step="1"
+                        value="{{ s.pref_ob|default:'20' }}">
+                      <small class="text-muted ob-converted-text"></small>
+                    </td>
+
+                    <td class="text-center">
+                      <input
+                        type="number"
+                        name="viva[{{ s.reg_no }}]"
+                        class="form-control form-control-sm mark-input viva-input"
+                        data-target="total_{{ s.reg_no }}"
+                        data-max="15"
+                        min="0"
+                        max="15"
+                        step="1"
+                        value="{{ s.pref_rc|default:'15' }}">
+                    </td>
+
+                    <td class="text-center">
+                      <input
+                        type="number"
+                        name="total[{{ s.reg_no }}]"
+                        id="total_{{ s.reg_no }}"
+                        class="form-control form-control-sm"
+                        readonly
+                        tabindex="-1"
+                        value="{{ s.pref_total|default:'75' }}">
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+
+              <tfoot class="table-light">
+                <tr>
+                  <td class="ps-4" colspan="6">
+                    <div class="d-flex justify-content-end gap-2">
+                      <button type="reset" class="btn btn-outline-secondary btn-sm">Reset</button>
+                      <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-check2-circle me-1"></i>Save Marks
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="alert alert-info">No students found for the selected Department/Batch/Section.</div>
+    {% endif %}
+  </form>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const TOTAL_MAX = 75;
+
+  function clamp(val, min, max) {
+    if (val === "" || val === null || typeof val === "undefined") return 0;
+    const n = Number(val);
+    if (isNaN(n)) return 0;
+    return Math.min(Math.max(n, min), max);
+  }
+
+  function convertedWorkProgram(val) {
+    let n = Number(val || 0);
+    if (isNaN(n)) n = 0;
+  
+    n = clamp(n, 0, 40);
+  
+    if (n <= 25) {
+      n = Math.round((n / 25) * 40);
+    } else {
+      n = Math.round(n);
+    }
+  
+    return Math.min(Math.max(n, 0), 40);
+  }
+  function convertedObservation(val) {
+    let n = Number(val || 0);
+    if (isNaN(n)) n = 0;
+
+    n = clamp(n, 0, 20);
+
+    if (n <= 10) {
+      n = Math.round((n / 10) * 20);
+    } else {
+      n = Math.round(n);
+    }
+
+    return Math.min(Math.max(n, 0), 20);
+  }
+
+  function recalcRowTotal(targetId) {
+    const totalEl = document.getElementById(targetId);
+    if (!totalEl) return;
+
+    const row = totalEl.closest('tr');
+    if (!row) return;
+
+    const wpInput = row.querySelector('input[name^="performance["]');
+    const obInput = row.querySelector('input[name^="record["]');
+    const rcInput = row.querySelector('input[name^="viva["]');
+    const wpText = row.querySelector('.wp-converted-text');
+    const obText = row.querySelector('.ob-converted-text');
+
+    const rawWp = wpInput ? wpInput.value : 0;
+    const rawOb = obInput ? obInput.value : 0;
+    const rawRc = rcInput ? rcInput.value : 0;
+
+    const rawWpNum = Number(rawWp || 0);
+    const rawObNum = Number(rawOb || 0);
+
+    const wp = convertedWorkProgram(rawWp);
+    const ob = convertedObservation(rawOb);
+    const rc = clamp(rawRc, 0, 15);
+
+    if (wpText) {
+      if (!isNaN(rawWpNum) && rawWpNum <= 25) {
+        wpText.textContent = "Converted to: " + wp + " / 40";
+      } else {
+        wpText.textContent = "";
+      }
+    }
+
+    if (obText) {
+      if (!isNaN(rawObNum) && rawObNum <= 10) {
+        obText.textContent = "Converted to: " + ob + " / 20";
+      } else {
+        obText.textContent = "";
+      }
+    }
+
+    totalEl.value = Math.min(wp + ob + rc, TOTAL_MAX);
+  }
+
+  document.querySelectorAll('.mark-input').forEach(inp => {
+    const maxAttr = Number(inp.getAttribute('data-max') || inp.max || 0);
+    inp.value = clamp(inp.value, 0, maxAttr);
+  });
+
+  document.querySelectorAll('[id^="total_"]').forEach(totalEl => {
+    recalcRowTotal(totalEl.id);
+  });
+
+  document.querySelectorAll('.mark-input').forEach(inp => {
+    inp.addEventListener('input', function() {
+      const maxAttr = Number(inp.getAttribute('data-max') || inp.max || 0);
+      const clamped = clamp(inp.value, 0, maxAttr);
+      if (String(clamped) !== String(inp.value)) inp.value = clamped;
+      recalcRowTotal(inp.getAttribute('data-target'));
+    });
+
+    inp.addEventListener('blur', function() {
+      const maxAttr = Number(inp.getAttribute('data-max') || inp.max || 0);
+      inp.value = clamp(inp.value, 0, maxAttr);
+      recalcRowTotal(inp.getAttribute('data-target'));
+    });
+  });
+});
+</script>
+{% endblock %}

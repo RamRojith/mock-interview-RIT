@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4 admin-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header mb-5 text-center">
+    <h1 class="display-6 fw-bold text-white mb-2">4.7.3 — Department Publications</h1>
+    <p class="lead text-white-50">Journals, Magazines, Newsletters — CAYm1 / CAYm2 / CAYm3</p>
+  </div>
+
+  <div class="card border-0 shadow-lg">
+    <div class="card-header bg-gradient-primary text-white py-3 d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fas fa-newspaper fa-lg"></i>
+        <div>
+          <h4 class="mb-0 fw-bold">Department Publications</h4>
+          <small class="opacity-75">Add rows for each CAY bucket and save</small>
+        </div>
+      </div>
+      
+    </div>
+
+    <div class="card-body p-4">
+      <!-- Department & AY -->
+      <form method="post" action="{% url 'add_deptpubs' %}" id="pubForm">
+        {% csrf_token %}
+        <div class="row g-4 mb-3">
+          <div class="col-md-5">
+            <label class="form-label small fw-semibold text-muted mb-2">
+              <i class="fas fa-building me-1"></i>Department
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0">
+                <i class="fas fa-university text-primary"></i>
+              </span>
+              <select name="department" id="department" class="form-select border-start-0" required
+                      onchange="window.location='{{ request.path }}?department='+this.value;">
+                <option value="">Select Department</option>
+                {% for d in departments %}
+                <option value="{{ d.id }}" {% if d.id|stringformat:'s' == selected_dept_id|stringformat:'s' %}selected{% endif %}>
+                  {{ d.Department }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-2">
+              <i class="fas fa-calendar me-1"></i>Academic Year
+            </label>
+            <input type="text" class="form-control" name="academic_year_range" placeholder="e.g., 2024-25" required>
+          </div>
+
+          <div class="col-md-3 d-flex align-items-end gap-2">
+            <button type="button" id="btnPast" class="btn btn-outline-primary w-100">
+              <i class="fas fa-history me-2"></i>Show Past
+            </button>
+          </div>
+        </div>
+
+        <!-- Table maker helper -->
+        <div class="table-section">
+          <h5 class="fw-bold mb-2">Table No. 4.7.3.1 — Publications</h5>
+
+          <!-- ========== CAYm1 ========== -->
+          <div class="mb-2 fw-bold text-uppercase text-primary">CAYm1</div>
+          <div class="table-responsive mb-2">
+            <table class="table table-bordered table-hover align-middle">
+              <thead class="table-warning">
+                <tr>
+                  <th style="width:5%">S.N.</th>
+                  <th>Journal/Magazine/Newsletter (Title)</th>
+                  <th>Type</th>
+                  <th>the Editor</th>
+                  <th>Student & Semester<br><small class="text-muted">Verify by Register No. (not stored)</small></th>
+                  <th>&nbsp;Issues</th>
+                  <th>Soft copy</th>
+                  <th style="width:70px">—</th>
+                </tr>
+              </thead>
+              <tbody id="CAYm1_tbody">
+                <tr class="data-row">
+                  <td></td>
+                  <td><input name="title_CAYm1[]" class="td-input" placeholder="Title"></td>
+                  <td>
+                    <select name="pub_type_CAYm1[]" class="td-input">
+                      <option>Journal</option><option>Magazine</option><option selected>Newsletter</option>
+                    </select>
+                  </td>
+                  <td><input name="editor_CAYm1[]" class="td-input" placeholder="Editor Name"></td>
+
+                  <!-- VERIFY BLOCK -->
+                  <td>
+                    <div class="d-flex flex-column gap-1">
+                      <div class="input-group input-group-sm">
+                        <input class="form-control" placeholder="Register No. to verify" data-role="regno">
+                        <button class="btn btn-outline-secondary" type="button" onclick="verifyStudent(this)">
+                          Verify
+                        </button>
+                      </div>
+                      <div class="small" data-role="studinfo"></div>
+                      <!-- This is what actually gets submitted -->
+                      <input name="studsem_CAYm1[]" class="td-input" placeholder="Student & Semester (stored)">
+                    </div>
+                  </td>
+                  <!-- /VERIFY BLOCK -->
+
+                  <td><input type="number" min="0" name="issues_CAYm1[]" class="td-input" placeholder="4"></td>
+                  <td>
+                    <div class="d-flex gap-2">
+                      <select name="copy_CAYm1[]" class="td-input"><option>Soft</option><option>Hard</option><option>Both</option></select>
+                      <input name="weblink_CAYm1[]" class="td-input" placeholder="https://link (optional)">
+                    </div>
+                  </td>
+                  <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="rm(this)"><i class="fas fa-trash"></i></button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addRow('CAYm1')">+ Add CAYm1 Row</button>
+
+          <!-- ========== CAYm2 ========== -->
+          <div class="mb-2 fw-bold text-uppercase text-primary">CAYm2</div>
+          <div class="table-responsive mb-2">
+            <table class="table table-bordered table-hover align-middle">
+              <thead class="table-warning">
+                <tr>
+                  <th style="width:5%">S.N.</th>
+                  <th>Journal/Magazine/Newsletter (Title)</th>
+                  <th>Type</th>
+                  <th>the Editor</th>
+                  <th>Student & Semester</th>
+                  <th>&nbsp;Issues</th>
+                  <th>Soft copy</th>
+                  <th style="width:70px">—</th>
+                </tr>
+              </thead>
+              <tbody id="CAYm2_tbody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addRow('CAYm2')">+ Add CAYm2 Row</button>
+
+          <!-- ========== CAYm3 ========== -->
+          <div class="mb-2 fw-bold text-uppercase text-primary">CAYm3</div>
+          <div class="table-responsive mb-2">
+            <table class="table table-bordered table-hover align-middle">
+              <thead class="table-warning">
+                <tr>
+                  <th style="width:5%">S.N.</th>
+                  <th>Journal/Magazine/Newsletter (Title)</th>
+                  <th>Type</th>
+                  <th>the Editor</th>
+                  <th>Student & Semester</th>
+                  <th>&nbsp;Issues</th>
+                  <th>Soft copy</th>
+                  <th style="width:70px">—</th>
+                </tr>
+              </thead>
+              <tbody id="CAYm3_tbody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm" onclick="addRow('CAYm3')">+ Add CAYm3 Row</button>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-between align-items-center border-top pt-3">
+          <button class="btn btn-primary"><i class="fas fa-save me-2"></i>Save Publications</button>
+          <small class="text-muted">
+            <i class="fas fa-info-circle me-1"></i>
+            Reg. No. is used only to verify; it is not saved. “Student & Semester” is what gets stored.
+          </small>
+        </div>
+
+        <!-- Past Panel -->
+        <div id="pastPanel" class="mt-4" style="display:none;">
+          <div class="card bg-light border-0">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0"><i class="fas fa-archive me-2 text-primary"></i>Past Submissions</h6>
+                <div class="text-muted small" id="pastCount"></div>
+              </div>
+              <div class="row g-3" id="pastCards"></div>
+              <div id="pastEmpty" class="text-center py-4" style="display:none;">
+                <i class="fas fa-inbox fa-2x text-muted mb-3"></i>
+                <p class="text-muted mb-0">No previous submissions found.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<style>
+:root{--primary:#1a56db;--dark:#1e3a8a;--medium:#3b82f6;--border:#e2e8f0;--bg:#f1f5f9;}
+.admin-dashboard{font-family:'Inter',system-ui,sans-serif;background:var(--bg);}
+.dashboard-header{background:linear-gradient(135deg,var(--primary),var(--dark));color:#fff;border-radius:16px;padding:2rem;}
+.card-header.bg-gradient-primary{background:linear-gradient(135deg,var(--primary),var(--medium))!important;}
+.table-section{background:#fff;border-radius:12px;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.table thead th{background:linear-gradient(135deg,#374151,#4b5563)!important;color:#fff;}
+.td-input{width:100%;border:2px solid var(--border);border-radius:6px;padding:.4rem;}
+.badge-mismatch{background:#fff3cd;border:1px solid #ffec99;color:#8a6d3b;border-radius:6px;padding:2px 6px;}
+</style>
+
+<script>
+const PAST_URL = "{% url 'past_deptpubs' %}";
+const LOOKUP_URL = "{% url 'student_lookup' %}";
+
+/* numbering */
+function idxify(){
+  ["CAYm1_tbody","CAYm2_tbody","CAYm3_tbody"].forEach(id=>{
+    document.querySelectorAll(`#${id} tr.data-row`).forEach((tr,i)=>{
+      tr.querySelector("td:first-child").textContent = String(i+1);
+    });
+  });
+}
+function rm(btn){ btn.closest('tr').remove(); idxify(); }
+
+/* Row template (includes verify UI) */
+function rowHTML(bucket){
+  return `
+  <tr class="data-row">
+    <td></td>
+    <td><input name="title_${bucket}[]" class="td-input" placeholder="Title"></td>
+    <td>
+      <select name="pub_type_${bucket}[]" class="td-input">
+        <option>Journal</option><option>Magazine</option><option selected>Newsletter</option>
+      </select>
+    </td>
+    <td><input name="editor_${bucket}[]" class="td-input" placeholder="Editor Name"></td>
+
+    <td>
+      <div class="d-flex flex-column gap-1">
+        <div class="input-group input-group-sm">
+          <input class="form-control" placeholder="Register No. to verify" data-role="regno">
+          <button class="btn btn-outline-secondary" type="button" onclick="verifyStudent(this)">Verify</button>
+        </div>
+        <div class="small" data-role="studinfo"></div>
+        <input name="studsem_${bucket}[]" class="td-input" placeholder="Student & Semester (stored)">
+      </div>
+    </td>
+
+    <td><input type="number" min="0" name="issues_${bucket}[]" class="td-input" placeholder="4"></td>
+    <td>
+      <div class="d-flex gap-2">
+        <select name="copy_${bucket}[]" class="td-input"><option>Soft</option><option>Hard</option><option>Both</option></select>
+        <input name="weblink_${bucket}[]" class="td-input" placeholder="https://link (optional)">
+      </div>
+    </td>
+    <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="rm(this)"><i class="fas fa-trash"></i></button></td>
+  </tr>`;
+}
+function addRow(bucket){
+  document.getElementById(`${bucket}_tbody`).insertAdjacentHTML('beforeend', rowHTML(bucket));
+  idxify();
+}
+document.addEventListener('DOMContentLoaded', ()=> idxify());
+
+/* Past panel (cards) */
+function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function rowsTable(rows){
+  if(!rows.length) return '<p class="text-muted small mb-0">No rows.</p>';
+  return `<div class="table-responsive mt-2"><table class="table table-sm table-bordered">
+    <thead class="table-light"><tr>
+      <th>#</th><th>Bucket</th><th>Title</th><th>Type</th><th>Editor</th>
+      <th>Student & Sem</th><th>Issues</th><th>Copy</th><th>Web Link</th>
+    </tr></thead><tbody>
+      ${rows.map((r,i)=>`<tr>
+        <td>${i+1}</td><td>${esc(r.bucket)}</td><td>${esc(r.title)}</td><td>${esc(r.pub_type)}</td>
+        <td>${esc(r.editor_name)}</td><td>${esc(r.student_semester)}</td><td>${esc(r.num_issues)}</td>
+        <td>${esc(r.copy_type)}</td>
+        <td>${r.weblink?`<a href="${esc(r.weblink)}" target="_blank" rel="noopener">Link</a>`:''}</td>
+      </tr>`).join('')}
+    </tbody></table></div>`;
+}
+function card(e){
+  const b=e.is_verified?'bg-success':'bg-warning';
+  const t=e.is_verified?'Verified':'Not Verified';
+  return `<div class="col-12"><div class="card h-100 shadow-sm"><div class="card-body">
+    <div class="d-flex justify-content-between align-items-start mb-2">
+      <div><h6 class="mb-1">${esc(e.academic_year_range||'—')}</h6>
+      <small class="text-muted">Created: ${esc(e.created_at||'—')}</small></div>
+      <span class="badge ${b}">${t}</span>
+    </div>
+    <div class="small mb-2 text-muted">Counts — CAYm1: ${e.caym1||0}, CAYm2: ${e.caym2||0}, CAYm3: ${e.caym3||0}</div>
+    ${rowsTable(e.rows||[])}
+  </div></div></div>`;
+}
+document.getElementById('btnPast').addEventListener('click', async function(){
+  const panel=document.getElementById('pastPanel');
+  const open = panel.style.display === 'block';
+  if(open){ panel.style.display='none'; this.innerHTML='<i class="fas fa-history me-2"></i>Show Past'; return; }
+  panel.style.display='block'; this.innerHTML='<i class="fas fa-times me-2"></i>Hide Past';
+
+  const dept = document.getElementById('department').value;
+  const url = new URL(PAST_URL, window.location.origin);
+  url.searchParams.set('department_id', dept || '');
+  try{
+    const res = await fetch(url, {credentials:'same-origin'});
+    const data = await res.json();
+    const wrap=document.getElementById('pastCards'); const empty=document.getElementById('pastEmpty');
+    const count=document.getElementById('pastCount');
+    wrap.innerHTML=''; empty.style.display='none'; count.textContent='';
+    const list=(data && data.entries)||[];
+    if(!list.length){ empty.style.display='block'; return; }
+    count.textContent = `(${list.length} submissions)`;
+    wrap.innerHTML=list.map(card).join('');
+  }catch(err){
+    console.error(err);
+    document.getElementById('pastEmpty').style.display='block';
+  }
+});
+
+/* ===== Register-Number Verification (AJAX) =====
+   - Uses GET /pa/472/lookup/?department_id=..&reg_no=..
+   - Writes a friendly line in [data-role=studinfo]
+   - Prefills the "Student & Semester" input in the row
+   - Never posts the reg no (no name attribute)
+*/
+async function verifyStudent(btn){
+  const row = btn.closest('tr');
+  const deptId = document.getElementById('department').value;
+  const regEl = row.querySelector('[data-role="regno"]');
+  const infoEl = row.querySelector('[data-role="studinfo"]');
+  const outEl  = row.querySelector('input[name^="studsem_"]');
+
+  const rn = (regEl.value || '').trim();
+  if(!deptId){ infoEl.innerHTML = `<span class="text-danger">Select department first.</span>`; return; }
+  if(!rn){ infoEl.innerHTML = `<span class="text-danger">Enter Register No. to verify.</span>`; return; }
+
+  btn.disabled = true; const prev = btn.textContent; btn.textContent = 'Checking...';
+  try{
+    const url = new URL(LOOKUP_URL, window.location.origin);
+    url.searchParams.set('department_id', deptId);
+    url.searchParams.set('reg_no', rn);
+    const res = await fetch(url, {credentials:'same-origin'});
+    const data = await res.json();
+
+    if(!data.ok){
+      infoEl.innerHTML = `<span class="text-danger">${(data.error||'Lookup failed')}</span>`;
+      return;
+    }
+    const s = data.student || {};
+    const mismatch = s.dept_mismatch ? `<span class="badge-mismatch ms-2">Other dept: ${s.department_name||''}</span>` : '';
+    infoEl.innerHTML = `<span class="text-success"><i class="fas fa-check-circle me-1"></i>${(s.name||'')}${s.reg_no? ' ('+s.reg_no+')':''}</span>${mismatch}
+                        <span class="text-muted ms-2">Batch ${s.batch||'—'} | Year ${s.year||'—'} | Sem ${s.semester||'—'} | Sec ${s.section||'—'}</span>`;
+
+    // Pre-fill the stored text (they can edit it)
+    const label = [s.name||'', s.semester? `Sem ${s.semester}` : ''].filter(Boolean).join(' — ');
+    if(outEl && !outEl.value) outEl.value = label;
+  }catch(e){
+    console.error(e);
+    infoEl.innerHTML = `<span class="text-danger">Lookup failed.</span>`;
+  }finally{
+    btn.disabled = false; btn.textContent = prev;
+  }
+}
+</script>
+{% endblock %}

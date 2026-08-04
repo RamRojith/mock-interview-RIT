@@ -1,0 +1,659 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .wifi-application {
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        min-height: 80vh;
+    }
+
+    .application-content {
+        padding: 1rem 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .application-form {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid #1a4b8c;
+        width: 100%;
+    }
+
+    .form-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1a4b8c;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        padding: 0.5rem;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #1a4b8c;
+        box-shadow: 0 0 0 0.2rem rgba(26, 75, 140, 0.25);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        border: none;
+        padding: 0.875rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+        width: 100%;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+        color: white;
+    }
+
+    .info-card {
+        background: #f0f9ff;
+        border: 1px solid #0ea5e9;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card h6 {
+        color: #0369a1;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .info-card ul {
+        margin-bottom: 0;
+        color: #374151;
+        font-size: 0.85rem;
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin: 1.5rem 0 1rem 0;
+    }
+
+    .section-header h4 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .text-uppercase {
+        text-transform: uppercase !important;
+    }
+
+    .declaration-section {
+        background: #f8f9fa;
+        border: 2px solid #1a4b8c;
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    .declaration-section .form-check-label {
+        font-weight: 600;
+        color: #1a4b8c;
+        line-height: 1.4;
+        font-size: 0.9rem;
+    }
+
+    .error-text {
+        color: #dc2626;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    .readonly-box {
+        background-color: #f8fafc;
+    }
+
+    .table-box {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .table-box table {
+        margin-bottom: 0;
+    }
+
+    .table-box thead th {
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c5aa0 100%);
+        color: white;
+        border: none;
+        text-align: center;
+        vertical-align: middle;
+        padding: 0.9rem 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .table-box tbody td {
+        vertical-align: middle;
+        text-align: center;
+        padding: 0.75rem 0.5rem;
+        border-color: #e2e8f0;
+    }
+
+    .year-cell {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        font-weight: 700;
+        color: #1a4b8c;
+    }
+
+    .alert {
+        border-radius: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .application-content {
+            padding: 1rem;
+        }
+
+        .application-form {
+            padding: 1rem;
+        }
+
+        .form-title {
+            font-size: 1.4rem;
+        }
+    }
+</style>
+
+<div class="wifi-application">
+    <main class="application-content">
+
+        <div class="info-card">
+            <h6><i class="fas fa-info-circle me-2"></i> WiFi Access Application Guidelines</h6>
+            <ul>
+                <li>This application is for student and faculty WiFi access requests.</li>
+                <li>WiFi access will be processed only after verification and approval.</li>
+                <li>Processing time depends on approval flow configured by Data Center Management.</li>
+                <li><strong>Credentials or activation will be provided only after final approval.</strong></li>
+                <li>Usage is subject to the institution internet policy.</li>
+            </ul>
+        </div>
+
+        <div class="application-form">
+            <h2 class="form-title">
+                <i class="fas fa-wifi me-2"></i>
+                {% if is_student_user %}
+                    {% if is_hosteller %}
+                        Hostel Student Internet Registration Form
+                    {% else %}
+                        Student WiFi Permission Form
+                    {% endif %}
+                {% else %}
+                    Faculty WiFi Permission Form
+                {% endif %}
+            </h2>
+
+            {% if errors.role %}
+                <div class="alert alert-danger">{{ errors.role }}</div>
+            {% endif %}
+
+            <form method="post" id="wifiApplicationForm">
+                {% csrf_token %}
+
+                <div class="section-header">
+                    <h4>I - General Information</h4>
+                </div>
+
+                {% if is_student_user and student %}
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control readonly-box text-uppercase" value="{{ student.name|default:''|upper }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="form-label">Year</label>
+                            <input type="text" class="form-control readonly-box" id="current_year" value="{{ student.year|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Register Number</label>
+                            <input type="text" class="form-control readonly-box" value="{{ student.reg_no|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control readonly-box" value="{{ student.email|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="form-label">Gender</label>
+                            <input type="text" class="form-control readonly-box" value="{{ student.gender|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="form-label">Section</label>
+                            <input type="text" class="form-control readonly-box" value="{{ student.section|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <input type="text" class="form-control readonly-box" value="{{ student.department|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="form-label">Mode</label>
+                            <input type="text" class="form-control readonly-box" value="{{ admission_mode|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="form-label">Semester</label>
+                            <input type="text" class="form-control readonly-box" value="{{ student.semester|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if is_faculty_user and faculty %}
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Faculty ID</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.faculty_id|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control readonly-box text-uppercase" value="{{ faculty.name|default:''|upper }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.department|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Designation</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.designation|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Mail Id</label>
+                            <input type="text" class="form-control readonly-box" value="{{ faculty.college_email|default:'-' }}" readonly>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if is_student_user and is_hosteller %}
+                <div class="section-header">
+                    <h4>Hostel Details</h4>
+                </div>
+
+                <div class="table-responsive table-box">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Cluster</th>
+                                <th>Room No</th>
+                                <th>Ethernet Cable Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="year-cell">{{ student.year|default:'-' }}</td>
+                                <td>
+                                    <input type="text" name="cluster" class="form-control" value="{{ form_data.cluster|default:'' }}">
+                                    {% if errors.cluster %}
+                                        <div class="error-text">{{ errors.cluster }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <input type="text" name="room_no" class="form-control" value="{{ form_data.room_no|default:'' }}">
+                                    {% if errors.room_no %}
+                                        <div class="error-text">{{ errors.room_no }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <input type="checkbox" name="ethernet_cable_required" id="id_ethernet_cable_required"
+                                           {% if form_data.ethernet_cable_required %}checked{% endif %}>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+
+                {% if is_faculty_user %}
+                <div class="section-header">
+                    <h4>Network Requirement</h4>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="ethernet_cable_required" id="id_ethernet_cable_required"
+                           {% if form_data.ethernet_cable_required %}checked{% endif %}>
+                    <label class="form-check-label" for="id_ethernet_cable_required">
+                        Ethernet cable required
+                    </label>
+                </div>
+                {% endif %}
+
+                <div class="section-header">
+                    <h4>II - Technical Information</h4>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Type of Device</label>
+                    <select name="device_type" class="form-select" id="id_device_type">
+                        <option value="">-- Select --</option>
+                        <option value="LAPTOP" {% if form_data.device_type == "LAPTOP" %}selected{% endif %}>Laptop</option>
+                        <option value="MOBILE" {% if form_data.device_type == "MOBILE" %}selected{% endif %}>Mobile</option>
+                    </select>
+                    {% if errors.device_type %}
+                        <div class="error-text">{{ errors.device_type }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">WiFi MAC Address</label>
+                    <input type="text" name="device_mac_address" class="form-control" value="{{ form_data.device_mac_address|default:'' }}" placeholder="XX:XX:XX:XX:XX:XX">
+                    <div class="form-text">Tip: run <code>getmac /v</code> in Command Prompt to find your device's WiFi MAC address.</div>
+                    {% if errors.device_mac_address %}
+                        <div class="error-text">{{ errors.device_mac_address }}</div>
+                    {% endif %}
+                </div>
+
+                <div id="ethernet-mac-field" class="form-group" style="display:none;">
+                    <label class="form-label">Ethernet MAC Address</label>
+                    <input type="text" name="ethernet_mac_address" class="form-control" value="{{ form_data.ethernet_mac_address|default:'' }}" placeholder="XX:XX:XX:XX:XX:XX">
+                    <div class="form-text">Tip: run <code>getmac /v</code> in Command Prompt to find your device's Ethernet MAC address.</div>
+                    {% if errors.ethernet_mac_address %}
+                        <div class="error-text">{{ errors.ethernet_mac_address }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="section-header">
+                    <h4>III - Mobile Information</h4>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="wifi_for_mobile_required" id="id_wifi_for_mobile_required"
+                           {% if form_data.wifi_for_mobile_required %}checked{% endif %}>
+                    <label class="form-check-label" for="id_wifi_for_mobile_required">
+                        WiFi for mobile is required
+                    </label>
+                </div>
+
+                <div id="mobile-fields" style="display:none;">
+                    <div class="row">
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Mobile Static MAC Address</label>
+                                <input type="text" name="mobile_static_mac_address" class="form-control" value="{{ form_data.mobile_static_mac_address|default:'' }}" placeholder="XX:XX:XX:XX:XX:XX">
+                                {% if errors.mobile_static_mac_address %}
+                                    <div class="error-text">{{ errors.mobile_static_mac_address }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-header">
+                    <h4>IV - Event Information</h4>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="is_for_event" id="id_is_for_event"
+                           {% if form_data.is_for_event %}checked{% endif %}>
+                    <label class="form-check-label" for="id_is_for_event">
+                        Is this request for an event?
+                    </label>
+                </div>
+
+                <div id="event-fields" style="display:none;">
+                    <div class="form-group">
+                        <label class="form-label">Purpose</label>
+                        <textarea name="purpose" class="form-control" rows="3">{{ form_data.purpose|default:'' }}</textarea>
+                        {% if errors.purpose %}
+                            <div class="error-text">{{ errors.purpose }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Event Name</label>
+                                <input type="text" name="event_name" class="form-control" value="{{ form_data.event_name|default:'' }}">
+                                {% if errors.event_name %}
+                                    <div class="error-text">{{ errors.event_name }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Location</label>
+                                <input type="text" name="location" class="form-control" value="{{ form_data.location|default:'' }}">
+                                {% if errors.location %}
+                                    <div class="error-text">{{ errors.location }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div>
+                            
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Time Period</label>
+                                <input type="text" name="time_period" class="form-control" value="{{ form_data.time_period|default:'' }}" placeholder="e.g. 10 AM - 4 PM / 2 days">
+                                {% if errors.time_period %}
+                                    <div class="error-text">{{ errors.time_period }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="declaration-section">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="agreement" id="id_agreement"
+                               {% if form_data.agreement %}checked{% endif %}>
+                        <label class="form-check-label" for="id_agreement">
+                            I hereby declare that the above information given by me is true and correct and I shall use this facility ethically.
+                        </label>
+                    </div>
+                    {% if errors.agreement %}
+                        <div class="error-text">{{ errors.agreement }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-paper-plane me-2"></i>Submit Application
+                </button>
+            </form>
+        </div>
+
+        <!-- ================= REQUEST HISTORY ================= -->
+<div class="application-form mt-4">
+    <h2 class="form-title">
+        <i class="fas fa-history me-2"></i>My Applications
+    </h2>
+
+    {% if user_requests %}
+    <div class="table-responsive table-box">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Device</th>
+                    <th>MAC Address</th>
+                    <th>Mobile</th>
+                    <th>Event</th>
+                    <th>Status</th>
+                    <th>Applied On</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in user_requests %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ req.device_type|default:"-" }}</td>
+                    <td>{{ req.device_mac_address|default:"-" }}</td>
+                    <td>
+                        {% if req.wifi_for_mobile_required %}
+                            Yes
+                        {% else %}
+                            No
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if req.is_for_event %}
+                            {{ req.event_name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if req.status == "APPROVED" %}
+                            <span class="badge bg-success">APPROVED</span>
+                        {% elif req.status == "REJECTED" %}
+                            <span class="badge bg-danger">REJECTED</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">PENDING</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ req.created_at|date:"d M Y, h:i A" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            No applications submitted yet.
+        </div>
+    {% endif %}
+</div>
+
+    </main>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Prevent double submission (double-click / rapid resubmit) that would
+    // otherwise create duplicate applications.
+    const wifiForm = document.getElementById("wifiApplicationForm");
+    if (wifiForm) {
+        wifiForm.addEventListener("submit", function () {
+            const btn = wifiForm.querySelector('button[type="submit"]');
+            if (btn) {
+                if (btn.dataset.submitting === "1") { return; }
+                btn.dataset.submitting = "1";
+                btn.disabled = true;
+                btn.style.opacity = "0.6";
+                btn.style.cursor = "not-allowed";
+                const original = btn.innerHTML;
+                btn.innerHTML = "Submitting...";
+                // Safety: re-enable if the page is restored from bfcache
+                setTimeout(function () {
+                    if (btn.disabled) { btn.disabled = false; btn.style.opacity = ""; btn.style.cursor = ""; btn.innerHTML = original; btn.dataset.submitting = ""; }
+                }, 10000);
+            }
+        });
+    }
+
+    const mobileCheckbox = document.getElementById("id_wifi_for_mobile_required");
+    const mobileFields = document.getElementById("mobile-fields");
+
+    const eventCheckbox = document.getElementById("id_is_for_event");
+    const eventFields = document.getElementById("event-fields");
+
+    const ethernetCheckbox = document.getElementById("id_ethernet_cable_required");
+    const ethernetMacField = document.getElementById("ethernet-mac-field");
+
+    function toggleMobileFields() {
+        mobileFields.style.display = (mobileCheckbox && mobileCheckbox.checked) ? "block" : "none";
+    }
+
+    function toggleEventFields() {
+        eventFields.style.display = (eventCheckbox && eventCheckbox.checked) ? "block" : "none";
+    }
+
+    function toggleEthernetMacField() {
+        ethernetMacField.style.display = (ethernetCheckbox && ethernetCheckbox.checked) ? "block" : "none";
+    }
+
+    if (mobileCheckbox) {
+        mobileCheckbox.addEventListener("change", toggleMobileFields);
+        toggleMobileFields();
+    }
+
+    if (eventCheckbox) {
+        eventCheckbox.addEventListener("change", toggleEventFields);
+        toggleEventFields();
+    }
+
+    if (ethernetCheckbox) {
+        ethernetCheckbox.addEventListener("change", toggleEthernetMacField);
+        toggleEthernetMacField();
+    }
+
+    document.querySelectorAll('input[name="device_mac_address"], input[name="mobile_static_mac_address"], input[name="ethernet_mac_address"]').forEach(function(input) {
+        input.addEventListener("input", function() {
+            let value = this.value.replace(/[^a-fA-F0-9]/g, "");
+            value = value.match(/.{1,2}/g)?.join(":") || value;
+            if (value.length > 17) value = value.substring(0, 17);
+            this.value = value.toUpperCase();
+        });
+    });
+});
+</script>
+{% endblock %}

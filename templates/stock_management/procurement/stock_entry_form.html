@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container py-4" style="max-width:1000px;">
+  <h2 class="fw-bold text-primary mb-4">
+    <i class="fa-solid fa-file-invoice me-2"></i>{% if is_edit %}Edit Stock Entry{% else %}New Stock Entry{% endif %}
+  </h2>
+
+  {% if messages %}{% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}{% endif %}
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <form method="post" enctype="multipart/form-data"
+            action="{% if is_edit %}{% url 'stock_entry_edit' entry.id %}{% else %}{% url 'stock_entry_create' %}{% endif %}">
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Stock Register <span class="text-danger">*</span></label>
+            <select name="register" class="form-select" required>
+              <option value="">-- Select Register (Lab) --</option>
+              {% for r in registers %}
+                <option value="{{ r.id }}" {% if entry and entry.register_id == r.id %}selected{% endif %}>{{ r.register_number }} — {{ r.lab.lab_code }} — {{ r.lab.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Bill Number <span class="text-danger">*</span></label>
+            <input type="text" name="bill_number" class="form-control" required value="{% firstof entry.bill_number form_data.bill_number '' %}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Bill Date <span class="text-danger">*</span></label>
+            <input type="date" name="bill_date" class="form-control" required value="{% if entry.bill_date %}{{ entry.bill_date|date:'Y-m-d' }}{% else %}{% firstof form_data.bill_date '' %}{% endif %}">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Vendor Name <span class="text-danger">*</span></label>
+            <input type="text" name="vendor_name" class="form-control" required value="{% firstof entry.vendor_name form_data.vendor_name '' %}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Vendor GSTIN</label>
+            <input type="text" name="vendor_gstin" class="form-control" value="{% firstof entry.vendor_gstin form_data.vendor_gstin '' %}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Register Page No.</label>
+            <input type="number" name="page_number" class="form-control" min="1" value="{% firstof entry.page_number form_data.page_number '' %}">
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">Vendor Address <span class="text-danger">*</span></label>
+            <textarea name="vendor_address" class="form-control" rows="2" required>{% firstof entry.vendor_address form_data.vendor_address '' %}</textarea>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-semibold">Item Description <span class="text-danger">*</span></label>
+            <textarea name="item_description" class="form-control" rows="2" required>{% firstof entry.item_description form_data.item_description '' %}</textarea>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+            <select name="item_category" class="form-select" required>
+              {% for val, label in category_choices %}
+                <option value="{{ val }}" {% if entry.item_category == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-semibold">Quantity <span class="text-danger">*</span></label>
+            <input type="number" name="quantity" id="id_qty" class="form-control" min="1" required value="{% firstof entry.quantity form_data.quantity '1' %}">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-semibold">Unit</label>
+            <select name="unit" class="form-select">
+              {% for val, label in unit_choices %}
+                <option value="{{ val }}" {% if entry.unit == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Price / Unit (₹) <span class="text-danger">*</span></label>
+            <input type="number" step="0.01" name="price_per_unit" id="id_price" class="form-control" min="0" required value="{% firstof entry.price_per_unit form_data.price_per_unit '' %}">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-semibold">Total (₹)</label>
+            <input type="text" id="id_total" class="form-control bg-light" readonly>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Warranty (years)</label>
+            <input type="number" name="warranty_years" class="form-control" min="0" value="{% firstof entry.warranty_years form_data.warranty_years '0' %}">
+          </div>
+          <div class="col-md-5">
+            <label class="form-label fw-semibold">Bill Scan (PDF/JPG/PNG)</label>
+            <input type="file" name="bill_scan" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save {% if not is_edit %}(Draft){% endif %}</button>
+          <a href="{% url 'stock_entry' %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const q=document.getElementById("id_qty"), p=document.getElementById("id_price"), t=document.getElementById("id_total");
+  function calc(){ const v=(parseFloat(q.value||0)*parseFloat(p.value||0)); t.value=isNaN(v)?"":v.toFixed(2); }
+  q.addEventListener("input",calc); p.addEventListener("input",calc); calc();
+});
+</script>
+{% endblock content %}

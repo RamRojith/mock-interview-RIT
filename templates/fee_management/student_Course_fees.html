@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <style>
+        .student-info-card {
+            background-color: #e6f2ff;
+            border: 1px solid #b3d1ff;
+        }
+        .total-balance-card {
+            background-color: #fff9e6;
+            border: 1px solid #ffe680;
+        }
+        .scholarship-card {
+            background-color: #e6ffe6;
+            border: 1px solid #99cc99;
+        }
+        .percentage-card {
+            background-color: #e6f0ff;
+            border: 1px solid #99b3e6;
+        }
+        .semester-card {
+            transition: all 0.3s ease;
+            border: 1px solid #dee2e6;
+        }
+        .semester-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .fee-breakdown {
+            font-size: 0.9rem;
+        }
+        .scholarship-badge {
+            background-color: #2e8b57;
+            color: white;
+        }
+        .percentage-badge {
+            background-color: #3a5bc7;
+            color: white;
+        }
+        .progress {
+            height: 8px;
+            background-color: #e9ecef;
+        }
+        .progress-bar {
+            transition: width 0.6s ease;
+        }
+        .text-success {
+            color: #28a745 !important;
+        }
+        .text-primary {
+            color: #007bff !important;
+        }
+        .text-danger {
+            color: #dc3545 !important;
+        }
+        .text-muted {
+            color: #6c757d !important;
+        }
+        .bg-light {
+            background-color: #f8f9fa !important;
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .badge {
+            font-weight: 500;
+            padding: 0.35em 0.65em;
+        }
+    </style>
+
+<div class="bg-light">
+    <div class="container py-4">
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body">
+                <h1 class="h2 card-title mb-4 text-dark">Semester Fee Payment</h1>
+                
+                <!-- Student Info Card -->
+                <div class="card student-info-card mb-4">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h2 class="h4 card-title text-dark">{{ student.first_name }} {{ student.surname }}</h2>
+                                <p class="card-text text-muted mb-1">
+                                    <span class="fw-medium">Program:</span> {{ student.program_name }} | 
+                                    <span class="fw-semibold">Batch:</span> {{ batch }}
+                                </p>
+                                <p class="card-text text-muted">
+                                    <span class="fw-semibold">Current Year:</span> {{ current_year }}
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">
+                                    {{ student.reg_number }}
+                                </span>
+                                {% if has_scholarship %}
+                                <span class="badge {% if scholarship_type == 'amount' %}scholarship-badge{% else %}percentage-badge{% endif %} ms-2">
+                                    <i class="fas {% if scholarship_type == 'amount' %}fa-award{% else %}fa-percentage{% endif %} me-1"></i>
+                                    {% if scholarship_type == 'amount' %}Scholarship{% else %}{{ scholarship_percentage }}% Discount{% endif %}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if has_scholarship %}
+                <!-- Scholarship Info Card -->
+                <div class="card {% if scholarship_type == 'amount' %}scholarship-card{% else %}percentage-card{% endif %} mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="h5 card-title {% if scholarship_type == 'amount' %}text-success{% else %}text-primary{% endif %}">
+                                    <i class="fas {% if scholarship_type == 'amount' %}fa-graduation-cap{% else %}fa-percent{% endif %} me-2"></i>
+                                    {% if scholarship_type == 'amount' %}Scholarship Benefit{% else %}Scholarship Fee Discount{% endif %}
+                                </h3>
+                                {% if scholarship_type == 'amount' %}
+                                <p class="mb-1 text-dark">
+                                    Total scholarship amount: <strong class="text-success">{{ total_scholarship|floatformat:2 }} ZMW</strong>
+                                </p>
+                                <p class="mb-0 text-dark">
+                                    Scholarship amount per year: <strong class="text-success">{{ scholarship_amount_for_each_year|floatformat:2 }} ZMW</strong>
+                                </p>
+                                {% else %}
+                                <p class="mb-1 text-dark">
+                                    Discount percentage: <strong class="text-primary">{{ scholarship_percentage|floatformat:2 }}%</strong>
+                                </p>
+                                <p class="mb-0 text-dark">
+                                    Total discount value: <strong class="text-primary">{{ total_scholarship|floatformat:2 }} ZMW</strong>
+                                </p>
+                                {% endif %}
+                            </div>
+                            <span class="badge {% if scholarship_type == 'amount' %}bg-success{% else %}bg-primary{% endif %} bg-opacity-25 {% if scholarship_type == 'amount' %}text-success border border-success{% else %}text-primary border border-primary{% endif %}">
+                                Applied
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Semesters Grid -->
+                <div class="row g-4">
+                    {% for sem in semesters %}
+                    <div class="col-12 col-sm-6 col-lg-4">
+                        <div class="card semester-card h-100 {% if sem.is_locked %}opacity-75{% endif %}">
+                            <div class="card-header">
+                                <h3 class="h6 card-title mb-0 fw-bold text-dark">Semester {{ sem.number }}</h3>
+                                {% if sem.is_locked %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary">
+                                    <i class="fas fa-lock me-1"></i> Locked
+                                </span>
+                                {% else %}
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success">
+                                    <i class="fas fa-unlock me-1"></i> Unlocked
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <div class="fee-breakdown mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">Original Fee:</span>
+                                        <span class="fw-medium text-dark">{{ sem.original_fee|floatformat:2 }} ZMW</span>
+                                    </div>
+                                    {% if has_scholarship %}
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">
+                                            {% if scholarship_type == 'amount' %}Scholarship{% else %}Discount{% endif %}:
+                                        </span>
+                                        <span class="fw-medium {% if scholarship_type == 'amount' %}text-success{% else %}text-primary{% endif %}">
+                                            -{{ sem.scholarship|floatformat:2 }} ZMW
+                                        </span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2 border-bottom pb-2">
+                                        <span class="text-muted">Adjusted Fee:</span>
+                                        <span class="fw-bold text-dark">{{ sem.adjusted_fee|floatformat:2 }} ZMW</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Payment Progress -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small class="text-muted">Paid: {{ sem.paid|floatformat:2 }} ZMW</small>
+                                        <small class="text-muted">{{ sem.adjusted_fee|floatformat:2 }} ZMW</small>
+                                    </div>
+                                    <div class="progress">
+                                        {% widthratio sem.paid sem.adjusted_fee 100 as payment_percent %}
+                                        <div class="progress-bar bg-success" 
+                                             role="progressbar" 
+                                             style="width: {% widthratio sem.paid sem.adjusted_fee 100 %}%" 
+                                             aria-valuenow="{{ payment_percent }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span class="text-muted">Balance:</span>
+                                    <span class="fw-medium {% if sem.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ sem.balance|floatformat:2 }} ZMW
+                                    </span>
+                                </div>
+                                
+                                {% if not sem.is_locked and sem.balance > 0 %}
+                                <button onclick="openPaymentModal({{ sem.number }}, {{ sem.balance|floatformat:2 }})"
+                                        class="btn btn-primary w-100">
+                                    Pay Now
+                                </button>
+                                {% elif sem.balance <= 0 %}
+                                <div class="text-center text-success py-2">
+                                    <i class="fas fa-check-circle me-1"></i> Paid in full
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Total Balance -->
+                <div class="card total-balance-card mt-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h6 mb-0 text-dark">Total Outstanding Balance:</span>
+                            <span class="h5 fw-bold {% if total_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ total_balance|floatformat:2 }} ZMW
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal fade" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Pay Semester Fee</h5>
+                    <button type="button" class="btn-close btn-close-white" onclick="closeModal()" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="paymentForm" method="post" action="{% url 'process_fee_payment' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="semester" id="modalSemester">
+                        <input type="hidden" name="nrc_number" value="{{ student.nrc_number }}">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Semester</label>
+                            <input type="text" id="displaySemester" class="form-control bg-light" readonly>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Amount to Pay (ZMW)</label>
+                            <input type="number" name="amount" id="paymentAmount" 
+                                   class="form-control" required min="0.01" step="0.01">
+                            <small class="text-muted">Maximum: <span id="maxAmount"></span> ZMW</small>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" onclick="closeModal()"
+                                    class="btn btn-outline-secondary px-4">
+                                Cancel
+                            </button>
+                            <button type="submit" 
+                                    class="btn btn-primary px-4">
+                                Proceed to Payment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let paymentModal = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            
+            const amountInput = document.getElementById('paymentAmount');
+            amountInput.addEventListener('input', function() {
+                const max = parseFloat(this.max);
+                const value = parseFloat(this.value);
+                if (value > max) {
+                    this.value = max.toFixed(2);
+                }
+            });
+        });
+
+        function openPaymentModal(semester, balance) {
+            document.getElementById('modalSemester').value = semester;
+            document.getElementById('displaySemester').value = 'Semester ' + semester;
+            
+            const amountInput = document.getElementById('paymentAmount');
+            amountInput.value = balance;
+            amountInput.max = balance;
+            document.getElementById('maxAmount').textContent = balance;
+            
+            paymentModal.show();
+        }
+
+        function closeModal() {
+            paymentModal.hide();
+        }
+    </script>
+</div>
+
+{% endblock content %}
