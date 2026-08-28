@@ -3,6 +3,7 @@ import importlib.util
 
 from django.conf import settings
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -19,7 +20,12 @@ from mock_interview.models import (
     StudentAnswer,
 )
 from mock_interview.ai.ollama_client import configured_model, health, model_available
-from mock_interview.services.access import student_identity, student_required
+from mock_interview.services.access import (
+    is_faculty_or_hod,
+    is_student_user,
+    student_identity,
+    student_required,
+)
 from mock_interview.services.interview_service import (
     InterviewStateError,
     enrich_resume,
@@ -82,6 +88,17 @@ INTERVIEW_ROUNDS = {
 DIFFICULTIES = {"Beginner", "Intermediate", "Advanced"}
 ENGLISH_VOICES = {"af_heart", "am_adam"}
 SESSION_DELETABLE_STATUSES = {"draft", "planning", "ready", "in_progress"}
+
+
+def module_entry(request):
+    """Route ERP users to the correct mock interview dashboard."""
+    if not getattr(request.user, "is_authenticated", False):
+        return redirect("login_view")
+    if is_faculty_or_hod(request.user):
+        return redirect("mock_interview:faculty_dashboard")
+    if is_student_user(request.user):
+        return dashboard(request)
+    raise PermissionDenied("Mock interviews are available to students and faculty only.")
 
 
 @student_required

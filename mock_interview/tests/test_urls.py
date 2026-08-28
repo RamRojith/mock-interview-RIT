@@ -1,7 +1,10 @@
 import uuid
+from types import SimpleNamespace
 
-from django.test import SimpleTestCase
+from django.test import RequestFactory, SimpleTestCase
 from django.urls import reverse
+
+from mock_interview.views.dashboard import module_entry
 
 
 class MockInterviewUrlTests(SimpleTestCase):
@@ -23,3 +26,23 @@ class MockInterviewUrlTests(SimpleTestCase):
             reverse("mock_interview:runtime_status"),
             "/mock-interview/api/runtime/status/",
         )
+
+
+class MockInterviewEntryRoutingTests(SimpleTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_faculty_module_root_redirects_to_faculty_dashboard(self):
+        request = self.factory.get(reverse("mock_interview:dashboard"))
+        request.user = SimpleNamespace(
+            is_authenticated=True,
+            is_student=False,
+            is_parent=False,
+            is_superuser=False,
+            role=SimpleNamespace(role="Faculty"),
+        )
+
+        response = module_entry(request)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("mock_interview:faculty_dashboard"))

@@ -1,10 +1,12 @@
 import json
 import logging
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
@@ -165,6 +167,23 @@ def delete_document_api(request, document_id):
 @faculty_required
 def create_interview_page(request):
     """Page for faculty to create a mock interview."""
+    if request.method == "POST":
+        try:
+            interview, auto_assigned = _create_interview(request.user, request.POST)
+        except (SchedulerError, ValueError) as exc:
+            messages.error(request, str(exc))
+        else:
+            suffix = (
+                f" {auto_assigned} student(s) auto-assigned."
+                if auto_assigned
+                else ""
+            )
+            messages.success(request, f"Interview created successfully.{suffix}")
+            return redirect(
+                "mock_interview:interview_detail_page",
+                interview_id=interview.id,
+            )
+
     employee_id = _faculty_employee_id(request.user)
     documents = UploadedDocument.objects.filter(
         faculty_employee_id=employee_id,
@@ -178,124 +197,190 @@ def create_interview_page(request):
     })
 
 
+def _bounded_int(value, *, default, minimum, maximum):
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        parsed = default
+    return min(maximum, max(minimum, parsed))
+
+
+def _target_skills(value):
+    if isinstance(value, str):
+        return [item.strip() for item in value.split(",") if item.strip()]
+    if isinstance(value, (list, tuple)):
+        return [str(item).strip() for item in value if str(item).strip()]
+    return []
+
+
+def _create_interview(user, data):
+    employee_id = _faculty_employee_id(user)
+    title = str(data.get("title", "") or "").strip()
+    subject_code = str(data.get("subject_code", "") or "").strip()
+    document_id = str(data.get("document_id", "") or "").strip()
+    difficulty = str(data.get("difficulty", "medium") or "medium").strip()
+    interview_mode = str(
+        data.get("interview_mode", "technical") or "technical"
+    ).strip()
+    language_mode = str(data.get("language_mode", "en") or "en").strip()
+    department_id = str(data.get("department_id", "") or "").strip()
+    target_batch = str(data.get("target_batch", "") or "").strip()
+    target_section = str(data.get("target_section", "") or "").strip()
+    target_skills = _target_skills(data.get("target_skills", []))
+    start_time = str(data.get("start_time", "") or "").strip()
+    end_time = str(data.get("end_time", "") or "").strip()
+
+    if not title or not subject_code:
+        raise ValueError("Title and subject code are required.")
+    if difficulty not in dict(MockInterview.DIFFICULTY_CHOICES):
+        raise ValueError("Invalid difficulty.")
+    if interview_mode not in dict(MockInterview.MODE_CHOICES):
+        raise ValueError("Invalid interview mode.")
+    if language_mode not in {"en", "ta"}:
+        raise ValueError("Invalid language mode.")
+
+    document = None
+    if document_id:
+        document = UploadedDocument.objects.filter(
+            id=document_id,
+            faculty_employee_id=employee_id,
+        ).first()
+        if not document:
+            raise ValueError("Invalid source document.")
+
+    target_department = None
+    if department_id:
+        target_department = Add_Department.objects.filter(
+            id=department_id,
+            is_active=True,
+        ).first()
+        if not target_department:
+            raise ValueError("Invalid department.")
+
+    interview_status = "draft"
+    interview_start = None
+    interview_end = None
+    if start_time or end_time:
+        if not start_time or not end_time:
+            raise ValueError("Both start and end time are required to schedule an interview.")
+        from django.utils.dateparse import parse_datetime
+        start_dt = parse_datetime(start_time)
+        end_dt = parse_datetime(end_time)
+        if start_dt is None or end_dt is None:
+            raise ValueError("Invalid schedule time.")
+        if timezone.is_naive(start_dt):
+            start_dt = timezone.make_aware(start_dt)
+        if timezone.is_naive(end_dt):
+            end_dt = timezone.make_aware(end_dt)
+        scheduler = InterviewScheduler()
+        scheduler.validate_interview_times(start_dt, end_dt)
+        interview_start = start_dt
+        interview_end = end_dt
+        interview_status = "scheduled"
+
+    question_count = _bounded_int(
+        data.get("question_count"),
+        default=10,
+        minimum=3,
+        maximum=30,
+    )
+    duration_minutes = _bounded_int(
+        data.get("duration_minutes"),
+        default=20,
+        minimum=5,
+        maximum=120,
+    )
+
+    with transaction.atomic():
+        interview = MockInterview.objects.create(
+            created_by=employee_id,
+            created_by_name=_faculty_name(user),
+            title=title,
+            subject_code=subject_code,
+            chapter=str(data.get("chapter", "") or "").strip(),
+            document=document,
+            difficulty=difficulty,
+            interview_mode=interview_mode,
+            question_count=question_count,
+            duration_minutes=duration_minutes,
+            language_mode=language_mode,
+            target_skills=target_skills,
+            target_batch=target_batch,
+            target_section=target_section,
+            target_department=target_department,
+            start_time=interview_start,
+            end_time=interview_end,
+            status=interview_status,
+        )
+
+        auto_assigned = 0
+        filters = {"is_active": True}
+        if target_department:
+            filters["department"] = target_department
+        if target_batch:
+            filters["batch"] = target_batch
+        if target_section:
+            filters["section"] = target_section
+
+        students = (
+            StudentDetails.objects.filter(**filters)
+            .exclude(reg_no__isnull=True)
+            .exclude(reg_no="")
+            .values_list("reg_no", "name")
+        )
+        assignments = []
+        seen_ids = set()
+        for reg_no, student_name in students:
+            sid = (reg_no or "").strip()
+            if not sid or sid in seen_ids:
+                continue
+            seen_ids.add(sid)
+            assignments.append(
+                InterviewAssignment(
+                    interview=interview,
+                    student_employee_id=sid,
+                    student_name=(student_name or "")[:500],
+                )
+            )
+
+        if assignments:
+            InterviewAssignment.objects.bulk_create(
+                assignments,
+                batch_size=500,
+                ignore_conflicts=True,
+            )
+            auto_assigned = interview.assignments.count()
+
+    return interview, auto_assigned
+
+
 @login_required
 @faculty_required
 @require_POST
 def create_interview_api(request):
     """API endpoint to create a mock interview."""
     try:
-        data = json.loads(request.body)
+        data = json.loads(request.body or "{}")
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON."}, status=400)
 
-    employee_id = _faculty_employee_id(request.user)
-    title = data.get("title", "").strip()
-    subject_code = data.get("subject_code", "").strip()
-    document_id = data.get("document_id")
-    difficulty = data.get("difficulty", "medium")
-    interview_mode = data.get("interview_mode", "technical")
-    question_count = data.get("question_count", 10)
-    duration_minutes = data.get("duration_minutes", 20)
-    department_id = data.get("department_id")
-    target_batch = data.get("target_batch", "")
-    target_section = data.get("target_section", "")
-    target_skills = data.get("target_skills", [])
-    start_time = data.get("start_time")
-    end_time = data.get("end_time")
-
-    if not title or not subject_code:
-        return JsonResponse(
-            {"error": "Title and subject code are required."}, status=400
-        )
-
-    document = None
-    if document_id:
-        document = get_object_or_404(
-            UploadedDocument,
-            id=document_id,
-            faculty_employee_id=employee_id,
-        )
-
-    target_department = None
-    if department_id:
-        try:
-            target_department = Add_Department.objects.get(id=department_id, is_active=True)
-        except Add_Department.DoesNotExist:
-            return JsonResponse({"error": "Invalid department."}, status=400)
-
-    interview_status = "draft"
-    interview_start = None
-    interview_end = None
-    if start_time and end_time:
-        from django.utils.dateparse import parse_datetime
-        start_dt = parse_datetime(start_time)
-        end_dt = parse_datetime(end_time)
-        if start_dt and end_dt:
-            if timezone.is_naive(start_dt):
-                start_dt = timezone.make_aware(start_dt)
-            if timezone.is_naive(end_dt):
-                end_dt = timezone.make_aware(end_dt)
-            scheduler = InterviewScheduler()
-            try:
-                scheduler.validate_interview_times(start_dt, end_dt)
-                interview_start = start_dt
-                interview_end = end_dt
-                interview_status = "scheduled"
-            except SchedulerError:
-                pass
-
-    interview = MockInterview.objects.create(
-        created_by=employee_id,
-        created_by_name=_faculty_name(request.user),
-        title=title,
-        subject_code=subject_code,
-        chapter=data.get("chapter", ""),
-        document=document,
-        difficulty=difficulty,
-        interview_mode=interview_mode,
-        question_count=question_count,
-        duration_minutes=duration_minutes,
-        language_mode=data.get("language_mode", "en"),
-        target_skills=target_skills,
-        target_batch=target_batch,
-        target_section=target_section,
-        target_department=target_department,
-        start_time=interview_start,
-        end_time=interview_end,
-        status=interview_status,
-    )
-
-    # Auto-assign students matching department, batch, and section
-    auto_assigned = 0
-    filters = {"is_active": True}
-    if target_department:
-        filters["department"] = target_department
-    if target_batch:
-        filters["batch"] = target_batch
-    if target_section:
-        filters["section"] = target_section
-
-    students = StudentDetails.objects.filter(**filters)
-    for student in students:
-        sid = (student.reg_no or "").strip()
-        if not sid:
-            continue
-        _, was_created = InterviewAssignment.objects.get_or_create(
-            interview=interview,
-            student_employee_id=sid,
-            defaults={"student_name": (student.name or "")[:500]},
-        )
-        if was_created:
-            auto_assigned += 1
+    try:
+        interview, auto_assigned = _create_interview(request.user, data)
+    except SchedulerError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+    except ValueError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
 
     return JsonResponse({
         "id": str(interview.id),
         "public_id": str(interview.public_id),
         "title": interview.title,
         "status": interview.status,
-        "start_time": interview_start.isoformat() if interview_start else None,
-        "end_time": interview_end.isoformat() if interview_end else None,
+        "start_time": interview.start_time.isoformat() if interview.start_time else None,
+        "end_time": interview.end_time.isoformat() if interview.end_time else None,
         "auto_assigned": auto_assigned,
+        "detail_url": reverse("mock_interview:interview_detail_page", args=[interview.id]),
+        "dashboard_url": reverse("mock_interview:faculty_dashboard"),
     })
 
 

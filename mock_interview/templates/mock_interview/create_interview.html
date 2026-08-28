@@ -6,31 +6,31 @@
         <h4 class="fw-bold mb-4"><i class="fas fa-microphone me-2"></i>Create Mock Interview</h4>
 
         <div class="content-card">
-            <form id="createForm">
+            <form id="createForm" method="post" action="{% url 'mock_interview:create_interview_page' %}">
                 {% csrf_token %}
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Interview Title *</label>
-                    <input type="text" class="form-control" id="title"
+                    <input type="text" class="form-control" id="title" name="title"
                            placeholder="e.g., OS Mid-Term Practice" required>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Subject Code *</label>
-                        <input type="text" class="form-control" id="subjectCode"
+                        <input type="text" class="form-control" id="subjectCode" name="subject_code"
                                placeholder="e.g., CS301" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Chapter / Topic</label>
-                        <input type="text" class="form-control" id="chapter"
+                        <input type="text" class="form-control" id="chapter" name="chapter"
                                placeholder="e.g., Process Scheduling">
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Source Document</label>
-                    <select class="form-select" id="documentId">
+                    <select class="form-select" id="documentId" name="document_id">
                         <option value="">-- Select a document (optional) --</option>
                         {% for doc in documents %}
                         <option value="{{ doc.id }}">
@@ -44,7 +44,7 @@
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Difficulty</label>
-                        <select class="form-select" id="difficulty">
+                        <select class="form-select" id="difficulty" name="difficulty">
                             <option value="easy">Easy</option>
                             <option value="medium" selected>Medium</option>
                             <option value="hard">Hard</option>
@@ -53,7 +53,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Mode</label>
-                        <select class="form-select" id="interviewMode">
+                        <select class="form-select" id="interviewMode" name="interview_mode">
                             <option value="technical" selected>Technical</option>
                             <option value="behavioural">Behavioural</option>
                             <option value="mixed">Mixed</option>
@@ -61,7 +61,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Language</label>
-                        <select class="form-select" id="languageMode">
+                        <select class="form-select" id="languageMode" name="language_mode">
                             <option value="en" selected>English</option>
                             <option value="ta">Tamil</option>
                         </select>
@@ -71,12 +71,12 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Number of Questions</label>
-                        <input type="number" class="form-control" id="questionCount"
+                        <input type="number" class="form-control" id="questionCount" name="question_count"
                                value="10" min="3" max="30">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Duration (minutes)</label>
-                        <input type="number" class="form-control" id="durationMinutes"
+                        <input type="number" class="form-control" id="durationMinutes" name="duration_minutes"
                                value="20" min="5" max="120">
                     </div>
                 </div>
@@ -88,7 +88,7 @@
                         <div class="row">
                             <div class="col-md-4 mb-2">
                                 <label class="form-label fw-bold">Department</label>
-                                <select class="form-select" id="targetDepartment">
+                                <select class="form-select" id="targetDepartment" name="department_id">
                                     <option value="">-- All Departments --</option>
                                     {% for dept in departments %}
                                     <option value="{{ dept.id }}">{{ dept.Department }}</option>
@@ -97,13 +97,13 @@
                             </div>
                             <div class="col-md-4 mb-2">
                                 <label class="form-label fw-bold">Batch</label>
-                                <select class="form-select" id="targetBatch">
+                                <select class="form-select" id="targetBatch" name="target_batch">
                                     <option value="">-- All Batches --</option>
                                 </select>
                             </div>
                             <div class="col-md-4 mb-2">
                                 <label class="form-label fw-bold">Section</label>
-                                <select class="form-select" id="targetSection">
+                                <select class="form-select" id="targetSection" name="target_section">
                                     <option value="">-- All Sections --</option>
                                 </select>
                             </div>
@@ -113,7 +113,7 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Target Skills (comma-separated)</label>
-                    <input type="text" class="form-control" id="targetSkills"
+                    <input type="text" class="form-control" id="targetSkills" name="target_skills"
                            placeholder="e.g., process management, scheduling, synchronization">
                 </div>
 
@@ -122,11 +122,11 @@
                     <div class="row">
                         <div class="col-md-6">
                             <label class="form-label small">Start Time</label>
-                            <input type="datetime-local" class="form-control" id="startTime">
+                            <input type="datetime-local" class="form-control" id="startTime" name="start_time">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small">End Time</label>
-                            <input type="datetime-local" class="form-control" id="endTime">
+                            <input type="datetime-local" class="form-control" id="endTime" name="end_time">
                         </div>
                     </div>
                     <div class="form-text">Leave empty to keep as draft.</div>
@@ -199,61 +199,5 @@ function loadSections() {
 document.getElementById('targetDepartment').addEventListener('change', loadBatches);
 document.getElementById('targetBatch').addEventListener('change', loadSections);
 
-document.getElementById('createForm').addEventListener('submit', e => {
-    e.preventDefault();
-    const createBtn = document.getElementById('createBtn');
-    createBtn.disabled = true;
-
-    const data = {
-        title: document.getElementById('title').value,
-        subject_code: document.getElementById('subjectCode').value,
-        chapter: document.getElementById('chapter').value,
-        document_id: document.getElementById('documentId').value || null,
-        difficulty: document.getElementById('difficulty').value,
-        interview_mode: document.getElementById('interviewMode').value,
-        language_mode: document.getElementById('languageMode').value,
-        question_count: parseInt(document.getElementById('questionCount').value),
-        duration_minutes: parseInt(document.getElementById('durationMinutes').value),
-        department_id: document.getElementById('targetDepartment').value || null,
-        target_batch: document.getElementById('targetBatch').value,
-        target_section: document.getElementById('targetSection').value,
-        target_skills: document.getElementById('targetSkills').value
-            .split(',').map(s => s.trim()).filter(Boolean),
-        start_time: document.getElementById('startTime').value || null,
-        end_time: document.getElementById('endTime').value || null,
-    };
-
-    fetch('{% url "mock_interview:create_interview_api" %}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify(data)
-    }).then(r => r.json().then(d => ({status: r.status, data: d})))
-      .then(({status, data}) => {
-        if (status === 200) {
-            let msg = `${data.title} created. `;
-            if (data.auto_assigned > 0) {
-                msg += `${data.auto_assigned} student(s) auto-assigned. `;
-            }
-            if (data.status === 'scheduled') {
-                msg += 'Interview scheduled.';
-            } else {
-                msg += 'Saved as draft.';
-            }
-            document.getElementById('resultText').textContent = msg;
-            document.getElementById('result').classList.remove('d-none');
-        } else {
-            document.getElementById('errorText').textContent = data.error;
-            document.getElementById('error').classList.remove('d-none');
-        }
-        createBtn.disabled = false;
-    }).catch(err => {
-        document.getElementById('errorText').textContent = 'Network error';
-        document.getElementById('error').classList.remove('d-none');
-        createBtn.disabled = false;
-    });
-});
 </script>
 {% endblock %}

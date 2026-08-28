@@ -7,7 +7,7 @@ app_name = "mock_interview"
 
 urlpatterns = [
     # ── Student Interview Flow (existing) ────────────────────────────
-    path("", views.dashboard, name="dashboard"),
+    path("", views.module_entry, name="dashboard"),
     path("resume/upload/", views.upload_resume, name="upload_resume"),
     path("setup/", views.setup, name="setup"),
     path(
