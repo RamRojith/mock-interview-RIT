@@ -219,62 +219,126 @@
 
     for (let index = 0; index < lines.length; index += 1) {
       const line = lines[index];
-      const headerCells = line.split("|").map((cell) => cell.trim().toLowerCase());
-      const isTableHeader =
-        headerCells.length === 4 &&
-        headerCells[0] === "s.no" &&
-        headerCells[1] === "name" &&
-        headerCells[2] === "reg no" &&
-        headerCells[3] === "marks";
-      if (!isTableHeader) {
-        textLines.push(line);
-        continue;
+
+      const isDashSeparator = /^\s*[-]{4,}\s*$/.test(line);
+      const isPipeSeparator = /^\s*[:\-+| ]+\s*$/.test(line) && line.includes("|");
+
+      const useDashFormat = isDashSeparator && index > 0 && index + 1 < lines.length;
+      const usePipeFormat = isPipeSeparator && index > 0 && index + 1 < lines.length;
+
+      if (useDashFormat) {
+        const prevLine = lines[index - 1].trim();
+        const nextLine = lines[index + 1].trim();
+        const prevParts = prevLine.split(/\s{2,}/).filter(Boolean);
+        const nextParts = nextLine.split(/\s{2,}/).filter(Boolean);
+        if (prevParts.length >= 2 && nextParts.length >= 2 && prevParts.length === nextParts.length) {
+          flushText();
+          const colCount = prevParts.length;
+          const headerCells = prevParts;
+          const rows = [];
+          let dataLine = nextLine;
+          while (true) {
+            const parts = dataLine.trim().split(/\s{2,}/).filter(Boolean);
+            if (parts.length !== colCount) break;
+            rows.push(parts);
+            index += 1;
+            if (index + 1 >= lines.length) break;
+            const peek = lines[index + 1].trim();
+            if (!peek || /^\s*[-]{4,}\s*$/.test(peek)) break;
+            dataLine = peek;
+          }
+
+          const tableWrap = document.createElement("div");
+          tableWrap.className = "faculty-chatbot__table-wrap";
+          tableWrap.setAttribute("tabindex", "0");
+          tableWrap.setAttribute("role", "region");
+          tableWrap.setAttribute("aria-label", "Marks table");
+
+          const table = document.createElement("table");
+          table.className = "faculty-chatbot__table";
+          const head = document.createElement("thead");
+          const headRow = document.createElement("tr");
+          headerCells.forEach((label) => {
+            const cell = document.createElement("th");
+            cell.scope = "col";
+            cell.textContent = label;
+            headRow.appendChild(cell);
+          });
+          head.appendChild(headRow);
+          table.appendChild(head);
+
+          const body = document.createElement("tbody");
+          rows.forEach((values) => {
+            const row = document.createElement("tr");
+            values.forEach((value) => {
+              const cell = document.createElement("td");
+              cell.textContent = value;
+              row.appendChild(cell);
+            });
+            body.appendChild(row);
+          });
+          table.appendChild(body);
+          tableWrap.appendChild(table);
+          bubble.appendChild(tableWrap);
+          continue;
+        }
       }
 
-      flushText();
-      const rows = [];
-      while (index + 1 < lines.length) {
-        const nextLine = lines[index + 1];
-        const isSeparator = /^\s*[-+|]+\s*$/.test(nextLine);
-        const rowCells = nextLine.split("|").map((cell) => cell.trim());
-        const isDataRow = rowCells.length === 4 && /^\d+$/.test(rowCells[0]);
-        if (!isSeparator && !isDataRow) break;
-        index += 1;
-        if (isDataRow) rows.push(rowCells);
+      if (usePipeFormat) {
+        const headerLine = lines[index - 1].trim();
+        const displayHeaders = headerLine.split("|").map((cell) => cell.trim()).filter(Boolean);
+        if (displayHeaders.length >= 2) {
+          textLines.pop();
+          flushText();
+          const colCount = displayHeaders.length;
+          const rows = [];
+          while (index + 1 < lines.length) {
+            const nextLine = lines[index + 1];
+            const isSep = /^\s*[:\-+| ]+\s*$/.test(nextLine) && nextLine.includes("|");
+            const rowCells = nextLine.split("|").map((cell) => cell.trim());
+            const isDataRow = rowCells.length === colCount;
+            if (!isSep && !isDataRow) break;
+            index += 1;
+            if (isDataRow) rows.push(rowCells);
+          }
+
+          const tableWrap = document.createElement("div");
+          tableWrap.className = "faculty-chatbot__table-wrap";
+          tableWrap.setAttribute("tabindex", "0");
+          tableWrap.setAttribute("role", "region");
+          tableWrap.setAttribute("aria-label", "Data table");
+
+          const table = document.createElement("table");
+          table.className = "faculty-chatbot__table";
+          const head = document.createElement("thead");
+          const headRow = document.createElement("tr");
+          displayHeaders.forEach((label) => {
+            const cell = document.createElement("th");
+            cell.scope = "col";
+            cell.textContent = label;
+            headRow.appendChild(cell);
+          });
+          head.appendChild(headRow);
+          table.appendChild(head);
+
+          const body = document.createElement("tbody");
+          rows.forEach((values) => {
+            const row = document.createElement("tr");
+            values.forEach((value) => {
+              const cell = document.createElement("td");
+              cell.textContent = value;
+              row.appendChild(cell);
+            });
+            body.appendChild(row);
+          });
+          table.appendChild(body);
+          tableWrap.appendChild(table);
+          bubble.appendChild(tableWrap);
+          continue;
+        }
       }
 
-      const tableWrap = document.createElement("div");
-      tableWrap.className = "faculty-chatbot__table-wrap";
-      tableWrap.setAttribute("tabindex", "0");
-      tableWrap.setAttribute("role", "region");
-      tableWrap.setAttribute("aria-label", "Class report marks table");
-
-      const table = document.createElement("table");
-      table.className = "faculty-chatbot__table";
-      const head = document.createElement("thead");
-      const headRow = document.createElement("tr");
-      ["S.No", "Name", "Reg No", "Marks"].forEach((label) => {
-        const cell = document.createElement("th");
-        cell.scope = "col";
-        cell.textContent = label;
-        headRow.appendChild(cell);
-      });
-      head.appendChild(headRow);
-      table.appendChild(head);
-
-      const body = document.createElement("tbody");
-      rows.forEach((values) => {
-        const row = document.createElement("tr");
-        values.forEach((value) => {
-          const cell = document.createElement("td");
-          cell.textContent = value;
-          row.appendChild(cell);
-        });
-        body.appendChild(row);
-      });
-      table.appendChild(body);
-      tableWrap.appendChild(table);
-      bubble.appendChild(tableWrap);
+      textLines.push(line);
     }
 
     flushText();

@@ -310,8 +310,9 @@ ACADEMIC_YEAR = get_academic_year()
 GEMINI_API_KEY = "AIzaSyCifV9HkhSZT3vWK7ZbzDevfmGBWp2wx-s"
 
 # Ollama (local network)
-OLLAMA_BASE_URL = "http://172.16.71.114:11434/v1"
-OLLAMA_MODEL = "gemma3:4b"
+OLLAMA_BASE_URL = "http://127.0.0.1:11434/v1"
+OLLAMA_MODEL = "deepseek-r1:1.5b"
+OLLAMA_TIMEOUT = 180.0
 GEMINI_MODEL = "gemini-2.5-flash"
 
 

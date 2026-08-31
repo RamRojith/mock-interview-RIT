@@ -10,6 +10,7 @@ from .views import _all_roles, _resolve_effective_role, chat, history, questions
 from .chatbot_logic import ERPBot
 from .question_catalog import build_question_groups
 from .student_prompts import (
+    FACULTY_STUDENT_PERFORMANCE_SYSTEM_PROMPT,
     STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT,
     STUDENT_PERFORMANCE_SYSTEM_PROMPT,
 )
@@ -235,6 +236,18 @@ class ChatAuthenticationTests(SimpleTestCase):
         self.assertNotIn("Head of Department", titles)
         self.assertNotIn("Administrator", titles)
 
+    def test_questions_returns_principal_group_for_principal_role(self):
+        request = self._request("get", "/chatbot/api/questions/", self._faculty())
+        with patch("chatbot.views._all_roles", return_value=["Principal"]):
+            response = questions(request)
+
+        payload = json.loads(response.content)
+        titles = [group["title"] for group in payload["groups"]]
+        principal_group = next(group for group in payload["groups"] if group["title"] == "Principal")
+
+        self.assertEqual(titles, ["Common", "Principal"])
+        self.assertLessEqual(len(principal_group["questions"]), 10)
+
     def test_questions_keeps_student_catalog_separate(self):
         student = SimpleNamespace(
             is_authenticated=True,
@@ -265,6 +278,42 @@ class ChatAuthenticationTests(SimpleTestCase):
         self.assertEqual(titles, ["Common", "Subject Faculty", "Class Advisor"])
         self.assertEqual(len(all_questions), len({item.casefold() for item in all_questions}))
 
+    def test_faculty_attendance_questions_require_semester_placeholder(self):
+        groups = build_question_groups(
+            ["Class Advisor", "Mentor", "Vice Principal", "Admin"]
+        )
+        all_questions = [
+            question for group in groups for question in group["questions"]
+        ]
+
+        self.assertIn(
+            "Show attendance for <REGISTER NUMBER> in <SEMESTER>.",
+            all_questions,
+        )
+        self.assertNotIn("Show attendance for <REGISTER NUMBER>.", all_questions)
+
+    def test_principal_question_catalog_has_maximum_ten_questions(self):
+        groups = build_question_groups(["Principal"])
+        titles = [group["title"] for group in groups]
+        principal_group = next(group for group in groups if group["title"] == "Principal")
+
+        self.assertEqual(titles, ["Common", "Principal"])
+        self.assertLessEqual(len(principal_group["questions"]), 10)
+        self.assertIn(
+            "Show attendance for <REGISTER NUMBER> in <SEMESTER>.",
+            principal_group["questions"],
+        )
+        self.assertIn(
+            "Class report for <SUBJECT CODE> in IAT 1 <BATCH> department <DEPARTMENT> section <SECTION>.",
+            principal_group["questions"],
+        )
+
+    def test_principal_question_catalog_accepts_common_role_typo(self):
+        groups = build_question_groups(["Princiapl"])
+        titles = [group["title"] for group in groups]
+
+        self.assertEqual(titles, ["Common", "Principal"])
+
     def test_history_clear_removes_only_chat_state(self):
         request = self._request("delete", "/chatbot/api/history/", self._faculty())
         request.session.update({
@@ -285,6 +334,115 @@ class ChatAuthenticationTests(SimpleTestCase):
 class RoleStudentRoutingTests(SimpleTestCase):
     def setUp(self):
         self.bot = ERPBot()
+
+    def test_faculty_information_query_returns_profile_only(self):
+        department = SimpleNamespace(id=7, Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE")
+        student = SimpleNamespace(
+            id=99,
+            name="RAMROJITH V",
+            reg_no="953624243079",
+            department=department,
+            batch="2024-2028",
+            year="2",
+            semester="4",
+            section="A",
+            mentor=SimpleNamespace(name="ANANDHI S V"),
+            ca=SimpleNamespace(name="KALIAPPAN M"),
+            email="student@example.com",
+            mobile_no="9876543210",
+            ca_id=None,
+            mentor_id=None,
+        )
+        faculty = SimpleNamespace(id=5, faculty_id="H001", department=department)
+        student_queryset = MagicMock()
+        student_queryset.filter.return_value.first.return_value = student
+
+        with patch.object(
+            self.bot, "_student_queryset", return_value=student_queryset
+        ), patch.object(
+            self.bot, "_get_faculty_info", return_value=faculty
+        ), patch.object(
+            self.bot, "_is_role_id_11_user", return_value=False
+        ), patch(
+            "chatbot.chatbot_logic.AssessmentMark.objects.filter"
+        ) as legacy_marks:
+            response = self.bot._handle_student_query(
+                "H001",
+                student.reg_no,
+                "give information of 953624243079",
+                "HOD",
+            )
+
+        self.assertIn("Student Profile: RAMROJITH V", response)
+        self.assertIn("Registration No: 953624243079", response)
+        self.assertIn("Department: ARTIFICIAL INTELLIGENCE AND DATA SCIENCE", response)
+        self.assertIn("Batch: 2024-2028", response)
+        self.assertIn("Year/Semester: 2 / 4", response)
+        self.assertIn("Section: A", response)
+        self.assertIn("Mentor: ANANDHI S V", response)
+        self.assertIn("Class Advisor: KALIAPPAN M", response)
+        self.assertIn("Email: student@example.com", response)
+        self.assertIn("Mobile: 9876543210", response)
+        self.assertNotIn("Academic Marks", response)
+        legacy_marks.assert_not_called()
+
+    def test_current_internal_marks_formatter_shows_internal_1_and_2_columns(self):
+        student = SimpleNamespace(
+            name="RAMROJITH V",
+            reg_no="953624243079",
+            semester="4",
+        )
+        response = self.bot._format_current_internal_marks_response(
+            ["953624243079"],
+            {"953624243079": student},
+            [
+                {
+                    "reg_no": "953624243079",
+                    "course_code": "AL3452",
+                    "course__title": "Operating Systems",
+                    "exam_name": "IAT1",
+                    "total_marks": 20,
+                    "maximum_marks": 25,
+                },
+                {
+                    "reg_no": "953624243079",
+                    "course_code": "AL3452",
+                    "course__title": "Operating Systems",
+                    "exam_name": "IAT 2",
+                    "total_marks": 22,
+                    "maximum_marks": 25,
+                },
+            ],
+        )
+
+        self.assertIn("Current Semester Internal Marks: RAMROJITH V (953624243079)", response)
+        self.assertIn("Semester: 4", response)
+        self.assertIn("Subject | Course Code | Internal 1 | Internal 2", response)
+        self.assertIn("Operating Systems | AL3452 | 20/25 | 22/25", response)
+
+    def test_internal_marks_for_register_without_subject_uses_current_semester_handler(self):
+        faculty = SimpleNamespace(id=5, faculty_id="H001", department=SimpleNamespace(id=7, Department="AI"))
+        with patch.object(
+            self.bot, "_get_faculty_info", return_value=faculty
+        ), patch.object(
+            self.bot,
+            "_handle_current_student_internal_marks_query",
+            return_value="current semester marks table",
+        ) as current_marks:
+            response = self.bot._handle_student_subject_marks_query(
+                "H001",
+                "HOD",
+                "give internal marks for 953624243079",
+            )
+
+        self.assertEqual(response, "current semester marks table")
+        current_marks.assert_called_once_with(
+            "H001",
+            "HOD",
+            "give internal marks for 953624243079",
+            ["953624243079"],
+            faculty,
+        )
 
     def test_hod_my_students_uses_department_list_not_ca_lookup(self):
         with patch.object(
@@ -473,6 +631,37 @@ class RoleStudentRoutingTests(SimpleTestCase):
         attendance.assert_called_once_with("301", 75)
         student_list.assert_not_called()
 
+    def test_hod_department_activity_queries_do_not_route_to_student_list(self):
+        faculty = SimpleNamespace(
+            name="HOD",
+            department=SimpleNamespace(
+                id=7,
+                Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE",
+            ),
+        )
+        queries = [
+            "Show department student publications.",
+            "Show department student projects and achievements.",
+            "Show department co-curricular activities.",
+        ]
+        with patch.object(
+            self.bot, "_get_faculty_info", return_value=faculty
+        ), patch.object(
+            self.bot, "_extract_department", return_value=None
+        ), patch.object(
+            self.bot,
+            "_handle_hod_activity_records",
+            return_value="Department activity table",
+        ) as activity_handler, patch.object(
+            self.bot, "_handle_role_scoped_student_list"
+        ) as student_list:
+            for query in queries:
+                with self.subTest(query=query):
+                    response = self.bot.process_query(query, "301", role="HOD")
+                    self.assertEqual(response, "Department activity table")
+
+        self.assertEqual(activity_handler.call_count, len(queries))
+        student_list.assert_not_called()
     def test_hod_different_department_request_is_denied(self):
         own_department = SimpleNamespace(id=7, Department="CSE")
         other_department = SimpleNamespace(id=8, Department="ECE")
@@ -488,6 +677,646 @@ class RoleStudentRoutingTests(SimpleTestCase):
             result, "Access denied: HOD access is limited to your mapped department."
         )
 
+
+    def test_hod_teacher_report_groups_staff_by_database_category(self):
+        department = SimpleNamespace(Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE")
+        teaching_staff = SimpleNamespace(
+            id=1,
+            name="ANANDHI S V",
+            faculty_id=1622,
+            category=SimpleNamespace(category_name="Teaching Staff"),
+            designation=SimpleNamespace(designation_name="Assistant Professor", is_teaching=True),
+        )
+        lab_staff = SimpleNamespace(
+            id=2,
+            name="LAB TECHNICIAN ONE",
+            faculty_id=2001,
+            category=SimpleNamespace(category_name="Lab Technician"),
+            designation=SimpleNamespace(designation_name="Lab Technician", is_teaching=False),
+        )
+        staff_qs = MagicMock()
+        staff_qs.select_related.return_value.order_by.return_value = [
+            lab_staff,
+            teaching_staff,
+        ]
+        assignment_values = MagicMock()
+        assignment_values.annotate.return_value = [
+            {"faculty_id": 1, "subjects": 5},
+        ]
+        assignment_qs = MagicMock()
+        assignment_qs.values.return_value = assignment_values
+
+        with patch.object(
+            self.bot,
+            "_hod_department_context",
+            return_value=(None, department, None),
+        ), patch.object(
+            self.bot,
+            "_hod_faculty_role_map",
+            return_value={},
+        ), patch(
+            "chatbot.chatbot_logic.general_information.objects.filter",
+            return_value=staff_qs,
+        ), patch(
+            "chatbot.chatbot_logic.AssignSubjectFaculty.objects.filter",
+            return_value=assignment_qs,
+        ):
+            response = self.bot._handle_hod_teacher_report("301")
+
+        self.assertIn("Staff Category | Staff Count | Active Subjects", response)
+        self.assertIn("Teaching Staff | 1 | 5", response)
+        self.assertIn("Lab Technician | 1 | 0", response)
+        self.assertIn("Staff | Employee ID | Designation | Active Subjects", response)
+        self.assertIn("ANANDHI S V | 1622 | Assistant Professor | 5", response)
+        self.assertIn("LAB TECHNICIAN ONE | 2001 | Lab Technician | 0", response)
+
+    def test_hod_mentor_report_merges_duplicate_unassigned_rows(self):
+        department = SimpleNamespace(Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE")
+        students = MagicMock()
+        students.count.return_value = 141
+        grouped_rows = MagicMock()
+        grouped_rows.order_by.return_value = [
+            {"mentor_id": None, "mentor__name": None, "mentor__faculty_id": None, "students": 2},
+            {"mentor_id": 10, "mentor__name": None, "mentor__faculty_id": None, "students": 120},
+            {"mentor_id": 11, "mentor__name": "ANANDHI S V", "mentor__faculty_id": 1622, "students": 19},
+        ]
+        students.values.return_value.annotate.return_value = grouped_rows
+
+        with patch.object(
+            self.bot,
+            "_hod_department_context",
+            return_value=(None, department, None),
+        ), patch.object(self.bot, "_hod_students", return_value=students):
+            response = self.bot._handle_hod_people_report("301", "Show mentor report")
+
+        self.assertIn("Summary", response)
+        self.assertIn("Total active students | 141", response)
+        self.assertIn("Assigned mentors | 1", response)
+        self.assertIn("Students assigned | 19", response)
+        self.assertIn("Students unassigned | 122", response)
+        self.assertIn("Mentor | Employee ID | Students", response)
+        self.assertIn("ANANDHI S V | 1622 | 19", response)
+        self.assertEqual(response.count("Unassigned | N/A | 122"), 1)
+
+    def test_hod_department_publications_are_rendered_as_student_table(self):
+        class FakeActivityQS:
+            def __init__(self, records):
+                self.records = records
+
+            def count(self):
+                return len(self.records)
+
+            def order_by(self, *args):
+                return self
+
+            def __getitem__(self, item):
+                return self.records[item]
+
+        department = SimpleNamespace(Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE")
+        student = SimpleNamespace(
+            name="RAMROJITH V",
+            reg_no="953624243079",
+            year="2",
+            semester="4",
+            section="A",
+            department=department,
+        )
+        record = SimpleNamespace(
+            student=student,
+            department=department,
+            year=None,
+            semester=None,
+            section=None,
+            title="AI Attendance Analytics",
+            program_name="National Conference",
+            publication_date="2026-03-10",
+            status="Approved",
+        )
+
+        with patch.object(
+            self.bot,
+            "_hod_department_context",
+            return_value=(None, department, None),
+        ), patch.object(
+            self.bot,
+            "_department_activity_queryset",
+            return_value=FakeActivityQS([record]),
+        ):
+            response = self.bot._handle_hod_activity_records(
+                "301", "Show department student publications."
+            )
+
+        self.assertIn("Department Student Publications", response)
+        self.assertIn("Student | Register Number | Department | Year | Semester | Section | Publication Title", response)
+        self.assertIn("RAMROJITH V | 953624243079 | ARTIFICIAL INTELLIGENCE AND DATA SCIENCE | 2 | 4 | A | AI Attendance Analytics", response)
+
+    def test_hod_department_co_curricular_activities_are_rendered_as_table(self):
+        class FakeActivityQS:
+            def __init__(self, records):
+                self.records = records
+
+            def count(self):
+                return len(self.records)
+
+            def order_by(self, *args):
+                return self
+
+            def __getitem__(self, item):
+                return self.records[item]
+
+        department = SimpleNamespace(Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE")
+        student = SimpleNamespace(
+            name="RAMROJITH V",
+            reg_no="953624243079",
+            year="2",
+            semester="4",
+            section="A",
+            department=department,
+        )
+        record = SimpleNamespace(
+            student=student,
+            department=department,
+            year=None,
+            semester=None,
+            section=None,
+            activity_type="Co-curricular",
+            event_name="Coding Contest",
+            level="National",
+            from_date="2026-02-01",
+            to_date="2026-02-02",
+            status="approved",
+        )
+
+        with patch.object(
+            self.bot,
+            "_hod_department_context",
+            return_value=(None, department, None),
+        ), patch.object(
+            self.bot,
+            "_department_activity_queryset",
+            return_value=FakeActivityQS([record]),
+        ):
+            response = self.bot._handle_hod_activity_records(
+                "301", "Show department co-curricular activities."
+            )
+
+        self.assertIn("Department Co-curricular Activities", response)
+        self.assertIn("Activity Type | Event Name | Level | Date | Status", response)
+        self.assertIn("Co-curricular | Coding Contest | National | 2026-02-01 to 2026-02-02 | approved", response)
+
+    def test_hod_department_projects_and_achievements_are_separate_tables(self):
+        class FakeActivityQS:
+            def __init__(self, records):
+                self.records = records
+
+            def count(self):
+                return len(self.records)
+
+            def order_by(self, *args):
+                return self
+
+            def __getitem__(self, item):
+                return self.records[item]
+
+        department = SimpleNamespace(Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE")
+        student = SimpleNamespace(
+            name="RAMROJITH V",
+            reg_no="953624243079",
+            year="2",
+            semester="4",
+            section="A",
+            department=department,
+        )
+        project = SimpleNamespace(
+            student=student,
+            department=department,
+            year=None,
+            semester=None,
+            section=None,
+            title="ERP Chatbot",
+            domain="AI",
+            activity_name="college",
+            organisation="RIT",
+            status="completed",
+        )
+        achievement = SimpleNamespace(
+            student=student,
+            department=department,
+            year=None,
+            semester=None,
+            section=None,
+            award_name="Best Paper",
+            contest="Symposium",
+            given_by="RIT",
+            date="2026-04-01",
+            status="Approved",
+        )
+
+        with patch.object(
+            self.bot,
+            "_hod_department_context",
+            return_value=(None, department, None),
+        ), patch.object(
+            self.bot,
+            "_department_activity_queryset",
+            side_effect=[FakeActivityQS([project]), FakeActivityQS([achievement])],
+        ):
+            response = self.bot._handle_hod_activity_records(
+                "301", "Show department student projects and achievements."
+            )
+
+        self.assertIn("Department Student Projects", response)
+        self.assertIn("Project Title | Domain | Activity | Organisation | Status", response)
+        self.assertIn("ERP Chatbot | AI | college | RIT | completed", response)
+        self.assertIn("Department Student Achievements", response)
+        self.assertIn("Achievement | Contest | Given By | Date | Status", response)
+        self.assertIn("Best Paper | Symposium | RIT | 2026-04-01 | Approved", response)
+
+    def test_hod_subject_analytics_groups_by_year_and_semester(self):
+        department = SimpleNamespace(Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE")
+        mark_qs = MagicMock()
+        mark_values = MagicMock()
+        mark_values.annotate.return_value = [
+            {
+                "student__year": "2",
+                "student__semester": "4",
+                "course_id": 1,
+                "course__course_code": "MA3391",
+                "course__title": "Probability and Statistics",
+                "obtained": 3867,
+                "maximum": 10000,
+                "students": 63,
+            },
+            {
+                "student__year": "2",
+                "student__semester": "4",
+                "course_id": 2,
+                "course__course_code": "AL3452",
+                "course__title": "Operating Systems",
+                "obtained": 6254,
+                "maximum": 10000,
+                "students": 63,
+            },
+            {
+                "student__year": "3",
+                "student__semester": "5",
+                "course_id": 3,
+                "course__course_code": "CCS345",
+                "course__title": "Ethics and AI",
+                "obtained": 8779,
+                "maximum": 10000,
+                "students": 60,
+            },
+        ]
+        mark_qs.values.return_value = mark_values
+
+        with patch.object(
+            self.bot,
+            "_hod_department_context",
+            return_value=(None, department, None),
+        ), patch(
+            "chatbot.chatbot_logic.StudentInternalMark.objects.filter",
+            return_value=mark_qs,
+        ):
+            response = self.bot._handle_hod_subject_analytics("301")
+
+        self.assertIn("Subject-wise Performance - ARTIFICIAL INTELLIGENCE AND DATA SCIENCE", response)
+        self.assertIn("Year 2 | Semester 4", response)
+        self.assertIn("Year 3 | Semester 5", response)
+        self.assertIn("Subject | Code | Students | Average", response)
+        self.assertIn("Probability and Statistics | MA3391 | 63 | 38.67%", response)
+        self.assertIn("Lowest Average By Year/Semester", response)
+        self.assertIn("2 | 4 | Probability and Statistics | MA3391 | 38.67%", response)
+        self.assertIn("Overall Lowest Average", response)
+
+    def test_hod_class_analytics_returns_year_semester_section_table(self):
+        department = SimpleNamespace(Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE")
+        mark_qs = MagicMock()
+        mark_values = MagicMock()
+        mark_values.annotate.return_value = [
+            {
+                "student__year": "2",
+                "student__semester": "4",
+                "student__section": "A",
+                "obtained": 5848,
+                "maximum": 10000,
+                "students": 63,
+            },
+            {
+                "student__year": "3",
+                "student__semester": "5",
+                "student__section": "B",
+                "obtained": 4947,
+                "maximum": 10000,
+                "students": 64,
+            },
+        ]
+        mark_qs.values.return_value = mark_values
+
+        with patch.object(
+            self.bot,
+            "_hod_department_context",
+            return_value=(None, department, None),
+        ), patch(
+            "chatbot.chatbot_logic.StudentInternalMark.objects.filter",
+            return_value=mark_qs,
+        ):
+            response = self.bot._handle_hod_class_analytics("301")
+
+        self.assertIn("Class and Section Comparison - ARTIFICIAL INTELLIGENCE AND DATA SCIENCE", response)
+        self.assertIn("Year | Semester | Section | Students With Marks | Average Internal Marks", response)
+        self.assertIn("2 | 4 | A | 63 | 58.48%", response)
+        self.assertIn("3 | 5 | B | 64 | 49.47%", response)
+        self.assertIn("Lowest Class Average", response)
+        self.assertIn("3 | 5 | B | 49.47%", response)
+
+    def test_hod_department_performance_summary_includes_class_and_register_tables(self):
+        department = SimpleNamespace(Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE")
+        student_a = SimpleNamespace(
+            id=1,
+            name="RAMROJITH V",
+            reg_no="953624243079",
+            year="2",
+            semester="4",
+            section="A",
+        )
+        student_b = SimpleNamespace(
+            id=2,
+            name="ARUL PRAKASH S",
+            reg_no="953624243008",
+            year="3",
+            semester="5",
+            section="B",
+        )
+        marks = [
+            {
+                "student_id": 1,
+                "student__name": "RAMROJITH V",
+                "student__reg_no": "953624243079",
+                "student__year": "2",
+                "student__semester": "4",
+                "student__section": "A",
+                "percentage": 45.32,
+            },
+            {
+                "student_id": 2,
+                "student__name": "ARUL PRAKASH S",
+                "student__reg_no": "953624243008",
+                "student__year": "3",
+                "student__semester": "5",
+                "student__section": "B",
+                "percentage": 72.0,
+            },
+        ]
+        attendance = [
+            {"student": student_a, "percentage": 83.95},
+            {"student": student_b, "percentage": 70.0},
+        ]
+
+        with patch.object(
+            self.bot,
+            "_hod_department_context",
+            return_value=(None, department, None),
+        ), patch.object(
+            self.bot,
+            "_hod_students",
+            return_value=[student_a, student_b],
+        ), patch.object(
+            self.bot,
+            "_hod_mark_percentages",
+            return_value=marks,
+        ), patch.object(
+            self.bot,
+            "_hod_attendance_percentages",
+            return_value=attendance,
+        ):
+            response = self.bot._handle_hod_performance_summary("301")
+
+        self.assertIn("Overview", response)
+        self.assertIn("Metric | Value", response)
+        self.assertIn("Year/Semester/Section Summary", response)
+        self.assertIn("Year | Semester | Section | Active Students | Students With Marks", response)
+        self.assertIn("2 | 4 | A | 1 | 1 | 45.32% | 83.95% | 1 | 0", response)
+        self.assertIn("3 | 5 | B | 1 | 1 | 72.0% | 70.0% | 0 | 1", response)
+        self.assertIn("Students Below 50% Marks", response)
+        self.assertIn("RAMROJITH V | 953624243079 | 2 | 4 | A | 45.32%", response)
+        self.assertIn("Students Below 75% Attendance", response)
+        self.assertIn("ARUL PRAKASH S | 953624243008 | 3 | 5 | B | 70.0%", response)
+
+    def test_hod_question_catalog_removes_subject_wise_performance_prompt(self):
+        groups = build_question_groups(["HOD"])
+        all_questions = [question for group in groups for question in group["questions"]]
+
+        self.assertNotIn("Show subject-wise performance in my department.", all_questions)
+        self.assertIn("Which subject has the lowest average?", all_questions)
+        self.assertIn("Compare classes and sections in my department.", all_questions)
+
+    def test_hod_mentoring_report_shows_top_three_per_year_semester_section(self):
+        department = SimpleNamespace(Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE")
+        students = [
+            SimpleNamespace(id=1, name="STUDENT ONE", reg_no="953624243001", year="2", semester="4", section="A"),
+            SimpleNamespace(id=2, name="STUDENT TWO", reg_no="953624243002", year="2", semester="4", section="A"),
+            SimpleNamespace(id=3, name="STUDENT THREE", reg_no="953624243003", year="2", semester="4", section="A"),
+            SimpleNamespace(id=4, name="STUDENT FOUR", reg_no="953624243004", year="2", semester="4", section="A"),
+            SimpleNamespace(id=5, name="STUDENT FIVE", reg_no="953624243005", year="3", semester="5", section="B"),
+        ]
+        marks = [
+            {"student_id": 1, "student__name": "STUDENT ONE", "student__reg_no": "953624243001", "student__year": "2", "student__semester": "4", "student__section": "A", "percentage": 10.0},
+            {"student_id": 2, "student__name": "STUDENT TWO", "student__reg_no": "953624243002", "student__year": "2", "student__semester": "4", "student__section": "A", "percentage": 20.0},
+            {"student_id": 3, "student__name": "STUDENT THREE", "student__reg_no": "953624243003", "student__year": "2", "student__semester": "4", "student__section": "A", "percentage": 30.0},
+            {"student_id": 4, "student__name": "STUDENT FOUR", "student__reg_no": "953624243004", "student__year": "2", "student__semester": "4", "student__section": "A", "percentage": 40.0},
+            {"student_id": 5, "student__name": "STUDENT FIVE", "student__reg_no": "953624243005", "student__year": "3", "student__semester": "5", "student__section": "B", "percentage": 60.0},
+        ]
+        attendance = [
+            {"student": students[0], "percentage": 90.0},
+            {"student": students[1], "percentage": 90.0},
+            {"student": students[2], "percentage": 90.0},
+            {"student": students[3], "percentage": 90.0},
+            {"student": students[4], "percentage": 70.0},
+        ]
+
+        with patch.object(
+            self.bot,
+            "_hod_department_context",
+            return_value=(None, department, None),
+        ), patch.object(
+            self.bot,
+            "_hod_students",
+            return_value=students,
+        ), patch.object(
+            self.bot,
+            "_hod_mark_percentages",
+            return_value=marks,
+        ), patch.object(
+            self.bot,
+            "_hod_attendance_percentages",
+            return_value=attendance,
+        ):
+            response = self.bot._handle_hod_mentoring_report("301")
+
+        self.assertIn("Students Needing Mentoring - ARTIFICIAL INTELLIGENCE AND DATA SCIENCE", response)
+        self.assertIn("Showing top 3 most severe students in each Year/Semester/Section group.", response)
+        self.assertIn("Year 2 | Semester 4 | Section A - showing 3 of 4 students", response)
+        self.assertIn("Student | Register Number | Year | Semester | Section | Marks | Attendance | Reason", response)
+        self.assertIn("STUDENT ONE | 953624243001 | 2 | 4 | A | 10.0% | 90.0% | Marks below 50%", response)
+        self.assertIn("STUDENT THREE | 953624243003 | 2 | 4 | A | 30.0% | 90.0% | Marks below 50%", response)
+        self.assertNotIn("STUDENT FOUR | 953624243004", response)
+        self.assertIn("Year 3 | Semester 5 | Section B - showing 1 of 1 students", response)
+        self.assertIn("STUDENT FIVE | 953624243005 | 3 | 5 | B | 60.0% | 70.0% | Attendance below 75%", response)
+
+    def test_hod_need_mentoring_query_routes_to_compact_table_handler(self):
+        faculty = SimpleNamespace(
+            name="HOD",
+            department=SimpleNamespace(id=7, Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE"),
+        )
+        with patch.object(
+            self.bot, "_get_faculty_info", return_value=faculty
+        ), patch.object(
+            self.bot, "_extract_department", return_value=None
+        ), patch.object(
+            self.bot,
+            "_handle_hod_mentoring_report",
+            return_value="compact mentoring table",
+        ) as mentoring, patch.object(
+            self.bot, "_handle_role_scoped_student_list"
+        ) as student_list:
+            response = self.bot.process_query(
+                "Which students need mentoring?", "301", role="HOD"
+            )
+
+        self.assertEqual(response, "compact mentoring table")
+        mentoring.assert_called_once_with("301")
+        student_list.assert_not_called()
+
+    def test_hod_need_mentoring_first_message_is_not_treated_as_hi(self):
+        faculty = SimpleNamespace(
+            name="KALIAPPAN M",
+            department=SimpleNamespace(id=7, Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE"),
+        )
+        with patch.object(
+            self.bot, "_get_faculty_info", return_value=faculty
+        ), patch.object(
+            self.bot, "_extract_department", return_value=None
+        ), patch.object(
+            self.bot,
+            "_handle_hod_mentoring_report",
+            return_value="compact mentoring table",
+        ) as mentoring:
+            response = self.bot.process_query(
+                "Which students need mentoring?",
+                "301",
+                role="HOD",
+                is_first_message=True,
+            )
+
+        self.assertEqual(response, "compact mentoring table")
+        mentoring.assert_called_once_with("301")
+        self.assertNotIn("Hello KALIAPPAN M", response)
+
+    def test_hod_top_students_are_grouped_year_wise(self):
+        department = SimpleNamespace(Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE")
+        rows = []
+        for index in range(11):
+            rows.append({
+                "student__name": f"YEAR TWO STUDENT {index + 1}",
+                "student__reg_no": f"953624243{index + 1:03d}",
+                "student__year": "2",
+                "student__semester": "4",
+                "student__section": "A",
+                "percentage": 100 - index,
+            })
+        rows.append({
+            "student__name": "YEAR THREE STUDENT",
+            "student__reg_no": "953624243120",
+            "student__year": "3",
+            "student__semester": "5",
+            "student__section": "B",
+            "percentage": 88,
+        })
+
+        response = self.bot._format_hod_top_students_by_year(department, rows, limit=10)
+
+        self.assertIn("Top 10 Students by Year - ARTIFICIAL INTELLIGENCE AND DATA SCIENCE", response)
+        self.assertIn("Year 2 - showing 10 of 11 students", response)
+        self.assertIn("Year 3 - showing 1 of 1 students", response)
+        self.assertIn("Rank | Student | Register Number | Year | Semester | Section | Marks", response)
+        self.assertIn("1 | YEAR TWO STUDENT 1 | 953624243001 | 2 | 4 | A | 100%", response)
+        self.assertIn("10 | YEAR TWO STUDENT 10 | 953624243010 | 2 | 4 | A | 91%", response)
+        self.assertNotIn("YEAR TWO STUDENT 11", response)
+        self.assertIn("1 | YEAR THREE STUDENT | 953624243120 | 3 | 5 | B | 88%", response)
+
+    def test_hod_top_students_query_routes_to_year_wise_formatter(self):
+        faculty = SimpleNamespace(
+            name="HOD",
+            department=SimpleNamespace(id=7, Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE"),
+        )
+        rows = [{"student__year": "2", "percentage": 90}]
+        with patch.object(
+            self.bot, "_get_faculty_info", return_value=faculty
+        ), patch.object(
+            self.bot, "_extract_department", return_value=None
+        ), patch.object(
+            self.bot, "_hod_mark_percentages", return_value=rows
+        ), patch.object(
+            self.bot,
+            "_format_hod_top_students_by_year",
+            return_value="year wise top students",
+        ) as formatter:
+            response = self.bot.process_query(
+                "Show the top 10 students in my department.", "301", role="HOD"
+            )
+
+        self.assertEqual(response, "year wise top students")
+        formatter.assert_called_once_with(faculty.department, rows, limit=10)
+
+    def test_hod_question_catalog_removes_attendance_below_prompt(self):
+        groups = build_question_groups(["HOD"])
+        all_questions = [question for group in groups for question in group["questions"]]
+
+        self.assertNotIn("List students with attendance below 75%.", all_questions)
+        self.assertIn("Show the top 10 students in my department.", all_questions)
+        self.assertIn("Show my department faculty.", all_questions)
+
+    def test_hod_department_faculty_directory_groups_by_role_category(self):
+        department = SimpleNamespace(Department="ARTIFICIAL INTELLIGENCE AND DATA SCIENCE")
+        faculty = SimpleNamespace(name="HOD", department=department)
+        teaching = SimpleNamespace(
+            name="ANANDHI S V",
+            faculty_id=1622,
+            department=department,
+            category=SimpleNamespace(category_name="Teaching Faculty"),
+            designation=SimpleNamespace(designation_name="Assistant Professor", is_teaching=True),
+        )
+        lab = SimpleNamespace(
+            name="LAB TECHNICIAN ONE",
+            faculty_id=2001,
+            department=department,
+            category=SimpleNamespace(category_name="Lab Technician"),
+            designation=SimpleNamespace(designation_name="Lab Technician", is_teaching=False),
+        )
+        base_qs = MagicMock()
+        filtered_qs = MagicMock()
+        base_qs.filter.return_value = filtered_qs
+        filtered_qs.order_by.return_value = [teaching, lab]
+
+        with patch.object(
+            self.bot, "_get_faculty_info", return_value=faculty
+        ), patch.object(
+            self.bot, "_hod_faculty_role_map", return_value={}
+        ), patch(
+            "chatbot.chatbot_logic.general_information.objects.select_related",
+            return_value=base_qs,
+        ):
+            response = self.bot._handle_faculty_directory("301", "HOD")
+
+        base_qs.filter.assert_called_once_with(department=department)
+        self.assertIn("Department Faculty Directory - ARTIFICIAL INTELLIGENCE AND DATA SCIENCE", response)
+        self.assertIn("Role/Category | Staff Count", response)
+        self.assertIn("Teaching Faculty | 1", response)
+        self.assertIn("Lab Technician | 1", response)
+        self.assertIn("Faculty | Employee ID | Role/Category | Designation | Department", response)
+        self.assertIn("ANANDHI S V | 1622 | Teaching Faculty | Assistant Professor | ARTIFICIAL INTELLIGENCE AND DATA SCIENCE", response)
+        self.assertIn("LAB TECHNICIAN ONE | 2001 | Lab Technician | Lab Technician | ARTIFICIAL INTELLIGENCE AND DATA SCIENCE", response)
 
 class EndSemesterResultTests(SimpleTestCase):
     def setUp(self):
@@ -740,7 +1569,8 @@ class EndSemesterResultTests(SimpleTestCase):
             section__iexact="A",
         )
         allocations.filter.assert_called_once_with(day__iexact="Monday")
-        self.assertIn("P1: AD3491 - Data Science", response)
+        self.assertIn("P1", response)
+        self.assertIn("AD3491", response)
 
     def test_attendance_projection_reports_recovery_and_safe_absences(self):
         self.assertEqual(self.bot._attendance_projection(50, 100), (100, 0))
@@ -829,39 +1659,50 @@ class EndSemesterResultTests(SimpleTestCase):
         OLLAMA_MODEL="shared-model",
     )
     def test_student_performance_uses_separate_prompt_and_shared_ai_settings(self):
-        student = SimpleNamespace(name="Test Student", semester="4")
+        student = SimpleNamespace(name="Test Student", semester="4", reg_no="921000000001")
         mark_rows = [
-            {"course_code": "AD3491", "course__title": "Data Science", "percentage": 80},
-            {"course_code": "MA3391", "course__title": "Statistics", "percentage": 55},
+            {"course_code": "AD3491", "course__title": "Data Science",
+             "obtained": 80, "maximum": 100, "percentage": 80},
+            {"course_code": "MA3391", "course__title": "Statistics",
+             "obtained": 55, "maximum": 100, "percentage": 55},
         ]
         attendance_rows = [
-            {"course__course_code": "AD3491", "course__title": "Data Science", "attended": 8, "total": 10},
+            {"course__course_code": "AD3491", "course__title": "Data Science",
+             "attended": 8, "total": 10},
         ]
-        ai_text = """**My AI Performance Analysis | Semester 4**
+        ai_text = """My AI Performance Analysis | Semester 4
 
-**Overall Assessment**
-1. Recorded performance is developing.
+Student Details
+1. Name: Test Student
+2. Register Number: N/A
+3. Department: N/A
+4. Batch: N/A
+5. Year: N/A
+6. Semester: 4
+7. Section: N/A
 
-**Strengths**
-1. Data Science is currently strongest.
+Strengths
+1. Data Science recorded the highest internal score at 80%.
 
-**Areas Needing Attention**
-1. Statistics needs additional practice.
+Weaknesses
+1. Statistics recorded the lowest internal score at 55%.
 
-**Action Plan**
-1. Revise Statistics topics weekly.
+How to Overcome
+1. Weakness: Statistics has the lowest recorded score at 55%.
+   Suggestion: Allocate additional weekly practice time to Statistics.
 
-**Department-Related Project Ideas**
-1. Build a small analytics dashboard.
+Recommendations
+1. Technical Skills: Python, Machine Learning
+2. Project Ideas: Data analytics dashboard
+3. Co-Curricular Activities: Kaggle competitions
+4. Certifications: N/A
 
-**Extracurricular Development**
-1. Join a technical club or project showcase.
+Conclusion
+1. Your Semester 4 recorded internal-mark average is 67.5%. Focus on Statistics.
 
-**Attendance Guidance**
-1. Maintain the recorded attendance level.
-
-**Data Note**
-1. This analysis uses only currently recorded ERP data; unpublished assessments are not included."""
+Data Note
+1. This analysis uses only the authenticated student's ERP data supplied for the selected semester.
+2. Missing or unpublished records are shown as N/A and are not interpreted as poor performance."""
         client = MagicMock()
         client.chat.completions.create.return_value = SimpleNamespace(
             choices=[SimpleNamespace(message=SimpleNamespace(content=ai_text))]
@@ -884,14 +1725,14 @@ class EndSemesterResultTests(SimpleTestCase):
         self.assertEqual(response, ai_text)
         call = client.chat.completions.create.call_args.kwargs
         self.assertEqual(call["model"], "shared-model")
-        self.assertIn("student-facing academic performance coach", call["messages"][0]["content"])
-        self.assertNotIn("strict Academic Performance Analyzer", call["messages"][0]["content"])
+        self.assertIn("AI Academic Performance Analyst", call["messages"][0]["content"])
         self.assertEqual(self.bot._ai_model(), "shared-model")
 
     def test_invalid_student_ai_response_uses_calculated_fallback(self):
-        student = SimpleNamespace(name="Test Student", semester="4")
+        student = SimpleNamespace(name="Test Student", semester="4", reg_no="921000000001")
         mark_rows = [
-            {"course_code": "AD3491", "course__title": "Data Science", "percentage": 80},
+            {"course_code": "AD3491", "course__title": "Data Science",
+             "obtained": 80, "maximum": 100, "percentage": 80},
         ]
         client = MagicMock()
         client.chat.completions.create.return_value = SimpleNamespace(
@@ -912,19 +1753,23 @@ class EndSemesterResultTests(SimpleTestCase):
                 student, "analyze my performance in semester 4"
             )
 
-        self.assertTrue(response.startswith("**My Performance Insights | Semester 4**"))
-        self.assertIn("**Recorded subject average:** 80.0%", response)
-        self.assertIn("**Department-Related Project Ideas**", response)
-        self.assertIn("**Extracurricular Development**", response)
-        self.assertIn("1. Build a small", response)
+        self.assertTrue(response.startswith("My AI Performance Analysis | Semester 4"))
+        self.assertIn("Student Details", response)
+        self.assertIn("Strengths", response)
+        self.assertIn("Weaknesses", response)
+        self.assertIn("Recommendations", response)
+        self.assertIn("Data Science (AD3491)", response)
+        self.assertIn("80.0%", response)
 
     def test_student_prompt_is_kept_in_separate_template_module(self):
         self.assertIn("SCOPE AND SECURITY", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
-        self.assertIn("authenticated student's selected-semester data", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
-        self.assertIn("**Department-Related Project Ideas**", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
-        self.assertIn("**Extracurricular Development**", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("authenticated student's academic data", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("My AI Performance Analysis | Semester", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Student Details", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("STRICTLY FORBIDDEN INFERENCES", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
         self.assertIn("cumulative academic data", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
         self.assertIn("**Academic Trends and Consistency**", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("TREND ANALYSIS RULES", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
 
     @override_settings(
         OLLAMA_BASE_URL="http://ollama.example.test:11434/v1",
@@ -941,9 +1786,10 @@ class EndSemesterResultTests(SimpleTestCase):
         )
 
     def test_performance_analysis_explicit_semester_overrides_current_semester(self):
-        student = SimpleNamespace(name="Test Student", semester="5")
+        student = SimpleNamespace(name="Test Student", semester="5", reg_no="921000000001")
         mark_rows = [
-            {"course_code": "AD3491", "course__title": "Data Science", "percentage": 75},
+            {"course_code": "AD3491", "course__title": "Data Science",
+             "obtained": 75, "maximum": 100, "percentage": 75},
         ]
         gpa_query = MagicMock()
         gpa_query.order_by.return_value.values.return_value.first.return_value = None
@@ -964,10 +1810,39 @@ class EndSemesterResultTests(SimpleTestCase):
         performance_rows.assert_called_once_with(student, 4, "2025-2026")
         attendance_rows.assert_called_once_with(student, 4, "2025-2026")
         gpa_filter.assert_called_once_with(student=student, semester__iexact="4")
-        self.assertTrue(response.startswith("**My Performance Insights | Semester 4**"))
+        self.assertTrue(response.startswith("My AI Performance Analysis | Semester 4"))
         self.assertNotIn("Semester 5", response)
 
-    def test_performance_analysis_without_semester_uses_all_recorded_semesters(self):
+    def test_performance_analysis_without_semester_uses_current_semester(self):
+        student = SimpleNamespace(
+            name="Test Student",
+            semester="5",
+            reg_no="921000000001",
+            department=SimpleNamespace(Department="AI AND DS"),
+        )
+        mark_rows = [
+            {"course_code": "AD3491", "course__title": "Data Science",
+             "obtained": 80, "maximum": 100, "percentage": 80.0},
+        ]
+        gpa_query = MagicMock()
+        gpa_query.order_by.return_value.values.return_value.first.return_value = None
+        with patch.object(
+            self.bot, "_get_student_subject_enrollments", return_value=([], "2025-2026")
+        ) as enrollments, patch.object(
+            self.bot, "_student_mark_performance_rows", return_value=mark_rows
+        ), patch.object(
+            self.bot, "_student_hour_attendance_rows", return_value=[]
+        ), patch.object(
+            self.bot, "_ai_client", side_effect=ConnectionError
+        ), patch("chatbot.chatbot_logic.GPA.objects.filter", return_value=gpa_query):
+            response = self.bot._handle_student_performance_insights(
+                student, "analyze my performance"
+            )
+
+        enrollments.assert_called_once_with(student, 5)
+        self.assertTrue(response.startswith("My AI Performance Analysis | Semester 5"))
+
+    def test_performance_analysis_with_overall_keyword_uses_cumulative_handler(self):
         student = SimpleNamespace(
             name="Test Student",
             semester="5",
@@ -1022,18 +1897,33 @@ class EndSemesterResultTests(SimpleTestCase):
         snapshot.assert_any_call(student, 2)
         snapshot.assert_any_call(student, 4)
         semester_resolver.assert_not_called()
-        self.assertTrue(response.startswith("**My Overall Performance Insights**"))
-        self.assertIn("**Semesters analyzed:** 2, 4", response)
-        self.assertIn("**Recorded internal-mark average:** 70.0%", response)
-        self.assertIn("GPA improved from 6.5 in Semester 2 to 8.0 in Semester 4", response)
+        self.assertTrue(response.startswith("**My Overall AI Performance Analysis**"))
+        self.assertIn("Cumulative Assessment", response)
         self.assertIn("all currently recorded ERP data up to today", response)
 
-    def test_performance_analysis_without_semester_routes_to_overall_handler(self):
+    def test_performance_analysis_without_semester_routes_to_current_handler(self):
         student = SimpleNamespace(name="Test Student", semester="5")
         for query in [
             "Analyze my performance",
-            "Analyze my overall performance",
             "Evaluate my performance",
+            "How am I performing?",
+        ]:
+            with self.subTest(query=query), patch.object(
+                self.bot,
+                "_handle_student_current_semester_performance",
+                return_value="current",
+            ) as current:
+                response = self.bot._handle_student_performance_insights(student, query)
+
+            self.assertEqual(response, "current")
+            current.assert_called_once_with(student)
+
+    def test_performance_analysis_with_overall_keyword_routes_to_cumulative_handler(self):
+        student = SimpleNamespace(name="Test Student", semester="5")
+        for query in [
+            "Analyze my overall performance",
+            "Analyze my cumulative performance",
+            "Show my performance across all semesters",
         ]:
             with self.subTest(query=query), patch.object(
                 self.bot,
@@ -1044,6 +1934,22 @@ class EndSemesterResultTests(SimpleTestCase):
 
             self.assertEqual(response, "overall")
             overall.assert_called_once_with(student)
+
+    def test_performance_analysis_with_explicit_semester_routes_to_semester_handler(self):
+        student = SimpleNamespace(name="Test Student", semester="5")
+        for query in [
+            "Analyze my Semester 4 performance",
+            "How did I perform in Semester 3?",
+        ]:
+            with self.subTest(query=query), patch.object(
+                self.bot,
+                "_handle_student_semester_performance_insights",
+                return_value="semester",
+            ) as semester:
+                response = self.bot._handle_student_performance_insights(student, query)
+
+            self.assertEqual(response, "semester")
+            semester.assert_called_once()
 
     def test_recorded_semesters_are_discovered_from_all_academic_sources(self):
         student = SimpleNamespace(id=91)
@@ -1193,7 +2099,7 @@ class EndSemesterResultTests(SimpleTestCase):
         self.assertEqual(response, "complete ESE results")
         handler.assert_called_once_with(
             "1603",
-            "Faculty",
+            "Class Advisor",
             "Show the end semester marks of 953624243093.",
             all_roles=["Faculty", "Class Advisor", "Mentor"],
         )
@@ -1280,6 +2186,76 @@ class EndSemesterResultTests(SimpleTestCase):
             "3",
         )
 
+    def test_attendance_query_routes_with_raw_semester_text(self):
+        faculty = SimpleNamespace(id=5, name="Faculty One")
+        with patch.object(
+            self.bot,
+            "_get_faculty_info",
+            return_value=faculty,
+        ), patch.object(
+            self.bot,
+            "_handle_student_attendance_query",
+            return_value="attendance ok",
+        ) as attendance_handler:
+            response = self.bot.process_query(
+                "Show attendance for 953624243093 in Semester 4",
+                "1603",
+                role="Class Advisor",
+                all_roles=["Class Advisor"],
+            )
+
+        self.assertEqual(response, "attendance ok")
+        attendance_handler.assert_called_once_with(
+            "1603",
+            "953624243093",
+            "Class Advisor",
+            "Show attendance for 953624243093 in Semester 4",
+        )
+
+    def test_student_attendance_query_filters_requested_semester_and_returns_table(self):
+        faculty = SimpleNamespace(id=5, name="Faculty One")
+        student = SimpleNamespace(name="Student A", reg_no="953624243093")
+        student_queryset = MagicMock()
+        student_queryset.filter.return_value.first.return_value = student
+        base_records = MagicMock()
+        ordered_records = MagicMock()
+        semester_records = MagicMock()
+        base_records.order_by.return_value = ordered_records
+        ordered_records.filter.return_value = semester_records
+        semester_records.values_list.return_value = [
+            ("Present", "Absent"),
+            ("On Duty", "Present"),
+        ]
+
+        with patch.object(
+            self.bot, "_get_faculty_info", return_value=faculty
+        ), patch.object(
+            self.bot, "_student_queryset", return_value=student_queryset
+        ), patch.object(
+            self.bot, "_has_student_access", return_value=True
+        ), patch(
+            "student_management.models.Daily_Attendance.objects.filter",
+            return_value=base_records,
+        ) as attendance_filter:
+            response = self.bot._handle_student_attendance_query(
+                "1603",
+                "953624243093",
+                "Class Advisor",
+                "Show attendance for 953624243093 in Semester 4",
+            )
+
+        attendance_filter.assert_called_once_with(student=student)
+        ordered_records.filter.assert_called_once_with(semester__iexact="4")
+        semester_records.values_list.assert_called_once_with(
+            "morning_status", "afternoon_status"
+        )
+        self.assertIn("Attendance Summary: Student A (953624243093)", response)
+        self.assertIn("Scope: Semester 4", response)
+        self.assertIn("Metric | Value", response)
+        self.assertIn("Recorded sessions | 4", response)
+        self.assertIn("Present/On Duty | 3", response)
+        self.assertIn("Absent | 1", response)
+        self.assertIn("Attendance percentage | 75.0%", response)
     def test_ese_subject_query_selects_semester_exam(self):
         self.assertEqual(
             self.bot._extract_internal_assessment_name(
@@ -1320,10 +2296,10 @@ class SubjectTeacherAssignmentTests(SimpleTestCase):
         self.faculty = SimpleNamespace(id=41, faculty_id="T001", name="Teacher")
 
     @staticmethod
-    def _assignment(course_id, title, code, section):
+    def _assignment(course_id, title, code, section, semester="5"):
         department = SimpleNamespace(Department="AI")
         course = SimpleNamespace(
-            title=title, course_code=code, department=department
+            title=title, course_code=code, department=department, semester=semester
         )
         return SimpleNamespace(
             course_id=course_id,
@@ -1520,6 +2496,20 @@ class SubjectTeacherAssignmentTests(SimpleTestCase):
 
         self.assertIn("not assigned to you", result)
         self.assertIn("Assigned batch(es) for AD3491", result)
+
+    def test_class_report_ranked_students_uses_pipe_table_format(self):
+        rows = [
+            {"student__name": "DHARMARAJ.G", "reg_no": "953624243015", "total_marks": 84},
+            {"student__name": "GURULAKSHMI P", "reg_no": "953624243024", "total_marks": 80},
+        ]
+
+        response = self.bot._format_ranked_students(rows, 5)
+
+        self.assertIn("S.No | Name | Reg No | Marks", response)
+        self.assertIn("--- | --- | --- | ---", response)
+        self.assertIn("1 | DHARMARAJ.G | 953624243015 | 84", response)
+        self.assertIn("2 | GURULAKSHMI P | 953624243024 | 80", response)
+        self.assertNotIn("---+", response)
 
     def test_class_report_batch_with_multiple_sections_requests_section(self):
         assignments = [
@@ -2095,6 +3085,393 @@ class FacultyProductivityWorkflowTests(SimpleTestCase):
             self.bot._ai_model(),
         )
 
+    def test_faculty_student_performance_prompt_contains_required_sections(self):
+        self.assertIn(
+            "SCOPE AND SECURITY", FACULTY_STUDENT_PERFORMANCE_SYSTEM_PROMPT
+        )
+        self.assertIn("**Student Details**", FACULTY_STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("**Strengths**", FACULTY_STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("**Weaknesses**", FACULTY_STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("**How to Overcome**", FACULTY_STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("**Recommendations**", FACULTY_STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("**Conclusion**", FACULTY_STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("**Data Note**", FACULTY_STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn(
+            "never compare the student with the class",
+            FACULTY_STUDENT_PERFORMANCE_SYSTEM_PROMPT.lower(),
+        )
+        self.assertIn("co-curricular activities", FACULTY_STUDENT_PERFORMANCE_SYSTEM_PROMPT.lower())
+        self.assertIn("STRICTLY FORBIDDEN INFERENCES", FACULTY_STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+
+    def test_faculty_ai_student_performance_report_returns_validated_text(self):
+        student = SimpleNamespace(
+            name="Student One",
+            reg_no="953624243093",
+            batch="2023",
+            year="3",
+            semester="6",
+            section="A",
+            department=SimpleNamespace(Department="AI AND DS"),
+        )
+        snapshot = {
+            "semester": 6,
+            "academic_year": "2024-2025",
+            "marks": [{
+                "course_code": "AD3491",
+                "course__title": "Data Science",
+                "percentage": 80.0,
+            }],
+            "attendance": [{
+                "course__course_code": "AD3491",
+                "course__title": "Data Science",
+                "attended": 85,
+                "total": 100,
+            }],
+            "gpa": {"gpa": 7.5, "cgpa": 7.5},
+            "results": [{
+                "course__course_code": "AD3491",
+                "course__title": "Data Science",
+                "grade": "A",
+                "grade_total": 8.0,
+            }],
+        }
+        client = MagicMock()
+        client.chat.completions.create.return_value = SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content=(
+                "**Student Details**\n1. **Name:** Student One\n"
+                "**Strengths**\n1. Strong Data Science score.\n"
+                "**Weaknesses**\n1. Attendance needs attention.\n"
+                "**How to Overcome**\n1. **Weakness:** Attendance.\n"
+                "   **Suggestion:** Attend classes regularly.\n"
+                "**Recommendations**\n1. **Technical Skills:** Python\n"
+                "**Conclusion**\n1. Good standing overall.\n"
+                "**Data Note**\n1. Uses only supplied ERP data."
+            )))]
+        )
+        with patch.object(self.bot, "_ai_client", return_value=client):
+            report = self.bot._faculty_ai_student_performance_report(
+                "semester", student, [snapshot]
+            )
+
+        self.assertIn("**Student Details**", report)
+        self.assertIn("1. **Name:** Student One", report)
+        self.assertEqual(
+            client.chat.completions.create.call_args.kwargs["model"],
+            self.bot._ai_model(),
+        )
+
+    def test_faculty_ai_student_performance_report_accepts_heading_variants(self):
+        student = SimpleNamespace(
+            name="Student One",
+            reg_no="953624243093",
+            batch="2023",
+            year="3",
+            semester="6",
+            section="A",
+            department=SimpleNamespace(Department="AI AND DS"),
+        )
+        snapshot = {
+            "semester": 6,
+            "academic_year": "2024-2025",
+            "marks": [{
+                "course_code": "AD3491",
+                "course__title": "Data Science",
+                "percentage": 80.0,
+            }],
+            "attendance": [],
+            "gpa": None,
+            "results": [],
+        }
+        client = MagicMock()
+        client.chat.completions.create.return_value = SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content=(
+                "## Student Details\n1. **Name:** Student One\n"
+                "### Strengths\n1. Strong Data Science score.\n"
+                "**Weaknesses:**\n1. Attendance below 75%.\n"
+                "- How to Overcome\n1. **Weakness:** Attendance.\n"
+                "   **Suggestion:** Attend classes regularly.\n"
+                "1. Recommendations\n1. **Technical Skills:** Python\n"
+                "Conclusion\n1. Good standing overall."
+            )))]
+        )
+        with patch.object(self.bot, "_ai_client", return_value=client):
+            report = self.bot._faculty_ai_student_performance_report(
+                "semester", student, [snapshot]
+            )
+
+        self.assertIn("**Student Details**", report)
+        self.assertIn("**Strengths**", report)
+        self.assertIn("**Weaknesses**", report)
+        self.assertIn("**How to Overcome**", report)
+        self.assertIn("**Recommendations**", report)
+        self.assertIn("**Conclusion**", report)
+        self.assertIn("**Data Note**", report)
+
+    def test_faculty_ai_student_performance_report_fills_missing_details(self):
+        student = SimpleNamespace(
+            name="Student One",
+            reg_no="953624243093",
+            batch="2023",
+            year="3",
+            semester="6",
+            section="A",
+            department=SimpleNamespace(Department="AI AND DS"),
+        )
+        snapshot = {
+            "semester": 6,
+            "academic_year": "2024-2025",
+            "marks": [{
+                "course_code": "AD3491",
+                "course__title": "Data Science",
+                "percentage": 80.0,
+            }],
+            "attendance": [],
+            "gpa": None,
+            "results": [],
+        }
+        client = MagicMock()
+        client.chat.completions.create.return_value = SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content=(
+                "**Strengths**\n1. Strong Data Science score.\n"
+                "**Weaknesses**\n1. Attendance below 75%.\n"
+                "**How to Overcome**\n1. **Weakness:** Attendance.\n"
+                "   **Suggestion:** Attend classes regularly.\n"
+                "**Recommendations**\n1. **Technical Skills:** Python\n"
+                "**Conclusion**\n1. Good standing overall."
+            )))]
+        )
+        with patch.object(self.bot, "_ai_client", return_value=client):
+            report = self.bot._faculty_ai_student_performance_report(
+                "semester", student, [snapshot]
+            )
+
+        self.assertTrue(report.startswith("**Student Details**"))
+        self.assertIn("**Name:** Student One", report)
+        self.assertIn("**Register Number:** 953624243093", report)
+        self.assertIn("**Data Note**", report)
+
+    def test_faculty_ai_student_performance_report_discards_incomplete_output(self):
+        student = SimpleNamespace(
+            name="Student One",
+            reg_no="953624243093",
+            batch="2023",
+            year="3",
+            semester="6",
+            section="A",
+            department=SimpleNamespace(Department="AI AND DS"),
+        )
+        snapshot = {
+            "semester": 6,
+            "academic_year": "2024-2025",
+            "marks": [{
+                "course_code": "AD3491",
+                "course__title": "Data Science",
+                "percentage": 80.0,
+            }],
+            "attendance": [],
+            "gpa": None,
+            "results": [],
+        }
+        client = MagicMock()
+        client.chat.completions.create.return_value = SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content=(
+                "**Student Details**\n1. **Name:** Student One\n"
+                "**Strengths**\n1. Strong Data Science score."
+            )))]
+        )
+        with patch.object(self.bot, "_ai_client", return_value=client):
+            report = self.bot._faculty_ai_student_performance_report(
+                "overall", student, [snapshot]
+            )
+
+        self.assertIsNone(report)
+
+    def test_faculty_ai_student_performance_report_returns_none_without_data(self):
+        student = SimpleNamespace(
+            name="Student One",
+            reg_no="953624243093",
+            batch="2023",
+            year="3",
+            semester="6",
+            section="A",
+            department=SimpleNamespace(Department="AI AND DS"),
+        )
+        self.assertIsNone(
+            self.bot._faculty_ai_student_performance_report("semester", student, [])
+        )
+
+    def test_faculty_ai_student_performance_report_falls_back_on_model_error(self):
+        student = SimpleNamespace(
+            name="Student One",
+            reg_no="953624243093",
+            batch="2023",
+            year="3",
+            semester="6",
+            section="A",
+            department=SimpleNamespace(Department="AI AND DS"),
+        )
+        snapshot = {
+            "semester": 6,
+            "academic_year": "2024-2025",
+            "marks": [{
+                "course_code": "AD3491",
+                "course__title": "Data Science",
+                "percentage": 80.0,
+            }],
+            "attendance": [],
+            "gpa": None,
+            "results": [],
+        }
+        client = MagicMock()
+        client.chat.completions.create.side_effect = RuntimeError("model down")
+        with patch.object(self.bot, "_ai_client", return_value=client):
+            report = self.bot._faculty_ai_student_performance_report(
+                "semester", student, [snapshot]
+            )
+
+        self.assertIsNone(report)
+
+    def test_faculty_semester_analysis_uses_full_ai_report_when_valid(self):
+        department = SimpleNamespace(id=7, Department="AI AND DS")
+        student = SimpleNamespace(
+            id=99,
+            name="Student One",
+            reg_no="953624243093",
+            year="3",
+            semester="6",
+            section="A",
+            batch="2023",
+            department=department,
+            ca_id=None,
+            mentor_id=None,
+        )
+        faculty = SimpleNamespace(id=5, faculty_id="H001", department=department)
+        student_queryset = MagicMock()
+        student_queryset.filter.return_value.first.return_value = student
+        legacy_marks = MagicMock()
+        legacy_marks.exists.return_value = True
+        legacy_marks.values.return_value.order_by.return_value = []
+        snapshot = {
+            "semester": 2,
+            "academic_year": "2023-2024",
+            "marks": [{
+                "course_code": "MA3201", "course__title": "Mathematics",
+                "obtained": 75, "maximum": 100, "percentage": 75.0,
+            }],
+            "attendance": [{"attended": 80, "total": 100}],
+            "gpa": {"gpa": 7.0, "cgpa": 7.0},
+            "results": [],
+        }
+        with patch.object(
+            self.bot, "_student_queryset", return_value=student_queryset
+        ), patch.object(
+            self.bot, "_get_faculty_info", return_value=faculty
+        ), patch.object(
+            self.bot, "_is_role_id_11_user", return_value=False
+        ), patch(
+            "chatbot.chatbot_logic.AssessmentMark.objects.filter",
+            return_value=legacy_marks,
+        ), patch.object(
+            self.bot,
+            "_student_semester_performance_snapshot",
+            return_value=snapshot,
+        ), patch.object(
+            self.bot,
+            "_faculty_ai_student_performance_report",
+            return_value="AI semester report",
+        ) as ai_report:
+            response = self.bot._handle_student_query(
+                "H001",
+                student.reg_no,
+                "Evaluate 953624243093 for Semester 2",
+                "HOD",
+            )
+
+        self.assertEqual(response, "AI semester report")
+        ai_report.assert_called_once_with("semester", student, [snapshot])
+
+    def test_faculty_overall_analysis_uses_full_ai_report_when_valid(self):
+        department = SimpleNamespace(id=7, Department="AI AND DS")
+        student = SimpleNamespace(
+            id=99,
+            name="Student One",
+            reg_no="953624243093",
+            year="3",
+            semester="6",
+            section="A",
+            batch="2023",
+            department=department,
+            ca_id=None,
+            mentor_id=None,
+        )
+        faculty = SimpleNamespace(id=5, faculty_id="H001", department=department)
+        student_queryset = MagicMock()
+        student_queryset.filter.return_value.first.return_value = student
+        legacy_marks = MagicMock()
+        legacy_marks.exists.return_value = True
+        legacy_marks.values.return_value.order_by.return_value = []
+
+        def snapshot(semester):
+            return {
+                "semester": semester,
+                "academic_year": "2023-2024",
+                "marks": [{
+                    "course_code": f"SUB{semester}",
+                    "course__title": f"Subject {semester}",
+                    "obtained": 60,
+                    "maximum": 100,
+                    "percentage": 60.0,
+                }],
+                "attendance": [{"attended": 80, "total": 100}],
+                "gpa": {"gpa": 6.5, "cgpa": 6.5},
+                "results": [],
+            }
+
+        count_queryset = MagicMock()
+        count_queryset.count.return_value = 1
+        with patch.object(
+            self.bot, "_student_queryset", return_value=student_queryset
+        ), patch.object(
+            self.bot, "_get_faculty_info", return_value=faculty
+        ), patch.object(
+            self.bot, "_is_role_id_11_user", return_value=False
+        ), patch(
+            "chatbot.chatbot_logic.AssessmentMark.objects.filter",
+            return_value=legacy_marks,
+        ), patch.object(
+            self.bot, "_student_recorded_semesters", return_value=[2, 4]
+        ), patch.object(
+            self.bot,
+            "_student_semester_performance_snapshot",
+            side_effect=lambda _student, semester: snapshot(semester),
+        ), patch.object(
+            self.bot,
+            "_faculty_ai_student_performance_report",
+            return_value="AI overall report",
+        ) as ai_report, patch(
+            "chatbot.chatbot_logic.StudentAchievements.objects.filter",
+            return_value=count_queryset,
+        ), patch(
+            "chatbot.chatbot_logic.StudentCO_EX_Curricular.objects.filter",
+            return_value=count_queryset,
+        ), patch(
+            "chatbot.chatbot_logic.StudentPublication.objects.filter",
+            return_value=count_queryset,
+        ), patch(
+            "chatbot.chatbot_logic.StudentProjects.objects.filter",
+            return_value=count_queryset,
+        ):
+            response = self.bot._handle_student_query(
+                "H001",
+                student.reg_no,
+                "Analyze the academic performance of 953624243093",
+                "HOD",
+            )
+
+        self.assertEqual(response, "AI overall report")
+        self.assertEqual(ai_report.call_count, 1)
+        self.assertEqual(ai_report.call_args.args[0], "overall")
+
     def test_faculty_explicit_semester_analysis_uses_only_requested_semester(self):
         department = SimpleNamespace(id=7, Department="AI AND DS")
         student = SimpleNamespace(
@@ -2146,6 +3523,8 @@ class FacultyProductivityWorkflowTests(SimpleTestCase):
             "_student_semester_performance_snapshot",
             return_value=snapshot,
         ) as semester_snapshot, patch.object(
+            self.bot, "_faculty_ai_student_performance_report", return_value=None
+        ), patch.object(
             self.bot, "_faculty_ai_recommendations", return_value=None
         ), patch.object(
             self.bot, "_student_recorded_semesters"
@@ -2226,7 +3605,9 @@ class FacultyProductivityWorkflowTests(SimpleTestCase):
             self.bot,
             "_student_semester_performance_snapshot",
             side_effect=lambda _student, semester: snapshot(semester),
-        ) as semester_snapshot, patch(
+        ) as semester_snapshot, patch.object(
+            self.bot, "_faculty_ai_student_performance_report", return_value=None
+        ), patch(
             "chatbot.chatbot_logic.ERPBot._faculty_ai_recommendations",
             return_value=None,
         ), patch(
@@ -2315,6 +3696,19 @@ class FacultyProductivityWorkflowTests(SimpleTestCase):
         self.assertIn('querySelectorAll("[data-chat-template-prefix]")', script)
         self.assertIn("input.setSelectionRange", script)
 
+    def test_chatbot_pipe_markdown_tables_render_as_html_tables(self):
+        project_root = Path(__file__).resolve().parent.parent
+        script = (project_root / "static" / "chatbot" / "chatbot.js").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("const headerLine = lines[index - 1].trim();", script)
+        self.assertIn("textLines.pop();", script)
+        self.assertIn("/^\\s*[:\\-+| ]+\\s*$/.test(line)", script)
+        self.assertIn("if (displayHeaders.length >= 2) {", script)
+        self.assertIn("displayHeaders.forEach", script)
+
+
     def test_student_question_browser_is_searchable_copyable_and_click_to_fill(self):
         project_root = Path(__file__).resolve().parent.parent
         widget = (project_root / "templates" / "chatbot" / "widget.html").read_text(
@@ -2353,7 +3747,7 @@ class FacultyProductivityWorkflowTests(SimpleTestCase):
         self.assertIn("-webkit-overflow-scrolling: touch", stylesheet)
         self.assertIn("grid-template-columns: minmax(0, 1fr) 40px", stylesheet)
         self.assertIn("chatbot/chatbot.css", style_partial)
-        self.assertIn("?v=20260720-3", style_partial)
+        self.assertIn("?v=20260820-1", style_partial)
         for template_name in (
             "base.html",
             "student_dashboard.html",
@@ -2363,3 +3757,933 @@ class FacultyProductivityWorkflowTests(SimpleTestCase):
                 encoding="utf-8"
             )
             self.assertIn('{% include "chatbot/styles.html" %}', template)
+
+
+class StudentPerformanceAnalysisModeTests(SimpleTestCase):
+    """Test suite for the 12 required student performance analysis scenarios."""
+
+    def setUp(self):
+        self.bot = ERPBot()
+
+    def _make_student(self, **overrides):
+        defaults = {
+            "name": "Harish Raj",
+            "reg_no": "921000000001",
+            "semester": "4",
+            "year": "3",
+            "batch": "2022",
+            "section": "A",
+            "department": SimpleNamespace(Department="AI & Data Science"),
+        }
+        defaults.update(overrides)
+        return SimpleNamespace(**defaults)
+
+    # ── TEST 1: "Analyze my performance" → current semester only ─────────
+
+    def test_test1_analyze_my_performance_uses_current_semester(self):
+        """'Analyze my performance' must use ONLY the current semester."""
+        student = self._make_student(semester="4")
+        mark_rows = [
+            {"course_code": "AD4401", "course__title": "Machine Learning",
+             "obtained": 80, "maximum": 100, "percentage": 80.0},
+        ]
+        with patch.object(
+            self.bot, "_get_student_subject_enrollments", return_value=([], "2025-2026")
+        ) as enrollments, patch.object(
+            self.bot, "_student_mark_performance_rows", return_value=mark_rows
+        ), patch.object(
+            self.bot, "_student_hour_attendance_rows", return_value=[]
+        ), patch.object(self.bot, "_ai_client", side_effect=ConnectionError), \
+        patch("chatbot.chatbot_logic.GPA.objects.filter") as gpa_filter:
+            gpa_filter.return_value.order_by.return_value.values.return_value.first.return_value = None
+            response = self.bot._handle_student_performance_insights(
+                student, "analyze my performance"
+            )
+
+        enrollments.assert_called_once_with(student, 4)
+        self.assertTrue(response.startswith("My AI Performance Analysis | Semester 4"))
+        self.assertNotIn("Semester 3", response)
+        self.assertNotIn("Semester 2", response)
+        self.assertNotIn("Cumulative", response)
+
+    # ── TEST 2: "Analyze my Semester 4 performance" → specific semester only ──
+
+    def test_test2_analyze_semester_4_uses_only_semester_4(self):
+        """'Analyze my Semester 4 performance' must use ONLY Semester 4 data."""
+        student = self._make_student(semester="5")
+        mark_rows = [
+            {"course_code": "AD4401", "course__title": "Machine Learning",
+             "obtained": 75, "maximum": 100, "percentage": 75.0},
+        ]
+        with patch.object(
+            self.bot, "_get_student_subject_enrollments", return_value=([], "2025-2026")
+        ) as enrollments, patch.object(
+            self.bot, "_student_mark_performance_rows", return_value=mark_rows
+        ), patch.object(
+            self.bot, "_student_hour_attendance_rows", return_value=[]
+        ), patch.object(self.bot, "_ai_client", side_effect=ConnectionError), \
+        patch("chatbot.chatbot_logic.GPA.objects.filter") as gpa_filter:
+            gpa_filter.return_value.order_by.return_value.values.return_value.first.return_value = None
+            response = self.bot._handle_student_performance_insights(
+                student, "analyze my Semester 4 performance"
+            )
+
+        enrollments.assert_called_once_with(student, 4)
+        self.assertTrue(response.startswith("My AI Performance Analysis | Semester 4"))
+        self.assertNotIn("Semester 5", response)
+
+    # ── TEST 3: "Analyze my overall performance" → all semesters ─────────
+
+    def test_test3_analyze_overall_uses_all_semesters(self):
+        """'Analyze my overall performance' must use ALL recorded semesters."""
+        student = self._make_student(semester="4")
+        with patch.object(
+            self.bot,
+            "_handle_student_overall_performance_insights",
+            return_value="overall result",
+        ) as overall:
+            response = self.bot._handle_student_performance_insights(
+                student, "analyze my overall performance"
+            )
+
+        self.assertEqual(response, "overall result")
+        overall.assert_called_once_with(student)
+
+    def test_test3_cumulative_keyword_triggers_overall(self):
+        """'cumulative' keyword must trigger cumulative analysis."""
+        student = self._make_student()
+        self.assertTrue(self.bot._is_cumulative_request("analyze my cumulative performance"))
+        self.assertTrue(self.bot._is_cumulative_request("show my overall performance"))
+        self.assertTrue(self.bot._is_cumulative_request("performance across all semesters"))
+        self.assertFalse(self.bot._is_cumulative_request("analyze my performance"))
+        self.assertFalse(self.bot._is_cumulative_request("how am i performing"))
+
+    # ── TEST 4: "Show my Semester 4 internal marks" → semester 4 data only ──
+
+    def test_test4_show_semester_4_marks_uses_only_semester_4(self):
+        """'Show my Semester 4 internal marks' must return only Semester 4 data."""
+        student = self._make_student(semester="5")
+        mark_rows = [
+            {"course_code": "AD4401", "course__title": "Machine Learning",
+             "exam_name": "IAT1", "obtained": 20, "maximum": 25,
+             "course__title": "Machine Learning"},
+        ]
+        with patch.object(
+            self.bot, "_get_student_subject_enrollments", return_value=([], "2025-2026")
+        ) as enrollments, patch.object(
+            self.bot, "_get_student_internal_mark_rows", return_value=mark_rows
+        ):
+            response = self.bot._handle_student_internal_marks(
+                student, "show my semester 4 internal marks"
+            )
+
+        enrollments.assert_called_once_with(student, 4)
+        self.assertIn("Semester 4", response)
+
+    # ── TEST 5: Compare Semester 3 and 4 → only if both available ────────
+
+    def test_test5_compare_requires_both_datasets(self):
+        """Comparison queries should only work when both semester datasets exist."""
+        student = self._make_student(semester="4")
+        with patch.object(
+            self.bot, "_extract_student_subject_semester", return_value=None
+        ), patch.object(
+            self.bot, "_is_cumulative_request", return_value=False
+        ), patch.object(
+            self.bot, "_handle_student_current_semester_performance",
+            return_value="current only",
+        ):
+            response = self.bot._handle_student_performance_insights(
+                student, "compare my semester 3 and semester 4"
+            )
+
+        self.assertEqual(response, "current only")
+
+    # ── TEST 6: Show another student's marks → access denied ─────────────
+
+    def test_test6_cross_student_access_denied(self):
+        """Showing another student's marks must be denied."""
+        student = self._make_student(reg_no="921000000001")
+        student_queryset = MagicMock()
+        student_queryset.filter.return_value.first.return_value = student
+        with patch.object(self.bot, "_student_queryset", return_value=student_queryset):
+            response = self.bot._process_student_query(
+                "show marks of 921000000099", "921000000001"
+            )
+
+        self.assertIn("own academic information", response)
+
+    # ── TEST 7: Only one semester exists → trend = N/A, consistency = N/A ─
+
+    def test_test7_single_semester_trend_and_consistency_are_na(self):
+        """With only one semester, trend and consistency must be N/A."""
+        student = self._make_student(semester="4")
+        snapshot = {
+            "semester": 4, "academic_year": "2025-2026",
+            "marks": [{"course_code": "AD4401", "course__title": "ML",
+                       "obtained": 80, "maximum": 100, "percentage": 80.0}],
+            "attendance": [{"attended": 40, "total": 50}],
+            "gpa": {"gpa": 8.0, "cgpa": 8.0},
+            "results": [],
+        }
+        with patch.object(
+            self.bot, "_student_recorded_semesters", return_value=[4]
+        ), patch.object(
+            self.bot, "_student_semester_performance_snapshot", return_value=snapshot
+        ), patch.object(self.bot, "_ai_client", side_effect=ConnectionError):
+            response = self.bot._handle_student_overall_performance_insights(student)
+
+        self.assertTrue(response.startswith("**My Overall AI Performance Analysis**"))
+        self.assertIn("Insufficient comparable semester data", response)
+
+    # ── TEST 8: Attendance missing → N/A ─────────────────────────────────
+
+    def test_test8_missing_attendance_shows_na(self):
+        """When attendance data is missing, the output must show N/A."""
+        student = self._make_student(semester="4")
+        mark_rows = [
+            {"course_code": "AD4401", "course__title": "ML",
+             "obtained": 80, "maximum": 100, "percentage": 80.0},
+        ]
+        with patch.object(
+            self.bot, "_get_student_subject_enrollments", return_value=([], "2025-2026")
+        ), patch.object(
+            self.bot, "_student_mark_performance_rows", return_value=mark_rows
+        ), patch.object(
+            self.bot, "_student_hour_attendance_rows", return_value=[]
+        ), patch.object(self.bot, "_ai_client", side_effect=ConnectionError), \
+        patch("chatbot.chatbot_logic.GPA.objects.filter") as gpa_filter, \
+        patch.object(
+            self.bot, "_find_latest_available_semester", return_value=(4, False, None)
+        ):
+            gpa_filter.return_value.order_by.return_value.values.return_value.first.return_value = None
+            response = self.bot._handle_student_performance_insights(
+                student, "analyze my performance"
+            )
+
+        self.assertIn("N/A", response)
+
+    # ── TEST 9: Passing threshold unavailable → do not claim "failed" ────
+
+    def test_test9_no_passing_threshold_no_failed_claim(self):
+        """Without a passing threshold, the system must not claim a subject failed."""
+        student = self._make_student(semester="4")
+        mark_rows = [
+            {"course_code": "PS4401", "course__title": "Probability",
+             "obtained": 11, "maximum": 100, "percentage": 11.0},
+        ]
+        with patch.object(
+            self.bot, "_get_student_subject_enrollments", return_value=([], "2025-2026")
+        ), patch.object(
+            self.bot, "_student_mark_performance_rows", return_value=mark_rows
+        ), patch.object(
+            self.bot, "_student_hour_attendance_rows", return_value=[]
+        ), patch.object(self.bot, "_ai_client", side_effect=ConnectionError), \
+        patch("chatbot.chatbot_logic.GPA.objects.filter") as gpa_filter, \
+        patch.object(
+            self.bot, "_find_latest_available_semester", return_value=(4, False, None)
+        ):
+            gpa_filter.return_value.order_by.return_value.values.return_value.first.return_value = None
+            response = self.bot._handle_student_performance_insights(
+                student, "analyze my performance"
+            )
+
+        self.assertNotIn("failed", response.lower())
+
+    # ── TEST 10: High attendance but low marks → not described as strong ─
+
+    def test_test10_high_attendance_low_marks_not_described_as_strong(self):
+        """High attendance alone must not make the student 'academically strong'."""
+        student = self._make_student(semester="4")
+        mark_rows = [
+            {"course_code": "AD4401", "course__title": "ML",
+             "obtained": 30, "maximum": 100, "percentage": 30.0},
+        ]
+        attendance_rows = [
+            {"course__course_code": "AD4401", "course__title": "ML",
+             "attended": 48, "total": 50},
+        ]
+        with patch.object(
+            self.bot, "_get_student_subject_enrollments", return_value=([], "2025-2026")
+        ), patch.object(
+            self.bot, "_student_mark_performance_rows", return_value=mark_rows
+        ), patch.object(
+            self.bot, "_student_hour_attendance_rows", return_value=attendance_rows
+        ), patch.object(self.bot, "_ai_client", side_effect=ConnectionError), \
+        patch("chatbot.chatbot_logic.GPA.objects.filter") as gpa_filter, \
+        patch.object(
+            self.bot, "_find_latest_available_semester", return_value=(4, False, None)
+        ):
+            gpa_filter.return_value.order_by.return_value.values.return_value.first.return_value = None
+            response = self.bot._handle_student_performance_insights(
+                student, "analyze my performance"
+            )
+
+        self.assertIn("96.0%", response)
+        self.assertIn("30.0%", response)
+        self.assertNotIn("excellent knowledge", response.lower())
+        self.assertNotIn("strong understanding", response.lower())
+
+    # ── TEST 11: High marks but low attendance → attendance as attention area ─
+
+    def test_test11_high_marks_low_attendance_flags_attendance(self):
+        """High marks with low attendance must flag attendance as needing attention."""
+        student = self._make_student(semester="4")
+        mark_rows = [
+            {"course_code": "AD4401", "course__title": "ML",
+             "obtained": 90, "maximum": 100, "percentage": 90.0},
+        ]
+        attendance_rows = [
+            {"course__course_code": "AD4401", "course__title": "ML",
+             "attended": 30, "total": 50},
+        ]
+        with patch.object(
+            self.bot, "_get_student_subject_enrollments", return_value=([], "2025-2026")
+        ), patch.object(
+            self.bot, "_student_mark_performance_rows", return_value=mark_rows
+        ), patch.object(
+            self.bot, "_student_hour_attendance_rows", return_value=attendance_rows
+        ), patch.object(self.bot, "_ai_client", side_effect=ConnectionError), \
+        patch("chatbot.chatbot_logic.GPA.objects.filter") as gpa_filter, \
+        patch.object(
+            self.bot, "_find_latest_available_semester", return_value=(4, False, None)
+        ):
+            gpa_filter.return_value.order_by.return_value.values.return_value.first.return_value = None
+            response = self.bot._handle_student_performance_insights(
+                student, "analyze my performance"
+            )
+
+        self.assertIn("60.0%", response)
+        self.assertIn("75%", response)
+
+    # ── TEST 12: No academic data available → no fabricated analysis ─────
+
+    def test_test12_no_data_no_fabrication(self):
+        """With no data, the system must not fabricate any analysis."""
+        student = self._make_student(semester="4")
+        with patch.object(
+            self.bot, "_get_student_subject_enrollments", return_value=([], None)
+        ), patch.object(
+            self.bot, "_student_mark_performance_rows", return_value=[]
+        ):
+            response = self.bot._handle_student_semester_performance_insights(
+                student, "", 4
+            )
+
+        self.assertIn("Academic performance data for Semester 4 is not currently available", response)
+        self.assertNotIn("strength", response.lower())
+        self.assertNotIn("weakness", response.lower())
+        self.assertNotIn("recommendation", response.lower())
+
+    # ── Additional validation tests ──────────────────────────────────────
+
+    def test_mode_detection_semester_specific(self):
+        """Explicit semester number routes to semester handler."""
+        student = self._make_student()
+        with patch.object(
+            self.bot, "_handle_student_semester_performance_insights",
+            return_value="semester specific",
+        ) as handler:
+            response = self.bot._handle_student_performance_insights(
+                student, "analyze my Semester 3 performance"
+            )
+
+        self.assertEqual(response, "semester specific")
+        handler.assert_called_once()
+
+    def test_mode_detection_current_is_default(self):
+        """Without semester or overall keyword, current semester is the default."""
+        student = self._make_student(semester="4")
+        with patch.object(
+            self.bot, "_handle_student_current_semester_performance",
+            return_value="current semester",
+        ) as handler:
+            response = self.bot._handle_student_performance_insights(
+                student, "how am i performing"
+            )
+
+        self.assertEqual(response, "current semester")
+        handler.assert_called_once_with(student)
+
+    def test_validation_sections_match_semester_prompt(self):
+        """The semester prompt must contain all required output sections."""
+        self.assertIn("Student Details", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Strengths", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Weaknesses", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("How to Overcome", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Recommendations", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Conclusion", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Data Note", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("My AI Performance Analysis | Semester", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+
+    def test_validation_sections_match_cumulative_prompt(self):
+        """The cumulative prompt must contain all required output sections."""
+        self.assertIn("My Overall AI Performance Analysis", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Cumulative Assessment", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Long-Term Strengths", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Areas Needing Attention", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Academic Trends and Consistency", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Action Plan", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Department-Related Project Ideas", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Extracurricular Development", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Attendance Guidance", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Data Note", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
+
+    def test_prompts_contain_anti_hallucination_rules(self):
+        """Both prompts must contain explicit anti-hallucination instructions."""
+        self.assertIn("STRICTLY FORBIDDEN INFERENCES", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Never infer or claim", STUDENT_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("STRICTLY FORBIDDEN INFERENCES", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
+        self.assertIn("Never infer or claim", STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT)
+
+    def test_cumulative_fallback_format_matches_prompt(self):
+        """The cumulative fallback must use the same headings as the cumulative prompt."""
+        student = self._make_student(semester="4")
+        snapshot_with_data = {
+            "semester": 4, "academic_year": "2025-2026",
+            "marks": [{"course_code": "AD4401", "course__title": "ML",
+                       "obtained": 80, "maximum": 100, "percentage": 80.0}],
+            "attendance": [{"attended": 40, "total": 50}],
+            "gpa": {"gpa": 8.0, "cgpa": 8.0},
+            "results": [],
+        }
+        with patch.object(
+            self.bot, "_student_recorded_semesters", return_value=[4]
+        ), patch.object(
+            self.bot, "_student_semester_performance_snapshot",
+            return_value=snapshot_with_data,
+        ), patch.object(self.bot, "_ai_client", side_effect=ConnectionError):
+            response = self.bot._handle_student_overall_performance_insights(student)
+
+        self.assertIn("**My Overall AI Performance Analysis**", response)
+        self.assertIn("**Cumulative Assessment**", response)
+        self.assertIn("**Long-Term Strengths**", response)
+        self.assertIn("**Areas Needing Attention**", response)
+        self.assertIn("**Academic Trends and Consistency**", response)
+        self.assertIn("**Action Plan**", response)
+        self.assertIn("**Department-Related Project Ideas**", response)
+        self.assertIn("**Extracurricular Development**", response)
+        self.assertIn("**Attendance Guidance**", response)
+        self.assertIn("**Data Note**", response)
+
+    def test_semester_fallback_format_matches_prompt(self):
+        """The semester fallback must use the same headings as the semester prompt."""
+        student = self._make_student(semester="4")
+        mark_rows = [
+            {"course_code": "AD4401", "course__title": "ML",
+             "obtained": 80, "maximum": 100, "percentage": 80.0},
+        ]
+        with patch.object(
+            self.bot, "_get_student_subject_enrollments", return_value=([], "2025-2026")
+        ), patch.object(
+            self.bot, "_student_mark_performance_rows", return_value=mark_rows
+        ), patch.object(
+            self.bot, "_student_hour_attendance_rows", return_value=[]
+        ), patch.object(self.bot, "_ai_client", side_effect=ConnectionError), \
+        patch("chatbot.chatbot_logic.GPA.objects.filter") as gpa_filter:
+            gpa_filter.return_value.order_by.return_value.values.return_value.first.return_value = None
+            response = self.bot._handle_student_performance_insights(
+                student, "analyze my performance"
+            )
+
+        self.assertIn("My AI Performance Analysis | Semester 4", response)
+        self.assertIn("Student Details", response)
+        self.assertIn("Strengths", response)
+        self.assertIn("Weaknesses", response)
+        self.assertIn("How to Overcome", response)
+        self.assertIn("Recommendations", response)
+        self.assertIn("Conclusion", response)
+        self.assertIn("Data Note", response)
+
+    def test_semester_user_message_contains_analysis_mode(self):
+        """The user message sent to the LLM must specify the analysis mode."""
+        student = self._make_student(semester="4")
+        mark_rows = [
+            {"course_code": "AD4401", "course__title": "ML",
+             "obtained": 80, "maximum": 100, "percentage": 80.0},
+        ]
+        client = MagicMock()
+        client.chat.completions.create.return_value = SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content="invalid"))]
+        )
+        with patch.object(
+            self.bot, "_get_student_subject_enrollments", return_value=([], "2025-2026")
+        ), patch.object(
+            self.bot, "_student_mark_performance_rows", return_value=mark_rows
+        ), patch.object(
+            self.bot, "_student_hour_attendance_rows", return_value=[]
+        ), patch.object(self.bot, "_ai_client", return_value=client), \
+        patch("chatbot.chatbot_logic.GPA.objects.filter") as gpa_filter:
+            gpa_filter.return_value.order_by.return_value.values.return_value.first.return_value = None
+            self.bot._handle_student_performance_insights(
+                student, "analyze my performance"
+            )
+
+        user_message = client.chat.completions.create.call_args.kwargs["messages"][1]["content"]
+        self.assertIn("Analysis mode: Current semester performance", user_message)
+        self.assertIn("INSTRUCTIONS:", user_message)
+
+    def test_cumulative_user_message_contains_analysis_mode(self):
+        """The cumulative user message sent to the LLM must specify cumulative mode."""
+        student = self._make_student(semester="4")
+        client = MagicMock()
+        client.chat.completions.create.return_value = SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content="invalid"))]
+        )
+        with patch.object(
+            self.bot, "_student_recorded_semesters", return_value=[4]
+        ), patch.object(
+            self.bot, "_student_semester_performance_snapshot", return_value={
+                "semester": 4, "academic_year": "2025-2026",
+                "marks": [{"course_code": "AD4401", "course__title": "ML",
+                           "obtained": 80, "maximum": 100, "percentage": 80.0}],
+                "attendance": [], "gpa": None, "results": [],
+            }), patch.object(self.bot, "_ai_client", return_value=client):
+            self.bot._handle_student_overall_performance_insights(student)
+
+        user_message = client.chat.completions.create.call_args.kwargs["messages"][1]["content"]
+        self.assertIn("Analysis mode: Cumulative / overall performance", user_message)
+        self.assertIn("INSTRUCTIONS:", user_message)
+
+
+class CALowPerformingTests(SimpleTestCase):
+    def setUp(self):
+        self.bot = ERPBot()
+        self.faculty = SimpleNamespace(
+            id=10,
+            faculty_id="T001",
+            name="Faculty One",
+            department=SimpleNamespace(id=7, Department="AI"),
+        )
+
+    def _make_student(self, pk=1, name="Student A", reg_no="123456789001", semester="5"):
+        return SimpleNamespace(
+            id=pk, name=name, reg_no=reg_no, semester=semester,
+            year="3", batch="2023", section="A",
+            department=self.faculty.department, is_active=True, is_discontinued=False,
+        )
+
+    def test_ca_low_performing_routes_from_hyphenated_query(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_ca_low_performing", return_value="Low-Performing Students") as handler:
+            response = self.bot.process_query(
+                "Show low-performing students in my class", "T001", role="Class Advisor"
+            )
+        self.assertEqual(response, "Low-Performing Students")
+        handler.assert_called_once_with("T001", "Class Advisor", course_code=None)
+
+    def test_ca_low_performing_routes_from_unhyphenated_query(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_ca_low_performing", return_value="Low-Performing Students") as handler:
+            response = self.bot.process_query(
+                "Show low performing students in my class", "T001", role="Class Advisor"
+            )
+        self.assertEqual(response, "Low-Performing Students")
+        handler.assert_called_once_with("T001", "Class Advisor", course_code=None)
+
+    def test_ca_low_performing_routes_from_weak_students_query(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_ca_low_performing", return_value="Low-Performing Students") as handler:
+            response = self.bot.process_query(
+                "Show weak students in my class", "T001", role="Class Advisor"
+            )
+        self.assertEqual(response, "Low-Performing Students")
+        handler.assert_called_once_with("T001", "Class Advisor", course_code=None)
+
+    def test_ca_low_performing_does_not_route_for_faculty_role(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_ca_low_performing") as handler:
+            response = self.bot.process_query(
+                "Show low-performing students in my class", "T001", role="Faculty"
+            )
+        handler.assert_not_called()
+
+    def test_ca_low_performing_does_not_use_mentor_scope_for_my_class(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_ca_low_performing") as handler:
+            response = self.bot.process_query(
+                "Show low-performing students in my class", "T001", role="Mentor"
+            )
+        self.assertIn("requires your Class Advisor role", response)
+        handler.assert_not_called()
+
+    def test_ca_low_performing_does_not_route_for_hod_role(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_ca_low_performing") as handler:
+            response = self.bot.process_query(
+                "Show low-performing students in my class", "T001", role="HOD"
+            )
+        handler.assert_not_called()
+
+    def test_ca_low_performing_with_course_code_routes_to_ca_handler(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_ca_low_performing", return_value="Low-Performing Students") as handler:
+            response = self.bot.process_query(
+                "Show low-performing students in AL3452", "T001", role="Class Advisor"
+            )
+        self.assertEqual(response, "Low-Performing Students")
+        handler.assert_called_once_with("T001", "Class Advisor", course_code="AL3452")
+
+    def test_ca_low_performing_with_course_code_bypasses_subject_risk(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_ca_low_performing", return_value="Low-Performing Students") as ca_handler, \
+             patch.object(self.bot, "_handle_subject_risk_students") as risk_handler:
+            response = self.bot.process_query(
+                "Show low-performing students in AL3452", "T001", role="Class Advisor"
+            )
+        self.assertEqual(response, "Low-Performing Students")
+        ca_handler.assert_called_once()
+        risk_handler.assert_not_called()
+
+    def test_mentor_low_performing_with_course_code_routes_to_ca_handler(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_ca_low_performing", return_value="Low-Performing Students") as handler:
+            response = self.bot.process_query(
+                "Show low-performing students in CS3401", "T001", role="Mentor"
+            )
+        self.assertEqual(response, "Low-Performing Students")
+        handler.assert_called_once_with("T001", "Mentor", course_code="CS3401")
+
+    def test_ca_at_risk_with_course_code_routes_to_ca_handler(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_ca_low_performing", return_value="Low-Performing Students") as handler:
+            response = self.bot.process_query(
+                "Show at-risk students in AL3452", "T001", role="Class Advisor"
+            )
+        self.assertEqual(response, "Low-Performing Students")
+        handler.assert_called_once_with("T001", "Class Advisor", course_code="AL3452")
+
+    def test_ca_at_risk_without_course_code_still_routes_early_warning(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_early_warning", return_value="Early Warning") as handler:
+            response = self.bot.process_query(
+                "Show at-risk students", "T001", role="Class Advisor"
+            )
+        self.assertEqual(response, "Early Warning")
+        handler.assert_called_once()
+
+    def test_early_warning_among_my_mentees_uses_mentor_scope_for_multi_role_user(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_early_warning", return_value="Early Warning") as handler:
+            response = self.bot.process_query(
+                "Show early warning students among my mentees.",
+                "T001",
+                role="Class Advisor",
+                all_roles=["Class Advisor", "Mentor"],
+            )
+        self.assertEqual(response, "Early Warning")
+        handler.assert_called_once_with("T001", "Mentor")
+
+    def test_early_warning_in_my_class_uses_class_advisor_scope_for_multi_role_user(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_early_warning", return_value="Early Warning") as handler:
+            response = self.bot.process_query(
+                "Show early warning students in my class.",
+                "T001",
+                role="Mentor",
+                all_roles=["Class Advisor", "Mentor"],
+            )
+        self.assertEqual(response, "Early Warning")
+        handler.assert_called_once_with("T001", "Class Advisor")
+
+    def test_low_performing_mentees_uses_mentor_attention_for_multi_role_user(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_mentor_attention_students", return_value="Mentee Academic Attention Report") as mentor_handler, \
+             patch.object(self.bot, "_handle_ca_low_performing") as ca_handler:
+            response = self.bot.process_query(
+                "Show low-performing mentees.",
+                "T001",
+                role="Class Advisor",
+                all_roles=["Class Advisor", "Mentor"],
+            )
+        self.assertEqual(response, "Mentee Academic Attention Report")
+        mentor_handler.assert_called_once_with("T001", "Mentor", "Show low-performing mentees.")
+        ca_handler.assert_not_called()
+
+    def test_low_performing_my_class_uses_class_advisor_scope_for_multi_role_user(self):
+        with patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_handle_ca_low_performing", return_value="Low-Performing Students") as handler:
+            response = self.bot.process_query(
+                "Show low-performing students in my class.",
+                "T001",
+                role="Mentor",
+                all_roles=["Class Advisor", "Mentor"],
+            )
+        self.assertEqual(response, "Low-Performing Students")
+        handler.assert_called_once_with("T001", "Class Advisor", course_code=None)
+
+    def _snapshot(self, semester, academic=None, attendance=None):
+        results = [] if academic is None else [{"grade_total": academic}]
+        attendance_rows = []
+        if attendance is not None:
+            attendance_rows = [{"attended": attendance, "total": 100}]
+        return {
+            "semester": semester,
+            "academic_year": "2025-2026",
+            "marks": [],
+            "attendance": attendance_rows,
+            "gpa": None,
+            "results": results,
+        }
+
+    def test_mentor_attention_uses_latest_available_semester_per_mentee(self):
+        students = [
+            self._make_student(1, "Student A", "953624243001", semester="5"),
+            self._make_student(2, "Student B", "953624243002", semester="5"),
+            self._make_student(3, "Student C", "953624243003", semester="5"),
+            self._make_student(4, "Student D", "953624243004", semester="5"),
+            self._make_student(5, "Student E", "953624243005", semester="5"),
+        ]
+        latest = {
+            1: (4, True, "Semester 5 academic results are not published"),
+            2: (3, True, "Semester 5 academic results are not published"),
+            3: (5, False, None),
+            4: (4, True, "Semester 5 academic results are not published"),
+            5: (None, False, None),
+        }
+        snapshots = {
+            (1, 4): self._snapshot(4, academic=45.32, attendance=82),
+            (2, 3): self._snapshot(3, academic=72, attendance=91),
+            (3, 5): self._snapshot(5, academic=65, attendance=72),
+            (4, 4): self._snapshot(4, academic=45, attendance=70),
+        }
+        with patch.object(self.bot, "_active_students_for_role", return_value=students), \
+             patch.object(self.bot, "_find_latest_available_semester", side_effect=lambda student, current: latest[student.id]), \
+             patch.object(self.bot, "_student_semester_performance_snapshot", side_effect=lambda student, semester: snapshots[(student.id, semester)]):
+            response = self.bot._handle_mentor_attention_students(
+                "T001", "Mentor", "Which mentees need academic attention?"
+            )
+        self.assertIn("Total mentees: 5", response)
+        self.assertIn("Academic attention required: 3", response)
+        self.assertIn("No immediate concern: 1", response)
+        self.assertIn("Academic data unavailable: 1", response)
+        self.assertIn("Student A | 953624243001 | Semester 4", response)
+        self.assertIn("Aggregate performance is 45.32%", response)
+        self.assertIn("Student B | 953624243002 | Semester 3", response)
+        self.assertIn("Latest available ERP data shows aggregate 72% and attendance 91%", response)
+        self.assertIn("Student C | 953624243003 | Semester 5", response)
+        self.assertIn("Attendance is 72%", response)
+        self.assertIn("Student D | 953624243004 | Semester 4", response)
+        self.assertIn("Aggregate performance is 45%", response)
+        self.assertIn("attendance is 70%", response)
+        self.assertIn("Student E | 953624243005", response)
+        self.assertNotIn("Academic data unavailable: 5", response)
+
+    def test_mentor_low_performing_intent_ignores_attendance_only_concern(self):
+        students = [
+            self._make_student(1, "Low Marks", "953624243011", semester="5"),
+            self._make_student(2, "Attendance Only", "953624243012", semester="5"),
+        ]
+        snapshots = {
+            (1, 4): self._snapshot(4, academic=45, attendance=91),
+            (2, 4): self._snapshot(4, academic=65, attendance=72),
+        }
+        with patch.object(self.bot, "_active_students_for_role", return_value=students), \
+             patch.object(self.bot, "_find_latest_available_semester", side_effect=lambda student, current: (4, True, None)), \
+             patch.object(self.bot, "_student_semester_performance_snapshot", side_effect=lambda student, semester: snapshots[(student.id, semester)]):
+            response = self.bot._handle_mentor_attention_students(
+                "T001", "Mentor", "Which mentees are low-performing?"
+            )
+        self.assertIn("Academic attention required: 1", response)
+        self.assertIn("Low Marks | 953624243011 | Semester 4", response)
+        self.assertIn("Attendance Only | 953624243012 | Semester 4", response)
+        self.assertNotIn("Attendance is 72%, below", response)
+
+    def test_mentor_attendance_intent_uses_attendance_threshold_only(self):
+        students = [
+            self._make_student(1, "Low Marks", "953624243021", semester="5"),
+            self._make_student(2, "Low Attendance", "953624243022", semester="5"),
+        ]
+        snapshots = {
+            (1, 4): self._snapshot(4, academic=45, attendance=91),
+            (2, 4): self._snapshot(4, academic=72, attendance=70),
+        }
+        with patch.object(self.bot, "_active_students_for_role", return_value=students), \
+             patch.object(self.bot, "_find_latest_available_semester", side_effect=lambda student, current: (4, True, None)), \
+             patch.object(self.bot, "_student_semester_performance_snapshot", side_effect=lambda student, semester: snapshots[(student.id, semester)]):
+            response = self.bot._handle_mentor_attention_students(
+                "T001", "Mentor", "Which mentees have attendance below 75%?"
+            )
+        self.assertIn("Academic attention required: 1", response)
+        self.assertIn("Low Attendance | 953624243022 | Semester 4", response)
+        self.assertIn("Attendance is 70%", response)
+        self.assertIn("Low Marks | 953624243021 | Semester 4", response)
+        self.assertNotIn("Low Marks | 953624243021 | Semester 4 | Aggregate performance is 45%", response)
+
+    def test_mentor_attention_rejects_non_mentor_role(self):
+        with patch.object(self.bot, "_active_students_for_role") as students:
+            response = self.bot._handle_mentor_attention_students(
+                "T001", "Class Advisor", "Which mentees need academic attention?"
+            )
+        self.assertIn("requires your Mentor role", response)
+        students.assert_not_called()
+
+    def test_handler_with_course_code_filters_subject(self):
+        student = self._make_student()
+        mark_details = [
+            {
+                "student_id": 1, "course_code": "AL3452", "exam_name": "IAT1",
+                "part_name": "A", "question_number": "1", "sub_question": "",
+                "option_letter": "", "max_marks": 100, "marks_obtained": 40,
+            },
+        ]
+        with patch.object(self.bot, "_active_students_for_role", return_value=[student]), \
+             patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_scope_subject_marks_queryset") as scope_mock, \
+             patch("chatbot.chatbot_logic.StudentInternalMark") as mark_model:
+            scope_mock.return_value.values.return_value.order_by.return_value = mark_details
+            mark_qs = mark_model.objects.filter.return_value
+            self.bot._handle_ca_low_performing(
+                "T001", "Class Advisor", course_code="AL3452"
+            )
+        mark_qs.filter.assert_any_call(course_code__iexact="AL3452")
+
+    def test_handler_with_course_code_shows_subject_in_heading(self):
+        student = self._make_student()
+        mark_details = [
+            {
+                "student_id": 1, "course_code": "AL3452", "exam_name": "IAT1",
+                "part_name": "A", "question_number": "1", "sub_question": "",
+                "option_letter": "", "max_marks": 100, "marks_obtained": 45,
+            },
+        ]
+        with patch.object(self.bot, "_active_students_for_role", return_value=[student]), \
+             patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_scope_subject_marks_queryset") as scope_mock:
+            scope_mock.return_value.values.return_value.order_by.return_value = mark_details
+            response = self.bot._handle_ca_low_performing(
+                "T001", "Class Advisor", course_code="AL3452"
+            )
+        self.assertIn("Low-Performing Students | AL3452", response)
+
+    def test_handler_returns_empty_message_when_no_students(self):
+        with patch.object(self.bot, "_active_students_for_role", return_value=[]):
+            response = self.bot._handle_ca_low_performing("T001", "Class Advisor")
+        self.assertIn("No students are mapped", response)
+
+    def test_handler_flags_student_below_60_in_any_subject(self):
+        student = self._make_student()
+        mark_details = [
+            {
+                "student_id": 1, "course_code": "AD3491", "exam_name": "IAT1",
+                "part_name": "A", "question_number": "1", "sub_question": "",
+                "option_letter": "", "max_marks": 100, "marks_obtained": 45,
+            },
+        ]
+        with patch.object(self.bot, "_active_students_for_role", return_value=[student]), \
+             patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_scope_subject_marks_queryset") as scope_mock:
+            scope_mock.return_value.values.return_value.order_by.return_value = mark_details
+            response = self.bot._handle_ca_low_performing("T001", "Class Advisor")
+        self.assertIn("Student A", response)
+        self.assertIn("AD3491 | IAT1", response)
+        self.assertIn("45%", response)
+        self.assertIn("Student | Register Number | Subject | IAT | Marks", response)
+        self.assertIn("--- | --- | --- | --- | ---", response)
+        self.assertIn("Student A | 123456789001 | AD3491 | IAT1 | 45%", response)
+
+    def test_handler_excludes_student_above_60_in_all_subjects(self):
+        student = self._make_student()
+        mark_details = [
+            {
+                "student_id": 1, "course_code": "AD3491", "exam_name": "IAT1",
+                "part_name": "A", "question_number": "1", "sub_question": "",
+                "option_letter": "", "max_marks": 100, "marks_obtained": 80,
+            },
+        ]
+        with patch.object(self.bot, "_active_students_for_role", return_value=[student]), \
+             patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_scope_subject_marks_queryset") as scope_mock:
+            scope_mock.return_value.values.return_value.order_by.return_value = mark_details
+            response = self.bot._handle_ca_low_performing("T001", "Class Advisor")
+        self.assertIn("No students scored below 60%", response)
+        self.assertNotIn("Student A", response)
+
+    def test_handler_shows_multiple_failing_subjects(self):
+        student = self._make_student()
+        mark_details = [
+            {
+                "student_id": 1, "course_code": "AD3491", "exam_name": "IAT1",
+                "part_name": "A", "question_number": "1", "sub_question": "",
+                "option_letter": "", "max_marks": 100, "marks_obtained": 40,
+            },
+            {
+                "student_id": 1, "course_code": "CS3401", "exam_name": "IAT1",
+                "part_name": "A", "question_number": "1", "sub_question": "",
+                "option_letter": "", "max_marks": 100, "marks_obtained": 50,
+            },
+        ]
+        with patch.object(self.bot, "_active_students_for_role", return_value=[student]), \
+             patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_scope_subject_marks_queryset") as scope_mock:
+            scope_mock.return_value.values.return_value.order_by.return_value = mark_details
+            response = self.bot._handle_ca_low_performing("T001", "Class Advisor")
+        self.assertIn("AD3491 | IAT1", response)
+        self.assertIn("CS3401 | IAT1", response)
+        self.assertIn("40%", response)
+        self.assertIn("50%", response)
+
+    def test_handler_handles_option_questions_correctly(self):
+        student = self._make_student()
+        mark_details = [
+            {
+                "student_id": 1, "course_code": "AD3491", "exam_name": "IAT1",
+                "part_name": "A", "question_number": "1", "sub_question": "",
+                "option_letter": "a", "max_marks": 10, "marks_obtained": 5,
+            },
+            {
+                "student_id": 1, "course_code": "AD3491", "exam_name": "IAT1",
+                "part_name": "A", "question_number": "1", "sub_question": "",
+                "option_letter": "b", "max_marks": 10, "marks_obtained": 3,
+            },
+            {
+                "student_id": 1, "course_code": "AD3491", "exam_name": "IAT1",
+                "part_name": "A", "question_number": "2", "sub_question": "",
+                "option_letter": "", "max_marks": 80, "marks_obtained": 30,
+            },
+        ]
+        with patch.object(self.bot, "_active_students_for_role", return_value=[student]), \
+             patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_scope_subject_marks_queryset") as scope_mock:
+            scope_mock.return_value.values.return_value.order_by.return_value = mark_details
+            response = self.bot._handle_ca_low_performing("T001", "Class Advisor")
+        self.assertIn("AD3491 | IAT1", response)
+        self.assertIn("Student A", response)
+
+    def test_handler_evaluates_iat1_and_iat2_separately(self):
+        student = self._make_student()
+        mark_details = [
+            {
+                "student_id": 1, "course_code": "AD3491", "exam_name": "IAT1",
+                "part_name": "A", "question_number": "1", "sub_question": "",
+                "option_letter": "", "max_marks": 100, "marks_obtained": 80,
+            },
+            {
+                "student_id": 1, "course_code": "AD3491", "exam_name": "IAT2",
+                "part_name": "A", "question_number": "1", "sub_question": "",
+                "option_letter": "", "max_marks": 100, "marks_obtained": 45,
+            },
+        ]
+        with patch.object(self.bot, "_active_students_for_role", return_value=[student]), \
+             patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_scope_subject_marks_queryset") as scope_mock:
+            scope_mock.return_value.values.return_value.order_by.return_value = mark_details
+            response = self.bot._handle_ca_low_performing("T001", "Class Advisor")
+        self.assertIn("Student A", response)
+        self.assertIn("AD3491 | IAT2", response)
+        self.assertIn("45%", response)
+        self.assertNotIn("AD3491 | IAT1", response)
+
+    def test_handler_shows_no_marks_message_for_students_without_marks(self):
+        student = self._make_student()
+        with patch.object(self.bot, "_active_students_for_role", return_value=[student]), \
+             patch.object(self.bot, "_get_faculty_info", return_value=self.faculty), \
+             patch.object(self.bot, "_scope_subject_marks_queryset") as scope_mock:
+            scope_mock.return_value.values.return_value.order_by.return_value = []
+            response = self.bot._handle_ca_low_performing("T001", "Class Advisor")
+        self.assertIn("Mark was not listed", response)
+        self.assertIn("Student | Register Number | Status", response)
+        self.assertIn("--- | --- | ---", response)
+        self.assertIn("Student A | 123456789001 | Mark was not listed", response)
+        self.assertNotIn("1. Student A", response)
+        self.assertIn("Student A", response)

@@ -31,14 +31,14 @@ class KnowledgeBase:
                 "- List students across departments.\n"
                 "- View academic profiles, marks, attendance, and reports.\n"
                 "- Query subject allocations and class performance.\n"
-                "- Review daily briefings and institution-scoped early-warning indicators."
+                "- Review institution-scoped early-warning indicators."
             )
         if role == "HOD":
             return (
                 "As HOD, you can:\n- List students in your department.\n"
                 "- Analyze permitted student performance.\n"
                 "- View subject-specific class reports.\n"
-                "- Get daily briefings, pending-work lists, and early-warning alerts."
+                "- Get early-warning alerts."
             )
         if role == "Vice Principal":
             return "As Vice Principal, you can query institution-level student profiles, marks, and reports."
@@ -47,8 +47,8 @@ class KnowledgeBase:
                 "You can:\n- List students assigned to your current role.\n"
                 "- View subjects you handle.\n"
                 "- Retrieve permitted student marks and performance details.\n"
-                "- Get a daily briefing, pending-work checklist, and early-warning alerts.\n"
+                "- Get early-warning alerts.\n"
                 "- Draft assessments, record mentor follow-ups, and submit reports with confirmation.\n"
-                "Try: 'daily briefing', 'pending work', 'early warning students', or 'assessment assistant'."
+                "Try: 'early warning students' or 'assessment assistant'."
             )
         return "I can help with ERP academic data available to your current faculty role."

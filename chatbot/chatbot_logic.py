@@ -1,7 +1,8 @@
 import re
 import random
 import math
-from datetime import datetime
+import logging
+from datetime import datetime, timedelta
 from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth.signals import user_logged_out
@@ -10,6 +11,7 @@ from django.dispatch import receiver
 from chatbot.models import Notification
 from .knowledge_base import KnowledgeBase
 from .student_prompts import (
+    FACULTY_STUDENT_PERFORMANCE_SYSTEM_PROMPT,
     STUDENT_OVERALL_PERFORMANCE_SYSTEM_PROMPT,
     STUDENT_PERFORMANCE_SYSTEM_PROMPT,
 )
@@ -36,6 +38,40 @@ from student_management.models import (
     StudentProjects,
     StudentPublication,
 )
+
+
+FACULTY_CANONICAL_SECTIONS = [
+    "Student Details",
+    "Strengths",
+    "Weaknesses",
+    "How to Overcome",
+    "Recommendations",
+    "Conclusion",
+    "Data Note",
+]
+
+FACULTY_CORE_SECTIONS = [
+    "Strengths",
+    "Weaknesses",
+    "How to Overcome",
+    "Recommendations",
+    "Conclusion",
+]
+
+FACULTY_SECTION_KEYS = {
+    " ".join(section.split()).lower(): section
+    for section in FACULTY_CANONICAL_SECTIONS
+}
+
+FACULTY_DATA_NOTE = (
+    "**Data Note**\n"
+    "1. This analysis uses only the ERP data supplied for the selected student "
+    "within the authenticated faculty role's scope.\n"
+    "2. Missing or unpublished records are shown as N/A and are not interpreted "
+    "as poor performance."
+)
+
+logger = logging.getLogger(__name__)
 
 
 class ERPBot:
@@ -451,6 +487,190 @@ class ERPBot:
             pass
         return None
 
+    def _faculty_student_details_block(self, student):
+        department_name = (
+            getattr(getattr(student, "department", None), "Department", None)
+            or "N/A"
+        )
+        return "\n".join([
+            "**Student Details**",
+            f"1. **Name:** {getattr(student, 'name', None) or 'N/A'}",
+            f"2. **Register Number:** {getattr(student, 'reg_no', None) or 'N/A'}",
+            f"3. **Department:** {department_name}",
+            f"4. **Batch:** {getattr(student, 'batch', None) or 'N/A'}",
+            f"5. **Year:** {getattr(student, 'year', None) or 'N/A'}",
+            f"6. **Semester:** {getattr(student, 'semester', None) or 'N/A'}",
+            f"7. **Section:** {getattr(student, 'section', None) or 'N/A'}",
+        ])
+
+    @staticmethod
+    def _normalize_faculty_heading(line):
+        line = line.strip()
+        line = re.sub(r"^[#>*_~`\-\s]+", "", line)
+        line = re.sub(r"^\d+[.)]\s*", "", line)
+        line = re.sub(r"^[#>*_~`\-\s]+", "", line)
+        line = line.strip("#*>_~`").strip()
+        line = re.sub(r"[:.,\-\s]+$", "", line)
+        return " ".join(line.split()).lower()
+
+    def _canonicalize_faculty_headings(self, text):
+        lines = []
+        for raw_line in (text or "").splitlines():
+            line = raw_line.strip()
+            if re.fullmatch(r"`{3,}|~{3,}", line):
+                continue
+            if re.fullmatch(r"[*_\-]{3,}", line):
+                continue
+            normalized = self._normalize_faculty_heading(line)
+            if normalized in FACULTY_SECTION_KEYS:
+                lines.append(f"**{FACULTY_SECTION_KEYS[normalized]}**")
+                continue
+            line = re.sub(r"^#{1,6}\s+", "", line)
+            lines.append(line)
+        return "\n".join(lines).strip()
+
+    def _found_faculty_sections(self, text):
+        return {
+            section
+            for section in FACULTY_CANONICAL_SECTIONS
+            if f"**{section}**" in (text or "")
+        }
+
+    def _faculty_ai_student_performance_report(
+        self,
+        analysis_scope,
+        student,
+        snapshots,
+        activity_counts=None,
+    ):
+        """Ask Ollama for the full faculty-facing student performance report.
+
+        Returns the validated AI report text or None so the caller can fall
+        back to the deterministic formatted analysis on any failure.
+        """
+        if not snapshots:
+            return None
+
+        department_name = (
+            getattr(getattr(student, "department", None), "Department", None)
+            or "N/A"
+        )
+        lines = [
+            f"Name: {getattr(student, 'name', None) or 'N/A'}",
+            f"Register Number: {getattr(student, 'reg_no', None) or 'N/A'}",
+            f"Department: {department_name}",
+            f"Batch: {getattr(student, 'batch', None) or 'N/A'}",
+            f"Year: {getattr(student, 'year', None) or 'N/A'}",
+            f"Semester: {getattr(student, 'semester', None) or 'N/A'}",
+            f"Section: {getattr(student, 'section', None) or 'N/A'}",
+        ]
+
+        for snapshot in snapshots:
+            semester = snapshot.get("semester")
+            academic_year = snapshot.get("academic_year") or "N/A"
+            lines.append("")
+            lines.append(f"Semester {semester} ({academic_year}):")
+            marks = snapshot.get("marks") or []
+            if marks:
+                lines.append("Recorded subject marks:")
+                lines.extend(
+                    f"- {row.get('course__title') or 'Subject'} "
+                    f"({row.get('course_code') or 'N/A'}): "
+                    f"{row.get('percentage') if row.get('percentage') is not None else 'N/A'}%"
+                    for row in marks
+                )
+            else:
+                lines.append("Recorded subject marks: N/A")
+            attendance = snapshot.get("attendance") or []
+            if attendance:
+                lines.append("Recorded attendance:")
+                for row in attendance:
+                    if row.get("total"):
+                        percentage = round(
+                            ((row.get("attended") or 0) / row["total"]) * 100, 2
+                        )
+                    else:
+                        percentage = None
+                    lines.append(
+                        f"- {row.get('course__title') or 'Subject'} "
+                        f"({row.get('course__course_code') or 'N/A'}): "
+                        f"{percentage if percentage is not None else 'N/A'}%"
+                    )
+            else:
+                lines.append("Recorded attendance: N/A")
+            gpa = snapshot.get("gpa") or {}
+            lines.append(
+                f"GPA/CGPA: GPA {gpa.get('gpa') if gpa.get('gpa') is not None else 'N/A'}, "
+                f"CGPA {gpa.get('cgpa') if gpa.get('cgpa') is not None else 'N/A'}"
+            )
+            results = snapshot.get("results") or []
+            if results:
+                lines.append("Published end-semester results:")
+                lines.extend(
+                    f"- {row.get('course__title') or 'Subject'} "
+                    f"({row.get('course__course_code') or 'N/A'}): "
+                    f"Grade {row.get('grade') or 'N/A'}, "
+                    f"grade total {row.get('grade_total') if row.get('grade_total') is not None else 'N/A'}"
+                    for row in results
+                )
+            else:
+                lines.append("Published end-semester results: N/A")
+
+        if activity_counts is not None:
+            lines.extend([
+                "",
+                "Recorded development activities:",
+                f"- Achievements: {activity_counts.get('achievements', 'N/A')}",
+                f"- Co-curricular records: {activity_counts.get('co_curricular', 'N/A')}",
+                f"- Publications: {activity_counts.get('publications', 'N/A')}",
+                f"- Projects: {activity_counts.get('projects', 'N/A')}",
+            ])
+        else:
+            lines.extend(["", "Recorded development activities: N/A"])
+
+        user_message = "\n".join(lines)
+        try:
+            response = self._ai_client().chat.completions.create(
+                model=self._ai_model(),
+                messages=[
+                    {
+                        "role": "system",
+                        "content": FACULTY_STUDENT_PERFORMANCE_SYSTEM_PROMPT,
+                    },
+                    {"role": "user", "content": user_message},
+                ],
+                temperature=0.1,
+                max_tokens=min(max(self._ai_max_tokens(), 1500), 4096),
+            )
+            ai_text = self._strip_model_reasoning(
+                response.choices[0].message.content,
+                preserve_bold=True,
+            )
+            canonical_text = self._canonicalize_faculty_headings(ai_text)
+            found = self._found_faculty_sections(canonical_text)
+            if found.issuperset(FACULTY_CORE_SECTIONS):
+                if "Student Details" not in found:
+                    canonical_text = (
+                        self._faculty_student_details_block(student)
+                        + "\n\n"
+                        + canonical_text
+                    )
+                if "Data Note" not in found:
+                    canonical_text = canonical_text + "\n\n" + FACULTY_DATA_NOTE
+                return canonical_text
+            logger.warning(
+                "Faculty AI performance report rejected for %s: missing sections %s",
+                getattr(student, "reg_no", "N/A"),
+                sorted(set(FACULTY_CORE_SECTIONS) - found),
+            )
+        except Exception as exc:
+            logger.warning(
+                "Faculty AI performance report call failed for %s: %s",
+                getattr(student, "reg_no", "N/A"),
+                exc,
+            )
+        return None
+
     def _format_overall_student_performance_analysis(
         self,
         current_scope,
@@ -743,6 +963,42 @@ class ERPBot:
     def _is_mentor_role(self, active_role):
         return self._normalize_role_name(active_role) == "mentor"
 
+    def _has_role(self, target, active_role, all_roles=None):
+        """Return True if the user holds *target* in active_role or any all_roles entry."""
+        if self._is_ca_role(target):
+            if self._is_ca_role(active_role):
+                return True
+            return any(self._is_ca_role(r) for r in (all_roles or []))
+        if self._is_mentor_role(target):
+            if self._is_mentor_role(active_role):
+                return True
+            return any(self._is_mentor_role(r) for r in (all_roles or []))
+        normalized_target = self._normalize_role_name(target)
+        return (
+            self._normalize_role_name(active_role) == normalized_target
+            or any(self._normalize_role_name(r) == normalized_target for r in (all_roles or []))
+        )
+
+    def _resolve_effective_role(self, active_role, all_roles):
+        """Pick the highest-scope role the user holds from all_roles."""
+        if not all_roles:
+            return active_role
+        role_precedence = [
+            ({"admin", "administrator"}, "Admin"),
+            ({"vice principal"}, "Vice Principal"),
+            ({"hod", "head of department", "head of the department"}, "HOD"),
+            ({"advisor", "ca", "class advisor"}, "Class Advisor"),
+            ({"mentor"}, "Mentor"),
+            ({"subject faculty", "subject teacher", "teacher", "faculty"}, "Faculty"),
+        ]
+        normalized_map = {}
+        for role in all_roles:
+            normalized_map[self._normalize_role_name(role)] = role
+        for aliases, canonical in role_precedence:
+            if aliases.intersection(normalized_map):
+                return canonical
+        return active_role
+
     def _is_teacher_role(self, active_role):
         return self._normalize_role_name(active_role) in {
             "teacher", "faculty", "subject faculty", "subject teacher"
@@ -780,8 +1036,10 @@ class ERPBot:
         """
         text = self._normalize_role_name(query)
         analytics_terms = [
-            "attendance", "marks", "performance", "report", "top student",
+            "attendance", "marks", "performance", "report", "top", "top student",
             "low student", "cgpa", "gpa", "result", "need mentoring",
+            "publication", "published", "project", "achievement",
+            "co-curricular", "co curricular", "curricular",
         ]
         if any(term in text for term in analytics_terms):
             return None
@@ -869,6 +1127,57 @@ class ERPBot:
             )
         return None, "Access denied: none of your assigned roles can list students."
 
+    def _student_analytics_role_hint(self, query):
+        """Return the explicit student scope named inside an analytics request."""
+        text = self._normalize_role_name(query)
+
+        mentor_terms = [
+            "mentee", "mentees", "mentor student", "mentor students",
+            "my mentor students", "under my mentorship", "under mentorship",
+            "advisee", "advisees",
+        ]
+        if any(term in text for term in mentor_terms):
+            return "Mentor"
+
+        department_terms = [
+            "department students", "department student", "my department students",
+            "students in my department", "students from my department",
+        ]
+        if any(term in text for term in department_terms):
+            return "HOD"
+
+        class_terms = [
+            "my class", "my classes", "class students", "class student",
+            "my ca students", "ca students", "advisor students",
+            "class advisor students",
+        ]
+        if any(term in text for term in class_terms):
+            return "Class Advisor"
+
+        return None
+
+    def _resolve_student_analytics_role(self, query, active_role, all_roles=None):
+        """Choose the authorized role for scoped student analytics queries."""
+        requested_role = self._student_analytics_role_hint(query)
+        if not requested_role:
+            return active_role, None
+
+        assigned_roles = {
+            self._canonical_role(role)
+            for role in (all_roles or [active_role])
+            if str(role or "").strip()
+        }
+        active_canonical = self._canonical_role(active_role)
+        if active_canonical:
+            assigned_roles.add(active_canonical)
+
+        if requested_role not in assigned_roles:
+            return None, (
+                f"Access denied: this request requires your {requested_role} role, "
+                "but that role is not assigned to your account."
+            )
+        return requested_role, None
+
     def _resolve_class_report_role(self, active_role, all_roles=None):
         """Choose the broadest verified academic role for a class report."""
         assigned_roles = {
@@ -937,6 +1246,12 @@ class ERPBot:
         if conversation_state is None:
             conversation_state = self.conversation_state
 
+        # ROLE RESOLUTION: If the user holds a higher-scope role (e.g.
+        # Class Advisor, Mentor, HOD) in all_roles, promote active_role so
+        # every downstream handler sees the correct authorization scope.
+        if all_roles and not self._is_student_role(active_role):
+            active_role = self._resolve_effective_role(active_role, all_roles)
+
         # FAIL-SAFE: If active role is missing or invalid, do not answer or deny.
         if not active_role:
              return "I'm sorry, I cannot perform any actions without an active role selection from your dashboard."
@@ -976,9 +1291,12 @@ class ERPBot:
             "who are you", "usage", "options", "commands", "what do you do"
         ]
 
+        def normalized_short_message(text):
+            return " ".join(str(text or "").split()).strip(" ?!.,").lower()
+
         def is_simple_greeting(text):
-            words = text.split()
-            return (not text) or (len(words) <= 4 and any(k in text for k in greeting_keywords))
+            normalized = normalized_short_message(text)
+            return (not normalized) or normalized in greeting_keywords
 
         # 0. Strict First-Time Greeting (Only appears once after login)
         # If the first message is a greeting or empty, greet; otherwise, proceed to answer the question.
@@ -987,7 +1305,7 @@ class ERPBot:
         
         # 0.1 Diverse Greeting & Help Logic
 
-        if any(word in query for word in greeting_keywords) and len(query.split()) < 3:
+        if normalized_short_message(query) in greeting_keywords and len(query.split()) < 3:
             greet = random.choice([
                 f"How can I assist you today, {faculty_name}?",
                 "Ready for your query. What are you looking for?"
@@ -1019,17 +1337,73 @@ class ERPBot:
         ]):
             return self._handle_pending_work(faculty_id, active_role)
 
+        _mentor_attention_terms = [
+            "mentees need academic attention", "mentees need attention",
+            "need academic attention", "mentees academic attention",
+            "which mentees need", "show low-performing mentees",
+            "low-performing mentees", "low performing mentees",
+            "who needs academic attention", "which of my mentees",
+            "mentees performing poorly", "identify students who need support",
+        ]
+        _low_perf_terms = [
+            "low performer", "low-performing", "low performing",
+            "weak student", "weak students", "students below",
+        ]
+        course_code = self._extract_course_code(raw_query)
+        _mentor_attention_requested = any(
+            phrase in query for phrase in _mentor_attention_terms
+        )
+        _mentor_attendance_requested = "mentee" in query and "attendance" in query
+        _risk_with_course = (
+            course_code
+            and any(term in query for term in ["at risk", "at-risk"])
+        )
+        _has_low_perf = any(term in query for term in _low_perf_terms) or _risk_with_course
+        _has_early_warning = any(phrase in query for phrase in [
+            "early warning", "at risk", "at-risk", "risk students",
+            "students needing attention", "students need attention",
+            "low attendance or marks", "low attendance or low marks",
+        ])
+
+        analytics_role = active_role
+        if _mentor_attention_requested or _mentor_attendance_requested or _has_low_perf or _has_early_warning:
+            analytics_role, analytics_role_error = self._resolve_student_analytics_role(
+                raw_query, active_role, all_roles=all_roles
+            )
+            if analytics_role_error:
+                return analytics_role_error
+
+        if (
+            (_mentor_attention_requested or _mentor_attendance_requested or _has_low_perf)
+            and self._is_mentor_role(analytics_role)
+            and not course_code
+        ):
+            return self._handle_mentor_attention_students(
+                faculty_id, analytics_role, raw_query
+            )
+
+        if _mentor_attention_requested and self._is_mentor_role(analytics_role):
+            return self._handle_ca_low_performing(
+                faculty_id, analytics_role, course_code=course_code
+            )
+
+        if _has_low_perf and self._is_ca_role(analytics_role):
+            return self._handle_ca_low_performing(
+                faculty_id, analytics_role, course_code=course_code
+            )
+
+        if _has_low_perf and self._is_mentor_role(analytics_role):
+            return self._handle_ca_low_performing(
+                faculty_id, analytics_role, course_code=course_code
+            )
+
         if self._is_subject_risk_query(raw_query):
             return self._handle_subject_risk_students(
                 faculty_id, active_role, raw_query
             )
 
-        if any(phrase in query for phrase in [
-            "early warning", "at risk", "at-risk", "risk students",
-            "students needing attention", "students need attention",
-            "low attendance or marks", "low attendance or low marks",
-        ]):
-            return self._handle_early_warning(faculty_id, active_role)
+        if _has_early_warning:
+            return self._handle_early_warning(faculty_id, analytics_role)
 
         if any(phrase in query for phrase in [
             "create question", "generate question", "question paper",
@@ -1182,7 +1556,7 @@ class ERPBot:
             student_reg_no = reg_match.group(0)
             if "attendance" in query or "present" in query or "absent" in query:
                 return self._handle_student_attendance_query(
-                    faculty_id, student_reg_no, active_role
+                    faculty_id, student_reg_no, active_role, raw_query
                 )
             if any(token in query for token in ["semester result", "semester results", "gpa", "cgpa", "grade"]):
                 return self._handle_student_semester_results(
@@ -1234,8 +1608,26 @@ class ERPBot:
         if any(term in query for term in [
             "timetable", "time table", "next class", "today's classes",
             "classes today", "weekly schedule", "class schedule",
+            "tomorrow", "yesterday",
         ]):
             return self._handle_student_timetable(student, query)
+
+        if any(term in query for term in [
+            "register number", "register no", "reg no", "reg number",
+            "roll number", "roll no",
+        ]):
+            return (
+                f"Your register number is {student.reg_no or 'N/A'}."
+            )
+
+        if any(term in query for term in [
+            "academic year", "my batch", "batch", "year of admission",
+            "my year", "which year", "current year",
+        ]):
+            return (
+                f"Academic Year: {student.year or 'N/A'}\n"
+                f"Batch: {student.batch or 'N/A'}"
+            )
 
         if any(term in query for term in [
             "my profile", "my details", "student profile", "about me",
@@ -1244,6 +1636,15 @@ class ERPBot:
             "class advisor", "class adviser", "my advisor", "my adviser",
             "my mentor", "mentor details", "advisor details",
         ]):
+            if any(term in query for term in [
+                "attendance", "present", "absent", "classes can i miss",
+                "classes should i attend", "classes required", "reach 75",
+            ]):
+                return self._handle_student_attendance(student, query)
+            if "mark" in query or "iat" in query or "model exam" in query or "internal" in query:
+                return self._handle_student_internal_marks(student, query)
+            if any(term in query for term in ["result", "grade", "gpa", "cgpa"]):
+                return self._handle_student_results(student, query)
             department = getattr(getattr(student, "department", None), "Department", None) or "N/A"
             advisor = getattr(student, "ca", None)
             mentor = getattr(student, "mentor", None)
@@ -1591,16 +1992,57 @@ class ERPBot:
             if is_historical_request
             else f"Current Semester {semester}"
         )
-        lines = [f"My Internal Marks | {heading_scope}"]
-        if academic_year:
-            lines.append(f"Academic Year: {academic_year}")
+
+        exam_order = {"iat1": 1, "iat2": 2, "iat3": 3}
+        by_course = {}
+        all_exams = set()
         for item in marks:
             code = item["course_code"] or "N/A"
             title = item["course__title"] or "Subject"
             exam = item["exam_name"] or "Assessment"
-            obtained = item["obtained"] if item["obtained"] is not None else "N/A"
-            maximum = item["maximum"] if item["maximum"] is not None else "N/A"
-            lines.append(f"- {title} ({code}) | {exam}: {obtained}/{maximum}")
+            normalized = self._normalize_exam_name(exam)
+            key = (code, title)
+            by_course.setdefault(key, {})[normalized] = item
+            all_exams.add(normalized)
+
+        sorted_exams = sorted(all_exams, key=lambda e: exam_order.get(e, 99))
+        exam_labels = {
+            "iat1": "IAT 1",
+            "iat2": "IAT 2",
+            "iat3": "IAT 3",
+        }
+
+        lines = [f"My Internal Marks | {heading_scope}"]
+        if academic_year:
+            lines.append(f"Academic Year: {academic_year}")
+        lines.append("")
+
+        if len(sorted_exams) >= 2:
+            header_cols = ["Subject"] + [exam_labels.get(e, e.upper()) for e in sorted_exams]
+            all_rows = []
+            for (code, title), exam_map in by_course.items():
+                row = [f"{title} ({code})"]
+                for exam in sorted_exams:
+                    item = exam_map.get(exam)
+                    if item and item.get("obtained") is not None and item.get("maximum") is not None:
+                        row.append(f"{item['obtained']}/{item['maximum']}")
+                    else:
+                        row.append("N/A")
+                all_rows.append(row)
+            lines.append(" | ".join(header_cols))
+            lines.append(" | ".join(["---"] * len(header_cols)))
+            for row in all_rows:
+                lines.append(" | ".join(row))
+        else:
+            for (code, title), exam_map in by_course.items():
+                for exam in sorted_exams:
+                    item = exam_map.get(exam)
+                    exam_label = exam_labels.get(exam, exam.upper())
+                    if item and item.get("obtained") is not None and item.get("maximum") is not None:
+                        lines.append(f"- {title} ({code}) | {exam_label}: {item['obtained']}/{item['maximum']}")
+                    else:
+                        lines.append(f"- {title} ({code}) | {exam_label}: N/A")
+
         return "\n".join(lines)
 
     def _handle_student_results(self, student, query):
@@ -1678,6 +2120,15 @@ class ERPBot:
             None,
         )
         weekly = any(term in query for term in ["weekly", "whole week", "full timetable", "week timetable"])
+
+        if not requested_day and not weekly:
+            if "tomorrow" in query:
+                tomorrow = datetime.now() + timedelta(days=1)
+                requested_day = tomorrow.strftime("%A")
+            elif "yesterday" in query:
+                yesterday = datetime.now() - timedelta(days=1)
+                requested_day = yesterday.strftime("%A")
+
         target_day = requested_day or (None if weekly else datetime.now().strftime("%A"))
 
         allocations = PeriodAllocation.objects.filter(
@@ -1713,26 +2164,27 @@ class ERPBot:
         }
 
         heading = (
-            f"My Weekly Timetable | Semester {semester} | Section {section}"
+            f"**My Weekly Timetable | Semester {semester} | Section {section}**"
             if not target_day
-            else f"My Timetable for {target_day} | Semester {semester} | Section {section}"
+            else f"**My Timetable for {target_day} | Semester {semester} | Section {section}**"
         )
-        lines = [heading]
+        lines = [heading, ""]
         if "next class" in query:
             lines.append(
                 "Note: ERP stores period order but no bell-time mapping, so the exact next period cannot be calculated."
             )
         for allocation in allocation_rows:
-            periods = []
+            if not target_day:
+                lines.append(f"**{allocation.day}**")
             for number, field in enumerate(period_fields, start=1):
                 code = str(getattr(allocation, field, "") or "").strip()
                 if not code:
                     continue
                 title = course_titles.get(code.upper())
-                label = f"{code} - {title}" if title else code
-                periods.append(f"P{number}: {label}")
-            lines.append(f"{allocation.day}: " + (" | ".join(periods) if periods else "No classes assigned"))
-        return "\n".join(lines)
+                label = f"{title}" if title else ""
+                lines.append(f"{number}. **P{number}** — {code}{': ' + label if label else ''}")
+            lines.append("")
+        return "\n".join(lines).rstrip()
 
     def _student_hour_attendance_rows(self, student, semester, academic_year=None):
         base_attendance = HourAttendance.objects.filter(
@@ -1769,6 +2221,20 @@ class ERPBot:
             )
         return rows
 
+    def _student_daily_attendance_summary(self, student, semester, academic_year=None):
+        """Fallback: query Daily_Attendance when HourAttendance has no records."""
+        base = Daily_Attendance.objects.filter(student=student, semester__iexact=str(semester))
+        if academic_year:
+            base = base.filter(academic_year=academic_year)
+        records = list(base.values_list("morning_status", "afternoon_status"))
+        if academic_year and not records:
+            records = list(
+                Daily_Attendance.objects.filter(
+                    student=student, semester__iexact=str(semester),
+                ).values_list("morning_status", "afternoon_status")
+            )
+        return records
+
     def _attendance_projection(self, attended, total, threshold=75):
         if total <= 0:
             return 0, 0
@@ -1790,8 +2256,34 @@ class ERPBot:
         _subjects, academic_year = self._get_student_subject_enrollments(student, semester)
         rows = self._student_hour_attendance_rows(student, semester, academic_year)
         if not rows:
+            daily_records = self._student_daily_attendance_summary(student, semester, academic_year)
+            if daily_records:
+                statuses = [s for pair in daily_records for s in pair if s]
+                present = sum(s in {"Present", "On Duty"} for s in statuses)
+                absent = sum(s == "Absent" for s in statuses)
+                percentage = round((present / len(statuses)) * 100, 2) if statuses else 0
+                required, safe_absences = self._attendance_projection(present, len(statuses))
+                guidance = (
+                    f"Attend the next **{required}** session(s) to reach **75%**."
+                    if required
+                    else f"Up to **{safe_absences}** additional absence(s) before dropping below **75%**."
+                )
+                lines = [
+                    f"**My Attendance | Semester {semester}**",
+                    "",
+                    "**Daily Attendance Summary**",
+                    f"- **Percentage:** **{percentage}%**",
+                    f"- **Sessions Attended:** **{present}/{len(statuses)}**",
+                    f"- **Absent:** **{absent}**",
+                    f"- **Guidance:** {guidance}",
+                ]
+                if academic_year:
+                    lines.append(f"- **Academic Year:** **{academic_year}**")
+                lines.append("")
+                lines.append("_Showing daily (morning + afternoon) attendance. Period-wise subject attendance will appear once faculty mark it._")
+                return "\n".join(lines)
             scope = "requested" if is_historical_request else "current"
-            return f"No subject-wise attendance records were found for your {scope} semester (Semester {semester})."
+            return f"No attendance records were found for your {scope} semester (Semester {semester}). Attendance may not have been marked yet."
 
         requested_code = self._extract_course_code(query)
         if requested_code:
@@ -1919,100 +2411,266 @@ class ERPBot:
             lines.append("Latest published GPA/CGPA: N/A")
         return "\n".join(lines)
 
+    _CUMULATIVE_KEYWORDS = (
+        "overall", "cumulative", "all semester", "every semester",
+        "complete academic", "across all", "entire academic",
+    )
+
+    def _is_cumulative_request(self, query):
+        """Return True when the student explicitly asks for multi-semester analysis."""
+        text = self._normalize_role_name(query)
+        return any(term in text for term in self._CUMULATIVE_KEYWORDS)
+
     def _handle_student_performance_insights(self, student, query=""):
         requested_semester = self._extract_student_subject_semester(query)
-        if requested_semester is None:
-            return self._handle_student_overall_performance_insights(student)
-
-        semester = requested_semester
-        is_historical_request = True
-        if semester is None:
-            return "Your current semester is not assigned in the ERP profile. Please contact the department office."
-        _subjects, academic_year = self._get_student_subject_enrollments(student, semester)
-        rows = self._student_mark_performance_rows(student, semester, academic_year)
-        if not rows:
-            scope = "requested" if is_historical_request else "current"
-            return f"No {scope}-semester internal marks are available for performance analysis (Semester {semester})."
-        ranked = sorted(rows, key=lambda row: (-row["percentage"], str(row["course_code"] or "")))
-        strongest = ranked[0]
-        weakest = ranked[-1]
-        average = round(sum(row["percentage"] for row in rows) / len(rows), 2)
-        attention = [row for row in ranked if row["percentage"] < average]
-        fallback_lines = [
-            f"**My Performance Insights | Semester {semester}**",
-            "",
-            "**Performance Summary**",
-            f"- **Recorded subject average:** {average}%",
-            f"- **Strongest subject:** {strongest['course__title'] or 'Subject'} ({strongest['course_code'] or 'N/A'}) - {strongest['percentage']}%",
-            f"- **Needs most attention:** {weakest['course__title'] or 'Subject'} ({weakest['course_code'] or 'N/A'}) - {weakest['percentage']}%",
-            "",
-            "**Study Recommendations**",
-        ]
-        focus_rows = attention[:3] or [weakest]
-        for index, row in enumerate(focus_rows, start=1):
-            fallback_lines.append(
-                f"{index}. Prioritize {row['course__title'] or 'Subject'} ({row['course_code'] or 'N/A'}): "
-                "review low-scoring assessment topics, practise related problems, and discuss unresolved areas with the subject faculty."
+        if requested_semester is not None:
+            return self._handle_student_semester_performance_insights(
+                student, query, requested_semester,
             )
+        if self._is_cumulative_request(query):
+            return self._handle_student_overall_performance_insights(student)
+        return self._handle_student_current_semester_performance(student)
+
+    @staticmethod
+    def _build_student_context_block(student, semester, academic_year):
+        """Return the common student-details block reused by both semester and cumulative prompts."""
         department_name = (
             getattr(getattr(student, "department", None), "Department", None)
-            or "your department"
+            or "N/A"
         )
-        fallback_lines.extend([
-            "",
-            "**Department-Related Project Ideas**",
-            f"1. Build a small {department_name} project that applies concepts from "
-            f"{weakest['course__title'] or 'the subject needing attention'} to a practical problem.",
-            f"2. Extend a concept from {strongest['course__title'] or 'your strongest subject'} "
-            "into a demonstrable mini-project and review its scope with a faculty member.",
-            "",
-            "**Extracurricular Development**",
-            "1. Participate in a technical club, hackathon, paper presentation, or project showcase related to your interests.",
-            "2. Include a sport, cultural activity, volunteering opportunity, or communication activity to develop teamwork and confidence.",
-            "",
-            "**Data Note**",
-            "1. These insights use only currently recorded internal marks; unpublished assessments are not included.",
-        ])
-        fallback = "\n".join(fallback_lines)
+        return {
+            "student": student,
+            "department_name": department_name,
+            "semester": semester,
+            "academic_year": academic_year,
+            "student_block": (
+                f"Student Name: {getattr(student, 'name', None) or 'N/A'}\n"
+                f"Register Number: {getattr(student, 'reg_no', None) or 'N/A'}\n"
+                f"Department: {department_name}\n"
+                f"Batch: {getattr(student, 'batch', None) or 'N/A'}\n"
+                f"Year: {getattr(student, 'year', None) or 'N/A'}\n"
+                f"Semester: {semester}\n"
+                f"Section: {getattr(student, 'section', None) or 'N/A'}"
+            ),
+        }
 
-        attendance_rows = self._student_hour_attendance_rows(
-            student,
-            semester,
-            academic_year,
-        )
-        latest_gpa = (
-            GPA.objects.filter(student=student, semester__iexact=str(semester))
-            .order_by("-academic_year", "-id")
-            .values("gpa", "cgpa", "semester", "academic_year")
-            .first()
-        )
+    def _build_semester_user_message(self, ctx, ranked, attendance_rows, average, latest_gpa):
+        """Build the deterministic user message sent to the LLM for a single semester."""
         mark_context = "\n".join(
-            f"- {row['course__title'] or 'Subject'} ({row['course_code'] or 'N/A'}): {row['percentage']}%"
+            f"- {row['course__title'] or 'Subject'} ({row['course_code'] or 'N/A'}): "
+            f"Obtained {row.get('obtained') or 0}/{row.get('maximum') or 0} ({row['percentage']}%)"
             for row in ranked
-        )
+        ) or "No recorded marks."
         attendance_context = "\n".join(
             f"- {row['course__title'] or 'Subject'} ({row['course__course_code'] or 'N/A'}): "
             f"{round(((row['attended'] or 0) / row['total']) * 100, 2) if row['total'] else 0}%"
             for row in attendance_rows
         ) or "N/A"
+        gpa_context = "N/A"
         if latest_gpa:
             gpa_context = (
                 f"GPA {latest_gpa['gpa'] if latest_gpa['gpa'] is not None else 'N/A'}, "
                 f"CGPA {latest_gpa['cgpa'] if latest_gpa['cgpa'] is not None else 'N/A'}, "
                 f"Semester {latest_gpa['semester'] or 'N/A'}"
             )
+        fallback_used = ctx.get("fallback_used", False)
+        current_semester = ctx.get("current_semester")
+        fallback_reason = ctx.get("fallback_reason")
+        if fallback_used and current_semester:
+            fallback_header = (
+                f"FALLBACK NOTICE: The student's current semester is Semester {current_semester}, "
+                f"but published academic results are not yet available for that semester. "
+                f"This analysis uses the latest available academic results from Semester {ctx['semester']}. "
+                f"Reason: {fallback_reason}. "
+                f"You MUST include a clear fallback transparency statement at the top of your response, "
+                f"explaining that Semester {current_semester} results are not published and Semester {ctx['semester']} is used instead.\n\n"
+            )
+            analysis_mode = (
+                f"Analysis mode: Latest available semester performance (Semester {ctx['semester']}) "
+                f"[Fallback from Semester {current_semester}]\n"
+            )
         else:
-            gpa_context = "N/A"
-        user_message = (
-            f"Authenticated student: {getattr(student, 'name', None) or 'Student'}\n"
-            f"ERP department: {department_name}\n"
-            f"Selected semester: {semester}\n"
-            f"Academic year: {academic_year or 'N/A'}\n"
+            fallback_header = ""
+            analysis_mode = f"Analysis mode: Current semester performance (Semester {ctx['semester']})\n"
+        return (
+            f"{fallback_header}"
+            f"{ctx['student_block']}\n\n"
+            f"{analysis_mode}"
+            f"Academic year: {ctx['academic_year'] or 'N/A'}\n"
             f"Recorded subject average: {average}%\n"
             f"Latest GPA/CGPA: {gpa_context}\n\n"
-            f"Selected-semester subject performance:\n{mark_context}\n\n"
-            f"Selected-semester subject attendance:\n{attendance_context}"
+            f"Subject performance (internal marks):\n{mark_context}\n\n"
+            f"Subject attendance:\n{attendance_context}\n\n"
+            f"INSTRUCTIONS: Analyze ONLY Semester {ctx['semester']} data shown above. "
+            f"Do NOT reference any other semester. Do NOT calculate values yourself; use the numbers provided. "
+            f"Do NOT claim knowledge, intelligence, personality, motivation, career interest, or any personal attribute. "
+            f"Only state what the marks, attendance, and GPA data directly support."
         )
+
+    def _build_semester_fallback(self, ctx, ranked, attendance_rows, average, latest_gpa):
+        """Deterministic fallback when the LLM call fails or returns invalid output."""
+        semester = ctx["semester"]
+        department_name = ctx["department_name"]
+        student = ctx["student"]
+        fallback_used = ctx.get("fallback_used", False)
+        current_semester = ctx.get("current_semester")
+        strongest = ranked[0] if ranked else None
+        weakest = ranked[-1] if ranked else None
+
+        attended_hours = sum(row.get("attended") or 0 for row in attendance_rows)
+        total_hours = sum(row.get("total") or 0 for row in attendance_rows)
+        attendance_pct = (
+            round((attended_hours / total_hours) * 100, 2) if total_hours else None
+        )
+
+        strengths = []
+        if strongest:
+            strengths.append(
+                f"Highest recorded internal score: {strongest['course__title'] or 'Subject'} "
+                f"({strongest['course_code'] or 'N/A'}) at {strongest['percentage']}% "
+                f"({strongest.get('obtained') or 0}/{strongest.get('maximum') or 0})."
+            )
+        if attendance_pct is not None and attendance_pct >= 75:
+            strengths.append(f"Attendance is {attendance_pct}%, above the 75% monitoring threshold.")
+        if latest_gpa and latest_gpa.get("gpa") is not None:
+            strengths.append(f"Published GPA for Semester {semester} is {latest_gpa['gpa']}.")
+        if not strengths:
+            strengths.append("No evidence-based strength can be identified from the currently recorded Semester data.")
+
+        weaknesses = []
+        if weakest:
+            weaknesses.append(
+                f"Lowest recorded internal score: {weakest['course__title'] or 'Subject'} "
+                f"({weakest['course_code'] or 'N/A'}) at {weakest['percentage']}% "
+                f"({weakest.get('obtained') or 0}/{weakest.get('maximum') or 0})."
+            )
+        if attendance_pct is not None and attendance_pct < 75:
+            weaknesses.append(
+                f"Attendance is {attendance_pct}%, below the 75% monitoring threshold."
+            )
+        if not weaknesses:
+            weaknesses.append("No evidence-based weakness can be identified from the currently recorded Semester data.")
+
+        overcome = []
+        if weakest:
+            overcome.append(
+                f"Weakness: Lowest recorded score in {weakest['course__title'] or 'the subject needing attention'} "
+                f"({weakest['percentage']}%).\n"
+                f"   Suggestion: Allocate additional weekly practice time to this subject, "
+                f"review low-scoring assessment topics, and discuss unresolved areas with the subject faculty."
+            )
+        if attendance_pct is not None and attendance_pct < 75:
+            overcome.append(
+                "Weakness: Attendance below 75%.\n"
+                f"   Suggestion: Prioritize upcoming classes and confirm the attendance recovery "
+                "requirement with the class advisor."
+            )
+        if not overcome:
+            overcome.append("No specific weakness identified that requires an overcoming suggestion.")
+
+        recs = [
+            f"Technical Skills: Review and strengthen core concepts from {strongest['course__title'] if strongest else 'your strongest subject'} and {weakest['course__title'] if weakest else 'a subject needing attention'}.",
+            f"Project Ideas: Build a small {department_name} project applying concepts from {weakest['course__title'] if weakest else 'a recorded subject'} to a practical problem.",
+            "Co-Curricular Activities: Participate in a technical club, hackathon, paper presentation, or project showcase.",
+        ]
+
+        lines = [
+            f"My AI Performance Analysis | Semester {semester}",
+            "",
+        ]
+        if fallback_used and current_semester:
+            lines.extend([
+                "Current Semester Note:",
+                f"Your current semester is Semester {current_semester}, but published academic results "
+                f"are not yet available. This analysis uses your latest available academic results "
+                f"from Semester {semester}.",
+                "",
+            ])
+        lines.extend([
+            "Student Details",
+            f"1. Name: {getattr(student, 'name', None) or 'N/A'}",
+            f"2. Register Number: {getattr(student, 'reg_no', None) or 'N/A'}",
+            f"3. Department: {department_name}",
+            f"4. Batch: {getattr(student, 'batch', None) or 'N/A'}",
+            f"5. Year: {getattr(student, 'year', None) or 'N/A'}",
+            f"6. Semester: {semester}",
+            f"7. Section: {getattr(student, 'section', None) or 'N/A'}",
+            "",
+            "Strengths",
+        ])
+        for i, s in enumerate(strengths, 1):
+            lines.append(f"{i}. {s}")
+        lines.append("")
+        lines.append("Weaknesses")
+        for i, w in enumerate(weaknesses, 1):
+            lines.append(f"{i}. {w}")
+        lines.append("")
+        lines.append("How to Overcome")
+        for i, item in enumerate(overcome, 1):
+            lines.append(f"{i}. {item}")
+        lines.append("")
+        lines.append("Recommendations")
+        for i, r in enumerate(recs, 1):
+            lines.append(f"{i}. {r}")
+        lines.append("")
+        lines.append("Conclusion")
+        lines.append(
+            f"1. Your Semester {semester} recorded internal-mark average is {average}%. "
+            f"Your strongest subject is {strongest['course__title'] if strongest else 'N/A'} "
+            f"({strongest['percentage']}%) and your weakest subject is {weakest['course__title'] if weakest else 'N/A'} "
+            f"({weakest['percentage']}%). "
+            f"{'Attendance is ' + str(attendance_pct) + '%.' if attendance_pct is not None else 'Attendance data is N/A.'} "
+            f"Focus on the areas needing attention and continue building on your strengths."
+        )
+        lines.extend([
+            "",
+            "Data Note",
+            "1. This analysis uses only the authenticated student's ERP data supplied for the selected semester.",
+            "2. Missing or unpublished records are shown as N/A and are not interpreted as poor performance.",
+        ])
+        return "\n".join(lines)
+
+    def _handle_student_semester_performance_insights(
+        self, student, query, semester,
+        current_semester=None, fallback_used=False, fallback_reason=None,
+    ):
+        """Mode B: Analyze a specific explicitly-requested semester only."""
+        _subjects, academic_year = self._get_student_subject_enrollments(student, semester)
+        rows = self._student_mark_performance_rows(student, semester, academic_year)
+        if not rows:
+            return (
+                f"Academic performance data for Semester {semester} is not currently available."
+            )
+
+        ranked = sorted(rows, key=lambda row: (-row["percentage"], str(row["course_code"] or "")))
+        average = round(sum(row["percentage"] for row in rows) / len(rows), 2)
+
+        attendance_rows = self._student_hour_attendance_rows(student, semester, academic_year)
+        latest_gpa = (
+            GPA.objects.filter(student=student, semester__iexact=str(semester))
+            .order_by("-academic_year", "-id")
+            .values("gpa", "cgpa", "semester", "academic_year")
+            .first()
+        )
+        ctx = self._build_student_context_block(student, semester, academic_year)
+        ctx["fallback_used"] = fallback_used
+        ctx["current_semester"] = current_semester
+        ctx["fallback_reason"] = fallback_reason
+        fallback = self._build_semester_fallback(ctx, ranked, attendance_rows, average, latest_gpa)
+
+        user_message = self._build_semester_user_message(
+            ctx, ranked, attendance_rows, average, latest_gpa,
+        )
+        required_sections = [
+            f"My AI Performance Analysis | Semester {semester}",
+            "Student Details",
+            "Strengths",
+            "Weaknesses",
+            "How to Overcome",
+            "Recommendations",
+            "Conclusion",
+            "Data Note",
+        ]
         try:
             response = self._ai_client().chat.completions.create(
                 model=self._ai_model(),
@@ -2032,22 +2690,40 @@ class ERPBot:
                 response.choices[0].message.content,
                 preserve_bold=True,
             )
-            required_sections = [
-                f"**My AI Performance Analysis | Semester {semester}**",
-                "**Overall Assessment**",
-                "**Strengths**",
-                "**Areas Needing Attention**",
-                "**Action Plan**",
-                "**Department-Related Project Ideas**",
-                "**Extracurricular Development**",
-                "**Attendance Guidance**",
-                "**Data Note**",
-            ]
             if ai_text and all(section in ai_text for section in required_sections):
                 return ai_text
         except Exception:
             pass
         return fallback
+
+    def _handle_student_current_semester_performance(self, student):
+        """Mode A: Analyze the latest semester with meaningful published academic results.
+
+        When the current semester has no meaningful academic data, the system
+        falls back to the most recent previous semester that does.
+        """
+        current_semester = self._semester_number(getattr(student, "semester", None))
+        if current_semester is None:
+            return (
+                "Your current semester is not assigned in the ERP student profile. "
+                "Please contact the department office to verify your semester."
+            )
+        selected_semester, fallback_used, fallback_reason = (
+            self._find_latest_available_semester(student, current_semester)
+        )
+        if selected_semester is None:
+            return (
+                "Academic performance data is not currently available. "
+                "Please check again after your academic records are published in the ERP."
+            )
+        return self._handle_student_semester_performance_insights(
+            student,
+            "",
+            selected_semester,
+            current_semester=current_semester,
+            fallback_used=fallback_used,
+            fallback_reason=fallback_reason,
+        )
 
     def _student_recorded_semesters(self, student):
         """Return normalized semesters having any recorded academic data."""
@@ -2069,6 +2745,62 @@ class ERPBot:
             if semester is not None
         }
         return sorted(semesters)
+
+    def _semester_has_meaningful_academic_data(self, student, semester):
+        """Return True when the semester has meaningful published academic results.
+
+        A semester is considered usable when at least one of the following
+        metrics is officially recorded:
+          1. End-semester marks (Result)
+          2. Internal marks (StudentInternalMark)
+          3. GPA
+          4. Practical marks (part of internal marks)
+          5. Assignment marks (part of internal marks)
+
+        Attendance alone is NOT treated as meaningful academic performance
+        when no marks/GPA data exists.
+        """
+        _subjects, academic_year = self._get_student_subject_enrollments(student, semester)
+        has_internal_marks = StudentInternalMark.objects.filter(
+            student=student, semester__iexact=str(semester),
+        ).exclude(
+            Q(marks_obtained__isnull=True) & Q(max_marks__isnull=True),
+        ).filter(
+            Q(marks_obtained__gt=0) | Q(max_marks__gt=0),
+        ).exists()
+        has_results = Result.objects.filter(
+            student=student, semester__iexact=str(semester),
+        ).exclude(
+            Q(grade__isnull=True) & Q(grade_total__isnull=True),
+        ).filter(
+            Q(grade__isnull=False) | Q(grade_total__gt=0),
+        ).exists()
+        has_gpa = GPA.objects.filter(
+            student=student, semester__iexact=str(semester),
+        ).exclude(
+            Q(gpa__isnull=True) & Q(cgpa__isnull=True),
+        ).filter(
+            Q(gpa__gt=0) | Q(cgpa__gt=0),
+        ).exists()
+        return has_internal_marks or has_results or has_gpa
+
+    def _find_latest_available_semester(self, student, current_semester):
+        """Find the latest semester with meaningful published academic results.
+
+        Returns (selected_semester, fallback_used, fallback_reason).
+        If no usable semester exists, returns (None, False, None).
+        """
+        if current_semester is not None and self._semester_has_meaningful_academic_data(student, current_semester):
+            return current_semester, False, None
+        recorded = self._student_recorded_semesters(student)
+        for sem in reversed(recorded):
+            if sem is not None and sem != current_semester and self._semester_has_meaningful_academic_data(student, sem):
+                return sem, True, (
+                    f"Semester {current_semester} academic results are not published"
+                )
+        if current_semester is not None and self._semester_has_meaningful_academic_data(student, current_semester):
+            return current_semester, False, None
+        return None, False, None
 
     def _student_semester_performance_snapshot(self, student, semester):
         """Build a database-scoped performance snapshot for one semester."""
@@ -2231,18 +2963,20 @@ class ERPBot:
             if weakest else "N/A"
         )
         fallback_lines = [
-            "**My Overall Performance Insights**",
+            "**My Overall AI Performance Analysis**",
             "",
-            "**Cumulative Summary**",
-            f"1. **Semesters analyzed:** {', '.join(str(value) for value in semesters)}",
-            f"2. **Recorded internal-mark average:** {overall_mark_average if overall_mark_average is not None else 'N/A'}%" if overall_mark_average is not None else "2. **Recorded internal-mark average:** N/A",
-            f"3. **Overall recorded attendance:** {overall_attendance if overall_attendance is not None else 'N/A'}%" if overall_attendance is not None else "3. **Overall recorded attendance:** N/A",
+            "**Cumulative Assessment**",
+            f"1. Analyzed semesters: {', '.join(str(value) for value in semesters)}. "
+            f"Recorded internal-mark average: "
+            f"{overall_mark_average if overall_mark_average is not None else 'N/A'}%. "
+            f"Overall recorded attendance: "
+            f"{overall_attendance if overall_attendance is not None else 'N/A'}%.",
             "",
             "**Long-Term Strengths**",
-            f"1. **Strongest recorded subject:** {strongest_text}",
+            f"1. Strongest recorded subject: {strongest_text}",
             "",
             "**Areas Needing Attention**",
-            f"1. **Lowest recorded subject:** {weakest_text}",
+            f"1. Lowest recorded subject: {weakest_text}",
             "",
             "**Academic Trends and Consistency**",
             f"1. {trend_text}",
@@ -2300,6 +3034,7 @@ class ERPBot:
         user_message = (
             f"Authenticated student: {getattr(student, 'name', None) or 'Student'}\n"
             f"ERP department: {department_name}\n"
+            f"Analysis mode: Cumulative / overall performance across all recorded semesters\n"
             f"Analysis date: {timezone.localdate().isoformat()}\n"
             f"Recorded semesters: {', '.join(str(value) for value in semesters)}\n"
             f"Cumulative internal-mark average: {overall_mark_average if overall_mark_average is not None else 'N/A'}\n"
@@ -2307,7 +3042,12 @@ class ERPBot:
             f"Calculated trend: {trend_text}\n\n"
             f"Comparable subject trends:\n{chr(10).join(subject_trends) if subject_trends else 'N/A'}\n\n"
             f"Semester summaries:\n{chr(10).join(semester_context)}\n\n"
-            f"Recorded subject performance:\n{subject_context}"
+            f"Recorded subject performance:\n{subject_context}\n\n"
+            f"INSTRUCTIONS: This is a cumulative analysis across all recorded semesters. "
+            f"Do NOT limit analysis to any single semester. "
+            f"Do NOT calculate values yourself; use the numbers provided. "
+            f"Do NOT claim knowledge, intelligence, personality, motivation, career interest, or any personal attribute. "
+            f"Only state what the marks, attendance, and GPA data directly support."
         )
         try:
             response = self._ai_client().chat.completions.create(
@@ -2393,7 +3133,7 @@ class ERPBot:
             max_marks__isnull=False,
         ).values(
             "student_id", "student__name", "student__reg_no",
-            "student__year", "student__section",
+            "student__year", "student__semester", "student__section",
         ).annotate(obtained=Sum("marks_obtained"), maximum=Sum("max_marks"))
         result = []
         for row in rows:
@@ -2402,6 +3142,40 @@ class ERPBot:
                 row["percentage"] = round((row["obtained"] or 0) * 100 / maximum, 2)
                 result.append(row)
         return result
+
+    def _format_hod_top_students_by_year(self, department, rows, limit=10):
+        rows = sorted(rows, key=lambda item: item["percentage"], reverse=True)
+        if not rows:
+            return "No internal-mark records are available in your department."
+
+        grouped = {}
+        for row in rows:
+            year = row.get("student__year") or "N/A"
+            grouped.setdefault(year, []).append(row)
+
+        lines = [f"Top {limit} Students by Year - {department.Department}"]
+        for year in sorted(grouped, key=lambda value: str(value)):
+            ranked = grouped[year][:limit]
+            table_rows = []
+            for index, row in enumerate(ranked, start=1):
+                table_rows.append([
+                    index,
+                    row.get("student__name"),
+                    row.get("student__reg_no"),
+                    row.get("student__year") or "N/A",
+                    row.get("student__semester") or "N/A",
+                    row.get("student__section") or "N/A",
+                    f"{row['percentage']}%",
+                ])
+            lines.extend([
+                "",
+                f"Year {year} - showing {len(ranked)} of {len(grouped[year])} students",
+                self._format_pipe_table(
+                    ["Rank", "Student", "Register Number", "Year", "Semester", "Section", "Marks"],
+                    table_rows,
+                ),
+            ])
+        return "\n".join(lines)
 
     def _format_hod_ranked_students(self, heading, rows, reverse=False, limit=10):
         rows = sorted(rows, key=lambda item: item["percentage"], reverse=reverse)[:limit]
@@ -2476,25 +3250,86 @@ class ERPBot:
             return error
         rows = StudentInternalMark.objects.filter(
             student__department=department,
+            student__is_active=True,
+            student__is_discontinued=False,
             marks_obtained__isnull=False,
             max_marks__isnull=False,
-        ).values("course_id", "course__course_code", "course__title").annotate(
-            obtained=Sum("marks_obtained"), maximum=Sum("max_marks")
+        ).values(
+            "student__year", "student__semester",
+            "course_id", "course__course_code", "course__title",
+        ).annotate(
+            obtained=Sum("marks_obtained"),
+            maximum=Sum("max_marks"),
+            students=Count("student_id", distinct=True),
         )
         results = []
         for row in rows:
             if row["maximum"]:
                 row["percentage"] = round(row["obtained"] * 100 / row["maximum"], 2)
                 results.append(row)
-        results.sort(key=lambda row: row["percentage"])
+        results.sort(key=lambda row: (
+            str(row.get("student__year") or ""),
+            str(row.get("student__semester") or ""),
+            row["percentage"],
+        ))
         if not results:
             return "No subject mark records are available in your department."
-        lines = [f"Subject-wise performance - {department.Department}:"]
+
+        grouped = {}
         for row in results:
-            label = row["course__title"] or row["course__course_code"] or "Unknown subject"
-            code = f" ({row['course__course_code']})" if row["course__course_code"] else ""
-            lines.append(f"- {label}{code}: {row['percentage']}%")
-        lines.append(f"Lowest average: {results[0]['course__title'] or results[0]['course__course_code']} - {results[0]['percentage']}%")
+            key = (row.get("student__year") or "N/A", row.get("student__semester") or "N/A")
+            grouped.setdefault(key, []).append(row)
+
+        lines = [f"Subject-wise Performance - {department.Department}"]
+        overall_lowest = min(results, key=lambda row: row["percentage"])
+        lowest_rows = []
+        for key in sorted(grouped, key=lambda item: (str(item[0]), str(item[1]))):
+            year, semester = key
+            subject_rows = []
+            for row in sorted(grouped[key], key=lambda item: item["percentage"]):
+                subject_rows.append([
+                    row.get("course__title") or row.get("course__course_code") or "Unknown subject",
+                    row.get("course__course_code"),
+                    row.get("students"),
+                    f"{row['percentage']}%",
+                ])
+            lowest = min(grouped[key], key=lambda item: item["percentage"])
+            lowest_rows.append([
+                year,
+                semester,
+                lowest.get("course__title") or lowest.get("course__course_code") or "Unknown subject",
+                lowest.get("course__course_code"),
+                f"{lowest['percentage']}%",
+            ])
+            lines.extend([
+                "",
+                f"Year {year} | Semester {semester}",
+                self._format_pipe_table(
+                    ["Subject", "Code", "Students", "Average"],
+                    subject_rows,
+                ),
+            ])
+
+        lines.extend([
+            "",
+            "Lowest Average By Year/Semester",
+            self._format_pipe_table(
+                ["Year", "Semester", "Subject", "Code", "Average"],
+                lowest_rows,
+            ),
+            "",
+            "Overall Lowest Average",
+            self._format_pipe_table(
+                ["Subject", "Code", "Year", "Semester", "Average"],
+                [[
+                    overall_lowest.get("course__title") or overall_lowest.get("course__course_code") or "Unknown subject",
+                    overall_lowest.get("course__course_code"),
+                    overall_lowest.get("student__year") or "N/A",
+                    overall_lowest.get("student__semester") or "N/A",
+                    f"{overall_lowest['percentage']}%",
+                ]],
+            ),
+        ])
         return "\n".join(lines)
 
     def _handle_hod_class_analytics(self, faculty_id):
@@ -2503,9 +3338,11 @@ class ERPBot:
             return error
         rows = StudentInternalMark.objects.filter(
             student__department=department,
+            student__is_active=True,
+            student__is_discontinued=False,
             marks_obtained__isnull=False,
             max_marks__isnull=False,
-        ).values("student__year", "student__section").annotate(
+        ).values("student__year", "student__semester", "student__section").annotate(
             obtained=Sum("marks_obtained"), maximum=Sum("max_marks"),
             students=Count("student_id", distinct=True),
         )
@@ -2514,81 +3351,358 @@ class ERPBot:
             if row["maximum"]:
                 row["percentage"] = round(row["obtained"] * 100 / row["maximum"], 2)
                 results.append(row)
-        results.sort(key=lambda row: (str(row["student__year"]), str(row["student__section"])))
+        results.sort(key=lambda row: (
+            str(row.get("student__year") or ""),
+            str(row.get("student__semester") or ""),
+            str(row.get("student__section") or ""),
+        ))
         if not results:
             return "No class-level mark records are available in your department."
-        lines = [f"Class comparison - {department.Department}:"]
+        rows = []
         for row in results:
-            lines.append(
-                f"- Year {row['student__year'] or 'N/A'}, Section {row['student__section'] or 'N/A'}: "
-                f"{row['percentage']}% ({row['students']} students)"
-            )
+            rows.append([
+                row.get("student__year") or "N/A",
+                row.get("student__semester") or "N/A",
+                row.get("student__section") or "N/A",
+                row.get("students"),
+                f"{row['percentage']}%",
+            ])
+        lowest = min(results, key=lambda item: item["percentage"])
+        return "\n".join([
+            f"Class and Section Comparison - {department.Department}",
+            "",
+            self._format_pipe_table(
+                ["Year", "Semester", "Section", "Students With Marks", "Average Internal Marks"],
+                rows,
+            ),
+            "",
+            "Lowest Class Average",
+            self._format_pipe_table(
+                ["Year", "Semester", "Section", "Average Internal Marks"],
+                [[
+                    lowest.get("student__year") or "N/A",
+                    lowest.get("student__semester") or "N/A",
+                    lowest.get("student__section") or "N/A",
+                    f"{lowest['percentage']}%",
+                ]],
+            ),
+        ])
+
+    def _format_pipe_table(self, headers, rows):
+        def clean(value):
+            if value is None or value == "":
+                return "N/A"
+            return str(value).replace("|", "/").strip() or "N/A"
+
+        lines = [" | ".join(clean(header) for header in headers)]
+        lines.append(" | ".join("---" for _ in headers))
+        for row in rows:
+            lines.append(" | ".join(clean(cell) for cell in row))
         return "\n".join(lines)
+
+    def _activity_student_cells(self, record):
+        student = getattr(record, "student", None)
+        department = getattr(record, "department", None) or getattr(student, "department", None)
+        return [
+            getattr(student, "name", None),
+            getattr(student, "reg_no", None),
+            getattr(department, "Department", None),
+            getattr(record, "year", None) or getattr(student, "year", None),
+            getattr(record, "semester", None) or getattr(student, "semester", None),
+            getattr(record, "section", None) or getattr(student, "section", None),
+        ]
+
+    def _department_activity_queryset(self, model, department):
+        return (
+            model.objects.filter(Q(student__department=department) | Q(department=department))
+            .select_related("student", "student__department", "department")
+            .distinct()
+        )
+
+    def _format_department_publications(self, department, records, total_count):
+        if not records:
+            return f"Department Student Publications - {department.Department}\nNo student publication records were found."
+        rows = []
+        for record in records:
+            rows.append(
+                self._activity_student_cells(record)
+                + [
+                    getattr(record, "title", None),
+                    getattr(record, "program_name", None),
+                    getattr(record, "publication_date", None),
+                    getattr(record, "status", None),
+                ]
+            )
+        return "\n".join([
+            f"Department Student Publications - {department.Department}",
+            f"Total records: {total_count}",
+            "",
+            self._format_pipe_table(
+                [
+                    "Student", "Register Number", "Department", "Year",
+                    "Semester", "Section", "Publication Title", "Program",
+                    "Publication Date", "Status",
+                ],
+                rows,
+            ),
+        ])
+
+    def _format_department_co_curricular(self, department, records, total_count):
+        if not records:
+            return f"Department Co-curricular Activities - {department.Department}\nNo co-curricular activity records were found."
+        rows = []
+        for record in records:
+            date_range = "N/A"
+            from_date = getattr(record, "from_date", None)
+            to_date = getattr(record, "to_date", None)
+            if from_date and to_date:
+                date_range = f"{from_date} to {to_date}"
+            elif from_date:
+                date_range = str(from_date)
+            rows.append(
+                self._activity_student_cells(record)
+                + [
+                    getattr(record, "activity_type", None),
+                    getattr(record, "event_name", None),
+                    getattr(record, "level", None),
+                    date_range,
+                    getattr(record, "status", None),
+                ]
+            )
+        return "\n".join([
+            f"Department Co-curricular Activities - {department.Department}",
+            f"Total records: {total_count}",
+            "",
+            self._format_pipe_table(
+                [
+                    "Student", "Register Number", "Department", "Year",
+                    "Semester", "Section", "Activity Type", "Event Name",
+                    "Level", "Date", "Status",
+                ],
+                rows,
+            ),
+        ])
+
+    def _format_department_projects(self, department, records, total_count):
+        if not records:
+            return f"Department Student Projects - {department.Department}\nNo student project records were found."
+        rows = []
+        for record in records:
+            rows.append(
+                self._activity_student_cells(record)
+                + [
+                    getattr(record, "title", None),
+                    getattr(record, "domain", None),
+                    getattr(record, "activity_name", None),
+                    getattr(record, "organisation", None),
+                    getattr(record, "status", None),
+                ]
+            )
+        return "\n".join([
+            f"Department Student Projects - {department.Department}",
+            f"Total records: {total_count}",
+            "",
+            self._format_pipe_table(
+                [
+                    "Student", "Register Number", "Department", "Year",
+                    "Semester", "Section", "Project Title", "Domain",
+                    "Activity", "Organisation", "Status",
+                ],
+                rows,
+            ),
+        ])
+
+    def _format_department_achievements(self, department, records, total_count):
+        if not records:
+            return f"Department Student Achievements - {department.Department}\nNo student achievement records were found."
+        rows = []
+        for record in records:
+            rows.append(
+                self._activity_student_cells(record)
+                + [
+                    getattr(record, "award_name", None),
+                    getattr(record, "contest", None),
+                    getattr(record, "given_by", None),
+                    getattr(record, "date", None),
+                    getattr(record, "status", None),
+                ]
+            )
+        return "\n".join([
+            f"Department Student Achievements - {department.Department}",
+            f"Total records: {total_count}",
+            "",
+            self._format_pipe_table(
+                [
+                    "Student", "Register Number", "Department", "Year",
+                    "Semester", "Section", "Achievement", "Contest",
+                    "Given By", "Date", "Status",
+                ],
+                rows,
+            ),
+        ])
 
     def _handle_hod_activity_records(self, faculty_id, query):
         faculty, department, error = self._hod_department_context(faculty_id)
         if error:
             return error
-        model_specs = [
-            ("project", StudentProjects, "title"),
-            ("publication", StudentPublication, "title"),
-            ("achievement", StudentAchievements, "award_name"),
-            ("co-curricular", StudentCO_EX_Curricular, "event_name"),
-            ("curricular", StudentCO_EX_Curricular, "event_name"),
-        ]
-        lines = [f"Student activity records - {department.Department}:"]
-        used = set()
-        for keyword, model, title_field in model_specs:
-            if keyword not in query.lower() or model in used:
-                continue
-            used.add(model)
-            records = model.objects.filter(student__department=department).select_related("student")[:50]
-            label = model._meta.verbose_name_plural.title()
-            lines.append(f"{label} ({model.objects.filter(student__department=department).count()}):")
-            for record in records:
-                title = getattr(record, title_field, None) or "Untitled"
-                student = getattr(record, "student", None)
-                lines.append(f"- {title} | {getattr(student, 'name', 'N/A')} ({getattr(student, 'reg_no', 'N/A')})")
-        return "\n".join(lines) if len(lines) > 1 else None
+
+        query_text = query.lower()
+        sections = []
+
+        if "publication" in query_text or "published" in query_text:
+            qs = self._department_activity_queryset(StudentPublication, department)
+            total_count = qs.count()
+            records = list(qs.order_by("-publication_date", "-created_at")[:100])
+            sections.append(self._format_department_publications(department, records, total_count))
+
+        if "co-curricular" in query_text or "co curricular" in query_text:
+            qs = self._department_activity_queryset(StudentCO_EX_Curricular, department)
+            total_count = qs.count()
+            records = list(qs.order_by("-from_date", "-created_at")[:100])
+            sections.append(self._format_department_co_curricular(department, records, total_count))
+
+        if "project" in query_text:
+            qs = self._department_activity_queryset(StudentProjects, department)
+            total_count = qs.count()
+            records = list(qs.order_by("-date", "-created_at")[:100])
+            sections.append(self._format_department_projects(department, records, total_count))
+
+        if "achievement" in query_text:
+            qs = self._department_activity_queryset(StudentAchievements, department)
+            total_count = qs.count()
+            records = list(qs.order_by("-date", "-created_at")[:100])
+            sections.append(self._format_department_achievements(department, records, total_count))
+
+        return "\n\n".join(sections) if sections else None
 
     def _handle_hod_people_report(self, faculty_id, query):
         faculty, department, error = self._hod_department_context(faculty_id)
         if error:
             return error
         students = self._hod_students(department)
-        if "mentor" in query.lower():
+        is_mentor_report = "mentor" in query.lower()
+        if is_mentor_report:
             rows = students.values("mentor_id", "mentor__name", "mentor__faculty_id").annotate(
                 students=Count("id")
             ).order_by("mentor__name")
-            heading = f"Mentor report - {department.Department}:"
+            heading = f"Mentor report - {department.Department}"
+            person_label = "Mentor"
             name_field, id_field = "mentor__name", "mentor__faculty_id"
         else:
             rows = students.values("ca_id", "ca__name", "ca__faculty_id").annotate(
                 students=Count("id")
             ).order_by("ca__name")
-            heading = f"Class advisor report - {department.Department}:"
+            heading = f"Class advisor report - {department.Department}"
+            person_label = "Class Advisor"
             name_field, id_field = "ca__name", "ca__faculty_id"
-        lines = [heading]
+
+        grouped = {}
         for row in rows:
-            lines.append(f"- {row[name_field] or 'Unassigned'} ({row[id_field] or 'N/A'}): {row['students']} students")
+            name = row.get(name_field) or "Unassigned"
+            employee_id = row.get(id_field) or "N/A"
+            key = (name, employee_id)
+            grouped[key] = grouped.get(key, 0) + (row.get("students") or 0)
+
+        ordered_rows = sorted(
+            grouped.items(),
+            key=lambda item: (item[0][0] == "Unassigned", item[0][0].casefold(), str(item[0][1])),
+        )
+        assigned_rows = [item for item in ordered_rows if item[0][0] != "Unassigned"]
+        assigned_students = sum(count for (name, _employee_id), count in ordered_rows if name != "Unassigned")
+        unassigned_students = sum(count for (name, _employee_id), count in ordered_rows if name == "Unassigned")
+
+        lines = [heading, "", "Summary"]
+        lines.append(self._format_pipe_table(
+            ["Metric", "Count"],
+            [
+                ["Total active students", students.count()],
+                [f"Assigned {person_label.lower()}s", len(assigned_rows)],
+                ["Students assigned", assigned_students],
+                ["Students unassigned", unassigned_students],
+            ],
+        ))
+        if ordered_rows:
+            lines.extend(["", f"{person_label} Assignments"])
+            lines.append(self._format_pipe_table(
+                [person_label, "Employee ID", "Students"],
+                [[name, employee_id, count] for (name, employee_id), count in ordered_rows],
+            ))
         return "\n".join(lines)
+
+    def _hod_faculty_role_map(self, faculty_ids):
+        employee_ids = [str(item) for item in faculty_ids if item not in (None, "")]
+        if not employee_ids:
+            return {}
+        try:
+            users = self._approval_user_queryset().select_related("role").filter(
+                Employee_id__in=employee_ids,
+                is_active=1,
+            )
+            return {
+                str(user.Employee_id): getattr(getattr(user, "role", None), "role", None)
+                for user in users
+            }
+        except Exception:
+            return {}
+
+    def _hod_staff_group_label(self, staff, role_map):
+        category = getattr(getattr(staff, "category", None), "category_name", None)
+        if category:
+            return category
+        employee_id = getattr(staff, "faculty_id", None)
+        role_name = role_map.get(str(employee_id)) if employee_id not in (None, "") else None
+        if role_name:
+            return role_name
+        designation = getattr(staff, "designation", None)
+        designation_name = getattr(designation, "designation_name", None)
+        if getattr(designation, "is_teaching", False):
+            return "Teaching Staff"
+        return designation_name or "Uncategorized Staff"
 
     def _handle_hod_teacher_report(self, faculty_id):
         faculty, department, error = self._hod_department_context(faculty_id)
         if error:
             return error
-        teachers = general_information.objects.filter(department=department).order_by("name")
+        teachers = list(
+            general_information.objects.filter(department=department)
+            .select_related("designation", "category")
+            .order_by("category__category_name", "designation__designation_name", "name")[:500]
+        )
         assignments = AssignSubjectFaculty.objects.filter(
             Q(department=department) | Q(course__department=department),
             is_active=True,
         ).values("faculty_id").annotate(subjects=Count("course_id", distinct=True))
         assignment_counts = {row["faculty_id"]: row["subjects"] for row in assignments}
-        lines = [f"Teacher report - {department.Department}:"]
-        for teacher in teachers[:200]:
-            lines.append(
-                f"- {teacher.name or 'N/A'} ({teacher.faculty_id or 'N/A'}) | "
-                f"Active subjects: {assignment_counts.get(teacher.id, 0)}"
-            )
+        role_map = self._hod_faculty_role_map([getattr(staff, "faculty_id", None) for staff in teachers])
+
+        grouped = {}
+        for staff in teachers:
+            group = self._hod_staff_group_label(staff, role_map)
+            grouped.setdefault(group, []).append(staff)
+
+        lines = [f"Teacher report - {department.Department}", "", "Summary"]
+        summary_rows = []
+        for group in sorted(grouped):
+            staff_members = grouped[group]
+            active_subjects = sum(assignment_counts.get(getattr(staff, "id", None), 0) for staff in staff_members)
+            summary_rows.append([group, len(staff_members), active_subjects])
+        lines.append(self._format_pipe_table(["Staff Category", "Staff Count", "Active Subjects"], summary_rows))
+
+        for group in sorted(grouped):
+            rows = []
+            for staff in grouped[group]:
+                designation = getattr(getattr(staff, "designation", None), "designation_name", None)
+                rows.append([
+                    getattr(staff, "name", None),
+                    getattr(staff, "faculty_id", None),
+                    designation,
+                    assignment_counts.get(getattr(staff, "id", None), 0),
+                ])
+            lines.extend(["", group])
+            lines.append(self._format_pipe_table(
+                ["Staff", "Employee ID", "Designation", "Active Subjects"],
+                rows,
+            ))
         return "\n".join(lines)
 
     def _handle_hod_notifications(self, faculty_id):
@@ -2618,15 +3732,238 @@ class ERPBot:
         attendance = self._hod_attendance_percentages(students)
         mark_average = round(sum(row["percentage"] for row in marks) / len(marks), 2) if marks else None
         attendance_average = round(sum(row["percentage"] for row in attendance) / len(attendance), 2) if attendance else None
-        return "\n".join([
+
+        student_groups = {}
+        for student in students:
+            key = (
+                getattr(student, "year", None) or "N/A",
+                getattr(student, "semester", None) or "N/A",
+                getattr(student, "section", None) or "N/A",
+            )
+            student_groups.setdefault(key, {"active": 0, "student_ids": set()})
+            student_groups[key]["active"] += 1
+            student_id = getattr(student, "id", None)
+            if student_id is not None:
+                student_groups[key]["student_ids"].add(student_id)
+
+        group_rows = []
+        all_keys = set(student_groups)
+        for row in marks:
+            all_keys.add((
+                row.get("student__year") or "N/A",
+                row.get("student__semester") or "N/A",
+                row.get("student__section") or "N/A",
+            ))
+        for item in attendance:
+            student = item["student"]
+            all_keys.add((
+                getattr(student, "year", None) or "N/A",
+                getattr(student, "semester", None) or "N/A",
+                getattr(student, "section", None) or "N/A",
+            ))
+
+        for key in sorted(all_keys, key=lambda item: (str(item[0]), str(item[1]), str(item[2]))):
+            year, semester, section = key
+            group = student_groups.get(key, {"active": 0, "student_ids": set()})
+            group_marks = [
+                row for row in marks
+                if (row.get("student__year") or "N/A", row.get("student__semester") or "N/A", row.get("student__section") or "N/A") == key
+            ]
+            group_attendance = [
+                row for row in attendance
+                if (
+                    getattr(row["student"], "year", None) or "N/A",
+                    getattr(row["student"], "semester", None) or "N/A",
+                    getattr(row["student"], "section", None) or "N/A",
+                ) == key
+            ]
+            avg_marks = round(sum(row["percentage"] for row in group_marks) / len(group_marks), 2) if group_marks else None
+            avg_attendance = round(sum(row["percentage"] for row in group_attendance) / len(group_attendance), 2) if group_attendance else None
+            group_rows.append([
+                year,
+                semester,
+                section,
+                group["active"],
+                len(group_marks),
+                f"{avg_marks}%" if avg_marks is not None else "N/A",
+                f"{avg_attendance}%" if avg_attendance is not None else "N/A",
+                sum(row["percentage"] < 50 for row in group_marks),
+                sum(row["percentage"] < 75 for row in group_attendance),
+            ])
+
+        low_mark_all = [row for row in marks if row["percentage"] < 50]
+        low_mark_rows = []
+        for row in sorted(
+            low_mark_all,
+            key=lambda item: item["percentage"],
+        )[:100]:
+            low_mark_rows.append([
+                row.get("student__name"),
+                row.get("student__reg_no"),
+                row.get("student__year") or "N/A",
+                row.get("student__semester") or "N/A",
+                row.get("student__section") or "N/A",
+                f"{row['percentage']}%",
+            ])
+
+        low_attendance_all = [row for row in attendance if row["percentage"] < 75]
+        low_attendance_rows = []
+        for row in sorted(
+            low_attendance_all,
+            key=lambda item: item["percentage"],
+        )[:100]:
+            student = row["student"]
+            low_attendance_rows.append([
+                getattr(student, "name", None),
+                getattr(student, "reg_no", None),
+                getattr(student, "year", None) or "N/A",
+                getattr(student, "semester", None) or "N/A",
+                getattr(student, "section", None) or "N/A",
+                f"{row['percentage']}%",
+            ])
+
+        lines = [
             f"Department Performance Summary - {department.Department}",
-            f"Active students: {len(students)}",
-            f"Students with internal marks: {len(marks)}",
-            f"Average internal marks: {mark_average if mark_average is not None else 'N/A'}%",
-            f"Average recorded attendance: {attendance_average if attendance_average is not None else 'N/A'}%",
-            f"Students below 50% marks: {sum(row['percentage'] < 50 for row in marks)}",
-            f"Students below 75% attendance: {sum(row['percentage'] < 75 for row in attendance)}",
-        ])
+            "",
+            "Overview",
+            self._format_pipe_table(
+                ["Metric", "Value"],
+                [
+                    ["Active students", len(students)],
+                    ["Students with internal marks", len(marks)],
+                    ["Average internal marks", f"{mark_average}%" if mark_average is not None else "N/A"],
+                    ["Average recorded attendance", f"{attendance_average}%" if attendance_average is not None else "N/A"],
+                    ["Students below 50% marks", len(low_mark_all)],
+                    ["Students below 75% attendance", len(low_attendance_all)],
+                ],
+            ),
+            "",
+            "Year/Semester/Section Summary",
+            self._format_pipe_table(
+                [
+                    "Year", "Semester", "Section", "Active Students",
+                    "Students With Marks", "Average Marks", "Average Attendance",
+                    "Below 50% Marks", "Below 75% Attendance",
+                ],
+                group_rows,
+            ),
+        ]
+
+        if low_mark_rows:
+            lines.extend([
+                "",
+                "Students Below 50% Marks",
+                self._format_pipe_table(
+                    ["Student", "Register Number", "Year", "Semester", "Section", "Marks"],
+                    low_mark_rows,
+                ),
+            ])
+        else:
+            lines.extend(["", "Students Below 50% Marks", "No students are below 50% marks based on recorded internal marks."])
+
+        if low_attendance_rows:
+            lines.extend([
+                "",
+                "Students Below 75% Attendance",
+                self._format_pipe_table(
+                    ["Student", "Register Number", "Year", "Semester", "Section", "Attendance"],
+                    low_attendance_rows,
+                ),
+            ])
+        else:
+            lines.extend(["", "Students Below 75% Attendance", "No students are below 75% attendance based on recorded attendance."])
+
+        return "\n".join(lines)
+
+    def _handle_hod_mentoring_report(self, faculty_id):
+        faculty, department, error = self._hod_department_context(faculty_id)
+        if error:
+            return error
+
+        students = list(self._hod_students(department))
+        student_lookup = {getattr(student, "id", None): student for student in students}
+        marks = {row["student_id"]: row for row in self._hod_mark_percentages(department)}
+        attendance = {
+            getattr(row["student"], "id", None): row
+            for row in self._hod_attendance_percentages(students)
+        }
+
+        grouped = {}
+        total_risk = 0
+        for student_id in set(marks) | set(attendance):
+            mark_row = marks.get(student_id, {})
+            attendance_row = attendance.get(student_id, {})
+            student = attendance_row.get("student") or student_lookup.get(student_id)
+            mark = mark_row.get("percentage")
+            attend = attendance_row.get("percentage")
+            mark_gap = 50 - mark if mark is not None and mark < 50 else 0
+            attendance_gap = 75 - attend if attend is not None and attend < 75 else 0
+            if mark_gap <= 0 and attendance_gap <= 0:
+                continue
+
+            year = mark_row.get("student__year") or getattr(student, "year", None) or "N/A"
+            semester = mark_row.get("student__semester") or getattr(student, "semester", None) or "N/A"
+            section = mark_row.get("student__section") or getattr(student, "section", None) or "N/A"
+            name = getattr(student, "name", None) or mark_row.get("student__name")
+            reg_no = getattr(student, "reg_no", None) or mark_row.get("student__reg_no")
+            reasons = []
+            if mark_gap > 0:
+                reasons.append("Marks below 50%")
+            if attendance_gap > 0:
+                reasons.append("Attendance below 75%")
+            severity = mark_gap + attendance_gap
+            grouped.setdefault((year, semester, section), []).append({
+                "name": name,
+                "reg_no": reg_no,
+                "year": year,
+                "semester": semester,
+                "section": section,
+                "mark": mark,
+                "attendance": attend,
+                "reason": " and ".join(reasons),
+                "severity": severity,
+            })
+            total_risk += 1
+
+        if not grouped:
+            return "No students currently meet the mentoring-risk thresholds (marks below 50% or attendance below 75%)."
+
+        lines = [
+            f"Students Needing Mentoring - {department.Department}",
+            "Thresholds: marks below 50% or attendance below 75%.",
+            "Showing top 3 most severe students in each Year/Semester/Section group.",
+            f"Total students meeting criteria: {total_risk}",
+        ]
+        for key in sorted(grouped, key=lambda item: (str(item[0]), str(item[1]), str(item[2]))):
+            rows = sorted(
+                grouped[key],
+                key=lambda item: (-item["severity"], item["mark"] if item["mark"] is not None else 101, item["attendance"] if item["attendance"] is not None else 101),
+            )
+            year, semester, section = key
+            table_rows = []
+            for item in rows[:3]:
+                table_rows.append([
+                    item["name"],
+                    item["reg_no"],
+                    item["year"],
+                    item["semester"],
+                    item["section"],
+                    f"{item['mark']}%" if item["mark"] is not None else "N/A",
+                    f"{item['attendance']}%" if item["attendance"] is not None else "N/A",
+                    item["reason"],
+                ])
+            lines.extend([
+                "",
+                f"Year {year} | Semester {semester} | Section {section} - showing {len(table_rows)} of {len(rows)} students",
+                self._format_pipe_table(
+                    [
+                        "Student", "Register Number", "Year", "Semester",
+                        "Section", "Marks", "Attendance", "Reason",
+                    ],
+                    table_rows,
+                ),
+            ])
+        return "\n".join(lines)
 
     def _route_hod_department_query(self, faculty_id, raw_query):
         """HOD-first intent router; returns None when normal routing should continue."""
@@ -2649,9 +3986,10 @@ class ERPBot:
             match = re.search(r"\btop\s+(\d+)", query)
             limit = min(int(match.group(1)), 100) if match else 10
             faculty, department, error = self._hod_department_context(faculty_id)
-            return error or self._format_hod_ranked_students(
-                f"Top performers - {department.Department}:",
-                self._hod_mark_percentages(department), reverse=True, limit=limit,
+            return error or self._format_hod_top_students_by_year(
+                department,
+                self._hod_mark_percentages(department),
+                limit=limit,
             )
         if "low performer" in query or "low-performing" in query:
             faculty, department, error = self._hod_department_context(faculty_id)
@@ -2661,25 +3999,7 @@ class ERPBot:
                 limit=100,
             )
         if "need mentoring" in query or "needs mentoring" in query:
-            faculty, department, error = self._hod_department_context(faculty_id)
-            if error:
-                return error
-            marks = {row["student_id"]: row for row in self._hod_mark_percentages(department)}
-            attendance = {row["student"].id: row for row in self._hod_attendance_percentages(list(self._hod_students(department)))}
-            at_risk = []
-            for student_id in set(marks) | set(attendance):
-                mark = marks.get(student_id, {}).get("percentage")
-                attend = attendance.get(student_id, {}).get("percentage")
-                if (mark is not None and mark < 50) or (attend is not None and attend < 75):
-                    student = attendance.get(student_id, {}).get("student")
-                    name = getattr(student, "name", None) or marks.get(student_id, {}).get("student__name")
-                    reg = getattr(student, "reg_no", None) or marks.get(student_id, {}).get("student__reg_no")
-                    at_risk.append((name, reg, mark, attend))
-            if not at_risk:
-                return "No students currently meet the mentoring-risk thresholds (marks below 50% or attendance below 75%)."
-            lines = [f"Students needing mentoring - {department.Department}:"]
-            lines.extend(f"- {name} ({reg}) | Marks: {mark if mark is not None else 'N/A'}% | Attendance: {attend if attend is not None else 'N/A'}%" for name, reg, mark, attend in at_risk[:100])
-            return "\n".join(lines)
+            return self._handle_hod_mentoring_report(faculty_id)
         if "placement-ready" in query or "placement ready" in query:
             faculty, department, error = self._hod_department_context(faculty_id)
             if error:
@@ -2804,7 +4124,7 @@ class ERPBot:
         if not faculty:
             return "Faculty profile not found."
 
-        directory = general_information.objects.select_related("department", "designation")
+        directory = general_information.objects.select_related("department", "designation", "category")
         if self._is_hod_role(active_role):
             if not faculty.department:
                 return "Your HOD account is not mapped to an ERP department."
@@ -2812,19 +4132,47 @@ class ERPBot:
         elif not self._is_admin_role(active_role):
             return "Access denied: Faculty directories require HOD or Admin access."
 
-        rows = list(directory.order_by("department__Department", "name")[:200])
+        rows = list(directory.order_by("department__Department", "category__category_name", "designation__designation_name", "name")[:200])
         if not rows:
             return "No faculty records found in your accessible scope."
 
-        lines = []
+        role_map = self._hod_faculty_role_map([getattr(member, "faculty_id", None) for member in rows])
+        grouped = {}
         for member in rows:
-            department = getattr(member.department, "Department", None) or "N/A"
-            designation = str(member.designation or "N/A")
-            lines.append(
-                f"- {member.name or 'N/A'} ({member.faculty_id or 'N/A'}) | "
-                f"{designation} | {department}"
-            )
-        return "Faculty Directory:\n" + "\n".join(lines)
+            group = self._hod_staff_group_label(member, role_map)
+            grouped.setdefault(group, []).append(member)
+
+        heading = "Faculty Directory"
+        if self._is_hod_role(active_role) and getattr(faculty, "department", None):
+            heading = f"Department Faculty Directory - {faculty.department.Department}"
+
+        lines = [heading, "", "Summary"]
+        lines.append(self._format_pipe_table(
+            ["Role/Category", "Staff Count"],
+            [[group, len(members)] for group, members in sorted(grouped.items())],
+        ))
+
+        for group in sorted(grouped):
+            table_rows = []
+            for member in grouped[group]:
+                department = getattr(member.department, "Department", None) or "N/A"
+                designation = getattr(getattr(member, "designation", None), "designation_name", None) or str(getattr(member, "designation", None) or "N/A")
+                table_rows.append([
+                    member.name or "N/A",
+                    member.faculty_id or "N/A",
+                    group,
+                    designation,
+                    department,
+                ])
+            lines.extend([
+                "",
+                group,
+                self._format_pipe_table(
+                    ["Faculty", "Employee ID", "Role/Category", "Designation", "Department"],
+                    table_rows,
+                ),
+            ])
+        return "\n".join(lines)
 
     def _handle_class_directory(self, faculty_id, active_role):
         faculty = self._get_faculty_info(faculty_id)
@@ -2952,6 +4300,7 @@ class ERPBot:
             "Friday": 5, "Saturday": 6, "Sunday": 7,
         }
         entries = []
+        weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         for allocation in allocations:
             for index, field_name in enumerate(period_fields, start=1):
                 code = getattr(allocation, field_name, None)
@@ -2962,20 +4311,44 @@ class ERPBot:
                         index,
                         f"{allocation.day} - Period {index}: {course.course_code} "
                         f"{course.title or ''} (Year {allocation.year}, Section {allocation.section})",
+                        allocation.day,
+                        course.course_code,
+                        course.title or "",
+                        allocation.year,
+                        allocation.section,
                     ))
 
         if not entries:
             return "No timetable periods are currently mapped to your active subjects."
-        entries.sort(key=lambda item: (item[0], item[1], item[2]))
+        entries.sort(key=lambda item: (item[0], item[1]))
         if self._is_admin_role(active_role):
-            heading = f"Institution Timetable ({latest_year})" if latest_year else "Institution Timetable"
+            heading = f"**Institution Timetable ({latest_year})**" if latest_year else "**Institution Timetable**"
         elif self._is_hod_role(active_role):
-            heading = f"Department Timetable ({latest_year})" if latest_year else "Department Timetable"
+            heading = f"**Department Timetable ({latest_year})**" if latest_year else "**Department Timetable**"
         else:
-            heading = f"My Timetable ({latest_year})" if latest_year else "My Timetable"
-        return heading + "\n" + "\n".join(f"- {item[2]}" for item in entries)
+            heading = f"**My Timetable ({latest_year})**" if latest_year else "**My Timetable**"
 
-    def _handle_student_attendance_query(self, faculty_id, reg_no, active_role):
+        grouped = {}
+        for entry in entries:
+            day_name = entry[3]
+            grouped.setdefault(day_name, []).append(entry)
+
+        lines = [heading, ""]
+        for day_name in weekdays:
+            day_entries = grouped.get(day_name)
+            if not day_entries:
+                continue
+            lines.append(f"**{day_name}**")
+            for entry in day_entries:
+                period_num = entry[1]
+                code = entry[4]
+                title = entry[5]
+                label = f"{title}" if title else ""
+                lines.append(f"{period_num}. **P{period_num}** — {code}{': ' + label if label else ''}")
+            lines.append("")
+        return "\n".join(lines).rstrip()
+
+    def _handle_student_attendance_query(self, faculty_id, reg_no, active_role, query=None):
         from student_management.models import Daily_Attendance
 
         faculty = self._get_faculty_info(faculty_id)
@@ -2986,13 +4359,17 @@ class ERPBot:
         if not self._has_student_access(faculty_id, faculty, student, active_role):
             return "Access denied: This student's attendance is outside your current role scope."
 
+        requested_semester = self._extract_requested_semester(query)
         records = Daily_Attendance.objects.filter(student=student).order_by("date")
+        if requested_semester:
+            records = records.filter(semester__iexact=str(requested_semester))
         if self._is_teacher_role(active_role):
             records = records.filter(Q(faculty=faculty) | Q(marked_by=faculty))
 
         status_values = list(records.values_list("morning_status", "afternoon_status"))
+        semester_text = f"Semester {requested_semester}" if requested_semester else "All recorded semesters"
         if not status_values:
-            return f"No accessible attendance records found for {student.name} ({student.reg_no})."
+            return f"No accessible attendance records found for {student.name} ({student.reg_no}) in {semester_text}."
 
         statuses = [status for pair in status_values for status in pair if status]
         present = sum(status in {"Present", "On Duty"} for status in statuses)
@@ -3000,10 +4377,14 @@ class ERPBot:
         percentage = round((present / len(statuses)) * 100, 2) if statuses else 0
         return "\n".join([
             f"Attendance Summary: {student.name} ({student.reg_no})",
-            f"Recorded sessions: {len(statuses)}",
-            f"Present/On Duty: {present}",
-            f"Absent: {absent}",
-            f"Attendance percentage: {percentage}%",
+            f"Scope: {semester_text}",
+            "",
+            "Metric | Value",
+            "--- | ---",
+            f"Recorded sessions | {len(statuses)}",
+            f"Present/On Duty | {present}",
+            f"Absent | {absent}",
+            f"Attendance percentage | {percentage}%",
         ])
 
     def _handle_list_students(
@@ -3121,14 +4502,30 @@ class ERPBot:
                     ]
                 enrollment_scope = Q()
                 for assignment in assignments:
-                    scope = Q(
-                        course_id=assignment.course_id,
-                        department_id=assignment.department_id,
-                        batch=assignment.batch,
-                        section=assignment.section,
-                    )
+                    scope = Q(course_id=assignment.course_id)
+                    if assignment.department_id:
+                        scope &= (
+                            Q(department_id=assignment.department_id)
+                            | Q(department_id__isnull=True)
+                        )
+                    if assignment.batch:
+                        scope &= (
+                            Q(batch__iexact=assignment.batch)
+                            | Q(batch__isnull=True)
+                            | Q(batch__exact="")
+                        )
+                    if assignment.section:
+                        scope &= (
+                            Q(section__iexact=assignment.section)
+                            | Q(section__isnull=True)
+                            | Q(section__exact="")
+                        )
                     if assignment.academic_year:
-                        scope &= Q(academic_year=assignment.academic_year)
+                        scope &= (
+                            Q(academic_year__iexact=assignment.academic_year)
+                            | Q(academic_year__isnull=True)
+                            | Q(academic_year__exact="")
+                        )
                     enrollment_scope |= scope
 
                 if enrollment_scope:
@@ -3137,7 +4534,7 @@ class ERPBot:
                         enroll=True,
                         student__is_active=True,
                         student__is_discontinued=False,
-                    ).values_list("student_id", flat=True)
+                    ).values_list("student_id", flat=True).distinct()
                     add_students(
                         self._student_queryset().filter(id__in=student_ids),
                         "Subject Teacher",
@@ -3390,7 +4787,8 @@ class ERPBot:
                     subject_label += f" ({course_code})"
 
                 if personal_scope:
-                    lines.append(f"- {subject_label}")
+                    semester_val = getattr(a.course, 'semester', None) or "N/A"
+                    lines.append((semester_val, subject_label))
                 else:
                     lines.append(
                         f"- {subject_label} | Dept: {dept_name} | Batch: {batch} | Section: {section} | AY: {academic_year} | Reg: {regulation}"
@@ -3401,11 +4799,187 @@ class ERPBot:
                 if personal_scope
                 else "Subjects You Are Handling"
             )
-            count_str = f"Total: {len(lines)}"
-            return f"{header}:\n\n" + "\n".join(lines) + f"\n\n{count_str}"
+
+            if personal_scope:
+                from collections import defaultdict
+                semester_groups = defaultdict(list)
+                for sem, label in lines:
+                    semester_groups[sem].append(label)
+                semesters_sorted = sorted(
+                    semester_groups.keys(),
+                    key=lambda s: int(s) if str(s).isdigit() else 99
+                )
+                output_lines = []
+                for sem in semesters_sorted:
+                    output_lines.append(f"**Semester {sem}**")
+                    for idx, label in enumerate(semester_groups[sem], 1):
+                        output_lines.append(f"{idx}. {label}")
+                    output_lines.append("")
+                count_str = f"Total: {len(lines)}"
+                return f"{header}:\n\n" + "\n".join(output_lines).rstrip() + f"\n\n{count_str}"
+            else:
+                count_str = f"Total: {len(lines)}"
+                return f"{header}:\n\n" + "\n".join(lines) + f"\n\n{count_str}"
 
         except Exception as e:
             return f"Error retrieving subject assignments: {str(e)}"
+
+    def _is_student_information_query(self, query):
+        text = self._normalize_role_name(query)
+        return bool(re.search(r'\b\d{12}\b', text)) and any(phrase in text for phrase in [
+            "give information", "show information", "student information",
+            "give details", "show details", "student details",
+            "profile of", "student profile", "give profile", "show profile",
+        ])
+
+    def _format_faculty_student_profile(self, student):
+        department = getattr(getattr(student, "department", None), "Department", None) or "N/A"
+        mentor = getattr(getattr(student, "mentor", None), "name", None) or "N/A"
+        class_advisor = getattr(getattr(student, "ca", None), "name", None) or "N/A"
+        return "\n".join([
+            f"Student Profile: {getattr(student, 'name', None) or 'N/A'}",
+            f"Registration No: {getattr(student, 'reg_no', None) or 'N/A'}",
+            f"Department: {department}",
+            f"Batch: {getattr(student, 'batch', None) or 'N/A'}",
+            f"Year/Semester: {getattr(student, 'year', None) or 'N/A'} / {getattr(student, 'semester', None) or 'N/A'}",
+            f"Section: {getattr(student, 'section', None) or 'N/A'}",
+            f"Mentor: {mentor}",
+            f"Class Advisor: {class_advisor}",
+            f"Email: {getattr(student, 'email', None) or 'N/A'}",
+            f"Mobile: {getattr(student, 'mobile_no', None) or 'N/A'}",
+        ])
+
+    def _internal_exam_column(self, exam_name):
+        normalized = self._normalize_exam_name(exam_name)
+        if normalized == "iat1":
+            return "Internal 1"
+        if normalized == "iat2":
+            return "Internal 2"
+        return None
+
+    def _format_internal_mark_value(self, obtained, maximum):
+        if obtained is None:
+            return "Not listed"
+        if maximum is None:
+            return str(obtained)
+        return f"{obtained}/{maximum}"
+
+    def _format_current_internal_marks_response(self, reg_nos, students_by_reg, mark_rows):
+        rows_by_student = {}
+        for row in mark_rows:
+            reg_no = str(row.get("reg_no") or "")
+            column = self._internal_exam_column(row.get("exam_name"))
+            if not reg_no or not column:
+                continue
+            course_key = (
+                row.get("course_code") or "N/A",
+                row.get("course__title") or "Unknown Subject",
+            )
+            rows_by_student.setdefault(reg_no, {}).setdefault(course_key, {})[column] = self._format_internal_mark_value(
+                row.get("total_marks"), row.get("maximum_marks")
+            )
+
+        lines = []
+        for reg_no in reg_nos:
+            student = students_by_reg.get(reg_no)
+            if not student:
+                lines.extend([f"Current Semester Internal Marks: {reg_no}", "Student not found."])
+                continue
+
+            if lines:
+                lines.append("")
+            lines.extend([
+                f"Current Semester Internal Marks: {getattr(student, 'name', None) or 'N/A'} ({reg_no})",
+                f"Semester: {getattr(student, 'semester', None) or 'N/A'}",
+                "",
+            ])
+            course_marks = rows_by_student.get(reg_no, {})
+            if not course_marks:
+                lines.append("No current-semester internal marks are available within your authorized scope.")
+                continue
+
+            table_rows = []
+            for (course_code, course_title), values in sorted(course_marks.items(), key=lambda item: (item[0][1], item[0][0])):
+                table_rows.append([
+                    course_title,
+                    course_code,
+                    values.get("Internal 1", "Not listed"),
+                    values.get("Internal 2", "Not listed"),
+                ])
+            lines.append(self._format_pipe_table(
+                ["Subject", "Course Code", "Internal 1", "Internal 2"],
+                table_rows,
+            ))
+        return "\n".join(lines)
+
+    def _handle_current_student_internal_marks_query(self, faculty_id, active_role, query, reg_nos, faculty_info):
+        students = list(self._student_queryset().filter(reg_no__in=reg_nos))
+        students_by_reg = {str(student.reg_no): student for student in students}
+        if not students_by_reg:
+            return "No matching students were found for the requested registration number(s)."
+
+        student_scope = Q()
+        for student in students:
+            semester = str(getattr(student, "semester", None) or "").strip()
+            if semester:
+                student_scope |= Q(reg_no__iexact=str(student.reg_no), semester=semester)
+        if not student_scope:
+            return "Current semester is not available for the requested student(s)."
+
+        marks_qs = StudentInternalMark.objects.filter(student_scope)
+        available_exam_names = list(
+            marks_qs.exclude(exam_name__isnull=True)
+            .exclude(exam_name__exact="")
+            .values_list("exam_name", flat=True)
+            .distinct()
+        )
+        internal_exam_names = [
+            name for name in available_exam_names
+            if self._internal_exam_column(name) in {"Internal 1", "Internal 2"}
+        ]
+        if not internal_exam_names:
+            return self._format_current_internal_marks_response(reg_nos, students_by_reg, [])
+        marks_qs = marks_qs.filter(exam_name__in=internal_exam_names)
+
+        if self._is_teacher_role(active_role):
+            assigned_codes = set()
+            assignments_qs = self._subject_assignment_queryset(faculty_id, faculty_info, active_role)
+            for student in students:
+                student_assignments = assignments_qs.filter(
+                    Q(department=student.department) | Q(course__department=student.department)
+                )
+                if getattr(student, "batch", None):
+                    student_assignments = student_assignments.filter(
+                        Q(batch__isnull=True) | Q(batch="") | Q(batch=student.batch)
+                    )
+                if getattr(student, "section", None):
+                    student_assignments = student_assignments.filter(
+                        Q(section__isnull=True) | Q(section="") | Q(section__iexact=student.section)
+                    )
+                assigned_codes.update(
+                    code for code in student_assignments.values_list("course__course_code", flat=True)
+                    if code
+                )
+            marks_qs = marks_qs.filter(course_code__in=sorted(assigned_codes)) if assigned_codes else StudentInternalMark.objects.none()
+        else:
+            marks_qs = self._scope_student_internal_marks_queryset(
+                marks_qs, faculty_id, faculty_info, active_role
+            )
+
+        grouped_rows = list(
+            marks_qs.values(
+                "reg_no",
+                "student__name",
+                "semester",
+                "course_code",
+                "course__title",
+                "exam_name",
+            ).annotate(
+                total_marks=Sum("marks_obtained"),
+                maximum_marks=Sum("max_marks"),
+            ).order_by("reg_no", "course__title", "course_code", "exam_name")
+        )
+        return self._format_current_internal_marks_response(reg_nos, students_by_reg, grouped_rows)
 
     def _handle_student_query(self, faculty_id, student_reg_no, query, active_role):
         try:
@@ -3534,6 +5108,9 @@ class ERPBot:
             
             if not is_authorized:
                 return auth_reason or "I'm unable to provide that information under your current role selection."
+
+            if self._is_student_information_query(query):
+                return self._format_faculty_student_profile(student)
 
             # ===== MARKS FILTERING BASED ON ROLE AND SCOPE =====
             # Retrieve all marks for this student
@@ -3665,7 +5242,7 @@ class ERPBot:
 
                     marks_by_subject = {}
                     for row in mark_rows:
-                        subject = row['assessment__course__title'] or "Unpnown Subject"
+                        subject = row['assessment__course__title'] or "Unknown Subject"
                         marks_by_subject.setdefault(subject, []).append(
                             f"{(row['assessment__Assessmentname'] or 'Assessment')}: {row['marks_raw']}"
                         )
@@ -3673,7 +5250,7 @@ class ERPBot:
                     for subject, subject_marks in sorted(marks_by_subject.items()):
                         profile_info.append(f"\n**{subject}**:")
                         for mark in subject_marks:
-                            profile_info.append(f"  • {mark}")
+                            profile_info.append(f"  - {mark}")
 
                 return "\n".join(profile_info)
 
@@ -3707,6 +5284,11 @@ class ERPBot:
                     (snapshot["gpa"] or {}).get("cgpa")
                     if include_gpa else "N/A (outside Subject Faculty scope)"
                 )
+                ai_report = self._faculty_ai_student_performance_report(
+                    "semester", student, [snapshot]
+                )
+                if ai_report:
+                    return ai_report
                 ai_recommendations = self._faculty_ai_recommendations(
                     "semester", student, [snapshot]
                 )
@@ -3761,6 +5343,11 @@ class ERPBot:
                         StudentProjects.objects.filter(student=student).count()
                     ),
                 }
+            ai_report = self._faculty_ai_student_performance_report(
+                "overall", student, snapshots, activity_counts=activity_counts
+            )
+            if ai_report:
+                return ai_report
             ai_recommendations = self._faculty_ai_recommendations(
                 "overall", student, snapshots
             )
@@ -4473,9 +6060,6 @@ class ERPBot:
         return (exam_number, normalized)
 
     def _format_ranked_students(self, rows, limit):
-        return self._format_student_marks_table(rows, limit=limit)
-
-    def _format_student_marks_table(self, rows, limit=None):
         table_rows = []
         row_limit = limit if limit is not None else len(rows)
 
@@ -4491,40 +6075,14 @@ class ERPBot:
                 reg_no = "-"
                 marks_value = "-"
 
-            table_rows.append(
-                {
-                    "sno": str(idx + 1),
-                    "name": str(name),
-                    "reg_no": str(reg_no),
-                    "marks": marks_value,
-                }
-            )
+            table_rows.append((idx + 1, str(name), str(reg_no), marks_value))
 
-        headers = {"sno": "S.No", "name": "Name", "reg_no": "Reg No", "marks": "Marks"}
-        widths = {
-            "sno": max(len(headers["sno"]), *(len(row["sno"]) for row in table_rows)) if table_rows else len(headers["sno"]),
-            "name": max(len(headers["name"]), *(len(row["name"]) for row in table_rows)) if table_rows else len(headers["name"]),
-            "reg_no": max(len(headers["reg_no"]), *(len(row["reg_no"]) for row in table_rows)) if table_rows else len(headers["reg_no"]),
-            "marks": max(len(headers["marks"]), *(len(row["marks"]) for row in table_rows)) if table_rows else len(headers["marks"]),
-        }
-
-        def build_line(values):
-            return (
-                f"{values['sno']:<{widths['sno']}} | "
-                f"{values['name']:<{widths['name']}} | "
-                f"{values['reg_no']:<{widths['reg_no']}} | "
-                f"{values['marks']:<{widths['marks']}}"
-            )
-
-        separator = (
-            f"{'-' * widths['sno']}-+-"
-            f"{'-' * widths['name']}-+-"
-            f"{'-' * widths['reg_no']}-+-"
-            f"{'-' * widths['marks']}"
-        )
-
-        lines = [build_line(headers), separator]
-        lines.extend(build_line(row) for row in table_rows)
+        lines = [
+            "S.No | Name | Reg No | Marks",
+            "--- | --- | --- | ---",
+        ]
+        for sno, name, reg_no, marks in table_rows:
+            lines.append(f"{sno} | {name} | {reg_no} | {marks}")
         return "\n".join(lines)
 
     def _format_student_subject_marks(self, rows):
@@ -4869,6 +6427,11 @@ class ERPBot:
                             lines.append("- No accessible marks found.")
 
                     return "\n".join(lines)
+
+                if any(token in (query or "").lower() for token in ["internal", "iat"]):
+                    return self._handle_current_student_internal_marks_query(
+                        faculty_id, effective_role, query, reg_nos, faculty_info
+                    )
 
                 return "Please provide the subject code to retrieve marks for a particular student or students."
 
@@ -5391,7 +6954,6 @@ class ERPBot:
             "Latest announcements:",
         ])
         lines.extend([f"- {title}" for title in notices] or ["- No active announcements."])
-        lines.append("\nAsk 'show pending work' for the detailed checklist.")
         return "\n".join(lines)
 
     def _pending_work_rows(self, faculty_id, active_role=None):
@@ -5461,10 +7023,7 @@ class ERPBot:
             "low", "lower", "below", "shortage", "at risk", "at-risk",
             "weak", "needs attention", "need attention",
         ])
-        metric_term = "attendance" in query_lower or any(
-            term in query_lower for term in ["mark", "marks", "score", "scores"]
-        )
-        return risk_term and metric_term
+        return risk_term
 
     def _subject_performance_mark_rows(self, queryset):
         """Normalize question-level marks into bounded student percentages."""
@@ -5744,6 +7303,441 @@ class ERPBot:
             )
         lines.append("These indicators support faculty review; they are not disciplinary decisions.")
         return "\n".join(lines)
+
+    def _handle_ca_low_performing(self, faculty_id, active_role, course_code=None):
+        filter_course_code = course_code
+        students = list(self._active_students_for_role(faculty_id, active_role)[:500])
+        if not students:
+            return "No students are mapped to your class."
+        student_ids = [student.id for student in students]
+
+        current_semester_scope = Q(pk__in=[])
+        for student in students:
+            semester = self._semester_number(getattr(student, "semester", None))
+            student_scope = Q(student_id=student.id)
+            if semester is not None:
+                student_scope &= Q(semester__iexact=str(semester))
+            current_semester_scope |= student_scope
+
+        marks_qs = StudentInternalMark.objects.filter(
+            current_semester_scope,
+            student_id__in=student_ids,
+            marks_obtained__isnull=False,
+            max_marks__isnull=False,
+        )
+        if filter_course_code:
+            marks_qs = marks_qs.filter(course_code__iexact=filter_course_code)
+        marks_qs = self._scope_subject_marks_queryset(
+            marks_qs, faculty_id,
+            self._get_faculty_info(faculty_id), active_role, filter_course_code,
+        )
+        details = list(
+            marks_qs.values(
+                "student_id", "course_code", "exam_name",
+                "part_name", "question_number", "sub_question",
+                "option_letter", "max_marks", "marks_obtained",
+            ).order_by(
+                "student_id", "course_code", "exam_name",
+                "part_name", "question_number", "option_letter", "sub_question",
+            )
+        )
+
+        # Group marks by (student, course, exam_name) — each IAT evaluated separately
+        iat_totals = {}
+        for detail in details:
+            sid = detail["student_id"]
+            course_code = detail.get("course_code")
+            exam_name = detail.get("exam_name") or ""
+            if not course_code:
+                continue
+            key = (sid, course_code, exam_name)
+            entry = iat_totals.setdefault(key, {"obtained": 0, "max": 0})
+            option = str(detail.get("option_letter") or "").strip().lower()
+            if option:
+                opt_key = f"opt_{option}"
+                prev_max = entry.get(f"{opt_key}_max", 0)
+                prev_obt = entry.get(f"{opt_key}_obt", 0)
+                entry[f"{opt_key}_max"] = prev_max + (detail.get("max_marks") or 0)
+                entry[f"{opt_key}_obt"] = prev_obt + (detail.get("marks_obtained") or 0)
+            else:
+                entry["obtained"] += detail.get("marks_obtained") or 0
+                entry["max"] += detail.get("max_marks") or 0
+
+        # Compute percentage per IAT per course per student
+        student_iat_results = {}
+        for (sid, course_code, exam_name), entry in iat_totals.items():
+            opt_max = max(
+                (entry.get(f"opt_{o}_max") or 0)
+                for o in "abcde"
+                if entry.get(f"opt_{o}_max")
+            ) if any(entry.get(f"opt_{o}_max") for o in "abcde") else 0
+            opt_obt = max(
+                (entry.get(f"opt_{o}_obt") or 0)
+                for o in "abcde"
+                if entry.get(f"opt_{o}_max")
+            ) if opt_max else 0
+            total_max = entry["max"] + opt_max
+            total_obt = entry["obtained"] + opt_obt
+            if total_max <= 0:
+                continue
+            percentage = round(min(100, max(0, total_obt * 100 / total_max)), 2)
+            student_iat_results.setdefault(sid, {})
+            student_iat_results[sid].setdefault(course_code, {})[exam_name] = percentage
+
+        # Build a set of all course_codes that have marks in the system
+        all_courses_with_marks = set()
+        for sid, courses in student_iat_results.items():
+            for course_code in courses:
+                all_courses_with_marks.add((sid, course_code))
+
+        student_map = {s.id: s for s in students}
+        low_performing = []
+        no_marks_students = []
+
+        for student in students:
+            sid = student.id
+            courses_with_iats = student_iat_results.get(sid, {})
+            if not courses_with_iats:
+                # Student has no marks at all
+                no_marks_students.append(student)
+                continue
+            flagged_subjects = []
+            for course_code, iats in sorted(courses_with_iats.items()):
+                for exam_name in sorted(iats.keys()):
+                    pct = iats[exam_name]
+                    if pct < 60:
+                        flagged_subjects.append((course_code, exam_name, pct))
+            if flagged_subjects:
+                low_performing.append((student, flagged_subjects))
+
+        low_performing.sort(key=lambda r: (r[0].name or "", r[0].id))
+
+        if filter_course_code:
+            lines = [f"Low-Performing Students | {filter_course_code}", ""]
+        else:
+            lines = ["Low-Performing Students", ""]
+
+        if low_performing:
+            lines.append("Students scoring below 60% in IAT1/IAT2:")
+            lines.append("")
+            lines.append("Student | Register Number | Subject | IAT | Marks")
+            lines.append("--- | --- | --- | --- | ---")
+            for student, subjects in low_performing:
+                for course_code, exam_name, pct in sorted(subjects, key=lambda s: (s[0], s[1])):
+                    pct_text = f"{pct:.2f}".rstrip("0").rstrip(".")
+                    lines.append(
+                        f"{student.name or 'N/A'} | "
+                        f"{student.reg_no or 'N/A'} | "
+                        f"{course_code or 'N/A'} | "
+                        f"{exam_name or 'N/A'} | "
+                        f"{pct_text}%"
+                    )
+            lines.append("")
+
+        if no_marks_students:
+            lines.append("Students with no marks listed:")
+            lines.append("")
+            lines.append("Student | Register Number | Status")
+            lines.append("--- | --- | ---")
+            for student in no_marks_students:
+                lines.append(
+                    f"{student.name or 'N/A'} | "
+                    f"{student.reg_no or 'N/A'} | "
+                    "Mark was not listed"
+                )
+            lines.append("")
+
+        if not low_performing and not no_marks_students:
+            lines.append("No students scored below 60% in any IAT.")
+
+        return "\n".join(lines).rstrip()
+
+    def _handle_mentor_attention_students(self, faculty_id, active_role, query=None):
+        """Evidence-based mentee academic attention analysis.
+
+        Mentor scope is resolved by the backend. Each mentee is analyzed against
+        the latest semester that contains usable ERP data, so unpublished
+        current-semester marks do not make historical academic records disappear.
+        """
+        if not self._is_mentor_role(active_role):
+            return "Access denied: this request requires your Mentor role."
+
+        students = list(self._active_students_for_role(faculty_id, active_role)[:500])
+        if not students:
+            return "No mentees are mapped to your account."
+
+        text = self._normalize_role_name(query or "")
+        attendance_only = "attendance" in text and not any(
+            term in text for term in [
+                "academic attention", "attention", "low-performing",
+                "low performing", "low performer", "marks", "mark",
+                "performance", "score", "scores",
+            ]
+        )
+        low_performance_only = any(term in text for term in [
+            "low-performing", "low performing", "low performer",
+            "low academic", "poor academic", "weak academic",
+        ]) and "attendance" not in text and "attention" not in text
+
+        academic_threshold = 50
+        attendance_threshold = 75
+
+        def pct(value):
+            return f"{value:.2f}".rstrip("0").rstrip(".") if value is not None else "N/A"
+
+        def snapshot_has_attendance(snapshot):
+            return bool(sum(row.get("total") or 0 for row in snapshot.get("attendance") or []))
+
+        def attendance_percentage(snapshot):
+            attended = sum(row.get("attended") or 0 for row in snapshot.get("attendance") or [])
+            total = sum(row.get("total") or 0 for row in snapshot.get("attendance") or [])
+            return round(attended * 100 / total, 2) if total else None
+
+        def internal_percentage(snapshot):
+            marks = snapshot.get("marks") or []
+            obtained = sum(row.get("obtained") or 0 for row in marks)
+            maximum = sum(row.get("maximum") or 0 for row in marks)
+            return round(obtained * 100 / maximum, 2) if maximum else None
+
+        def result_percentage(snapshot):
+            values = [
+                row.get("grade_total") for row in snapshot.get("results") or []
+                if row.get("grade_total") is not None
+            ]
+            return round(sum(values) / len(values), 2) if values else None
+
+        def gpa_percentage(snapshot):
+            gpa = snapshot.get("gpa") or {}
+            value = gpa.get("gpa") if gpa.get("gpa") is not None else gpa.get("cgpa")
+            return round(float(value) * 10, 2) if value is not None else None
+
+        def academic_percentage(snapshot):
+            for resolver in (result_percentage, internal_percentage, gpa_percentage):
+                value = resolver(snapshot)
+                if value is not None:
+                    return value
+            return None
+
+        def latest_attendance_semester(student, current_semester):
+            recorded = self._student_recorded_semesters(student)
+            candidates = []
+            if current_semester is not None:
+                candidates.append(current_semester)
+            candidates.extend(sem for sem in reversed(recorded) if sem != current_semester)
+            seen = set()
+            for semester in candidates:
+                if semester is None or semester in seen:
+                    continue
+                seen.add(semester)
+                snapshot = self._student_semester_performance_snapshot(student, semester)
+                if snapshot_has_attendance(snapshot):
+                    return semester, snapshot, semester != current_semester
+            return None, None, False
+
+        attention_required = []
+        no_concern = []
+        data_unavailable = []
+        fallback_used = False
+        seen_regs = set()
+
+        for student in students:
+            reg = str(getattr(student, "reg_no", "") or "").strip()
+            if reg in seen_regs:
+                continue
+            seen_regs.add(reg)
+
+            current_semester = self._semester_number(getattr(student, "semester", None))
+            analysis_semester, used_fallback, _reason = self._find_latest_available_semester(
+                student, current_semester,
+            )
+            snapshot = None
+            if analysis_semester is not None:
+                snapshot = self._student_semester_performance_snapshot(student, analysis_semester)
+            elif attendance_only:
+                analysis_semester, snapshot, used_fallback = latest_attendance_semester(
+                    student, current_semester,
+                )
+
+            if not snapshot:
+                data_unavailable.append({
+                    "student": student,
+                    "current_semester": current_semester,
+                    "analysis_semester": None,
+                    "classification": "academic_data_unavailable",
+                    "reason": "No marks, GPA, result, or attendance records are available across recorded semesters.",
+                })
+                continue
+
+            fallback_used = fallback_used or used_fallback
+            academic_value = academic_percentage(snapshot)
+            attendance_value = attendance_percentage(snapshot)
+
+            academic_low = academic_value is not None and academic_value < academic_threshold
+            attendance_low = attendance_value is not None and attendance_value < attendance_threshold
+            has_any_data = academic_value is not None or attendance_value is not None
+
+            if not has_any_data:
+                data_unavailable.append({
+                    "student": student,
+                    "current_semester": current_semester,
+                    "analysis_semester": analysis_semester,
+                    "classification": "academic_data_unavailable",
+                    "reason": "No marks, GPA, result, or attendance records are available for the latest usable semester.",
+                })
+                continue
+
+            evidence = []
+            if academic_value is not None:
+                evidence.append(f"aggregate {pct(academic_value)}%")
+            else:
+                evidence.append("academic marks unavailable")
+            if attendance_value is not None:
+                evidence.append(f"attendance {pct(attendance_value)}%")
+            else:
+                evidence.append("attendance unavailable")
+
+            if academic_low and attendance_low:
+                classification = "academic_attendance_concern"
+                reason = (
+                    f"Aggregate performance is {pct(academic_value)}%, below the configured "
+                    f"{academic_threshold}% threshold, and attendance is {pct(attendance_value)}%, "
+                    f"below the configured {attendance_threshold}% threshold."
+                )
+            elif academic_low:
+                classification = "confirmed_low_performing"
+                reason = (
+                    f"Aggregate performance is {pct(academic_value)}%, below the configured "
+                    f"{academic_threshold}% attention threshold."
+                )
+            elif attendance_low:
+                classification = "attendance_concern"
+                reason = (
+                    f"Attendance is {pct(attendance_value)}%, below the configured "
+                    f"{attendance_threshold}% threshold."
+                )
+            else:
+                classification = "no_immediate_concern"
+                reason = "Latest available ERP data shows " + " and ".join(evidence) + "."
+
+            row = {
+                "student": student,
+                "current_semester": current_semester,
+                "analysis_semester": analysis_semester,
+                "fallback_used": used_fallback,
+                "academic_percentage": academic_value,
+                "attendance_percentage": attendance_value,
+                "classification": classification,
+                "reason": reason,
+            }
+
+            if low_performance_only:
+                if academic_low:
+                    attention_required.append(row)
+                elif academic_value is not None:
+                    row["reason"] = (
+                        f"Aggregate performance is {pct(academic_value)}%, at or above the configured "
+                        f"{academic_threshold}% academic threshold."
+                    )
+                    no_concern.append(row)
+                elif attendance_value is not None:
+                    row["reason"] = "Attendance data available; academic marks unavailable."
+                    no_concern.append(row)
+                else:
+                    data_unavailable.append(row)
+            elif attendance_only:
+                if attendance_low:
+                    attention_required.append(row)
+                elif attendance_value is not None:
+                    row["reason"] = (
+                        f"Attendance is {pct(attendance_value)}%, at or above the configured "
+                        f"{attendance_threshold}% threshold."
+                    )
+                    no_concern.append(row)
+                else:
+                    data_unavailable.append(row)
+            elif classification == "no_immediate_concern":
+                no_concern.append(row)
+            else:
+                attention_required.append(row)
+
+        attention_required.sort(key=lambda row: (row["student"].name or "", row["student"].id))
+        no_concern.sort(key=lambda row: (row["student"].name or "", row["student"].id))
+        data_unavailable.sort(key=lambda row: (row["student"].name or "", row["student"].id))
+
+        lines = [
+            "**Mentee Academic Attention Report**",
+            "",
+            f"Total mentees: {len(attention_required) + len(no_concern) + len(data_unavailable)}",
+            f"Academic attention required: {len(attention_required)}",
+            f"No immediate concern: {len(no_concern)}",
+            f"Academic data unavailable: {len(data_unavailable)}",
+            "",
+            f"Thresholds: aggregate marks below {academic_threshold}% or attendance below {attendance_threshold}%.",
+        ]
+        if fallback_used:
+            lines.extend([
+                "",
+                "Academic analysis uses each mentee's latest semester with published academic results. Current-semester records were skipped where academic results were not yet published.",
+            ])
+
+        if attention_required:
+            lines.extend([
+                "",
+                "---",
+                "",
+                "**Mentees Requiring Academic Attention**",
+                "",
+                "Student | Register Number | Analysis Semester | Reason",
+                "--- | --- | --- | ---",
+            ])
+            for row in attention_required:
+                student = row["student"]
+                semester = row["analysis_semester"]
+                lines.append(
+                    f"{student.name or 'N/A'} | {student.reg_no or 'N/A'} | "
+                    f"Semester {semester if semester is not None else 'N/A'} | {row['reason']}"
+                )
+        else:
+            lines.extend([
+                "",
+                "No mentees currently meet the configured academic-attention criteria based on the available published ERP data.",
+            ])
+
+        if no_concern:
+            lines.extend([
+                "",
+                "---",
+                "",
+                "**No Immediate Concern**",
+                "",
+                "Student | Register Number | Analysis Semester | Evidence",
+                "--- | --- | --- | ---",
+            ])
+            for row in no_concern:
+                student = row["student"]
+                semester = row["analysis_semester"]
+                lines.append(
+                    f"{student.name or 'N/A'} | {student.reg_no or 'N/A'} | "
+                    f"Semester {semester if semester is not None else 'N/A'} | {row['reason']}"
+                )
+
+        if data_unavailable:
+            lines.extend([
+                "",
+                "---",
+                "",
+                "**Academic Data Unavailable**",
+                "",
+                "Student | Register Number | Status",
+                "--- | --- | ---",
+            ])
+            for row in data_unavailable:
+                student = row["student"]
+                lines.append(
+                    f"{student.name or 'N/A'} | {student.reg_no or 'N/A'} | {row['reason']}"
+                )
+
+        return "\n".join(lines).rstrip()
 
     def _handle_assessment_assistant(self, faculty_id, active_role, query):
         course_code = self._extract_course_code(query)
